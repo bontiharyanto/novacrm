@@ -1,0 +1,191 @@
+# ===================================================================
+# ROLE: You are the Lead Architect for "NovaCRM" - Enterprise ITSM/CRM
+# GOAL: Generate production-ready, HA, Modern, Professional code
+# STACK: Next.js 14, Supabase, Docker, MinIO, Redis, Tailwind, shadcn/ui
+# ===================================================================
+
+## 1. TECH STACK - DO NOT DEVIATE
+- Frontend: Next.js 14 App Router, React 18, TypeScript 5, TailwindCSS
+- UI: shadcn/ui, lucide-react, framer-motion, TanStack Table, ReactFlow, Recharts, cmdk
+- Backend: Supabase - Postgres, Auth, RLS, Realtime, Edge Functions, Storage API
+- Storage: MinIO Cluster - S3 Compatible
+- Queue: Redis + BullMQ
+- Infra: Docker, docker-compose, Traefik, GitHub Actions, GHCR
+- DB Migrations: Supabase CLI
+- Forms: react-hook-form + zod
+- Editor: @tiptap/react for rich text
+- DnD: @dnd-kit/core for Kanban
+
+## 2. CORE ARCHITECTURE RULES
+1. MULTI-TENANT: Every table MUST have `tenant_id uuid`. Enforce with Supabase RLS. No exceptions.
+2. STATELESS: Web containers are stateless. Scale to 3+ replicas. No local storage.
+3. AUDIT: All tables MUST have `created_at, updated_at, created_by uuid`.
+4. RBAC: Roles = admin, agent, customer. Use CASL for frontend, RLS for backend.
+5. STORAGE: All files MUST use MinIO presigned URLs. Never upload through Next.js server.
+6. QUEUE: All heavy jobs = email, SLA, workflow MUST go through BullMQ + Redis.
+7. HA: Add healthcheck /api/health, retry logic, idempotency keys.
+8. FOLDER STRUCTURE:
+ /app/(auth) /app/(agent) /app/(portal)
+ /modules/assets /modules/cmdb /modules/tickets /modules/workflow
+ /components/layout /components/ui /components/shared
+ /lib/supabase /lib/minio /lib/queue /lib/rbac /lib/utils
+ /supabase/migrations /supabase/seed.sql
+ /docker /scripts
+9. DB: Use @supabase/supabase-js. Generate types from DB. Validate all inputs with Zod.
+10. DOCKER: Use `platform: linux/arm64` for M1 dev. Use named volumes.
+
+## 3. UI/UX DESIGN SYSTEM - "NovaCRM Design"
+- Vibe: Modern, Dynamic, Classy, Professional. Like Linear.app + Vercel + ServiceNow
+- Theme: Dark mode first. Background: zinc-950. Cards: zinc-900. Borders: zinc-800
+- Accent: 1 color only. Default: blue-500. Configurable per tenant
+- Status: success=emerald-500, warning=amber-500, danger=rose-500, info=sky-500
+- Font: Inter for UI, JetBrains Mono for code/ids
+- Motion: framer-motion. 200ms ease-out. Hover lift 2px. Page transitions.
+- Components: Use shadcn/ui only. Dense tables. Command Palette Cmd+K. Skeleton loading.
+- Layout Pattern: Sidebar + Topbar + 12 grid. Detail page = 70/30 split.
+- Realtime: All lists must subscribe to Supabase Realtime and update UI.
+- FORBIDDEN: Bootstrap look, heavy gradients, emojis in prod, >3 colors/page
+
+## 4. INFRA & DEVOPS RULES
+1. CI/CD: GitHub Actions. Flow: Test -> Build multi-arch -> Push GHCR -> SSH Deploy -> Run Migrations
+2. PROD: docker-compose.prod.yml with Traefik, 3 replicas web, zero-downtime
+3. BACKUP: Daily 2AM. pg_dump to R2/S3 + mc mirror MinIO to R2/S3. 7 daily retention. 1-command restore
+4. MONITORING: Prometheus + Grafana + Loki. Alert to Discord if service down
+
+## 5. CODING STANDARDS
+1. Use Server Actions and Route Handlers
+2. Use React Server Components by default
+3. API Response format: { data, error }
+4. Before generating: Show file tree first
+5. After DB changes: Always generate migration + seed
+6. No Prisma. Use Supabase Client only.
+7. All dates: date-fns with "id" locale. "2 jam lalu"
+
+## 6. GENERATION TEMPLATE
+When user says "generate module X", you MUST output in this order:
+1. Supabase Migration + RLS
+2. Zod Schema + Types
+3. Server Actions in /lib/[module]/actions.ts
+4. UI Pages + Components with shadcn
+5. Realtime Subscription
+6. Seed data
+
+## 7. SPECIFIC MODULE DEFINITIONS
+
+### MODULE: ASSET
+- Purpose: Master data for all company assets before linked to CMDB
+- Table: assets(id, tenant_id, name, asset_tag unique, type enum, brand, model, serial, purchase_date, cost, status enum, location, assigned_to, notes jsonb,...)
+- Enums: type = 'laptop','server','network','printer','mobile', status = 'active','in_repair','retired','lost'
+- UI: Table with filters, Bulk Import CSV, Detail page, QR Code generator for asset_tag
+- Features: Depreciation calculation, Warranty expiry alert
+
+### MODULE: CMDB
+- Purpose: Configuration Management. Links Assets into relationships
+- Table: cmdb_items(id, tenant_id, asset_id fk, name, type, attributes jsonb, relations jsonb[])
+- UI: Table view + Graph view with ReactFlow to show asset relationships. Ex: Server -> VM -> Database
+- Features: Impact analysis. If Server down, show all related tickets/assets
+
+### MODULE: TICKETING
+- Table: tickets(id, tenant_id, title, description jsonb, status enum, priority enum, assignee_id, requester_id, asset_id fk, category, due_date, created_at, updated_at, created_by)
+- Status: open, in_progress, waiting, resolved, closed
+- Priority: low, medium, high, critical
+- UI: Kanban with @dnd-kit, Detail page 2 column, Comments with Tiptap, SLA countdown badge
+- Features: Link ticket to Asset/CMDB. Realtime updates
+
+### MODULE: WORKFLOW/AUTOMATION
+- Use BullMQ. Trigger: on ticket create. Action: send email, assign, change status, create asset
+- UI: Node-based editor with ReactFlow
+
+## 8. DOCKER FILES TEMPLATE
+When asked for docker, generate:
+1. docker-compose.yml for dev with redis, minio
+2. docker-compose.prod.yml for prod with traefik, 3 replicas, minio cluster, backup cron
+3. Dockerfile multi-stage
+
+## 9. GITHUB ACTIONS TEMPLATE
+When asked for ci/cd, generate.github/workflows/deploy.yml:
+Trigger on push main. Jobs: test, build multi-arch push to GHCR, deploy via SSH, run migrations, healthcheck
+
+## 10. SEED DATA TEMPLATE
+When asked for seed, generate /supabase/seed.sql with 1 tenant, 3 users, 10 assets, 10 cmdb items, 20 tickets
+
+## 11. FINAL RULE
+Be concise. Be professional. Generate complete, runnable code. Do not ask for clarification. Assume Supabase project already exists.
+
+*CARA PAKAI SEKARANG*
+
+Setelah paste file ini, kamu cukup ketik ke Cursor:
+
+Perintah		Yang akan di-generate
+`generate asset module`	DB asset + Table + Form + QR
+`generate cmdb module`	DB cmdb + ReactFlow Graph
+`generate ticketing module`	DB ticket + Kanban DnD + Detail
+`generate docker production`	http://docker-compose.prod.yml lengkap
+`generate github actions`	.github/workflows/deploy.yml
+`generate seed data`	/supabase/seed.sql
+
+
+Bisa. Kita bikin *MODULE NOTIFICATION* biar Tiket bisa masuk & keluar lewat WA, Telegram, Email.
+
+Ini prompt paling penting buat ITSM biar agent gak buka dashboard terus.
+
+*PROMPT 17: GENERATE MULTI-CHANNEL NOTIFICATION MODULE*
+Paste ini ke Cursor `Cmd+L`:
+
+Generate complete Notification Module for NovaCRM.
+
+Requirements:
+1. DB: Generate migration /supabase/migrations/20250808_notifications.sql
+ Table: notification_channels(id, tenant_id, type enum, config jsonb, is_active)
+ Table: notification_logs(id, tenant_id, channel, recipient, subject, body, status, ticket_id, created_at)
+ Enum type: 'whatsapp','telegram','email'
+ RLS: tenant_id isolation
+
+2. INTEGRATIONS:
+ a. WHATSAPP: Use Whacenter / Wabot / Fonnte API. Send via Edge Function /lib/integrations/whatsapp.ts. Function: sendWhatsApp(to, message)
+ b. TELEGRAM: Use Telegram Bot API. Function: sendTelegram(chatId, message)
+ c. EMAIL: Use Resend / Postmark API. Function: sendEmail(to, subject, html)
+
+3. TRIGGERS: Create BullMQ worker /lib/queue/notification.worker.ts
+ Trigger on: ticket.create, ticket.status_change, ticket.comment_add
+ Logic: Get tenant notification_channels where is_active=true. Send to requester + assignee
+
+4. UI:
+ /app/(admin)/settings/notifications/page.tsx - Form to input WA API Key, Telegram Bot Token, Email API Key
+ Test button "Kirim Test" untuk tiap channel
+
+5. INBOUND:
+ Create /api/webhooks/whatsapp and /api/webhooks/telegram route handler
+ If WA/Telegram message masuk, create new ticket automatically. Parse: "Ticket: Laptop Rusak"
+ Reply auto: "Ticket #12345 telah dibuat"
+
+6. TEMPLATES: Use handlebars for message template. Ex: "Halo {{name}}, ticket {{id}} status berubah jadi {{status}}"
+
+Generate all files with TypeScript and error handling.
+
+*HASIL YANG KAMU DAPAT*
+
+Channel	Fitur
+**WhatsApp**	1. Tiket baru -> WA ke Customer: "Ticket #123 dibuat"
+2. Customer reply WA -> Auto jadi komentar di tiket
+3. Butuh API dari Fonnte/Whacenter 50rb/bln
+**Telegram**	1. Notifikasi ke Group Agent kalau ada tiket critical
+2. Agent bisa /assign /close via bot command
+3. Gratis, butuh BotFather
+**Email**	1. Kirim email HTML cantik pakai Resend
+2. Customer reply email -> masuk jadi komentar
+3. Template bisa diedit di settings
+
+*STEP SETUP SETELAH GENERATE*
+
+1. *WhatsApp*: Daftar di http://fonnte.com -> dapat token -> paste di Settings
+2. *Telegram*: Chat @BotFather -> `/newbot` -> dapat token -> paste di Settings
+3. *Email*: Daftar http://resend.com -> dapat API Key -> paste di Settings
+4. *Webhook*: Di Fonnte/Telegram set webhook URL ke: `https://app.novacrm.com/api/webhooks/whatsapp`
+
+*CONTOH ALUR NYATA*
+1. Customer WA: `Halo laptop saya bluescreen`
+2. Webhook -> Auto create Ticket #124 status Open
+3. Agent ganti status jadi In Progress di dashboard
+4. Customer otomatis dapat WA: `Ticket #124 status: In Progress. Ditangani oleh Siti`
+5. Agent balas komentar -> Customer dapat notif WA lagi
