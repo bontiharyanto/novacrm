@@ -1,54 +1,125 @@
 # NovaCRM
 
-NovaCRM is a modern support operations platform designed for managing customer tickets, communicating across channels, and tracking operational workflow health. The application provides a dashboard for support teams to create, triage, and resolve tickets while supporting notification delivery through email, WhatsApp, and Telegram integrations.
+NovaCRM is a support operations platform for managing customer service workflows, notifications, and ticket resolution in a single modern workspace. It is designed for teams that need to respond quickly to customer issues, coordinate internal follow-up, and keep communication channels aligned across email, WhatsApp, and Telegram.
 
-## Overview
+## Product Summary
 
-This project was designed as a lightweight but production-aware customer support system with:
+NovaCRM helps support teams move from fragmented communication to a structured service workflow. Instead of chasing issues across channels, teams can track work, prioritize urgency, and monitor service health from one dashboard.
 
-- ticket management and status lifecycle tracking
-- kanban-style workflow views
-- SLA-aware due dates and risk indicators
-- notification configuration for multiple channels
-- webhook-based ticket creation from external messaging channels
-- tenant-aware configuration structure
-- route-based API endpoints for tickets, settings, and notifications
+### The problem NovaCRM solves
+- customer issues arrive from multiple channels
+- cases are difficult to triage without a shared workflow
+- support teams lose context between channels and tools
+- SLA deadlines and escalation risk are not clearly visible
 
-The app is built with Next.js 14, TypeScript, and Tailwind CSS, making it suitable for rapid local development and easy extension into a full production support platform.
+### The solution
+- central ticket dashboard for case intake and triage
+- Kanban-based lifecycle tracking for support queues
+- notification dispatch across preferred communication channels
+- due-date and SLA monitoring to reduce missed response windows
+- webhook-driven intake from messaging platforms
+- tenant-aware configuration for multi-client or multi-brand operations
 
-## Core Features
+---
 
-### Ticket Management
-- Create and view support tickets from the dashboard
-- Track lifecycle states such as open, in progress, waiting, on hold, resolved, and closed
-- Prioritize tickets by urgency
-- Receive due-date and SLA information for operational follow-up
+## Investor / Demo Narrative
 
-### Notification System
-- Configure notification channels per tenant
-- Dispatch notifications through email, WhatsApp, or Telegram
-- Persist notification logs for auditing and troubleshooting
-- Use templates for ticket lifecycle events, including creation and updates
+NovaCRM is positioned as a practical workflow platform for modern support operations. It combines a strong operational UX with a modular architecture that can scale from a local prototype into a real customer support system.
 
-### Webhook Intake
-- Accept inbound WhatsApp messages and create support tickets automatically
-- Accept inbound Telegram messages and convert them into support records
-- Provide a clean API surface for future integrations
+The product story is simple:
 
-### Admin Settings
-- Notification settings page for channel configuration
-- Support for testing configured channels
-- Centralized configuration layer for tenant-specific settings
+1. customer issues arrive from multiple entry points
+2. the platform creates a structured support ticket
+3. support agents triage and route work into the proper lifecycle state
+4. notification channels keep both teams and customers informed
+5. SLA monitoring and status visibility reduce operational risk
 
-## Tech Stack
+This makes NovaCRM suitable for SMB service teams, SaaS support desks, field service operations, and multi-tenant customer care environments.
+
+---
+
+## SaaS Product Positioning
+
+### Core capabilities
+- Ticket creation and lifecycle management
+- Kanban operations board
+- SLA risk monitoring and due-date tracking
+- WhatsApp, Telegram, and email notification channels
+- admin configuration panel for notification settings
+- webhook-based automation for inbound communication
+- structured logging for operational visibility
+
+### Why it stands out
+- designed for operational speed and clarity
+- supports multi-channel service intake
+- based on a clean Next.js architecture
+- ready for extension with real database and queue infrastructure
+- suitable for both internal support teams and customer-facing service operations
+
+---
+
+## Internal Engineering Overview
+
+### Architecture
+NovaCRM follows a modular application structure built with Next.js and TypeScript. The foundation is separated into a few clear domains:
+
+- app layer: route handlers and page-level UI
+- components: dashboard, ticket UI, and admin panels
+- lib: domain rules, configuration, integrations, and ticket logic
+- supabase: schema and migration structure for database readiness
+- notifications: templates, logging, queue abstractions, and dispatch logic
+
+### Key application domains
+- Tickets: creation, updates, lifecycle changes, assignment, comments
+- Notifications: channel configuration, templates, logs, message dispatch
+- Webhooks: WhatsApp and Telegram inbound message ingestion
+- Tenants: multi-tenant structure and config management
+- Integrations: email, Telegram, and WhatsApp APIs with safe fallbacks
+
+### Operational assumptions
+- fallback in-memory storage is available for local prototyping
+- real persistence can be plugged into Supabase or another database layer
+- queue abstraction is ready for future Redis/BullMQ implementation
+- external providers can be enabled through environment variables
+
+---
+
+## Features
+
+### Ticket management
+- create tickets from the operations dashboard
+- manage status states: open, in progress, waiting, on hold, resolved, and closed
+- filter and review queue activity using a kanban-style board
+- review ticket detail pages with comments and SLA information
+
+### Notification management
+- configure channels for email, WhatsApp, and Telegram
+- dispatch lifecycle messages for updates and events
+- keep a log of notification activity for troubleshooting and auditing
+
+### Webhook automation
+- collect inbound WhatsApp payloads and convert them to tickets
+- collect inbound Telegram payloads and convert them to tickets
+- create a structure for future CRM integrations and external communication systems
+
+### Admin experience
+- notification settings page
+- configuration management for tenant-specific behavior
+- support for channel testing and a clean operational admin UI
+
+---
+
+## Technology Stack
 
 - Next.js 14
 - React 18
 - TypeScript
 - Tailwind CSS
-- Supabase-ready schema and migration structure
-- Docker support for local environment setup
-- Redis/BullMQ-ready notification queue abstraction
+- Supabase-ready schema and migration support
+- Docker support for local orchestration
+- Redis/BullMQ-ready architecture for production queueing
+
+---
 
 ## Project Structure
 
@@ -76,26 +147,32 @@ novacrm/
 ├── supabase/
 │   ├── migrations/
 │   └── seed.sql
+├── docs/
+│   └── DEPLOYMENT.md
+├── .dockerignore
 ├── .env.example
-├── docker-compose.yml
+├── .gitignore
 ├── Dockerfile
+├── docker-compose.yml
 ├── next.config.mjs
 ├── package.json
 ├── postcss.config.js
 ├── tailwind.config.ts
 ├── tsconfig.json
-└── README.md
+├── README.md
+└── LICENSE
 ```
 
-## Prerequisites
+---
 
-Before running the project locally, ensure you have:
+## Getting Started
 
-- Node.js 20 or newer
-- npm or pnpm
-- Docker (optional, for local services such as Redis and MinIO)
+### Prerequisites
+- Node.js 20+
+- npm
+- Docker (optional for local services such as Redis and MinIO)
 
-## Installation
+### Install and run locally
 
 1. Clone the repository:
 
@@ -110,23 +187,25 @@ cd novacrm
 npm install
 ```
 
-3. Copy the environment example if needed:
+3. Create your environment file:
 
 ```bash
 cp .env.example .env.local
 ```
 
-4. Start the application:
+4. Start the development server:
 
 ```bash
 npm run dev
 ```
 
-5. Open the app in a browser:
+5. Open the app in the browser:
 
 ```text
 http://localhost:3000
 ```
+
+---
 
 ## Available Scripts
 
@@ -137,40 +216,78 @@ npm run start
 npm run lint
 ```
 
-## Production Validation
+---
 
-This project includes build validation and is intended to be production-aware. A production build can be checked with:
+## Environment Variables
 
-```bash
-npm run build
+A sample environment file is provided in `.env.example`.
+
+Example variables include:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+WHATSAPP_API_KEY=
+TELEGRAM_BOT_TOKEN=
+RESEND_API_KEY=
+EMAIL_FROM=NovaCRM <no-reply@novacrm.app>
 ```
 
-## Environment Notes
+These values are used for integration readiness and should be configured in a real deployment environment.
 
-The project is structured to support real-world operational configuration, including:
+---
 
-- tenant-level settings
-- external API integrations
-- notification logs and auditing
-- Supabase migration support
-- queue-based processing patterns for notifications
+## Deployment
 
-Some integrations are implemented with safe fallbacks and will operate gracefully when external credentials are not configured.
+Production deployment guidance is available in the deployment documentation:
 
-## Future Roadmap
+- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
 
-Potential next steps include:
+The repository includes Docker-based and environment-driven deployment patterns suitable for local and cloud deployment workflows.
 
-- real Supabase database integration
-- authentication and role-based access control
-- production Redis/BullMQ queue processing
-- real API credentials for WhatsApp, Telegram, and email providers
-- reporting dashboards and analytics
+### Recommended deployment options
+- Vercel for the Next.js frontend and API routes
+- Docker for self-hosted or container-based production deployment
+- Supabase for persistent relational storage
+- Redis/BullMQ for queue-based notification processing
+
+---
+
+## Production Readiness Notes
+
+This project is structured as a strong operational prototype and can be extended into production with the following next steps:
+
+- connect to a real Supabase project
+- configure authentication and authorization
+- integrate real notification providers
+- add persistent queue processing with Redis/BullMQ
+- implement role-based access controls for support and admin teams
+- add reporting and analytics surfaces
+
+---
+
+## Roadmap
+
+### Near-term priorities
+- real data persistence and relational modeling
+- secure auth and RBAC
+- production notification provider setup
+- operational analytics and reporting
+
+### Longer-term vision
+- multi-tenant support operations platform
+- AI-assisted triage and response drafting
+- customer communication analytics
+- SLA and performance forecasting
+
+---
 
 ## License
 
-This project is provided for educational and operational demonstration purposes. Please review and adjust licensing requirements before using it in a production environment.
+This project is intended for development, demonstration, and operational prototyping. Before production use, confirm licensing and compliance requirements for your deployment environment and customer use cases.
+
+---
 
 ## Contact
 
-For questions or collaboration opportunities, please use the repository contact information and project issues available on GitHub.
+For collaboration, product feedback, or operational use cases, please use the GitHub repository and issue tracking for this project.
