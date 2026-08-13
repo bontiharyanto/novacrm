@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { isSupabaseConfigured } from '@/lib/config/env';
 import type { AppRole } from '@/lib/rbac/ability';
 
 export type SessionProfile = {
@@ -16,14 +17,8 @@ export type AppSession = {
   profile: SessionProfile;
 };
 
-function isConfigured() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  return Boolean(url && key && !url.includes('example.supabase.co'));
-}
-
 export async function getSessionProfile(): Promise<AppSession | null> {
-  if (!isConfigured()) {
+  if (!isSupabaseConfigured()) {
     return null;
   }
 

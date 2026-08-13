@@ -1,23 +1,40 @@
 # Deployment Guide
 
-NovaCRM production path: GitHub Actions builds a multi-arch image to GHCR, then SSH-deploys `docker-compose.prod.yml`.
+NovaCRM production path: GitHub Actions tests, builds a multi-arch image to GHCR, then SSH-deploys `docker-compose.prod.yml` when server secrets exist.
+
+Local laptop first: [docs/LOCAL.md](LOCAL.md).
 
 ## Runtime
 
 - Web: Next.js (3 replicas behind Traefik)
 - Worker: BullMQ notification processor
-- Database: Supabase Postgres
+- Database: hosted Supabase Postgres
 - Queue: Redis
 - Files: MinIO, uploaded with presigned URLs
 - Edge: Traefik + Let's Encrypt
+
+Public Supabase URL/anon key are injected at **runtime** from `.env.production`, so one GHCR image works for any tenant project.
 
 ## GitHub Actions
 
 Workflow: `.github/workflows/deploy.yml`
 
-On pull request: test only. On push to `main`: test, build/push GHCR, deploy if SSH secrets exist.
+- Pull request: test only
+- Push to `main` or manual **Run workflow**: test → build/push GHCR → SSH deploy if secrets exist
 
-### Required repository secrets
+Image: `ghcr.io/bontiharyanto/novacrm`
+
+### Required repository secrets for SSH
+
+Set these in GitHub → Settings → Secrets and variables → Actions:
+
+```bash
+gh secret set DEPLOY_HOST --body "vps.example.com"
+gh secret set DEPLOY_USER --body "ubuntu"
+gh secret set DEPLOY_SSH_KEY < ~/.ssh/id_ed25519
+gh secret set DEPLOY_PATH --body "/opt/novacrm"
+gh secret set DATABASE_URL --body "postgresql://postgres:PASSWORD@db.PROJECT.supabase.co:5432/postgres"
+```
 
 | Secret | Purpose |
 | --- | --- |
@@ -27,29 +44,37 @@ On pull request: test only. On push to `main`: test, build/push GHCR, deploy if 
 | `DEPLOY_PATH` | App directory on the server, e.g. `/opt/novacrm` |
 | `DATABASE_URL` | Postgres URL for `scripts/migrate.sh` |
 
-`GITHUB_TOKEN` is provided by Actions and is used to push `ghcr.io/bontiharyanto/novacrm`.
+Without `DEPLOY_HOST`, the deploy job is skipped and only GHCR is updated. `GITHUB_TOKEN` is provided by Actions and is used to push/pull `ghcr.io/bontiharyanto/novacrm`.
 
 ## Server bootstrap
 
+On the VPS (Docker + git installed):
+
 ```bash
-git clone https://github.com/bontiharyanto/novacrm.git /opt/novacrm
+sudo mkdir -p /opt/novacrm
+sudo git clone https://github.com/bontiharyanto/novacrm.git /opt/novacrm
 cd /opt/novacrm
-cp .env.example .env.production
-# fill production values
-docker compose -f docker-compose.prod.yml up -d
+cp .env.production.example .env.production
+# fill production values, including hosted Supabase keys
+
+cat > .env <<'EOF'
+APP_HOST=crm.example.com
+ACME_EMAIL=ops@example.com
+IMAGE_TAG=latest
+EOF
+
+# Point DNS A/AAAA for APP_HOST at this server, then:
+docker compose -f docker-compose.prod.yml pull
+docker compose -f docker-compose.prod.yml up -d --remove-orphans --scale web=3
 ```
 
-Set `APP_HOST` and `ACME_EMAIL` in the environment used by Compose. Point DNS at the server.
+Create a hosted [Supabase](https://supabase.com) project, run `supabase/migrations/*.sql` then `supabase/seed.sql` (or let CI `migrate.sh` apply migrations).
 
-Scale web replicas (Swarm or Compose scale):
-
-```bash
-docker compose -f docker-compose.prod.yml up -d --scale web=3
-```
+After secrets are set, the next push to `main` will pull the new image, scale web to 3, migrate, and healthcheck `/api/health`.
 
 ## Environment
 
-Copy `.env.example` to `.env.production`. Minimum production keys:
+Copy `.env.production.example` to `.env.production`. Minimum production keys:
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=
@@ -64,6 +89,8 @@ WHATSAPP_WEBHOOK_SECRET=
 TELEGRAM_WEBHOOK_SECRET=
 DATABASE_URL=
 ```
+
+Compose interpolates `APP_HOST` and `ACME_EMAIL` from the project `.env` file (not `.env.production`).
 
 ## Backup and restore
 
@@ -84,8 +111,9 @@ Backup cron runs daily at 02:00 Asia/Jakarta.
 
 ## Local Docker
 
-```bash
-docker compose up --build
-```
+Laptop loop uses Redis + MinIO only, plus local Supabase:
 
-This starts the app, Redis, MinIO, and the notification worker.
+```bash
+npm run local:setup
+npm run local:dev
+```

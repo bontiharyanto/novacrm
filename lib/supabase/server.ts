@@ -1,9 +1,9 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { getPublicSupabaseConfig } from '@/lib/config/env';
 
 export async function createSupabaseServerClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const { url, key } = getPublicSupabaseConfig();
 
   if (!url || !key) {
     throw new Error('Supabase server client is not configured');

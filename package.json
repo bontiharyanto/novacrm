@@ -8,7 +8,11 @@
     "start": "next start",
     "lint": "next lint",
     "test": "tsc --noEmit && next lint",
-    "worker": "tsx scripts/notification-worker.ts"
+    "worker": "tsx scripts/notification-worker.ts",
+    "local:up": "docker compose up -d redis minio minio-init",
+    "local:setup": "sh scripts/setup-local.sh",
+    "local:dev": "sh scripts/dev-local.sh",
+    "local:stop": "sh scripts/stop-local.sh"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1109.0",

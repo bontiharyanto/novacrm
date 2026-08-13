@@ -44,3 +44,7 @@ build/
 *.pem
 *.key
 *.crt
+
+# Supabase local CLI
+supabase/.temp/
+supabase/.branches/

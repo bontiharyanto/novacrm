@@ -1,7 +1,6 @@
-version: '3.9'
-
 services:
   app:
+    profiles: ['full']
     platform: linux/arm64
     build:
       context: .
@@ -24,6 +23,7 @@ services:
     restart: unless-stopped
 
   worker:
+    profiles: ['full']
     platform: linux/arm64
     build:
       context: .

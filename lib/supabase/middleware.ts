@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { getPublicSupabaseConfig, isSupabaseConfigured } from '@/lib/config/env';
 
 function isPublicPath(pathname: string) {
   return (
@@ -10,10 +11,9 @@ function isPublicPath(pathname: string) {
 }
 
 export async function updateSession(request: NextRequest) {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const { url, key } = getPublicSupabaseConfig();
 
-  if (!url || !key || url.includes('example.supabase.co')) {
+  if (!url || !key || !isSupabaseConfigured(url, key)) {
     if (isPublicPath(request.nextUrl.pathname) || request.nextUrl.pathname.startsWith('/_next')) {
       return NextResponse.next({ request });
     }

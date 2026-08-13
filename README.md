@@ -20,40 +20,38 @@ Repository: [github.com/bontiharyanto/novacrm](https://github.com/bontiharyanto/
 - MinIO presigned uploads
 - Docker Compose (dev + production with Traefik)
 
-## Getting started
+## Getting started (laptop)
+
+Full walkthrough: [docs/LOCAL.md](docs/LOCAL.md)
 
 ```bash
 git clone https://github.com/bontiharyanto/novacrm.git
 cd novacrm
-npm install
-cp .env.example .env.local
-```
-
-Apply `supabase/migrations/*.sql` then `supabase/seed.sql` on your Supabase project. Start local dependencies and the app:
-
-```bash
-docker compose up redis minio minio-init
-npm run worker
-npm run dev
+npm run local:setup
+npm run local:dev
 ```
 
 Open http://localhost:3000
 
-Demo logins (password `NovaCRM!2026`) after seed:
+| Role | Email | Password |
+| --- | --- | --- |
+| admin | `admin@novacrm.app` | `NovaCRM!2026` |
+| agent | `agent@novacrm.app` | `NovaCRM!2026` |
+| customer | `customer@novacrm.app` | `NovaCRM!2026` |
 
-- `admin@novacrm.app`
-- `agent@novacrm.app`
-- `customer@novacrm.app`
+`local:setup` starts Redis + MinIO, runs local Supabase, applies migrations/seed, and writes `.env.local`. Docker Desktop must be running.
 
 ## Scripts
 
 ```bash
-npm run dev
+npm run local:setup
+npm run local:dev
+npm run local:stop
+npm run local:up
 npm run worker
+npm run dev
 npm test
 npm run build
-npm run start
-npm run lint
 ```
 
 ## CI/CD
@@ -66,7 +64,7 @@ Push to `main` runs [.github/workflows/deploy.yml](.github/workflows/deploy.yml)
 
 Production compose: `docker-compose.prod.yml` (Traefik, 3 web replicas, worker, Redis, MinIO, daily 02:00 backup). Restore with `./scripts/restore.sh YYYYMMDD`.
 
-See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for secrets, backup, and server setup.
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for secrets, VPS bootstrap, backup, and server setup.
 
 ## License
 
