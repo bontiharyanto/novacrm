@@ -9,5 +9,5 @@ export default async function HomePage() {
   if (session.profile.role === 'customer') {
     redirect('/portal');
   }
-  redirect('/tickets');
+  redirect('/dashboard');
 }

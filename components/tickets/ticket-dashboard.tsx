@@ -1,84 +1,139 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
+import { LayoutGrid, List, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { TicketKanban } from '@/components/tickets/ticket-kanban';
+import { TicketTable } from '@/components/tickets/ticket-table';
+import { ProcessStrip } from '@/components/tickets/process-strip';
 import { useRealtimeTable } from '@/lib/supabase/realtime';
-import type { TicketStatus } from '@/lib/tickets/schema';
+import { evaluateTicketSla } from '@/lib/tickets/sla';
+import {
+  TICKET_TYPES,
+  isTicketType,
+  queueFilters,
+  ticketTypeMeta,
+  type QueueFilter,
+  type TicketType,
+} from '@/lib/tickets/process';
+import type { TicketPriority, TicketStatus } from '@/lib/tickets/schema';
+import type { TicketPendingReason } from '@/lib/tickets/pending';
+import { cn } from '@/lib/utils';
 
 type TicketItem = {
   id: string;
+  number: string;
   title: string;
   description: string;
+  type: TicketType;
   status: TicketStatus;
-  priority: 'low' | 'medium' | 'high' | 'critical';
+  priority: TicketPriority;
   dueDate?: string;
   requesterName: string;
   requesterEmail?: string;
   requesterPhone?: string;
+  assigneeId?: string;
   assigneeName?: string;
+  groupId?: string;
+  groupName?: string;
+  slaResponseAt?: string;
+  slaResolveBy?: string;
+  slaRespondedAt?: string;
+  slaPausedAt?: string;
+  slaResponseMinutes?: number;
+  slaResolveMinutes?: number;
+  pendingReason?: TicketPendingReason;
+  pendingNote?: string;
+  assetId?: string;
+  assetName?: string;
+  assetTag?: string;
   createdAt: string;
   comments: Array<{ id: string; author: string; comment: string; createdAt: string }>;
 };
 
-export function TicketDashboard() {
+function normalizeTicket(row: Partial<TicketItem> & { id: string; title: string }): TicketItem {
+  return {
+    id: row.id,
+    number: row.number || `#${row.id.slice(0, 8)}`,
+    title: row.title,
+    description: row.description ?? '',
+    type: isTicketType(row.type) ? row.type : 'incident',
+    status: row.status ?? 'open',
+    priority: row.priority ?? 'medium',
+    dueDate: row.dueDate,
+    requesterName: row.requesterName ?? 'Customer',
+    requesterEmail: row.requesterEmail,
+    requesterPhone: row.requesterPhone,
+    assigneeId: row.assigneeId,
+    assigneeName: row.assigneeName,
+    groupId: row.groupId,
+    groupName: row.groupName,
+    slaResponseAt: row.slaResponseAt,
+    slaResolveBy: row.slaResolveBy,
+    slaRespondedAt: row.slaRespondedAt,
+    slaPausedAt: row.slaPausedAt,
+    slaResponseMinutes: row.slaResponseMinutes,
+    slaResolveMinutes: row.slaResolveMinutes,
+    pendingReason: row.pendingReason,
+    pendingNote: row.pendingNote,
+    assetId: row.assetId,
+    assetName: row.assetName,
+    assetTag: row.assetTag,
+    createdAt: row.createdAt ?? new Date().toISOString(),
+    comments: row.comments ?? [],
+  };
+}
+
+export function TicketDashboard({ currentUserId }: { currentUserId: string }) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const typeParam = searchParams.get('type');
+  const queueParam = searchParams.get('queue');
+  const activeType = isTicketType(typeParam) ? typeParam : 'all';
+  const activeQueue: QueueFilter =
+    queueParam === 'mine' || queueParam === 'unassigned' || queueParam === 'queue' ? queueParam : 'all';
+
   const [tickets, setTickets] = useState<TicketItem[]>([]);
-  const [title, setTitle] = useState('');
-  const [requesterName, setRequesterName] = useState('Customer');
-  const [requesterEmail, setRequesterEmail] = useState('');
-  const [requesterPhone, setRequesterPhone] = useState('');
-  const [dueDate, setDueDate] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [myGroupIds, setMyGroupIds] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [view, setView] = useState<'table' | 'board'>('table');
+  const newTicketHref = activeType === 'all' ? '/tickets/new' : `/tickets/new?type=${activeType}`;
 
   const loadTickets = useCallback(async () => {
     const response = await fetch('/api/tickets');
     const payload = await response.json();
-    setTickets(payload.data ?? []);
+    setTickets(((payload.data ?? []) as TicketItem[]).map((row) => normalizeTicket(row)));
+    setLoading(false);
   }, []);
 
   useEffect(() => {
     void loadTickets();
+    void fetch('/api/org/groups')
+      .then((response) => response.json())
+      .then((payload) => {
+        const rows = (payload.data ?? []) as Array<{ id: string; isMember?: boolean }>;
+        setMyGroupIds(rows.filter((row) => row.isMember).map((row) => row.id));
+      })
+      .catch(() => setMyGroupIds([]));
   }, [loadTickets]);
 
   useRealtimeTable('tickets', loadTickets);
   useRealtimeTable('ticket_comments', loadTickets);
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setIsSubmitting(true);
-
-    const response = await fetch('/api/tickets', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        title,
-        description: 'Created from ticket dashboard',
-        requesterName,
-        requesterEmail,
-        requesterPhone,
-        dueDate: dueDate || undefined,
-        status: 'open',
-        priority: 'medium',
-      }),
-    });
-
-    const result = await response.json();
-    if (!response.ok) {
-      console.error(result.error);
-      setIsSubmitting(false);
-      return;
-    }
-
-    setTitle('');
-    setRequesterName('Customer');
-    setRequesterEmail('');
-    setRequesterPhone('');
-    setDueDate('');
-    await loadTickets();
-    setIsSubmitting(false);
+  function setFilter(next: { type?: string; queue?: string }) {
+    const params = new URLSearchParams(searchParams.toString());
+    const type = next.type ?? (activeType === 'all' ? '' : activeType);
+    const queue = next.queue ?? (activeQueue === 'all' ? '' : activeQueue);
+    if (type) params.set('type', type);
+    else params.delete('type');
+    if (queue) params.set('queue', queue);
+    else params.delete('queue');
+    const query = params.toString();
+    router.replace(query ? `/tickets?${query}` : '/tickets');
   }
 
   async function handleStatusChange(ticketId: string, status: TicketStatus) {
@@ -93,101 +148,146 @@ export function TicketDashboard() {
     }
   }
 
-  const openCount = tickets.filter((ticket) => ticket.status === 'open').length;
-  const onHoldCount = tickets.filter((ticket) => ticket.status === 'hold').length;
-  const atRiskCount = tickets.filter((ticket) => {
-    if (ticket.status === 'resolved' || ticket.status === 'closed') return false;
-    if (!ticket.dueDate) return false;
-    const due = new Date(ticket.dueDate).getTime();
-    const now = Date.now();
-    return due <= now + 1000 * 60 * 60 * 24;
+  const visibleTickets = useMemo(() => {
+    return tickets.filter((ticket) => {
+      if (activeType !== 'all' && ticket.type !== activeType) return false;
+      if (activeQueue === 'mine' && ticket.assigneeId !== currentUserId) return false;
+      if (activeQueue === 'queue' && (!ticket.groupId || !myGroupIds.includes(ticket.groupId))) return false;
+      if (activeQueue === 'unassigned' && ticket.assigneeId) return false;
+      return true;
+    });
+  }, [tickets, activeType, activeQueue, currentUserId, myGroupIds]);
+
+  const openCount = visibleTickets.filter((ticket) => ticket.status === 'open').length;
+  const unassignedCount = tickets.filter((ticket) => !ticket.assigneeId).length;
+  const atRiskCount = visibleTickets.filter((ticket) => {
+    const level = evaluateTicketSla(ticket).overall;
+    return level === 'risk' || level === 'breached';
   }).length;
+  const mineCount = tickets.filter((ticket) => ticket.assigneeId === currentUserId).length;
+  const queueCount = tickets.filter((ticket) => ticket.groupId && myGroupIds.includes(ticket.groupId)).length;
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between gap-4">
+    <div className="space-y-5 p-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-sm uppercase tracking-[0.2em] text-blue-400">Tickets</p>
-          <h1 className="text-3xl font-bold text-white">Operations dashboard</h1>
+          <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Service desk</p>
+          <h1 className="text-2xl font-semibold text-white">
+            {activeType === 'all' ? 'Tickets' : ticketTypeMeta[activeType].label}
+          </h1>
         </div>
-        <Button type="button" onClick={() => document.getElementById('title')?.focus()}>
-          New ticket
-        </Button>
+        <div className="flex items-center gap-2">
+          <div className="flex rounded-md border border-zinc-800 p-0.5">
+            <Button size="sm" variant={view === 'table' ? 'default' : 'ghost'} onClick={() => setView('table')}>
+              <List className="h-3.5 w-3.5" /> List
+            </Button>
+            <Button size="sm" variant={view === 'board' ? 'default' : 'ghost'} onClick={() => setView('board')}>
+              <LayoutGrid className="h-3.5 w-3.5" /> Board
+            </Button>
+          </div>
+          <Link
+            href={newTicketHref}
+            className="inline-flex items-center justify-center gap-2 rounded-md bg-blue-600 px-2.5 py-1.5 text-xs font-medium text-white transition-all duration-200 ease-out hover:-translate-y-0.5 hover:bg-blue-500"
+          >
+            <Plus className="h-3.5 w-3.5" /> New ticket
+          </Link>
+        </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">Total</p>
-            <p className="mt-2 text-2xl font-semibold text-white">{tickets.length}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-xs uppercase tracking-[0.2em] text-sky-400">Open</p>
-            <p className="mt-2 text-2xl font-semibold text-white">{openCount}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-xs uppercase tracking-[0.2em] text-amber-400">Hold</p>
-            <p className="mt-2 text-2xl font-semibold text-white">{onHoldCount}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-xs uppercase tracking-[0.2em] text-amber-400">SLA Risk</p>
-            <p className="mt-2 text-2xl font-semibold text-white">{atRiskCount}</p>
-          </CardContent>
-        </Card>
+      <div className="flex flex-wrap gap-1.5">
+        <button
+          type="button"
+          onClick={() => setFilter({ type: '' })}
+          className={cn(
+            'rounded-full border px-3 py-1 text-[11px] font-medium transition-all duration-200 ease-out hover:-translate-y-0.5',
+            activeType === 'all'
+              ? 'border-blue-500/40 bg-blue-500/15 text-blue-200'
+              : 'border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-zinc-200',
+          )}
+        >
+          All processes
+        </button>
+        {TICKET_TYPES.map((type) => (
+          <button
+            key={type}
+            type="button"
+            onClick={() => setFilter({ type })}
+            className={cn(
+              'rounded-full border px-3 py-1 text-[11px] font-medium transition-all duration-200 ease-out hover:-translate-y-0.5',
+              activeType === type
+                ? 'border-blue-500/40 bg-blue-500/15 text-blue-200'
+                : 'border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-zinc-200',
+            )}
+          >
+            {ticketTypeMeta[type].label}
+            <span className="ml-1.5 font-mono text-[10px] text-zinc-500">
+              {tickets.filter((ticket) => ticket.type === type).length}
+            </span>
+          </button>
+        ))}
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Create ticket</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
-            <div className="md:col-span-2 space-y-2">
-              <Label htmlFor="title">Title</Label>
-              <Input id="title" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Laptop bluescreen after update" required />
-            </div>
+      <div className="flex flex-wrap gap-1.5">
+        {queueFilters.map((queue) => (
+          <button
+            key={queue.id}
+            type="button"
+            onClick={() => setFilter({ queue: queue.id === 'all' ? '' : queue.id })}
+            className={cn(
+              'rounded-md border px-3 py-1.5 text-xs font-medium transition-all duration-200 ease-out hover:-translate-y-0.5',
+              activeQueue === queue.id
+                ? 'border-zinc-600 bg-zinc-800 text-white'
+                : 'border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-zinc-200',
+            )}
+          >
+            {queue.label}
+            <span className="ml-1.5 font-mono text-[10px] text-zinc-500">
+              {queue.id === 'all'
+                ? tickets.length
+                : queue.id === 'mine'
+                  ? mineCount
+                  : queue.id === 'queue'
+                    ? queueCount
+                    : unassignedCount}
+            </span>
+          </button>
+        ))}
+      </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="requesterName">Requester</Label>
-              <Input id="requesterName" value={requesterName} onChange={(event) => setRequesterName(event.target.value)} />
-            </div>
+      {activeType !== 'all' ? (
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-3">
+          <p className="mb-2 text-[11px] uppercase tracking-[0.16em] text-zinc-500">
+            {ticketTypeMeta[activeType].description}
+          </p>
+          <ProcessStrip type={activeType} status="open" />
+        </div>
+      ) : null}
 
-            <div className="space-y-2">
-              <Label htmlFor="requesterEmail">Email</Label>
-              <Input id="requesterEmail" type="email" value={requesterEmail} onChange={(event) => setRequesterEmail(event.target.value)} placeholder="customer@example.com" />
-            </div>
+      <div className="grid gap-3 md:grid-cols-4">
+        {[
+          { label: 'In queue', value: visibleTickets.length, className: 'text-zinc-500' },
+          { label: 'New', value: openCount, className: 'text-sky-400' },
+          { label: 'Unassigned', value: unassignedCount, className: 'text-amber-400' },
+          { label: 'SLA risk', value: atRiskCount, className: 'text-rose-400' },
+        ].map((stat) => (
+          <Card key={stat.label}>
+            <CardContent className="p-4">
+              <p className={`text-[11px] uppercase tracking-[0.16em] ${stat.className}`}>{stat.label}</p>
+              <p className="mt-1 text-xl font-semibold text-white">{loading ? '—' : stat.value}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="requesterPhone">Phone / WhatsApp</Label>
-              <Input id="requesterPhone" value={requesterPhone} onChange={(event) => setRequesterPhone(event.target.value)} placeholder="62812..." />
-            </div>
-
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="dueDate">Due date</Label>
-              <Input id="dueDate" type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} />
-            </div>
-
-            <div className="md:col-span-2">
-              <Button type="submit" disabled={isSubmitting || !title.trim()}>
-                {isSubmitting ? 'Creating...' : 'Create ticket'}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-
-      {tickets.length === 0 ? (
-        <Card>
-          <CardContent className="p-6 text-zinc-400">No tickets yet.</CardContent>
-        </Card>
+      {loading ? (
+        <div className="space-y-2">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-64 w-full" />
+        </div>
+      ) : view === 'table' ? (
+        <TicketTable tickets={visibleTickets} />
       ) : (
-        <TicketKanban tickets={tickets} onStatusChange={(ticketId, status) => void handleStatusChange(ticketId, status)} />
+        <TicketKanban tickets={visibleTickets} onStatusChange={(ticketId, status) => void handleStatusChange(ticketId, status)} />
       )}
     </div>
   );

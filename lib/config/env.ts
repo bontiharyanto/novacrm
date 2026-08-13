@@ -1,12 +1,21 @@
-const requiredEnv = ['NEXT_PUBLIC_SUPABASE_URL', 'NEXT_PUBLIC_SUPABASE_ANON_KEY'] as const;
+type RequiredEnv = 'NEXT_PUBLIC_SUPABASE_URL' | 'NEXT_PUBLIC_SUPABASE_ANON_KEY';
 
 const placeholderHosts = ['example.supabase.co', 'your-project.supabase.co'];
 const placeholderKeys = ['your-anon-key', 'public-anon-key'];
 
 export function getPublicSupabaseConfig() {
+  const env = process.env;
   return {
-    url: process.env['NEXT_PUBLIC_SUPABASE_URL'] ?? '',
-    key: process.env['NEXT_PUBLIC_SUPABASE_ANON_KEY'] ?? '',
+    url: env.NOVACRM_SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL || '',
+    key: env.NOVACRM_SUPABASE_ANON_KEY || env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+  };
+}
+
+export function getServerSupabaseConfig() {
+  const publicConfig = getPublicSupabaseConfig();
+  return {
+    url: process.env['SUPABASE_INTERNAL_URL'] || publicConfig.url,
+    key: publicConfig.key,
   };
 }
 
@@ -19,16 +28,20 @@ export function isSupabaseConfigured(url?: string, key?: string) {
   return true;
 }
 
-export function getEnv(name: (typeof requiredEnv)[number]) {
+export function getEnv(name: RequiredEnv) {
   return process.env[name] ?? '';
 }
 
 export function validateEnv() {
-  const missing = requiredEnv.filter((item) => !process.env[item]);
-  const configured = isSupabaseConfigured();
+  const { url, key } = getPublicSupabaseConfig();
+  const missing = [
+    ...(!url ? ['NEXT_PUBLIC_SUPABASE_URL'] : []),
+    ...(!key ? ['NEXT_PUBLIC_SUPABASE_ANON_KEY'] : []),
+  ];
+  const configured = isSupabaseConfigured(url, key);
 
   return {
-    ok: configured && missing.length === 0,
-    missing: configured ? missing : [...missing, ...(configured ? [] : ['NEXT_PUBLIC_SUPABASE_URL'])],
+    ok: configured,
+    missing,
   };
 }

@@ -26,7 +26,11 @@ export function buildNotificationJobId(payload: NotificationJobPayload) {
     return `notify:create:${payload.ticketId}`;
   }
   if (payload.event === 'ticket.status_change') {
-    return `notify:status:${payload.ticketId}:${payload.status ?? 'unknown'}`;
+    const digest = createHash('sha1')
+      .update(`${payload.status ?? ''}:${payload.assigneeId ?? ''}:${payload.message ?? ''}`)
+      .digest('hex')
+      .slice(0, 12);
+    return `notify:update:${payload.ticketId}:${digest}`;
   }
   const digest = createHash('sha1').update(payload.message ?? '').digest('hex').slice(0, 12);
   return `notify:comment:${payload.ticketId}:${digest}`;

@@ -3,6 +3,7 @@ import { sendEmail } from '@/lib/integrations/email';
 import { sendTelegram } from '@/lib/integrations/telegram';
 import { sendWhatsApp } from '@/lib/integrations/whatsapp';
 import { appendNotificationLog } from '@/lib/notifications/logs';
+import { buildTicketEmailHtml, buildTicketEmailSubject, ticketPermalink } from '@/lib/notifications/email-template';
 import type { NotificationChannelRow, NotificationJobPayload } from '@/lib/notifications/types';
 
 async function loadActiveChannels(tenantId: string): Promise<NotificationChannelRow[]> {
@@ -20,11 +21,15 @@ async function loadActiveChannels(tenantId: string): Promise<NotificationChannel
   return (data ?? []) as NotificationChannelRow[];
 }
 
+function emailRecipients(payload: NotificationJobPayload) {
+  const emails = [payload.requesterEmail, payload.assigneeEmail].filter((value): value is string => Boolean(value));
+  return emails.filter((email, index) => emails.indexOf(email) === index);
+}
+
 export async function processNotificationJob(payload: NotificationJobPayload) {
   const {
     tenantId,
     event,
-    requesterEmail,
     requesterPhone,
     assigneeChatId,
     title,
@@ -32,6 +37,9 @@ export async function processNotificationJob(payload: NotificationJobPayload) {
     requesterName = 'Customer',
     assigneeName = 'Agent',
     message,
+    number,
+    type,
+    ticketId,
   } = payload;
 
   if (!tenantId) {
@@ -43,67 +51,93 @@ export async function processNotificationJob(payload: NotificationJobPayload) {
     storedChannels.length > 0
       ? storedChannels
       : ([
-          { type: 'email', config: { apiKey: process.env.RESEND_API_KEY, from: process.env.EMAIL_FROM }, is_active: true },
-          { type: 'telegram', config: { botToken: process.env.TELEGRAM_BOT_TOKEN, chatId: assigneeChatId }, is_active: true },
-          { type: 'whatsapp', config: { apiKey: process.env.FONNTE_API_KEY ?? process.env.WHATSAPP_API_KEY, target: requesterPhone }, is_active: true },
+          {
+            type: 'email',
+            config: { apiKey: process.env.RESEND_API_KEY, from: process.env.EMAIL_FROM },
+            is_active: true,
+          },
         ] as NotificationChannelRow[]);
 
   const results: Array<{ channel: string; ok: boolean; error?: string }> = [];
+  const displayNumber = number || ticketId?.slice(0, 8) || 'Ticket';
+  const displayTitle = title ?? 'Ticket update';
+  const displayStatus = status ?? 'updated';
 
   for (const channel of channels) {
     try {
-      if (channel.type === 'email' && requesterEmail) {
-        const subject = `${title ?? 'Ticket'} • ${status ?? 'Update'}`;
-        const html = `<p>Halo ${requesterName},</p><p>${message ?? event}</p><p><strong>Status:</strong> ${status ?? 'Update'}</p>`;
-        const result = await sendEmail(requesterEmail, subject, html, {
-          apiKey: channel.config.apiKey,
-          from: channel.config.from,
+      if (channel.type === 'email') {
+        const recipients = emailRecipients(payload);
+        if (recipients.length === 0) continue;
+
+        const subject = buildTicketEmailSubject({
+          event,
+          number: displayNumber,
+          title: displayTitle,
+          status: displayStatus,
         });
-        results.push({ channel: 'email', ok: Boolean(result.ok), error: result.error });
-        await appendNotificationLog({
-          tenantId,
-          channel: 'email',
-          recipient: requesterEmail,
-          subject,
-          body: html,
-          status: result.ok ? 'sent' : 'failed',
-          ticketId: payload.ticketId,
+        const html = buildTicketEmailHtml({
+          number: displayNumber,
+          title: displayTitle,
+          type,
+          status: displayStatus,
+          name: requesterName,
+          message: message ?? event,
+          ticketUrl: ticketId ? ticketPermalink(ticketId) : getFallbackUrl(),
         });
+
+        for (const recipient of recipients) {
+          const result = await sendEmail(recipient, subject, html, {
+            apiKey: channel.config.apiKey || process.env.RESEND_API_KEY,
+            from: channel.config.from || process.env.EMAIL_FROM,
+          });
+          results.push({ channel: 'email', ok: Boolean(result.ok), error: result.error });
+          await appendNotificationLog({
+            tenantId,
+            channel: 'email',
+            recipient,
+            subject: result.dryRun ? `[DEV] ${subject}` : subject,
+            body: html,
+            status: result.ok ? (result.dryRun ? 'queued' : 'sent') : 'failed',
+            ticketId,
+          });
+        }
         continue;
       }
 
       if (channel.type === 'telegram') {
+        const botToken = channel.config.botToken || process.env.TELEGRAM_BOT_TOKEN;
         const chatId = channel.config.chatId ?? assigneeChatId;
-        if (!chatId) continue;
-        const text = message ?? `Ticket update: ${title ?? 'New Ticket'}\nStatus: ${status ?? 'updated'}\nAssigned: ${assigneeName}`;
-        const result = await sendTelegram(chatId, text, { botToken: channel.config.botToken });
+        if (!botToken || !chatId) continue;
+        const text = message ?? `${displayNumber} ${displayTitle}\nStatus: ${displayStatus}\nAssigned: ${assigneeName}`;
+        const result = await sendTelegram(chatId, text, { botToken });
         results.push({ channel: 'telegram', ok: Boolean(result.ok), error: result.error });
         await appendNotificationLog({
           tenantId,
           channel: 'telegram',
           recipient: String(chatId),
-          subject: `Ticket ${title ?? 'update'}`,
+          subject: displayNumber,
           body: text,
           status: result.ok ? 'sent' : 'failed',
-          ticketId: payload.ticketId,
+          ticketId,
         });
         continue;
       }
 
       if (channel.type === 'whatsapp') {
+        const apiKey = channel.config.apiKey || process.env.FONNTE_API_KEY || process.env.WHATSAPP_API_KEY;
         const target = channel.config.target ?? requesterPhone;
-        if (!target) continue;
-        const text = message ?? `Halo ${requesterName}, tiket ${title ?? 'baru'} status: ${status ?? 'updated'}`;
-        const result = await sendWhatsApp(target, text, { apiKey: channel.config.apiKey });
+        if (!apiKey || !target) continue;
+        const text = message ?? `Halo ${requesterName}, ${displayNumber} status: ${displayStatus}`;
+        const result = await sendWhatsApp(target, text, { apiKey });
         results.push({ channel: 'whatsapp', ok: Boolean(result.ok), error: result.error });
         await appendNotificationLog({
           tenantId,
           channel: 'whatsapp',
           recipient: String(target),
-          subject: `Ticket ${title ?? 'update'}`,
+          subject: displayNumber,
           body: text,
           status: result.ok ? 'sent' : 'failed',
-          ticketId: payload.ticketId,
+          ticketId,
         });
       }
     } catch (error) {
@@ -115,5 +149,17 @@ export async function processNotificationJob(payload: NotificationJobPayload) {
     }
   }
 
-  return { ok: results.some((item) => item.ok) || results.length === 0, results };
+  if (results.length === 0) {
+    return { ok: true, results, error: null };
+  }
+
+  return {
+    ok: results.some((item) => item.ok),
+    results,
+    error: results.find((item) => !item.ok)?.error,
+  };
+}
+
+function getFallbackUrl() {
+  return process.env.APP_URL || 'http://localhost:3000/tickets';
 }

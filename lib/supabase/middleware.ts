@@ -1,6 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
-import { getPublicSupabaseConfig, isSupabaseConfigured } from '@/lib/config/env';
+import { getServerSupabaseConfig, isSupabaseConfigured } from '@/lib/config/env';
 
 function isPublicPath(pathname: string) {
   return (
@@ -10,21 +10,35 @@ function isPublicPath(pathname: string) {
   );
 }
 
+function hasAuthCookie(request: NextRequest) {
+  return request.cookies.getAll().some((cookie) => cookie.name.includes('-auth-token') || cookie.name.startsWith('sb-'));
+}
+
+function roleFromUser(user: { user_metadata?: Record<string, unknown>; app_metadata?: Record<string, unknown> } | null) {
+  const meta = user?.user_metadata?.role ?? user?.app_metadata?.role;
+  return typeof meta === 'string' ? meta : undefined;
+}
+
 export async function updateSession(request: NextRequest) {
-  const { url, key } = getPublicSupabaseConfig();
+  const { url, key } = getServerSupabaseConfig();
+  const { pathname } = request.nextUrl;
 
   if (!url || !key || !isSupabaseConfigured(url, key)) {
-    if (isPublicPath(request.nextUrl.pathname) || request.nextUrl.pathname.startsWith('/_next')) {
+    if (isPublicPath(pathname) || pathname.startsWith('/_next')) {
       return NextResponse.next({ request });
     }
 
-    if (request.nextUrl.pathname.startsWith('/api/')) {
+    if (pathname.startsWith('/api/')) {
       return NextResponse.json({ data: null, error: 'Unauthorized' }, { status: 401 });
     }
 
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = '/login';
     return NextResponse.redirect(redirectUrl);
+  }
+
+  if (isPublicPath(pathname) && !hasAuthCookie(request)) {
+    return NextResponse.next({ request });
   }
 
   let supabaseResponse = NextResponse.next({ request });
@@ -48,8 +62,6 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { pathname } = request.nextUrl;
-
   if (!user && !isPublicPath(pathname)) {
     if (pathname.startsWith('/api/')) {
       return NextResponse.json({ data: null, error: 'Unauthorized' }, { status: 401 });
@@ -62,38 +74,31 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user && pathname === '/login') {
+    const role = roleFromUser(user);
     const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = '/';
+    redirectUrl.pathname = role === 'customer' ? '/portal' : '/dashboard';
     redirectUrl.search = '';
     return NextResponse.redirect(redirectUrl);
   }
 
-  if (user && !pathname.startsWith('/api/')) {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .maybeSingle();
+  const role = roleFromUser(user);
 
-    const role = profile?.role as 'admin' | 'agent' | 'customer' | undefined;
+  if (user && role === 'customer' && !pathname.startsWith('/portal') && !pathname.startsWith('/api/')) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = '/portal';
+    return NextResponse.redirect(redirectUrl);
+  }
 
-    if (role === 'customer' && !pathname.startsWith('/portal')) {
-      const redirectUrl = request.nextUrl.clone();
-      redirectUrl.pathname = '/portal';
-      return NextResponse.redirect(redirectUrl);
-    }
+  if (user && role && role !== 'customer' && pathname.startsWith('/portal')) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = '/dashboard';
+    return NextResponse.redirect(redirectUrl);
+  }
 
-    if (role && role !== 'customer' && pathname.startsWith('/portal')) {
-      const redirectUrl = request.nextUrl.clone();
-      redirectUrl.pathname = '/tickets';
-      return NextResponse.redirect(redirectUrl);
-    }
-
-    if (role === 'agent' && pathname.startsWith('/settings')) {
-      const redirectUrl = request.nextUrl.clone();
-      redirectUrl.pathname = '/tickets';
-      return NextResponse.redirect(redirectUrl);
-    }
+  if (user && role === 'agent' && pathname.startsWith('/settings')) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = '/dashboard';
+    return NextResponse.redirect(redirectUrl);
   }
 
   return supabaseResponse;

@@ -41,11 +41,21 @@ Open http://localhost:3000
 
 `local:setup` starts Redis + MinIO, runs local Supabase, applies migrations/seed, and writes `.env.local`. Docker Desktop must be running.
 
+Production-like on the same laptop (Docker `next start`, no Traefik):
+
+```bash
+npm run local:deploy
+```
+
+VPS comes after that. See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
+
 ## Scripts
 
 ```bash
 npm run local:setup
 npm run local:dev
+npm run local:deploy
+npm run local:undeploy
 npm run local:stop
 npm run local:up
 npm run worker

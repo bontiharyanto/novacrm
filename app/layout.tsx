@@ -18,6 +18,8 @@ export const metadata: Metadata = {
   description: 'Enterprise ITSM and CRM platform',
 };
 
+export const dynamic = 'force-dynamic';
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="id" className={`${inter.variable} ${jetbrains.variable}`}>

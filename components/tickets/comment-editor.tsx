@@ -10,9 +10,11 @@ function isEmptyHtml(html: string) {
 export function CommentEditor({
   value,
   onChange,
+  minHeightClass = 'min-h-28',
 }: {
   value: string;
   onChange: (html: string) => void;
+  minHeightClass?: string;
 }) {
   const editor = useEditor({
     extensions: [StarterKit],
@@ -20,7 +22,7 @@ export function CommentEditor({
     immediatelyRender: false,
     editorProps: {
       attributes: {
-        class: 'tiptap min-h-28 px-3 py-2 text-sm text-zinc-100 focus:outline-none',
+        class: `tiptap ${minHeightClass} px-3 py-2 text-sm text-zinc-100 focus:outline-none`,
       },
     },
     onUpdate: ({ editor: instance }) => {

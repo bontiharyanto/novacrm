@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createInboundTicket } from '@/lib/tickets/actions';
+import { ingestInbound } from '@/lib/inbound/ingest';
 import { sendTelegram } from '@/lib/integrations/telegram';
 import { verifyWebhookSecret } from '@/lib/webhooks/verify';
 import { DEMO_TENANT_ID } from '@/lib/config/constants';
@@ -24,37 +24,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ data: null, error: 'Invalid Telegram payload' }, { status: 400 });
     }
 
-    const title = text.replace(/^ticket\s*:\s*/i, '').replace(/^halo\s+/i, '').trim() || 'Laptop Rusak';
+    const title = text.replace(/^ticket\s*:\s*/i, '').replace(/^halo\s+/i, '').trim() || 'Telegram request';
     const tenantId = process.env.WEBHOOK_TENANT_ID || DEMO_TENANT_ID;
-    const result = await createInboundTicket(tenantId, {
+    const result = await ingestInbound({
       tenantId,
+      channel: 'telegram',
       title,
-      description: `Inbound Telegram message: ${text}`,
-      requesterName: typeof sender === 'string' ? sender : 'Customer',
-      assigneeChatId: chatId != null ? String(chatId) : undefined,
-      status: 'open',
-      priority: 'medium',
+      body: text,
+      sender: typeof sender === 'string' ? sender : 'Customer',
+      chatId: chatId != null ? String(chatId) : undefined,
+      payload,
     });
 
     if (result.error || !result.data) {
       return NextResponse.json({ data: null, error: result.error }, { status: 400 });
     }
 
-    const reply = `Ticket #${result.data.id.slice(0, 8)} telah dibuat`;
     if (chatId && chatId !== 'unknown') {
-      await sendTelegram(String(chatId), reply);
+      await sendTelegram(String(chatId), result.data.message);
     }
 
-    return NextResponse.json({
-      data: {
-        ticketId: result.data.id,
-        title: result.data.title,
-        status: result.data.status,
-        message: reply,
-        chatId,
-      },
-      error: null,
-    });
+    return NextResponse.json({ data: { ...result.data, chatId }, error: null });
   } catch (error) {
     return NextResponse.json(
       { data: null, error: error instanceof Error ? error.message : 'Webhook processing failed' },

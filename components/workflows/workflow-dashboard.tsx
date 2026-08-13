@@ -1,121 +1,124 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-
-type WorkflowRule = {
-  id: string;
-  name: string;
-  event: 'ticket.create' | 'ticket.status_change' | 'ticket.comment_add';
-  action: 'send_email' | 'assign' | 'change_status' | 'create_asset';
-  target?: string;
-  createdAt: string;
-};
+import { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
+import { Plus } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useRealtimeTable } from '@/lib/supabase/realtime';
+import { formatRelativeId } from '@/lib/utils/dates';
+import { WORKFLOW_ACTIONS, WORKFLOW_EVENTS, type WorkflowRule, type WorkflowRun } from '@/lib/workflows/schema';
 
 export function WorkflowDashboard() {
   const [rules, setRules] = useState<WorkflowRule[]>([]);
-  const [name, setName] = useState('');
-  const [event, setEvent] = useState<WorkflowRule['event']>('ticket.create');
-  const [action, setAction] = useState<WorkflowRule['action']>('send_email');
+  const [runs, setRuns] = useState<WorkflowRun[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  async function loadRules() {
+  const load = useCallback(async () => {
     const response = await fetch('/api/workflows');
     const payload = await response.json();
     setRules(payload.data ?? []);
-  }
-
-  useEffect(() => {
-    void loadRules();
+    setRuns(payload.runs ?? []);
+    setLoading(false);
   }, []);
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  useEffect(() => {
+    void load();
+  }, [load]);
 
-    await fetch('/api/workflows', {
-      method: 'POST',
+  useRealtimeTable('workflow_rules', load);
+  useRealtimeTable('workflow_runs', load);
+
+  async function toggle(rule: WorkflowRule) {
+    await fetch(`/api/workflows/${rule.id}`, {
+      method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, event, action, target: 'requester' }),
+      body: JSON.stringify({ isActive: !rule.isActive }),
     });
-
-    setName('');
-    setEvent('ticket.create');
-    setAction('send_email');
-    await loadRules();
+    await load();
   }
 
   return (
-    <div className="space-y-6 p-6">
-      <div className="flex items-center justify-between gap-4">
+    <div className="space-y-5 p-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-sm uppercase tracking-[0.2em] text-blue-400">Workflow Automation</p>
-          <h1 className="text-3xl font-bold text-white">Rules</h1>
+          <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Automation</p>
+          <h1 className="text-2xl font-semibold text-white">Workflows</h1>
         </div>
+        <Link
+          href="/workflows/new"
+          className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-2.5 py-1.5 text-xs font-medium text-white transition-all duration-200 ease-out hover:-translate-y-0.5 hover:bg-blue-500"
+        >
+          <Plus className="h-3.5 w-3.5" /> New flow
+        </Link>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Create rule</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form className="grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="name">Rule name</Label>
-              <Input id="name" value={name} onChange={(event) => setName(event.target.value)} placeholder="Auto acknowledge ticket" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="event">Event</Label>
-              <select
-                id="event"
-                value={event}
-                onChange={(e) => setEvent(e.target.value as WorkflowRule['event'])}
-                className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 focus:border-blue-500 focus:outline-none"
-              >
-                <option value="ticket.create">ticket.create</option>
-                <option value="ticket.status_change">ticket.status_change</option>
-                <option value="ticket.comment_add">ticket.comment_add</option>
-              </select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="action">Action</Label>
-              <select
-                id="action"
-                value={action}
-                onChange={(e) => setAction(e.target.value as WorkflowRule['action'])}
-                className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 focus:border-blue-500 focus:outline-none"
-              >
-                <option value="send_email">send_email</option>
-                <option value="assign">assign</option>
-                <option value="change_status">change_status</option>
-                <option value="create_asset">create_asset</option>
-              </select>
-            </div>
-            <div className="md:col-span-2">
-              <Button type="submit">Create workflow rule</Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+      <div className="grid gap-3 md:grid-cols-3">
+        {[
+          { label: 'Flows', value: rules.length },
+          { label: 'Active', value: rules.filter((rule) => rule.isActive).length },
+          { label: 'Runs', value: runs.length },
+        ].map((stat) => (
+          <Card key={stat.label}>
+            <CardContent className="p-4">
+              <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{stat.label}</p>
+              <p className="mt-1 text-xl font-semibold text-white">{loading ? '—' : stat.value}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Workflow rules</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3">
+      {loading ? (
+        <Skeleton className="h-48 w-full" />
+      ) : (
+        <div className="overflow-hidden rounded-xl border border-zinc-800">
           {rules.length === 0 ? (
-            <p className="text-zinc-400">No workflow rules yet.</p>
+            <p className="px-4 py-8 text-center text-sm text-zinc-500">No flows yet.</p>
           ) : (
-            rules.map((rule) => (
-              <div key={rule.id} className="rounded-lg border border-zinc-800 bg-zinc-950 p-3">
-                <p className="font-medium text-white">{rule.name}</p>
-                <p className="text-xs text-zinc-400">{rule.event} → {rule.action}</p>
-              </div>
-            ))
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-zinc-800 bg-zinc-950 text-[11px] uppercase tracking-[0.12em] text-zinc-500">
+                <tr>
+                  <th className="px-3 py-2 font-medium">Name</th>
+                  <th className="px-3 py-2 font-medium">When</th>
+                  <th className="px-3 py-2 font-medium">Then</th>
+                  <th className="px-3 py-2 font-medium">Level</th>
+                  <th className="px-3 py-2 font-medium">State</th>
+                  <th className="px-3 py-2 font-medium">Opened</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rules.map((rule) => (
+                  <tr key={rule.id} className="border-b border-zinc-800/80 hover:bg-zinc-900/80">
+                    <td className="px-3 py-2.5">
+                      <Link href={`/workflows/${rule.id}`} className="text-white hover:text-blue-200">
+                        {rule.name}
+                      </Link>
+                    </td>
+                    <td className="px-3 py-2.5 text-zinc-300">
+                      {WORKFLOW_EVENTS.find((item) => item.id === rule.event)?.label ?? rule.event}
+                    </td>
+                    <td className="px-3 py-2.5 text-zinc-300">
+                      {WORKFLOW_ACTIONS.find((item) => item.id === rule.action)?.label ?? rule.action}
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <Badge tone={rule.complexity === 'complex' ? 'warning' : rule.complexity === 'normal' ? 'info' : 'neutral'}>
+                        {rule.complexity}
+                      </Badge>
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <button type="button" onClick={() => void toggle(rule)}>
+                        <Badge tone={rule.isActive ? 'success' : 'neutral'}>{rule.isActive ? 'active' : 'off'}</Badge>
+                      </button>
+                    </td>
+                    <td className="px-3 py-2.5 text-zinc-500">{formatRelativeId(rule.createdAt)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      )}
     </div>
   );
 }

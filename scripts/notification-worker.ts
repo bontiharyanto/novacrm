@@ -1,11 +1,16 @@
+import { loadLocalEnvFile } from '../lib/config/load-local-env';
 import { startNotificationWorker } from '../lib/queue/notification.worker';
+import { startWorkflowWorker } from '../lib/queue/workflow.worker';
 
-const worker = startNotificationWorker();
+loadLocalEnvFile();
 
-console.info('NovaCRM notification worker listening on queue novacrm-notifications');
+const notificationWorker = startNotificationWorker();
+const workflowWorker = startWorkflowWorker();
+
+console.info('NovaCRM workers listening on novacrm-notifications + novacrm-workflows');
 
 async function shutdown() {
-  await worker.close();
+  await Promise.all([notificationWorker.close(), workflowWorker.close()]);
   process.exit(0);
 }
 

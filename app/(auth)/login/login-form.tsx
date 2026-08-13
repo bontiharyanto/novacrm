@@ -1,56 +1,38 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
+import { useFormState, useFormStatus } from 'react-dom';
+import { useSearchParams } from 'next/navigation';
+import { signInAction, type SignInState } from './actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-const isDemo = process.env.NODE_ENV !== 'production';
+function isLocalDemoHost(url: string) {
+  return url.includes('127.0.0.1') || url.includes('localhost');
+}
+
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <Button type="submit" disabled={pending} className="w-full">
+      {pending ? 'Signing in...' : 'Sign in'}
+    </Button>
+  );
+}
 
 export function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
-  const [email, setEmail] = useState(isDemo ? 'admin@novacrm.app' : '');
-  const [password, setPassword] = useState(isDemo ? 'NovaCRM!2026' : '');
-  const [error, setError] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [envReady, setEnvReady] = useState(true);
+  const [isDemo, setIsDemo] = useState(false);
+  const [email, setEmail] = useState('admin@novacrm.app');
+  const [password, setPassword] = useState('NovaCRM!2026');
+  const [state, formAction] = useFormState(signInAction, null as SignInState);
 
   useEffect(() => {
-    void fetch('/api/health')
-      .then((response) => response.json())
-      .then((payload) => {
-        setEnvReady(Boolean(payload.data?.envConfigured));
-      })
-      .catch(() => setEnvReady(false));
+    const injected = typeof window !== 'undefined' ? window.__NOVACRM_ENV?.supabaseUrl ?? '' : '';
+    setIsDemo(isLocalDemoHost(injected) || process.env.NODE_ENV !== 'production');
   }, []);
-
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setIsSubmitting(true);
-    setError('');
-
-    try {
-      const supabase = createSupabaseBrowserClient();
-      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-
-      if (signInError) {
-        setError(signInError.message);
-        setIsSubmitting(false);
-        return;
-      }
-
-      const next = searchParams.get('next') || '/';
-      router.replace(next);
-      router.refresh();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unable to sign in');
-      setIsSubmitting(false);
-    }
-  }
 
   return (
     <Card className="w-full max-w-md">
@@ -64,25 +46,25 @@ export function LoginForm() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {!envReady ? (
-          <p className="rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
-            Supabase belum terhubung. Jalankan <span className="font-mono">npm run local:setup</span> lalu{' '}
-            <span className="font-mono">npm run local:dev</span>. Lihat docs/LOCAL.md.
-          </p>
-        ) : null}
-        <form className="space-y-4" onSubmit={handleSubmit}>
+        <form className="space-y-4" action={formAction}>
+          <input type="hidden" name="next" value={searchParams.get('next') || ''} />
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
+            <Input id="email" name="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} required />
+            <Input
+              id="password"
+              name="password"
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              required
+            />
           </div>
-          {error ? <p className="text-sm text-rose-400">{error}</p> : null}
-          <Button type="submit" disabled={isSubmitting || !envReady} className="w-full">
-            {isSubmitting ? 'Signing in...' : 'Sign in'}
-          </Button>
+          {state?.error ? <p className="text-sm text-rose-400">{state.error}</p> : null}
+          <SubmitButton />
         </form>
         {isDemo ? (
           <div className="space-y-1 font-mono text-[11px] text-zinc-500">

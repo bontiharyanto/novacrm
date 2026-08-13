@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createWorkflowRule, listWorkflowRules } from '@/lib/workflows/automation';
+import { createWorkflowRule, listWorkflowRules, listWorkflowRuns } from '@/lib/workflows/actions';
 import { requireApiUser } from '@/lib/api/require-user';
 
 export async function GET() {
@@ -7,7 +7,8 @@ export async function GET() {
   if (auth.error) return auth.error;
 
   const rules = await listWorkflowRules();
-  return NextResponse.json({ data: rules, error: null });
+  const runs = await listWorkflowRuns();
+  return NextResponse.json({ data: rules, runs, error: null });
 }
 
 export async function POST(request: NextRequest) {

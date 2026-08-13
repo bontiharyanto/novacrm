@@ -3,9 +3,10 @@
 import { getSessionProfile } from '@/lib/auth/session';
 import { canRole } from '@/lib/rbac/ability';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { sendEmail } from '@/lib/integrations/email';
+import { sendEmail, getMailpitUrl } from '@/lib/integrations/email';
 import { sendTelegram } from '@/lib/integrations/telegram';
 import { sendWhatsApp } from '@/lib/integrations/whatsapp';
+import { appendNotificationLog } from '@/lib/notifications/logs';
 import { isMaskedSecret, maskSecret } from '@/lib/utils/secrets';
 import type { NotificationChannelType } from '@/lib/notifications/types';
 
@@ -166,10 +167,33 @@ export async function testNotificationChannel(
   const apiKey = isMaskedSecret(values.emailApiKey) ? config.apiKey : values.emailApiKey;
   const from = values.emailFrom || config.from || stored.emailFrom;
   const to = session.profile.email;
-  if (!apiKey) return { ok: false, error: 'Email API key is required.' };
   if (!to) return { ok: false, error: 'Admin email is required for test send.' };
-  const result = await sendEmail(to, 'NovaCRM test', '<p>Email channel OK.</p>', { apiKey, from });
-  return result.ok
-    ? { ok: true, message: 'Email test terkirim.' }
-    : { ok: false, error: result.error ?? 'Email test failed.' };
+  const result = await sendEmail(to, 'NovaCRM test', '<p>Email channel OK. Notifications will use this From address.</p>', {
+    apiKey: apiKey || process.env.RESEND_API_KEY,
+    from,
+  });
+  await appendNotificationLog({
+    tenantId: session.profile.tenantId,
+    channel: 'email',
+    recipient: to,
+    subject: result.dryRun ? '[DEV] NovaCRM test' : 'NovaCRM test',
+    body: 'Email channel OK.',
+    status: result.ok ? (result.dryRun ? 'queued' : 'sent') : 'failed',
+    createdBy: session.userId,
+  });
+  if (!result.ok) {
+    return { ok: false, error: result.error ?? 'Email test failed.' };
+  }
+  if (result.via === 'smtp') {
+    return {
+      ok: true,
+      message: `Terkirim ke Mailpit (${to}). Buka ${getMailpitUrl()}`,
+    };
+  }
+  return {
+    ok: true,
+    message: result.dryRun
+      ? `Logged locally to ${to}. Add a Resend API key to deliver for real.`
+      : `Email test sent to ${to}.`,
+  };
 }

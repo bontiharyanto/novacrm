@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
-import { getPublicSupabaseConfig } from '@/lib/config/env';
+import { getServerSupabaseConfig } from '@/lib/config/env';
 
 export function createSupabaseAdminClient() {
-  const { url } = getPublicSupabaseConfig();
+  const { url } = getServerSupabaseConfig();
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!url || !key) {
@@ -18,5 +18,5 @@ export function createSupabaseAdminClient() {
 }
 
 export function hasServiceRole() {
-  return Boolean(getPublicSupabaseConfig().url && process.env.SUPABASE_SERVICE_ROLE_KEY);
+  return Boolean(getServerSupabaseConfig().url && process.env.SUPABASE_SERVICE_ROLE_KEY);
 }

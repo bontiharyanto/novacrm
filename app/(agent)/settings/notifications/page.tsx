@@ -1,5 +1,5 @@
-import { NotificationSettingsForm } from '@/components/settings/notification-settings-form';
+import { IntegrationsSettings } from '@/components/settings/integrations-settings';
 
 export default function NotificationSettingsPage() {
-  return <NotificationSettingsForm />;
+  return <IntegrationsSettings />;
 }

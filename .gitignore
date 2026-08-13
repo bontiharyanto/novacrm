@@ -26,6 +26,9 @@ pnpm-debug.log*
 Thumbs.db
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
 
 # Test/coverage output
 coverage/

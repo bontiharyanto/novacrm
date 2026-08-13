@@ -1,4 +1,5 @@
-import type { TicketPriority, TicketStatus } from '@/lib/tickets/schema';
+import type { TicketPendingReason, TicketPriority, TicketStatus, TicketType } from '@/lib/tickets/schema';
+import { isSupportTier, type SupportTier } from '@/lib/tickets/pending';
 
 export type TicketCommentRecord = {
   id: string;
@@ -10,8 +11,12 @@ export type TicketCommentRecord = {
 export type TicketRecord = {
   id: string;
   tenantId: string;
+  accountId: string;
+  accountName?: string;
+  number: string;
   title: string;
   description: string;
+  type: TicketType;
   status: TicketStatus;
   priority: TicketPriority;
   dueDate?: string;
@@ -22,8 +27,32 @@ export type TicketRecord = {
   assigneeId?: string;
   assigneeName?: string;
   assigneeChatId?: string;
+  groupId?: string;
+  groupName?: string;
+  groupKind?: string;
+  groupTier?: SupportTier;
+  pendingReason?: TicketPendingReason;
+  pendingNote?: string;
+  slaAgreementId?: string;
+  slaResponseMinutes?: number;
+  slaResolveMinutes?: number;
+  slaResponseAt?: string;
+  slaResolveBy?: string;
+  slaRespondedAt?: string;
+  slaPausedAt?: string;
   assetId?: string;
+  assetName?: string;
+  assetTag?: string;
+  assetType?: string;
   category?: string;
+  catalogItemId?: string;
+  catalogAnswers?: Record<string, string>;
+  changeType?: 'standard' | 'normal' | 'emergency';
+  riskLevel?: 'low' | 'medium' | 'high' | 'critical';
+  plannedStart?: string;
+  plannedEnd?: string;
+  implementationPlan?: string;
+  backoutPlan?: string;
   createdAt: string;
   updatedAt?: string;
   createdBy?: string;
@@ -46,8 +75,11 @@ export function textToDescription(text?: string) {
 type TicketRow = {
   id: string;
   tenant_id: string;
+  account_id?: string | null;
+  number?: string | null;
   title: string;
   description: unknown;
+  type?: TicketType | null;
   status: TicketStatus;
   priority: TicketPriority;
   due_date?: string | null;
@@ -58,8 +90,26 @@ type TicketRow = {
   assignee_id?: string | null;
   assignee_name?: string | null;
   assignee_chat_id?: string | null;
+  group_id?: string | null;
+  pending_reason?: TicketPendingReason | null;
+  pending_note?: string | null;
+  sla_agreement_id?: string | null;
+  sla_response_minutes?: number | null;
+  sla_resolve_minutes?: number | null;
+  sla_response_at?: string | null;
+  sla_resolve_by?: string | null;
+  sla_responded_at?: string | null;
+  sla_paused_at?: string | null;
   asset_id?: string | null;
   category?: string | null;
+  catalog_item_id?: string | null;
+  catalog_answers?: Record<string, string> | null;
+  change_type?: 'standard' | 'normal' | 'emergency' | null;
+  risk_level?: 'low' | 'medium' | 'high' | 'critical' | null;
+  planned_start?: string | null;
+  planned_end?: string | null;
+  implementation_plan?: string | null;
+  backout_plan?: string | null;
   created_at: string;
   updated_at?: string;
   created_by?: string | null;
@@ -76,8 +126,11 @@ export function mapTicketRow(row: TicketRow): TicketRecord {
   return {
     id: row.id,
     tenantId: row.tenant_id,
+    accountId: row.account_id ?? '',
+    number: row.number || `INC${row.id.replace(/-/g, '').slice(0, 7).toUpperCase()}`,
     title: row.title,
     description: descriptionToText(row.description),
+    type: row.type ?? 'incident',
     status: row.status,
     priority: row.priority,
     dueDate: row.due_date ?? undefined,
@@ -88,8 +141,29 @@ export function mapTicketRow(row: TicketRow): TicketRecord {
     assigneeId: row.assignee_id ?? undefined,
     assigneeName: row.assignee_name ?? undefined,
     assigneeChatId: row.assignee_chat_id ?? undefined,
+    groupId: row.group_id ?? undefined,
+    pendingReason: row.pending_reason ?? undefined,
+    pendingNote: row.pending_note ?? undefined,
+    slaAgreementId: row.sla_agreement_id ?? undefined,
+    slaResponseMinutes: row.sla_response_minutes ?? undefined,
+    slaResolveMinutes: row.sla_resolve_minutes ?? undefined,
+    slaResponseAt: row.sla_response_at ?? undefined,
+    slaResolveBy: row.sla_resolve_by ?? undefined,
+    slaRespondedAt: row.sla_responded_at ?? undefined,
+    slaPausedAt: row.sla_paused_at ?? undefined,
     assetId: row.asset_id ?? undefined,
+    assetName: undefined,
+    assetTag: undefined,
+    assetType: undefined,
     category: row.category ?? undefined,
+    catalogItemId: row.catalog_item_id ?? undefined,
+    catalogAnswers: row.catalog_answers ?? undefined,
+    changeType: row.change_type ?? undefined,
+    riskLevel: row.risk_level ?? undefined,
+    plannedStart: row.planned_start ?? undefined,
+    plannedEnd: row.planned_end ?? undefined,
+    implementationPlan: row.implementation_plan ?? undefined,
+    backoutPlan: row.backout_plan ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     createdBy: row.created_by ?? undefined,
@@ -103,6 +177,40 @@ export function mapTicketRow(row: TicketRow): TicketRecord {
         createdAt: comment.created_at,
       })),
   };
+}
+
+export function withAssets(
+  tickets: TicketRecord[],
+  assets: Array<{ id: string; name: string; asset_tag?: string; type?: string }>,
+) {
+  const byId = new Map(assets.map((asset) => [asset.id, asset]));
+  return tickets.map((ticket) => {
+    const asset = ticket.assetId ? byId.get(ticket.assetId) : undefined;
+    if (!asset) return ticket;
+    return {
+      ...ticket,
+      assetName: asset.name,
+      assetTag: asset.asset_tag,
+      assetType: asset.type,
+    };
+  });
+}
+
+export function withGroups(
+  tickets: TicketRecord[],
+  groups: Array<{ id: string; name: string; kind?: string; tier?: string | null }>,
+): TicketRecord[] {
+  const byId = new Map(groups.map((group) => [group.id, group]));
+  return tickets.map((ticket) => {
+    const group = ticket.groupId ? byId.get(ticket.groupId) : undefined;
+    if (!group) return ticket;
+    return {
+      ...ticket,
+      groupName: group.name,
+      groupKind: group.kind,
+      groupTier: isSupportTier(group.tier) ? group.tier : undefined,
+    };
+  });
 }
 
 export function withCommentAuthors(

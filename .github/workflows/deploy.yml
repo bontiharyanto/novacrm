@@ -13,7 +13,6 @@ permissions:
 
 env:
   IMAGE: ghcr.io/bontiharyanto/novacrm
-  HEALTH_PATH: /api/health
 
 jobs:
   test:
@@ -73,21 +72,33 @@ jobs:
       - name: Deploy over SSH
         if: steps.gate.outputs.skip != 'true'
         uses: appleboy/ssh-action@v1.2.0
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GHCR_USER: ${{ github.actor }}
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ${{ secrets.DEPLOY_USER }}
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           script_stop: true
+          envs: DATABASE_URL,GITHUB_TOKEN,GHCR_USER
           script: |
             set -euo pipefail
             cd ${{ secrets.DEPLOY_PATH }}
             git fetch origin main
             git checkout main
             git pull --ff-only origin main
-            echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+            echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
             docker compose -f docker-compose.prod.yml pull
             docker compose -f docker-compose.prod.yml up -d --remove-orphans --scale web=3
             chmod +x scripts/*.sh
-            DATABASE_URL='${{ secrets.DATABASE_URL }}' ./scripts/migrate.sh
-            sleep 12
-            docker compose -f docker-compose.prod.yml exec -T web node -e "fetch('http://127.0.0.1:3000/api/health').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+            DATABASE_URL="$DATABASE_URL" ./scripts/migrate.sh
+            tries=0
+            until docker compose -f docker-compose.prod.yml exec -T web node -e "fetch('http://127.0.0.1:3000/api/health').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"; do
+              tries=$((tries + 1))
+              if [ "$tries" -ge 20 ]; then
+                docker compose -f docker-compose.prod.yml logs web --tail 80
+                exit 1
+              fi
+              sleep 3
+            done

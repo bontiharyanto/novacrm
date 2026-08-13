@@ -40,6 +40,14 @@ export function NotificationSettingsForm() {
   const [isSaving, setIsSaving] = useState(false);
   const [status, setStatus] = useState('');
 
+  async function loadLogs() {
+    const logResponse = await fetch('/api/notifications/logs');
+    const logPayload = await logResponse.json();
+    if (logPayload.data) {
+      setLogs(logPayload.data as NotificationLogRow[]);
+    }
+  }
+
   useEffect(() => {
     async function load() {
       const response = await fetch('/api/settings/notifications');
@@ -54,12 +62,7 @@ export function NotificationSettingsForm() {
           emailConfigured: payload.data.emailConfigured,
         });
       }
-
-      const logResponse = await fetch('/api/notifications/logs');
-      const logPayload = await logResponse.json();
-      if (logPayload.data) {
-        setLogs(logPayload.data as NotificationLogRow[]);
-      }
+      await loadLogs();
     }
 
     void load();
@@ -76,6 +79,7 @@ export function NotificationSettingsForm() {
     const payload = await response.json();
     setStatus(response.ok ? 'Settings saved successfully.' : payload.error ?? 'Failed to save settings.');
     setIsSaving(false);
+    await loadLogs();
   }
 
   async function testChannel(channel: 'whatsapp' | 'telegram' | 'email') {
@@ -87,13 +91,16 @@ export function NotificationSettingsForm() {
 
     const payload = await response.json();
     setStatus(payload.data?.message ?? payload.error ?? 'Testing channel failed.');
+    await loadLogs();
   }
 
   return (
     <div className="space-y-6 p-6">
       <div>
         <h1 className="text-2xl font-semibold text-white">Notification Settings</h1>
-        <p className="text-sm text-zinc-400">Configure outbound channels for WhatsApp, Telegram, and email notifications.</p>
+        <p className="text-sm text-zinc-400">
+          Ticket create, status, and comment events notify the requester and assignee. On this laptop, email lands in Mailpit at http://127.0.0.1:54324.
+        </p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -149,7 +156,11 @@ export function NotificationSettingsForm() {
         <Card>
           <CardHeader>
             <CardTitle>Email</CardTitle>
-            <CardDescription>Resend / Postmark</CardDescription>
+            <CardDescription>
+              {settings.emailConfigured
+                ? 'Resend is configured'
+                : 'Local Mailpit — http://127.0.0.1:54324'}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -205,7 +216,7 @@ export function NotificationSettingsForm() {
                           ? 'bg-rose-500/15 text-rose-300'
                           : 'bg-amber-500/15 text-amber-300'
                     }`}>
-                      {log.status}
+                      {log.status === 'queued' ? 'local' : log.status}
                     </span>
                     <p className="mt-1 text-zinc-500">{new Date(log.createdAt).toLocaleString()}</p>
                   </div>

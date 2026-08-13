@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createInboundTicket } from '@/lib/tickets/actions';
+import { ingestInbound } from '@/lib/inbound/ingest';
 import { sendWhatsApp } from '@/lib/integrations/whatsapp';
 import { verifyWebhookSecret } from '@/lib/webhooks/verify';
 import { DEMO_TENANT_ID } from '@/lib/config/constants';
@@ -24,39 +24,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ data: null, error: 'Invalid WhatsApp payload' }, { status: 400 });
     }
 
-    const title =
-      message.replace(/^ticket\s*:\s*/i, '').replace(/^halo\s+/i, '').trim() || 'Laptop Rusak';
-
+    const title = message.replace(/^ticket\s*:\s*/i, '').replace(/^halo\s+/i, '').trim() || 'WhatsApp request';
     const tenantId = process.env.WEBHOOK_TENANT_ID || DEMO_TENANT_ID;
-    const result = await createInboundTicket(tenantId, {
+    const result = await ingestInbound({
       tenantId,
+      channel: 'whatsapp',
       title,
-      description: `Inbound WhatsApp message: ${message}`,
-      requesterName: typeof sender === 'string' ? sender : 'Customer',
-      requesterPhone: typeof senderPhone === 'string' ? senderPhone : undefined,
-      status: 'open',
-      priority: 'medium',
+      body: message,
+      sender: typeof sender === 'string' ? sender : 'Customer',
+      senderPhone: typeof senderPhone === 'string' ? senderPhone : undefined,
+      payload,
     });
 
     if (result.error || !result.data) {
       return NextResponse.json({ data: null, error: result.error }, { status: 400 });
     }
 
-    const reply = `Ticket #${result.data.id.slice(0, 8)} telah dibuat`;
     if (typeof senderPhone === 'string' && senderPhone !== 'unknown') {
-      await sendWhatsApp(senderPhone, reply);
+      await sendWhatsApp(senderPhone, result.data.message);
     }
 
-    return NextResponse.json({
-      data: {
-        ticketId: result.data.id,
-        title: result.data.title,
-        status: result.data.status,
-        message: reply,
-        sender,
-      },
-      error: null,
-    });
+    return NextResponse.json({ data: { ...result.data, sender }, error: null });
   } catch (error) {
     return NextResponse.json(
       { data: null, error: error instanceof Error ? error.message : 'Webhook processing failed' },

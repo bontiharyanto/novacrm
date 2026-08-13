@@ -23,6 +23,8 @@ export type NotificationJobPayload = {
   tenantId: string;
   event: TicketNotificationEvent;
   ticketId?: string;
+  number?: string;
+  type?: string;
   requesterId?: string;
   assigneeId?: string;
   title?: string;
@@ -30,6 +32,7 @@ export type NotificationJobPayload = {
   requesterName?: string;
   assigneeName?: string;
   requesterEmail?: string;
+  assigneeEmail?: string;
   requesterPhone?: string;
   assigneeChatId?: string;
   message?: string;

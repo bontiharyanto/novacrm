@@ -12,6 +12,13 @@ function getMinioConfig() {
   return { endpoint, accessKey, secretKey, bucket, region };
 }
 
+function toPublicMinioUrl(url: string) {
+  const { endpoint } = getMinioConfig();
+  const publicEndpoint = process.env.MINIO_PUBLIC_ENDPOINT ?? endpoint;
+  if (!publicEndpoint || publicEndpoint === endpoint) return url;
+  return url.replace(endpoint.replace(/\/$/, ''), publicEndpoint.replace(/\/$/, ''));
+}
+
 function createMinioClient() {
   const { endpoint, accessKey, secretKey, region } = getMinioConfig();
   return new S3Client({
@@ -54,12 +61,12 @@ export async function createPresignedUpload(input: {
   });
 
   const url = await getSignedUrl(client, command, { expiresIn: input.expiresIn ?? 300 });
-  return { data: { url, key, bucket, method: 'PUT' as const }, error: null };
+  return { data: { url: toPublicMinioUrl(url), key, bucket, method: 'PUT' as const }, error: null };
 }
 
 export async function createPresignedDownload(key: string, expiresIn = 300) {
   const { bucket } = getMinioConfig();
   const client = createMinioClient();
   const url = await getSignedUrl(client, new GetObjectCommand({ Bucket: bucket, Key: key }), { expiresIn });
-  return { data: { url, key, bucket }, error: null };
+  return { data: { url: toPublicMinioUrl(url), key, bucket }, error: null };
 }
