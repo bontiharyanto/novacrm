@@ -64,7 +64,7 @@ export function BreachRecord({ breachId }: { breachId: string }) {
           <Link href="/governance/breaches" className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-200">
             <ArrowLeft className="h-3.5 w-3.5" /> Breach register
           </Link>
-          <h1 className="mt-1 font-mono text-2xl font-semibold text-white">{row.number}</h1>
+          <h1 className="mt-1 font-mono text-2xl font-semibold text-zinc-50">{row.number}</h1>
         </div>
         <div className="flex items-center gap-2">
           <Badge tone={slaTone(sla)}>{slaLabel(sla, 'breach')}</Badge>
@@ -96,7 +96,7 @@ export function BreachRecord({ breachId }: { breachId: string }) {
         <Card className="lg:col-span-8">
           <CardContent className="space-y-4 p-5">
             <div>
-              <p className="text-lg text-white">{row.title}</p>
+              <p className="text-lg text-zinc-50">{row.title}</p>
               <p className="mt-2 whitespace-pre-wrap text-sm text-zinc-300">{row.description || 'No description.'}</p>
             </div>
             <div className="flex flex-wrap gap-1">

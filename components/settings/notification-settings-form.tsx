@@ -97,7 +97,7 @@ export function NotificationSettingsForm() {
   return (
     <div className="space-y-6 p-6">
       <div>
-        <h1 className="text-2xl font-semibold text-white">Notification Settings</h1>
+        <h1 className="text-2xl font-semibold text-zinc-50">Notification Settings</h1>
         <p className="text-sm text-zinc-400">
           Ticket create, status, and comment events notify the requester and assignee. On this laptop, email lands in Mailpit at http://127.0.0.1:54324.
         </p>
@@ -205,7 +205,7 @@ export function NotificationSettingsForm() {
               {logs.slice(0, 6).map((log) => (
                 <div key={log.id} className="flex items-center justify-between gap-4 rounded-lg border border-zinc-800 bg-zinc-950/60 p-3">
                   <div>
-                    <p className="text-sm font-medium text-white">{log.channel}</p>
+                    <p className="text-sm font-medium text-zinc-50">{log.channel}</p>
                     <p className="text-xs text-zinc-400">{log.recipient} • {log.subject}</p>
                   </div>
                   <div className="text-right text-xs">

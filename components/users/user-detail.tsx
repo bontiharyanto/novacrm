@@ -54,7 +54,7 @@ export function UserDetail({
             <ArrowLeft className="h-3.5 w-3.5" /> Users
           </Link>
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            <h1 className="text-xl font-semibold text-white">{user.fullName}</h1>
+            <h1 className="text-xl font-semibold text-zinc-50">{user.fullName}</h1>
             <Badge tone={roleTone[user.role]}>{user.role}</Badge>
             {user.supportLevel ? <Badge tone="warning">{supportTierLabel[user.supportLevel]}</Badge> : null}
           </div>
@@ -90,7 +90,7 @@ export function UserDetail({
         {message ? <p className="text-sm text-zinc-400">{message}</p> : null}
 
         <div>
-          <h2 className="text-sm font-medium text-white">Support groups / level</h2>
+          <h2 className="text-sm font-medium text-zinc-50">Support groups / level</h2>
           <div className="mt-3 overflow-hidden rounded-xl border border-zinc-800">
             <table className="w-full text-left text-sm">
               <thead className="border-b border-zinc-800 bg-zinc-950 text-[11px] uppercase tracking-[0.12em] text-zinc-500">
@@ -112,7 +112,7 @@ export function UserDetail({
                   user.groups.map((group) => (
                     <tr key={group.membershipId} className="border-b border-zinc-800/80">
                       <td className="px-3 py-2.5">
-                        <Link href={`/org/groups/${group.groupId}`} className="text-white hover:text-blue-200">
+                        <Link href={`/org/groups/${group.groupId}`} className="text-zinc-50 hover:text-blue-200">
                           {group.name}
                         </Link>
                       </td>

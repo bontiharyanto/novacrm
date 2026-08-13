@@ -88,7 +88,7 @@ function TicketCard({ ticket, isOverlay }: { ticket: KanbanTicket; isOverlay?: b
           </div>
         </CardHeader>
         <CardContent className="space-y-3 pb-3 text-sm text-zinc-300">
-          <p className="font-medium text-white">{ticket.title}</p>
+          <p className="font-medium text-zinc-50">{ticket.title}</p>
           <TypeBadge type={ticket.type ?? 'incident'} />
           <div className="flex items-center justify-between text-[11px] text-zinc-400">
             <span>{ticket.requesterName}</span>

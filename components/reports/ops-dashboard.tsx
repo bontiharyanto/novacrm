@@ -64,12 +64,12 @@ export function OpsDashboard() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Operations</p>
-          <h1 className="text-2xl font-semibold text-white">Dashboard</h1>
+          <h1 className="text-2xl font-semibold text-zinc-50">Dashboard</h1>
           <p className="mt-1 text-sm text-zinc-500">Last 7 days · updated {formatRelativeId(report.generatedAt)}</p>
         </div>
         <Link
           href="/reports"
-          className="rounded-md border border-zinc-800 px-3 py-1.5 text-xs text-zinc-300 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-zinc-700 hover:text-white"
+          className="rounded-md border border-zinc-800 px-3 py-1.5 text-xs text-zinc-300 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-zinc-700 hover:text-zinc-50"
         >
           Open reports
         </Link>
@@ -81,7 +81,7 @@ export function OpsDashboard() {
             <Card className="transition-all duration-200 ease-out hover:-translate-y-0.5">
               <CardContent className="p-4">
                 <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{item.label}</p>
-                <p className={`mt-1 text-xl font-semibold ${item.danger && item.value > 0 ? 'text-rose-400' : 'text-white'}`}>
+                <p className={`mt-1 text-xl font-semibold ${item.danger && item.value > 0 ? 'text-rose-400' : 'text-zinc-50'}`}>
                   {item.value}
                 </p>
               </CardContent>
@@ -134,7 +134,7 @@ export function OpsDashboard() {
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         {isTicketType(row.type) ? <TypeBadge type={row.type} /> : null}
-                        <p className="truncate text-sm text-white">{row.title}</p>
+                        <p className="truncate text-sm text-zinc-50">{row.title}</p>
                       </div>
                       <p className="mt-0.5 font-mono text-[11px] text-zinc-500">{row.number}</p>
                     </div>

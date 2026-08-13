@@ -39,7 +39,7 @@ export function TriggerNode({ data, selected }: NodeProps<Node<TriggerNodeData>>
       }`}
     >
       <p className="text-[10px] uppercase tracking-[0.16em] text-zinc-500">Trigger</p>
-      <p className="mt-1 text-sm font-medium text-white">{eventLabel(data.event)}</p>
+      <p className="mt-1 text-sm font-medium text-zinc-50">{eventLabel(data.event)}</p>
       {data.matchPriority ? <p className="text-[11px] text-zinc-500">Priority {data.matchPriority}</p> : null}
       {data.matchCategory ? <p className="text-[11px] text-zinc-500">{data.matchCategory}</p> : null}
       <Handle type="source" position={Position.Right} className="!h-2.5 !w-2.5 !border-zinc-600 !bg-blue-500" />
@@ -56,7 +56,7 @@ export function ActionNode({ data, selected }: NodeProps<Node<ActionNodeData>>) 
     >
       <Handle type="target" position={Position.Left} className="!h-2.5 !w-2.5 !border-zinc-600 !bg-blue-500" />
       <p className="text-[10px] uppercase tracking-[0.16em] text-zinc-500">Action</p>
-      <p className="mt-1 text-sm font-medium text-white">{actionLabel(data.action)}</p>
+      <p className="mt-1 text-sm font-medium text-zinc-50">{actionLabel(data.action)}</p>
       {data.target ? <p className="truncate font-mono text-[11px] text-zinc-500">{data.target}</p> : null}
       <Handle type="source" position={Position.Right} className="!h-2.5 !w-2.5 !border-zinc-600 !bg-zinc-500" />
     </div>
@@ -74,7 +74,7 @@ export function ConditionNode({ data, selected }: NodeProps<Node<ConditionNodeDa
     >
       <Handle type="target" position={Position.Left} className="!h-2.5 !w-2.5 !border-zinc-600 !bg-blue-500" />
       <p className="text-[10px] uppercase tracking-[0.16em] text-zinc-500">Condition</p>
-      <p className="mt-1 text-sm font-medium text-white">
+      <p className="mt-1 text-sm font-medium text-zinc-50">
         {field} = {value}
       </p>
       <div className="mt-2 flex justify-between text-[10px] uppercase tracking-[0.12em] text-zinc-500">

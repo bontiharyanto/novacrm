@@ -10,7 +10,7 @@ export function Button({ className = '', variant = 'default', size = 'default', 
   const variants = {
     default: 'bg-blue-600 text-white hover:bg-blue-500 hover:-translate-y-0.5',
     outline: 'border border-zinc-700 bg-transparent text-zinc-100 hover:bg-zinc-800 hover:-translate-y-0.5',
-    ghost: 'bg-transparent text-zinc-300 hover:bg-zinc-800 hover:text-white',
+    ghost: 'bg-transparent text-zinc-300 hover:bg-zinc-800 hover:text-zinc-50',
   };
   const sizes = {
     default: 'px-4 py-2',

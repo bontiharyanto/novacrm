@@ -157,7 +157,7 @@ export function ReportPreview({
                     'rounded-md px-2.5 py-1 text-xs transition-all duration-200 ease-out hover:-translate-y-0.5',
                     sheet.name === activeSheet.name
                       ? 'bg-blue-500/15 text-blue-200'
-                      : 'text-zinc-400 hover:bg-zinc-800 hover:text-white',
+                      : 'text-zinc-400 hover:bg-zinc-800 hover:text-zinc-50',
                   )}
                 >
                   {sheet.name}

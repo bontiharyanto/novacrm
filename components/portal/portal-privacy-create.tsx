@@ -52,7 +52,7 @@ export function PortalPrivacyCreate({ fullName, email }: { fullName: string; ema
         <Link href="/portal/privacy" className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-200">
           <ArrowLeft className="h-3.5 w-3.5" /> Privacy
         </Link>
-        <h1 className="mt-1 text-2xl font-semibold text-white">Submit a rights request</h1>
+        <h1 className="mt-1 text-2xl font-semibold text-zinc-50">Submit a rights request</h1>
         <p className="mt-1 text-sm text-zinc-500">Access, correct, or erase personal data held in NovaCRM. Response SLA is 30 days.</p>
       </div>
 
@@ -88,7 +88,7 @@ export function PortalPrivacyCreate({ fullName, email }: { fullName: string; ema
         <Card className="lg:col-span-4">
           <CardContent className="space-y-3 p-5">
             <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Subject</p>
-            <p className="text-sm text-white">{fullName}</p>
+            <p className="text-sm text-zinc-50">{fullName}</p>
             <p className="text-xs text-zinc-500">{email ?? 'Email on file'}</p>
             <p className="text-sm text-zinc-500">{DSAR_TYPES.find((item) => item.id === requestType)?.hint}</p>
           </CardContent>

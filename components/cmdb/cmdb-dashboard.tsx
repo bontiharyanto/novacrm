@@ -66,7 +66,7 @@ export function CmdbDashboard() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Configuration</p>
-            <h1 className="text-2xl font-semibold text-white">CMDB</h1>
+            <h1 className="text-2xl font-semibold text-zinc-50">CMDB</h1>
             <p className="mt-1 text-sm text-zinc-500">Topology is scoped to the active account.</p>
           </div>
           <div className="flex items-center gap-2">
@@ -139,7 +139,7 @@ export function CmdbDashboard() {
                   rows.map((item) => (
                     <tr key={item.id} className="border-b border-zinc-800/80 hover:bg-zinc-900/80">
                       <td className="px-3 py-2.5">
-                        <Link href={`/cmdb/${item.id}`} className="text-white hover:text-blue-200">
+                        <Link href={`/cmdb/${item.id}`} className="text-zinc-50 hover:text-blue-200">
                           {item.name}
                         </Link>
                       </td>
@@ -168,25 +168,25 @@ export function CmdbDashboard() {
         <Card>
           <CardContent className="p-4">
             <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">CIs</p>
-            <p className="mt-1 text-xl font-semibold text-white">{loading ? '—' : items.length}</p>
+            <p className="mt-1 text-xl font-semibold text-zinc-50">{loading ? '—' : items.length}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Network nodes</p>
-            <p className="mt-1 text-xl font-semibold text-white">{loading ? '—' : networkCount}</p>
+            <p className="mt-1 text-xl font-semibold text-zinc-50">{loading ? '—' : networkCount}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Relations</p>
-            <p className="mt-1 text-xl font-semibold text-white">{loading ? '—' : relationCount}</p>
+            <p className="mt-1 text-xl font-semibold text-zinc-50">{loading ? '—' : relationCount}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">IP segments</p>
-            <p className="mt-1 text-xl font-semibold text-white">{loading ? '—' : segments.length}</p>
+            <p className="mt-1 text-xl font-semibold text-zinc-50">{loading ? '—' : segments.length}</p>
           </CardContent>
         </Card>
         <div className="space-y-2">
@@ -200,7 +200,7 @@ export function CmdbDashboard() {
                 href={segment.cmdbItemId ? `/cmdb/${segment.cmdbItemId}` : '/cmdb'}
                 className="block rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 hover:border-zinc-700"
               >
-                <p className="font-mono text-xs text-white">{formatIpSegment(segment)}</p>
+                <p className="font-mono text-xs text-zinc-50">{formatIpSegment(segment)}</p>
                 <p className="mt-0.5 text-[11px] text-zinc-500">{segment.name}</p>
               </Link>
             ))

@@ -61,7 +61,7 @@ export function GovernanceDashboard() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">UU PDP · Law 27/2022</p>
-          <h1 className="text-2xl font-semibold text-white">Governance</h1>
+          <h1 className="text-2xl font-semibold text-zinc-50">Governance</h1>
         </div>
         <GovernanceNav />
       </div>
@@ -74,7 +74,7 @@ export function GovernanceDashboard() {
                 <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{item.label}</p>
                 <p
                   className={`mt-1 text-xl font-semibold ${
-                    item.danger && Number(item.value) > 0 ? 'text-rose-400' : item.warn ? 'text-amber-400' : 'text-white'
+                    item.danger && Number(item.value) > 0 ? 'text-rose-400' : item.warn ? 'text-amber-400' : 'text-zinc-50'
                   }`}
                 >
                   {item.value}
@@ -107,7 +107,7 @@ export function GovernanceDashboard() {
                       className="flex items-center justify-between gap-3 border-b border-zinc-800/80 px-3 py-2 last:border-b-0 hover:bg-zinc-900/80"
                     >
                       <div className="min-w-0">
-                        <p className="truncate text-sm text-white">{row.subjectName}</p>
+                        <p className="truncate text-sm text-zinc-50">{row.subjectName}</p>
                         <p className="font-mono text-[11px] text-zinc-500">
                           {row.number} · {DSAR_TYPES.find((item) => item.id === row.requestType)?.label}
                         </p>
@@ -141,7 +141,7 @@ export function GovernanceDashboard() {
                       className="block rounded-lg border border-zinc-800 px-3 py-2 hover:bg-zinc-900/80"
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <p className="truncate text-sm text-white">{row.title}</p>
+                        <p className="truncate text-sm text-zinc-50">{row.title}</p>
                         <Badge tone={slaTone(sla)}>{slaLabel(sla, 'breach')}</Badge>
                       </div>
                       <p className="mt-1 font-mono text-[11px] text-zinc-500">

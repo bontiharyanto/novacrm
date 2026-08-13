@@ -33,7 +33,7 @@ export function OrgDashboard({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Configuration</p>
-            <h1 className="text-2xl font-semibold text-white">Organization</h1>
+            <h1 className="text-2xl font-semibold text-zinc-50">Organization</h1>
             {accountName ? <p className="mt-1 text-sm text-zinc-500">{accountName}</p> : null}
           </div>
           {canCreate ? (
@@ -56,7 +56,7 @@ export function OrgDashboard({
 
         <section>
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-medium text-white">Divisi / Unit</h2>
+            <h2 className="text-sm font-medium text-zinc-50">Divisi / Unit</h2>
             {canCreate ? (
               <Link href="/org/units/new?type=unit" className="text-xs text-blue-300 hover:text-blue-200">
                 New unit
@@ -80,7 +80,7 @@ export function OrgDashboard({
                       className="flex items-center justify-between bg-zinc-900/60 px-4 py-3 hover:bg-zinc-900"
                     >
                       <div>
-                        <p className="text-sm font-medium text-white">{division.name}</p>
+                        <p className="text-sm font-medium text-zinc-50">{division.name}</p>
                         <p className="text-xs text-zinc-500">{division.managerName ?? 'No manager'}</p>
                       </div>
                       <Badge tone="info">Division</Badge>
@@ -106,7 +106,7 @@ export function OrgDashboard({
         </section>
 
         <section>
-          <h2 className="mb-3 text-sm font-medium text-white">Assignment groups</h2>
+          <h2 className="mb-3 text-sm font-medium text-zinc-50">Assignment groups</h2>
           <div className="overflow-hidden rounded-xl border border-zinc-800">
             {groups.length === 0 ? (
               <p className="px-4 py-8 text-center text-sm text-zinc-500">No groups on this account.</p>
@@ -124,7 +124,7 @@ export function OrgDashboard({
                   {groups.map((group) => (
                     <tr key={group.id} className="border-b border-zinc-800/80 hover:bg-zinc-900/80">
                       <td className="px-3 py-2.5">
-                        <Link href={`/org/groups/${group.id}`} className="text-white hover:text-blue-200">
+                        <Link href={`/org/groups/${group.id}`} className="text-zinc-50 hover:text-blue-200">
                           {group.name}
                         </Link>
                       </td>
@@ -146,13 +146,13 @@ export function OrgDashboard({
         <Card>
           <CardContent className="p-4">
             <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Units</p>
-            <p className="mt-1 text-xl font-semibold text-white">{units.length}</p>
+            <p className="mt-1 text-xl font-semibold text-zinc-50">{units.length}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Groups</p>
-            <p className="mt-1 text-xl font-semibold text-white">{groups.length}</p>
+            <p className="mt-1 text-xl font-semibold text-zinc-50">{groups.length}</p>
           </CardContent>
         </Card>
         <p className="text-sm leading-6 text-zinc-400">

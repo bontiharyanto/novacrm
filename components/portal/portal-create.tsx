@@ -70,7 +70,7 @@ export function PortalCreate() {
             <ArrowLeft className="h-3.5 w-3.5" /> My tickets
           </Link>
           <div className="mt-2 flex items-center gap-2">
-            <h1 className="text-2xl font-semibold text-white">New {meta.label.toLowerCase()}</h1>
+            <h1 className="text-2xl font-semibold text-zinc-50">New {meta.label.toLowerCase()}</h1>
             <TypeBadge type={type} />
           </div>
           <p className="mt-1 text-sm text-zinc-500">{meta.description}</p>
@@ -100,7 +100,7 @@ export function PortalCreate() {
               )}
             >
               <p className="font-mono text-[11px] text-zinc-500">{option.prefix}</p>
-              <p className="mt-1 text-sm font-medium text-white">{option.label}</p>
+              <p className="mt-1 text-sm font-medium text-zinc-50">{option.label}</p>
               <p className="mt-1 text-xs text-zinc-500">{option.description}</p>
             </button>
           );

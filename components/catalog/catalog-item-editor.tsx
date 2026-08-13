@@ -128,7 +128,7 @@ export function CatalogItemEditor({ itemId }: { itemId?: string }) {
               value={name}
               onChange={(event) => setName(event.target.value)}
               placeholder="Item name"
-              className="mt-1 block w-full max-w-xl bg-transparent text-xl font-semibold text-white outline-none placeholder:text-zinc-600"
+              className="mt-1 block w-full max-w-xl bg-transparent text-xl font-semibold text-zinc-50 outline-none placeholder:text-zinc-600"
             />
           </div>
           <div className="flex items-center gap-2">

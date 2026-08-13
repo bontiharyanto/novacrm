@@ -43,7 +43,7 @@ export function PortalPrivacyDetail({ requestId }: { requestId: string }) {
         <Link href="/portal/privacy" className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-200">
           <ArrowLeft className="h-3.5 w-3.5" /> Privacy
         </Link>
-        <h1 className="mt-1 font-mono text-2xl font-semibold text-white">{row.number}</h1>
+        <h1 className="mt-1 font-mono text-2xl font-semibold text-zinc-50">{row.number}</h1>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-12">

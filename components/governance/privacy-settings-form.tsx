@@ -94,7 +94,7 @@ export function PrivacySettingsForm() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Controller · DPO · notice</p>
-          <h1 className="text-2xl font-semibold text-white">Privacy notice</h1>
+          <h1 className="text-2xl font-semibold text-zinc-50">Privacy notice</h1>
         </div>
         <div className="flex items-center gap-2">
           <Badge tone={isPublished ? 'success' : 'warning'}>{isPublished ? 'Published' : 'Draft'}</Badge>

@@ -46,7 +46,7 @@ export function PortalHome() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Service portal</p>
-          <h1 className="text-2xl font-semibold text-white">My tickets</h1>
+          <h1 className="text-2xl font-semibold text-zinc-50">My tickets</h1>
         </div>
         <div className="flex gap-2">
           <Link
@@ -89,7 +89,7 @@ export function PortalHome() {
                 className="flex items-center justify-between gap-4 border-b border-zinc-800/80 px-4 py-3 transition-colors last:border-b-0 hover:bg-zinc-900/80"
               >
                 <div className="min-w-0">
-                  <p className="truncate font-medium text-white">{ticket.title}</p>
+                  <p className="truncate font-medium text-zinc-50">{ticket.title}</p>
                   <p className="mt-0.5 font-mono text-xs text-zinc-500">{displayTicketNumber(ticket.number, ticket.id)}</p>
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-1">

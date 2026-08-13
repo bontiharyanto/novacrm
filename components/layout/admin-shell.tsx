@@ -17,6 +17,7 @@ import {
   LogOut,
   Menu,
   Package,
+  Palette,
   Plus,
   Scale,
   Search,
@@ -33,44 +34,48 @@ import { motion } from 'framer-motion';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 import { CommandPalette } from '@/components/layout/command-palette';
 import { AccountSwitcher } from '@/components/accounts/account-switcher';
+import { PreferenceControls } from '@/components/layout/preference-controls';
+import { useI18n } from '@/components/layout/preferences-provider';
+import type { Dictionary } from '@/lib/i18n';
 import type { AccountRecord } from '@/lib/accounts/schema';
 import type { AppRole } from '@/lib/rbac/ability';
 import { cn } from '@/lib/utils';
 
-type NavItem = { href: string; label: string; icon: typeof Ticket; roles?: AppRole[] };
-type ProcessItem = { href: string; type: string | null; label: string; icon: typeof Ticket };
+type NavKey = keyof Dictionary['nav'];
+type NavItem = { href: string; labelKey: NavKey; icon: typeof Ticket; roles?: AppRole[] };
+type ProcessItem = { href: string; type: string | null; labelKey: NavKey; icon: typeof Ticket };
 
 const overviewItems: NavItem[] = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin', 'agent'] },
-  { href: '/reports', label: 'Reports', icon: BarChart3, roles: ['admin', 'agent'] },
-  { href: '/assistant', label: 'Assistant', icon: Sparkles, roles: ['admin', 'agent'] },
+  { href: '/dashboard', labelKey: 'dashboard', icon: LayoutDashboard, roles: ['admin', 'agent'] },
+  { href: '/reports', labelKey: 'reports', icon: BarChart3, roles: ['admin', 'agent'] },
+  { href: '/assistant', labelKey: 'assistant', icon: Sparkles, roles: ['admin', 'agent'] },
 ];
 
 const processItems: ProcessItem[] = [
-  { href: '/tickets?type=incident', type: 'incident', label: 'Incidents', icon: AlertTriangle },
-  { href: '/tickets?type=problem', type: 'problem', label: 'Problems', icon: Bug },
-  { href: '/tickets?type=change', type: 'change', label: 'Changes', icon: GitBranch },
-  { href: '/cab', type: 'cab', label: 'CAB', icon: ShieldCheck },
-  { href: '/tickets?type=request', type: 'request', label: 'Requests', icon: ClipboardList },
-  { href: '/tickets', type: null, label: 'All tickets', icon: Ticket },
+  { href: '/tickets?type=incident', type: 'incident', labelKey: 'incidents', icon: AlertTriangle },
+  { href: '/tickets?type=problem', type: 'problem', labelKey: 'problems', icon: Bug },
+  { href: '/tickets?type=change', type: 'change', labelKey: 'changes', icon: GitBranch },
+  { href: '/cab', type: 'cab', labelKey: 'cab', icon: ShieldCheck },
+  { href: '/tickets?type=request', type: 'request', labelKey: 'requests', icon: ClipboardList },
+  { href: '/tickets', type: null, labelKey: 'allTickets', icon: Ticket },
 ];
 
 const configurationItems: NavItem[] = [
-  { href: '/accounts', label: 'Accounts', icon: Building2, roles: ['admin', 'agent'] },
-  { href: '/org', label: 'Organization', icon: Users, roles: ['admin', 'agent'] },
-  { href: '/users', label: 'Users', icon: UserCog, roles: ['admin', 'agent'] },
-  { href: '/sla', label: 'SLA', icon: Clock, roles: ['admin', 'agent'] },
-  { href: '/assets', label: 'Assets', icon: Package, roles: ['admin', 'agent'] },
-  { href: '/cmdb', label: 'CMDB', icon: LayoutGrid, roles: ['admin', 'agent'] },
+  { href: '/accounts', labelKey: 'accounts', icon: Building2, roles: ['admin', 'agent'] },
+  { href: '/org', labelKey: 'organization', icon: Users, roles: ['admin', 'agent'] },
+  { href: '/users', labelKey: 'users', icon: UserCog, roles: ['admin', 'agent'] },
+  { href: '/sla', labelKey: 'sla', icon: Clock, roles: ['admin', 'agent'] },
+  { href: '/assets', labelKey: 'assets', icon: Package, roles: ['admin', 'agent'] },
+  { href: '/cmdb', labelKey: 'cmdb', icon: LayoutGrid, roles: ['admin', 'agent'] },
 ];
 
 const catalogItems: NavItem[] = [
-  { href: '/catalog', label: 'Catalog', icon: BookOpen, roles: ['admin', 'agent'] },
-  { href: '/workflows', label: 'Automation', icon: Workflow, roles: ['admin', 'agent'] },
+  { href: '/catalog', labelKey: 'catalog', icon: BookOpen, roles: ['admin', 'agent'] },
+  { href: '/workflows', labelKey: 'automation', icon: Workflow, roles: ['admin', 'agent'] },
 ];
 
 const governanceItems: NavItem[] = [
-  { href: '/governance', label: 'Governance', icon: Scale, roles: ['admin', 'agent'] },
+  { href: '/governance', labelKey: 'governance', icon: Scale, roles: ['admin', 'agent'] },
 ];
 
 function isPathActive(pathname: string, href: string) {
@@ -108,7 +113,7 @@ function NavLink({
       onClick={onNavigate}
       className={cn(
         'group relative flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] transition-colors duration-200 ease-out',
-        active ? 'bg-blue-500/10 text-white' : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100',
+        active ? 'bg-blue-500/10 text-zinc-50' : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100',
       )}
     >
       <span
@@ -135,11 +140,12 @@ function NavSection({ title, children }: { title: string; children: ReactNode })
 function ProcessNav({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { t } = useI18n();
   const activeType = searchParams.get('type');
   const onDesk = pathname === '/tickets';
 
   return (
-    <NavSection title="Service desk">
+    <NavSection title={t.nav.serviceDesk}>
       {processItems.map((item) => {
         const active =
           item.type === 'cab'
@@ -149,7 +155,7 @@ function ProcessNav({ onNavigate }: { onNavigate?: () => void }) {
           <NavLink
             key={item.href}
             href={item.href}
-            label={item.label}
+            label={t.nav[item.labelKey]}
             icon={item.icon}
             active={active}
             onNavigate={onNavigate}
@@ -173,6 +179,7 @@ function ItemSection({
   role: AppRole;
   onNavigate?: () => void;
 }) {
+  const { t } = useI18n();
   const visible = items.filter((item) => !item.roles || item.roles.includes(role));
   if (visible.length === 0) return null;
 
@@ -182,7 +189,7 @@ function ItemSection({
         <NavLink
           key={item.href}
           href={item.href}
-          label={item.label}
+          label={t.nav[item.labelKey]}
           icon={item.icon}
           active={isPathActive(pathname, item.href)}
           onNavigate={onNavigate}
@@ -193,20 +200,22 @@ function ItemSection({
 }
 
 function SidebarBrand() {
+  const { t } = useI18n();
   return (
     <div className="flex items-center gap-2.5 px-4 py-3.5">
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-blue-600 text-[13px] font-semibold text-white">
         N
       </div>
       <div className="min-w-0">
-        <p className="truncate text-[13px] font-semibold tracking-tight text-white">NovaCRM</p>
-        <p className="text-[10px] uppercase tracking-[0.16em] text-zinc-500">Operations</p>
+        <p className="truncate text-[13px] font-semibold tracking-tight text-zinc-50">{t.brand.name}</p>
+        <p className="text-[10px] uppercase tracking-[0.16em] text-zinc-500">{t.brand.operations}</p>
       </div>
     </div>
   );
 }
 
 function NewTicketButton({ onNavigate }: { onNavigate?: () => void }) {
+  const { t } = useI18n();
   return (
     <div className="px-3 pb-3">
       <Link
@@ -215,7 +224,7 @@ function NewTicketButton({ onNavigate }: { onNavigate?: () => void }) {
         className="flex h-8 items-center justify-center gap-1.5 rounded-md bg-blue-600 text-[13px] font-medium text-white transition-colors duration-200 ease-out hover:bg-blue-500"
       >
         <Plus className="h-3.5 w-3.5" />
-        New ticket
+        {t.common.newTicket}
       </Link>
     </div>
   );
@@ -230,21 +239,22 @@ function SidebarNav({
   role: AppRole;
   onNavigate?: () => void;
 }) {
+  const { t } = useI18n();
   return (
     <div className="nova-scroll min-h-0 flex-1 overflow-y-auto py-1">
-      <ItemSection title="Overview" items={overviewItems} pathname={pathname} role={role} onNavigate={onNavigate} />
+      <ItemSection title={t.nav.overview} items={overviewItems} pathname={pathname} role={role} onNavigate={onNavigate} />
       <Suspense fallback={null}>
         <ProcessNav onNavigate={onNavigate} />
       </Suspense>
       <ItemSection
-        title="Configuration"
+        title={t.nav.configuration}
         items={configurationItems}
         pathname={pathname}
         role={role}
         onNavigate={onNavigate}
       />
-      <ItemSection title="Catalog" items={catalogItems} pathname={pathname} role={role} onNavigate={onNavigate} />
-      <ItemSection title="Governance" items={governanceItems} pathname={pathname} role={role} onNavigate={onNavigate} />
+      <ItemSection title={t.nav.catalog} items={catalogItems} pathname={pathname} role={role} onNavigate={onNavigate} />
+      <ItemSection title={t.nav.governance} items={governanceItems} pathname={pathname} role={role} onNavigate={onNavigate} />
     </div>
   );
 }
@@ -262,21 +272,34 @@ function SidebarFooter({
   onNavigate?: () => void;
   onSignOut: () => void;
 }) {
-  const settingsActive = pathname.startsWith('/settings');
+  const { t } = useI18n();
+  const appearanceActive = pathname === '/settings/appearance';
+  const integrationsActive = pathname.startsWith('/settings') && !appearanceActive;
 
   return (
     <div className="border-t border-zinc-800 p-3">
+      <Link
+        href="/settings/appearance"
+        onClick={onNavigate}
+        className={cn(
+          'mb-0.5 flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] transition-colors duration-200 ease-out',
+          appearanceActive ? 'bg-blue-500/10 text-zinc-50' : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100',
+        )}
+      >
+        <Palette className={cn('h-3.5 w-3.5', appearanceActive ? 'text-blue-400' : 'text-zinc-500')} />
+        {t.nav.appearance}
+      </Link>
       {role === 'admin' ? (
         <Link
           href="/settings"
           onClick={onNavigate}
           className={cn(
             'mb-1 flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-[13px] transition-colors duration-200 ease-out',
-            settingsActive ? 'bg-blue-500/10 text-white' : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100',
+            integrationsActive ? 'bg-blue-500/10 text-zinc-50' : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100',
           )}
         >
-          <Settings className={cn('h-3.5 w-3.5', settingsActive ? 'text-blue-400' : 'text-zinc-500')} />
-          Integrations
+          <Settings className={cn('h-3.5 w-3.5', integrationsActive ? 'text-blue-400' : 'text-zinc-500')} />
+          {t.nav.integrations}
         </Link>
       ) : null}
       <div className="flex items-center gap-2.5 rounded-md px-1 py-1">
@@ -284,14 +307,14 @@ function SidebarFooter({
           {initials(fullName)}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[13px] text-white">{fullName}</p>
+          <p className="truncate text-[13px] text-zinc-50">{fullName}</p>
           <p className="font-mono text-[10px] uppercase tracking-wide text-zinc-500">{role}</p>
         </div>
         <button
           type="button"
           onClick={onSignOut}
-          className="rounded-md p-1.5 text-zinc-500 transition-colors hover:bg-zinc-900 hover:text-white"
-          aria-label="Sign out"
+          className="rounded-md p-1.5 text-zinc-500 transition-colors hover:bg-zinc-900 hover:text-zinc-50"
+          aria-label={t.common.signOut}
         >
           <LogOut className="h-3.5 w-3.5" />
         </button>
@@ -319,6 +342,7 @@ function SidebarPanel({
   onSignOut: () => void;
   onClose?: () => void;
 }) {
+  const { t } = useI18n();
   return (
     <>
       <div className="relative shrink-0 border-b border-zinc-800">
@@ -327,8 +351,8 @@ function SidebarPanel({
           <button
             type="button"
             onClick={onClose}
-            className="absolute right-3 top-3 rounded-md p-1 text-zinc-400 hover:bg-zinc-900 hover:text-white"
-            aria-label="Close menu"
+            className="absolute right-3 top-3 rounded-md p-1 text-zinc-400 hover:bg-zinc-900 hover:text-zinc-50"
+            aria-label={t.common.closeMenu}
           >
             <X className="h-4 w-4" />
           </button>
@@ -363,6 +387,7 @@ export function AgentShell({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { t } = useI18n();
   const [commandOpen, setCommandOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -409,7 +434,7 @@ export function AgentShell({
 
       {mobileOpen ? (
         <div className="fixed inset-0 z-50 md:hidden">
-          <button type="button" className="absolute inset-0 bg-black/60" aria-label="Close menu" onClick={() => setMobileOpen(false)} />
+          <button type="button" className="absolute inset-0 bg-black/60" aria-label={t.common.closeMenu} onClick={() => setMobileOpen(false)} />
           <aside className="relative flex h-full w-64 flex-col border-r border-zinc-800 bg-zinc-950">
             <SidebarPanel {...sidebarProps} onNavigate={() => setMobileOpen(false)} onClose={() => setMobileOpen(false)} />
           </aside>
@@ -423,7 +448,7 @@ export function AgentShell({
               type="button"
               className="rounded-md border border-zinc-800 p-2 text-zinc-300 hover:bg-zinc-900 md:hidden"
               onClick={() => setMobileOpen(true)}
-              aria-label="Open menu"
+              aria-label={t.common.openMenu}
             >
               <Menu className="h-4 w-4" />
             </button>
@@ -433,15 +458,16 @@ export function AgentShell({
               className="flex h-9 min-w-0 flex-1 items-center gap-2 rounded-md border border-zinc-800 bg-zinc-900/80 px-3 text-left text-sm text-zinc-500 transition-colors hover:border-zinc-700 hover:text-zinc-300"
             >
               <Search className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate">Search or jump...</span>
+              <span className="truncate">{t.common.search}</span>
               <kbd className="ml-auto hidden font-mono text-[10px] text-zinc-600 sm:inline">⌘K</kbd>
             </button>
+            <PreferenceControls compact />
             <Link
               href="/tickets/new"
-              className="hidden h-9 items-center gap-1.5 rounded-md border border-zinc-800 px-3 text-[13px] text-zinc-300 transition-colors hover:bg-zinc-900 hover:text-white sm:inline-flex"
+              className="hidden h-9 items-center gap-1.5 rounded-md border border-zinc-800 px-3 text-[13px] text-zinc-300 transition-colors hover:bg-zinc-900 hover:text-zinc-50 sm:inline-flex"
             >
               <Plus className="h-3.5 w-3.5" />
-              New
+              {t.common.new}
               <kbd className="hidden font-mono text-[10px] text-zinc-600 lg:inline">⌘N</kbd>
             </Link>
           </div>

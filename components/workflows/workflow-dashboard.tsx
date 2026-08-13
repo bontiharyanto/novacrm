@@ -44,7 +44,7 @@ export function WorkflowDashboard() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Automation</p>
-          <h1 className="text-2xl font-semibold text-white">Workflows</h1>
+          <h1 className="text-2xl font-semibold text-zinc-50">Workflows</h1>
         </div>
         <Link
           href="/workflows/new"
@@ -63,7 +63,7 @@ export function WorkflowDashboard() {
           <Card key={stat.label}>
             <CardContent className="p-4">
               <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{stat.label}</p>
-              <p className="mt-1 text-xl font-semibold text-white">{loading ? '—' : stat.value}</p>
+              <p className="mt-1 text-xl font-semibold text-zinc-50">{loading ? '—' : stat.value}</p>
             </CardContent>
           </Card>
         ))}
@@ -91,7 +91,7 @@ export function WorkflowDashboard() {
                 {rules.map((rule) => (
                   <tr key={rule.id} className="border-b border-zinc-800/80 hover:bg-zinc-900/80">
                     <td className="px-3 py-2.5">
-                      <Link href={`/workflows/${rule.id}`} className="text-white hover:text-blue-200">
+                      <Link href={`/workflows/${rule.id}`} className="text-zinc-50 hover:text-blue-200">
                         {rule.name}
                       </Link>
                     </td>

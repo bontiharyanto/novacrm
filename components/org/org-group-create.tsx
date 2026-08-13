@@ -47,7 +47,7 @@ export function OrgGroupCreate() {
           <Link href="/org" className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-200">
             <ArrowLeft className="h-3.5 w-3.5" /> Organization
           </Link>
-          <h1 className="mt-1 text-xl font-semibold text-white">New assignment group</h1>
+          <h1 className="mt-1 text-xl font-semibold text-zinc-50">New assignment group</h1>
         </div>
         <div className="space-y-4">
           <div className="space-y-1.5">

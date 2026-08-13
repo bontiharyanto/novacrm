@@ -3,13 +3,15 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Command } from 'cmdk';
-import { BarChart3, BookOpen, Building2, Clock, LayoutDashboard, LayoutGrid, Package, Scale, Settings, ShieldCheck, Sparkles, Ticket, UserCog, Users, Workflow } from 'lucide-react';
+import { BarChart3, BookOpen, Building2, Clock, LayoutDashboard, LayoutGrid, Package, Palette, Scale, Settings, ShieldCheck, Sparkles, Ticket, UserCog, Users, Workflow } from 'lucide-react';
 import type { AppRole } from '@/lib/rbac/ability';
+import { useI18n } from '@/components/layout/preferences-provider';
 
 type TicketHit = { id: string; number?: string; title: string; status: string };
 
 export function CommandPalette({ open, onOpenChange, role }: { open: boolean; onOpenChange: (open: boolean) => void; role: AppRole }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [tickets, setTickets] = useState<TicketHit[]>([]);
 
   useEffect(() => {
@@ -48,80 +50,83 @@ export function CommandPalette({ open, onOpenChange, role }: { open: boolean; on
         <Command label="Command palette" className="overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900">
           <Command.Input
             autoFocus
-            placeholder="Search tickets or jump to a page..."
-            className="w-full border-b border-zinc-800 bg-transparent px-4 py-3 text-sm text-white outline-none placeholder:text-zinc-500"
+            placeholder={t.command.placeholder}
+            className="w-full border-b border-zinc-800 bg-transparent px-4 py-3 text-sm text-zinc-50 outline-none placeholder:text-zinc-500"
           />
           <Command.List className="max-h-80 overflow-y-auto p-2">
-            <Command.Empty className="px-3 py-6 text-sm text-zinc-500">No matches.</Command.Empty>
-            <Command.Group heading="Navigate" className="px-1 py-1 text-[11px] uppercase tracking-[0.16em] text-zinc-500">
+            <Command.Empty className="px-3 py-6 text-sm text-zinc-500">{t.command.empty}</Command.Empty>
+            <Command.Group heading={t.command.navigate} className="px-1 py-1 text-[11px] uppercase tracking-[0.16em] text-zinc-500">
               <Command.Item className="cmdk-item" onSelect={() => go('/dashboard')}>
-                <LayoutDashboard className="h-3.5 w-3.5" /> Dashboard
+                <LayoutDashboard className="h-3.5 w-3.5" /> {t.nav.dashboard}
               </Command.Item>
               <Command.Item className="cmdk-item" onSelect={() => go('/reports')}>
-                <BarChart3 className="h-3.5 w-3.5" /> Reports
+                <BarChart3 className="h-3.5 w-3.5" /> {t.nav.reports}
               </Command.Item>
               <Command.Item className="cmdk-item" onSelect={() => go('/assistant')}>
-                <Sparkles className="h-3.5 w-3.5" /> Assistant
+                <Sparkles className="h-3.5 w-3.5" /> {t.nav.assistant}
               </Command.Item>
               <Command.Item className="cmdk-item" onSelect={() => go('/tickets')}>
-                <Ticket className="h-3.5 w-3.5" /> Tickets
+                <Ticket className="h-3.5 w-3.5" /> {t.tickets.title}
               </Command.Item>
               <Command.Item className="cmdk-item" onSelect={() => go('/tickets/new')}>
-                <Ticket className="h-3.5 w-3.5" /> New ticket
+                <Ticket className="h-3.5 w-3.5" /> {t.common.newTicket}
               </Command.Item>
               <Command.Item className="cmdk-item" onSelect={() => go('/cab')}>
-                <ShieldCheck className="h-3.5 w-3.5" /> CAB
+                <ShieldCheck className="h-3.5 w-3.5" /> {t.nav.cab}
               </Command.Item>
               <Command.Item className="cmdk-item" onSelect={() => go('/accounts')}>
-                <Building2 className="h-3.5 w-3.5" /> Accounts
+                <Building2 className="h-3.5 w-3.5" /> {t.nav.accounts}
               </Command.Item>
               <Command.Item className="cmdk-item" onSelect={() => go('/org')}>
-                <Users className="h-3.5 w-3.5" /> Organization
+                <Users className="h-3.5 w-3.5" /> {t.nav.organization}
               </Command.Item>
               <Command.Item className="cmdk-item" onSelect={() => go('/users')}>
-                <UserCog className="h-3.5 w-3.5" /> Users
+                <UserCog className="h-3.5 w-3.5" /> {t.nav.users}
               </Command.Item>
               <Command.Item className="cmdk-item" onSelect={() => go('/sla')}>
-                <Clock className="h-3.5 w-3.5" /> SLA
+                <Clock className="h-3.5 w-3.5" /> {t.nav.sla}
               </Command.Item>
               <Command.Item className="cmdk-item" onSelect={() => go('/assets')}>
-                <Package className="h-3.5 w-3.5" /> Assets
+                <Package className="h-3.5 w-3.5" /> {t.nav.assets}
               </Command.Item>
               <Command.Item className="cmdk-item" onSelect={() => go('/assets/new')}>
-                <Package className="h-3.5 w-3.5" /> New asset
+                <Package className="h-3.5 w-3.5" /> {t.command.newAsset}
               </Command.Item>
               <Command.Item className="cmdk-item" onSelect={() => go('/cmdb')}>
-                <LayoutGrid className="h-3.5 w-3.5" /> CMDB
+                <LayoutGrid className="h-3.5 w-3.5" /> {t.nav.cmdb}
               </Command.Item>
               <Command.Item className="cmdk-item" onSelect={() => go('/cmdb/new')}>
-                <LayoutGrid className="h-3.5 w-3.5" /> New CI
+                <LayoutGrid className="h-3.5 w-3.5" /> {t.command.newCi}
               </Command.Item>
               <Command.Item className="cmdk-item" onSelect={() => go('/catalog')}>
-                <BookOpen className="h-3.5 w-3.5" /> Catalog
+                <BookOpen className="h-3.5 w-3.5" /> {t.nav.catalog}
               </Command.Item>
               <Command.Item className="cmdk-item" onSelect={() => go('/catalog/new')}>
-                <BookOpen className="h-3.5 w-3.5" /> New catalog item
+                <BookOpen className="h-3.5 w-3.5" /> {t.command.newCatalog}
               </Command.Item>
               <Command.Item className="cmdk-item" onSelect={() => go('/workflows')}>
-                <Workflow className="h-3.5 w-3.5" /> Automation
+                <Workflow className="h-3.5 w-3.5" /> {t.nav.automation}
               </Command.Item>
               <Command.Item className="cmdk-item" onSelect={() => go('/workflows/new')}>
-                <Workflow className="h-3.5 w-3.5" /> New flow
+                <Workflow className="h-3.5 w-3.5" /> {t.command.newFlow}
               </Command.Item>
               <Command.Item className="cmdk-item" onSelect={() => go('/governance')}>
-                <Scale className="h-3.5 w-3.5" /> Governance
+                <Scale className="h-3.5 w-3.5" /> {t.nav.governance}
               </Command.Item>
               <Command.Item className="cmdk-item" onSelect={() => go('/governance/requests')}>
-                <Scale className="h-3.5 w-3.5" /> DSAR queue
+                <Scale className="h-3.5 w-3.5" /> {t.command.dsar}
+              </Command.Item>
+              <Command.Item className="cmdk-item" onSelect={() => go('/settings/appearance')}>
+                <Palette className="h-3.5 w-3.5" /> {t.nav.appearance}
               </Command.Item>
               {role === 'admin' ? (
                 <Command.Item className="cmdk-item" onSelect={() => go('/settings')}>
-                  <Settings className="h-3.5 w-3.5" /> Integrations
+                  <Settings className="h-3.5 w-3.5" /> {t.nav.integrations}
                 </Command.Item>
               ) : null}
             </Command.Group>
             {tickets.length > 0 ? (
-              <Command.Group heading="Tickets" className="px-1 py-1 text-[11px] uppercase tracking-[0.16em] text-zinc-500">
+              <Command.Group heading={t.command.tickets} className="px-1 py-1 text-[11px] uppercase tracking-[0.16em] text-zinc-500">
                 {tickets.map((ticket) => (
                   <Command.Item key={ticket.id} className="cmdk-item" onSelect={() => go(`/tickets/${ticket.id}`)}>
                     <span className="font-mono text-[11px] text-zinc-500">{ticket.number ?? `#${ticket.id.slice(0, 8)}`}</span>

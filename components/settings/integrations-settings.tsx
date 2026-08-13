@@ -11,6 +11,7 @@ import type { HubIntegrations, IntegrationKind } from '@/lib/integrations/types'
 import { AI_PROVIDERS, DEFAULT_EMAIL_FROM, GROQ_MODELS, matchAiProvider } from '@/lib/integrations/types';
 import { formatRelativeId } from '@/lib/utils/dates';
 import { Select } from '@/components/ui/select';
+import { useI18n } from '@/components/layout/preferences-provider';
 
 const KINDS: Array<{ id: IntegrationKind; label: string; hint: string }> = [
   { id: 'ai', label: 'AI', hint: 'Groq free / Gemini / Ollama' },
@@ -28,6 +29,7 @@ function statusOf(item?: { configured?: boolean; lastOk?: boolean | null }) {
 }
 
 export function IntegrationsSettings() {
+  const { t, locale } = useI18n();
   const [hub, setHub] = useState<HubIntegrations | null>(null);
   const [kind, setKind] = useState<IntegrationKind>('ai');
   const [values, setValues] = useState<Record<string, string>>({});
@@ -107,9 +109,9 @@ export function IntegrationsSettings() {
     <div className="grid min-h-[calc(100vh-3.5rem)] lg:grid-cols-[minmax(0,1fr)_320px]">
       <div className="space-y-5 p-6">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Configuration</p>
-          <h1 className="text-2xl font-semibold text-white">Integrations</h1>
-          <p className="mt-1 text-sm text-zinc-500">Paste keys, save, then Test connection. Secrets stay masked after save.</p>
+          <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">{t.integrations.kicker}</p>
+          <h1 className="text-2xl font-semibold text-zinc-50">{t.integrations.title}</h1>
+          <p className="mt-1 text-sm text-zinc-500">{t.integrations.subtitle}</p>
         </div>
 
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -126,7 +128,7 @@ export function IntegrationsSettings() {
                 }`}
               >
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-sm font-medium text-white">{item.label}</p>
+                  <p className="text-sm font-medium text-zinc-50">{item.label}</p>
                   <Badge tone={state.tone}>{state.label}</Badge>
                 </div>
                 <p className="mt-1 text-[11px] text-zinc-500">{item.hint}</p>
@@ -138,7 +140,7 @@ export function IntegrationsSettings() {
         <Card>
           <CardContent className="space-y-4 p-5">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-sm font-medium text-white">{KINDS.find((item) => item.id === kind)?.label}</p>
+              <p className="text-sm font-medium text-zinc-50">{KINDS.find((item) => item.id === kind)?.label}</p>
               <Badge tone={badge.tone}>{badge.label}</Badge>
             </div>
 
@@ -288,7 +290,7 @@ export function IntegrationsSettings() {
 
             {testedAt ? (
               <p className="text-[11px] text-zinc-500">
-                Last test {formatRelativeId(testedAt)}
+                Last test {formatRelativeId(testedAt, locale)}
                 {current.lastError ? ` · ${current.lastError}` : ''}
               </p>
             ) : null}
@@ -297,10 +299,10 @@ export function IntegrationsSettings() {
 
             <div className="flex flex-wrap gap-2">
               <Button size="sm" variant="outline" disabled={busy} onClick={() => void save()}>
-                {busy ? 'Working…' : 'Save'}
+                {busy ? t.integrations.working : t.integrations.save}
               </Button>
               <Button size="sm" disabled={busy} onClick={() => void test()}>
-                Test connection
+                {t.integrations.test}
               </Button>
             </div>
           </CardContent>

@@ -47,7 +47,7 @@ export function OrgUnitDetail({
             <ArrowLeft className="h-3.5 w-3.5" /> Organization
           </Link>
           <div className="mt-2 flex items-center gap-2">
-            <h1 className="text-xl font-semibold text-white">{unit.name}</h1>
+            <h1 className="text-xl font-semibold text-zinc-50">{unit.name}</h1>
             <Badge tone={unit.type === 'division' ? 'info' : 'neutral'}>{unit.type}</Badge>
           </div>
         </div>

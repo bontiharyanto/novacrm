@@ -95,7 +95,7 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
-  if (user && role === 'agent' && pathname.startsWith('/settings')) {
+  if (user && role === 'agent' && pathname.startsWith('/settings') && pathname !== '/settings/appearance') {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = '/dashboard';
     return NextResponse.redirect(redirectUrl);

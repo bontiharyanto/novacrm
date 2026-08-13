@@ -91,7 +91,7 @@ export function CmdbDetail({ itemId }: { itemId: string }) {
             <ArrowLeft className="h-3.5 w-3.5" /> CMDB
           </Link>
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            <h1 className="text-xl font-semibold text-white">{item.name}</h1>
+            <h1 className="text-xl font-semibold text-zinc-50">{item.name}</h1>
             <Badge tone="info">{formatCiClassLabel(item.type, classes)}</Badge>
             {hostIp ? <Badge tone="neutral">{hostIp}</Badge> : null}
           </div>
@@ -107,7 +107,7 @@ export function CmdbDetail({ itemId }: { itemId: string }) {
             ) : (
               item.segments.map((segment) => (
                 <div key={segment.id} className="rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2">
-                  <p className="font-mono text-sm text-white">{formatIpSegment(segment)}</p>
+                  <p className="font-mono text-sm text-zinc-50">{formatIpSegment(segment)}</p>
                   <p className="mt-0.5 text-[11px] text-zinc-500">
                     {segment.name}
                     {segment.gateway ? ` · gw ${segment.gateway}` : ''}
@@ -133,7 +133,7 @@ export function CmdbDetail({ itemId }: { itemId: string }) {
               <div className="space-y-2">
                 {item.impact.relatedCis.map((ci) => (
                   <Link key={ci.id} href={`/cmdb/${ci.id}`} className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 hover:border-zinc-700">
-                    <span className="text-sm text-white">{ci.name}</span>
+                    <span className="text-sm text-zinc-50">{ci.name}</span>
                     <span className="text-[11px] text-zinc-500">{ci.type}</span>
                   </Link>
                 ))}
@@ -144,7 +144,7 @@ export function CmdbDetail({ itemId }: { itemId: string }) {
                 <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Related tickets</p>
                 {item.impact.tickets.map((ticket) => (
                   <Link key={ticket.id} href={`/tickets/${ticket.id}`} className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 hover:border-zinc-700">
-                    <span className="text-sm text-white">{ticket.title}</span>
+                    <span className="text-sm text-zinc-50">{ticket.title}</span>
                     <span className="font-mono text-[11px] text-zinc-500">{displayTicketNumber(ticket.number, ticket.id)}</span>
                   </Link>
                 ))}
@@ -167,7 +167,7 @@ export function CmdbDetail({ itemId }: { itemId: string }) {
                   href={`/cmdb/${relation.targetId}`}
                   className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 hover:border-zinc-700"
                 >
-                  <span className="text-sm text-white">{relation.type.replace('_', ' ')}</span>
+                  <span className="text-sm text-zinc-50">{relation.type.replace('_', ' ')}</span>
                   <span className="font-mono text-[11px] text-zinc-500">{relation.targetId.slice(0, 8)}</span>
                 </Link>
               ))
@@ -192,7 +192,7 @@ export function CmdbDetail({ itemId }: { itemId: string }) {
               .map(([key, value]) => (
                 <div key={key}>
                   <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{key}</p>
-                  <p className="text-sm text-white">{value}</p>
+                  <p className="text-sm text-zinc-50">{value}</p>
                 </div>
               ))}
           </CardContent>

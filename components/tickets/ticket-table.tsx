@@ -117,7 +117,7 @@ export function TicketTable({ tickets }: { tickets: TicketRow[] }) {
                     </Link>
                   </td>
                   <td className="px-3 py-2.5">
-                    <Link href={`/tickets/${ticket.id}`} className="text-sm text-white hover:text-blue-200">
+                    <Link href={`/tickets/${ticket.id}`} className="text-sm text-zinc-50 hover:text-blue-200">
                       {ticket.title}
                     </Link>
                   </td>

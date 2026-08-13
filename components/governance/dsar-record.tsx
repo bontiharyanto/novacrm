@@ -65,7 +65,7 @@ export function DsarRecord({ requestId }: { requestId: string }) {
           <Link href="/governance/requests" className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-200">
             <ArrowLeft className="h-3.5 w-3.5" /> DSAR
           </Link>
-          <h1 className="mt-1 font-mono text-2xl font-semibold text-white">{row.number}</h1>
+          <h1 className="mt-1 font-mono text-2xl font-semibold text-zinc-50">{row.number}</h1>
         </div>
         <div className="flex items-center gap-2">
           <Badge tone={slaTone(sla)}>{slaLabel(sla, 'dsar')}</Badge>
@@ -98,7 +98,7 @@ export function DsarRecord({ requestId }: { requestId: string }) {
           <CardContent className="space-y-4 p-5">
             <div>
               <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Subject</p>
-              <p className="mt-1 text-lg text-white">{row.subjectName}</p>
+              <p className="mt-1 text-lg text-zinc-50">{row.subjectName}</p>
               <p className="text-sm text-zinc-500">{row.subjectEmail ?? 'No email'} · {row.subjectPhone ?? 'No phone'}</p>
             </div>
             <p className="whitespace-pre-wrap text-sm text-zinc-300">{row.description || 'No additional detail.'}</p>

@@ -74,7 +74,7 @@ export function RecordProducer({ itemId }: { itemId: string }) {
             <ArrowLeft className="h-3.5 w-3.5" /> Catalog
           </Link>
           <div className="mt-2 flex items-center gap-2">
-            <h1 className="text-2xl font-semibold text-white">{item.name}</h1>
+            <h1 className="text-2xl font-semibold text-zinc-50">{item.name}</h1>
             <TypeBadge type={item.ticketType} />
           </div>
           <p className="mt-1 text-sm text-zinc-500">{item.shortDescription || meta.description}</p>

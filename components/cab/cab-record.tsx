@@ -129,11 +129,11 @@ export function CabRecord({ ticketId }: { ticketId: string }) {
             <ArrowLeft className="h-3.5 w-3.5" /> CAB
           </Link>
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            <h1 className="font-mono text-xl font-semibold text-white">{displayTicketNumber(ticket.number, ticket.id)}</h1>
+            <h1 className="font-mono text-xl font-semibold text-zinc-50">{displayTicketNumber(ticket.number, ticket.id)}</h1>
             <TypeBadge type="change" />
             <Badge tone="info">{stageLabel('change', ticket.status)}</Badge>
           </div>
-          <h2 className="mt-1 text-2xl font-semibold text-white">{ticket.title}</h2>
+          <h2 className="mt-1 text-2xl font-semibold text-zinc-50">{ticket.title}</h2>
           {error ? <p className="mt-2 text-sm text-rose-400">{error}</p> : null}
         </div>
 
@@ -159,7 +159,7 @@ export function CabRecord({ ticketId }: { ticketId: string }) {
             {approvals.map((item) => (
               <div key={item.id} className="flex items-start justify-between gap-3 rounded-lg border border-zinc-800 px-3 py-2">
                 <div>
-                  <p className="text-sm text-white">{item.approverName ?? 'Member'}</p>
+                  <p className="text-sm text-zinc-50">{item.approverName ?? 'Member'}</p>
                   {item.comment ? <p className="text-xs text-zinc-500">{item.comment}</p> : null}
                 </div>
                 <Badge tone={item.decision === 'approved' ? 'success' : item.decision === 'rejected' ? 'danger' : 'warning'}>

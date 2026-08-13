@@ -382,7 +382,7 @@ function WorkflowEditorInner({ ruleId, template }: { ruleId?: string; template?:
             <input
               value={name}
               onChange={(event) => setName(event.target.value)}
-              className="mt-1 block w-full max-w-md bg-transparent text-xl font-semibold text-white outline-none"
+              className="mt-1 block w-full max-w-md bg-transparent text-xl font-semibold text-zinc-50 outline-none"
             />
           </div>
           <div className="flex items-center gap-2">
@@ -408,7 +408,7 @@ function WorkflowEditorInner({ ruleId, template }: { ruleId?: string; template?:
             onClick={() => addNode('condition')}
             className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-left transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-zinc-700"
           >
-            <p className="text-sm text-white">Condition</p>
+            <p className="text-sm text-zinc-50">Condition</p>
             <p className="text-[11px] text-zinc-500">If / else branch</p>
           </button>
           <p className="pt-2 text-[11px] uppercase tracking-[0.16em] text-zinc-500">Add action</p>
@@ -419,7 +419,7 @@ function WorkflowEditorInner({ ruleId, template }: { ruleId?: string; template?:
               onClick={() => addNode('action', item.id)}
               className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-left transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-zinc-700"
             >
-              <p className="text-sm text-white">{item.label}</p>
+              <p className="text-sm text-zinc-50">{item.label}</p>
               <p className="text-[11px] text-zinc-500">{item.hint}</p>
             </button>
           ))}

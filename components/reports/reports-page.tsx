@@ -129,7 +129,7 @@ export function ReportsPage() {
           <Link href="/dashboard" className="text-[11px] uppercase tracking-[0.2em] text-zinc-500 hover:text-zinc-200">
             Operations
           </Link>
-          <h1 className="mt-1 text-2xl font-semibold text-white">Reports</h1>
+          <h1 className="mt-1 text-2xl font-semibold text-zinc-50">Reports</h1>
           {report && !stale ? (
             <p className="mt-1 text-sm text-zinc-500">
               {formatReportPeriod(report)}
@@ -143,7 +143,7 @@ export function ReportsPage() {
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href="/assistant"
-            className="rounded-md border border-zinc-800 px-3 py-1.5 text-xs text-zinc-300 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-zinc-700 hover:text-white"
+            className="rounded-md border border-zinc-800 px-3 py-1.5 text-xs text-zinc-300 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-zinc-700 hover:text-zinc-50"
           >
             Ask assistant
           </Link>
@@ -155,7 +155,7 @@ export function ReportsPage() {
                 onClick={() => changePreset(item.id)}
                 className={cn(
                   'rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-200 ease-out',
-                  preset === item.id ? 'bg-zinc-800 text-white' : 'text-zinc-400 hover:text-zinc-200',
+                  preset === item.id ? 'bg-zinc-800 text-zinc-50' : 'text-zinc-400 hover:text-zinc-200',
                 )}
               >
                 {item.label}
@@ -262,7 +262,7 @@ export function ReportsPage() {
               <Card key={item.label} className="transition-all duration-200 ease-out hover:-translate-y-0.5">
                 <CardContent className="p-4">
                   <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{item.label}</p>
-                  <p className={`mt-1 text-2xl font-semibold ${item.danger && item.value > 0 ? 'text-rose-400' : 'text-white'}`}>
+                  <p className={`mt-1 text-2xl font-semibold ${item.danger && item.value > 0 ? 'text-rose-400' : 'text-zinc-50'}`}>
                     {item.value}
                   </p>
                   <p className="mt-1 text-[11px] text-zinc-600">{item.hint}</p>
@@ -364,7 +364,7 @@ export function ReportsPage() {
                             <span className="font-mono text-[11px] text-zinc-500">{row.number}</span>
                             <span className="flex min-w-0 items-center gap-2">
                               {isTicketType(row.type) ? <TypeBadge type={row.type} /> : null}
-                              <span className="truncate text-sm text-white">{row.title}</span>
+                              <span className="truncate text-sm text-zinc-50">{row.title}</span>
                             </span>
                             <span className="truncate text-xs text-zinc-500">{row.assigneeName ?? 'Unassigned'}</span>
                             <span className="text-right">

@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { VariableBuilder } from '@/components/catalog/variable-builder';
@@ -70,7 +69,7 @@ export function VariableSetEditor({ setId }: { setId?: string }) {
               value={name}
               onChange={(event) => setName(event.target.value)}
               placeholder="Variable set name"
-              className="mt-1 block w-full max-w-xl bg-transparent text-xl font-semibold text-white outline-none placeholder:text-zinc-600"
+              className="mt-1 block w-full max-w-xl bg-transparent text-xl font-semibold text-zinc-50 outline-none placeholder:text-zinc-600"
             />
           </div>
           <div className="flex items-center gap-2">

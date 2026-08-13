@@ -44,7 +44,7 @@ export function AccountCreate() {
           <Link href="/accounts" className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-200">
             <ArrowLeft className="h-3.5 w-3.5" /> Accounts
           </Link>
-          <h1 className="mt-1 text-xl font-semibold text-white">New customer account</h1>
+          <h1 className="mt-1 text-xl font-semibold text-zinc-50">New customer account</h1>
           <p className="mt-1 text-sm text-zinc-500">Creates an isolated ticket queue, asset register, and CMDB.</p>
         </div>
 

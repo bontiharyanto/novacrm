@@ -66,7 +66,7 @@ export function BreachCreate() {
           <Link href="/governance/breaches" className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-200">
             <ArrowLeft className="h-3.5 w-3.5" /> Breach register
           </Link>
-          <h1 className="mt-1 text-2xl font-semibold text-white">Log personal data breach</h1>
+          <h1 className="mt-1 text-2xl font-semibold text-zinc-50">Log personal data breach</h1>
         </div>
         <GovernanceNav />
       </div>

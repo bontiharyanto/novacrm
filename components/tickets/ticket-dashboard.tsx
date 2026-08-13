@@ -16,13 +16,13 @@ import {
   TICKET_TYPES,
   isTicketType,
   queueFilters,
-  ticketTypeMeta,
   type QueueFilter,
   type TicketType,
 } from '@/lib/tickets/process';
 import type { TicketPriority, TicketStatus } from '@/lib/tickets/schema';
 import type { TicketPendingReason } from '@/lib/tickets/pending';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/components/layout/preferences-provider';
 
 type TicketItem = {
   id: string;
@@ -89,6 +89,7 @@ function normalizeTicket(row: Partial<TicketItem> & { id: string; title: string 
 }
 
 export function TicketDashboard({ currentUserId }: { currentUserId: string }) {
+  const { t } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
   const typeParam = searchParams.get('type');
@@ -171,25 +172,25 @@ export function TicketDashboard({ currentUserId }: { currentUserId: string }) {
     <div className="space-y-5 p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Service desk</p>
-          <h1 className="text-2xl font-semibold text-white">
-            {activeType === 'all' ? 'Tickets' : ticketTypeMeta[activeType].label}
+          <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">{t.tickets.kicker}</p>
+          <h1 className="text-2xl font-semibold text-zinc-50">
+            {activeType === 'all' ? t.tickets.title : t.tickets.typePlural[activeType]}
           </h1>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex rounded-md border border-zinc-800 p-0.5">
             <Button size="sm" variant={view === 'table' ? 'default' : 'ghost'} onClick={() => setView('table')}>
-              <List className="h-3.5 w-3.5" /> List
+              <List className="h-3.5 w-3.5" /> {t.tickets.list}
             </Button>
             <Button size="sm" variant={view === 'board' ? 'default' : 'ghost'} onClick={() => setView('board')}>
-              <LayoutGrid className="h-3.5 w-3.5" /> Board
+              <LayoutGrid className="h-3.5 w-3.5" /> {t.tickets.board}
             </Button>
           </div>
           <Link
             href={newTicketHref}
             className="inline-flex items-center justify-center gap-2 rounded-md bg-blue-600 px-2.5 py-1.5 text-xs font-medium text-white transition-all duration-200 ease-out hover:-translate-y-0.5 hover:bg-blue-500"
           >
-            <Plus className="h-3.5 w-3.5" /> New ticket
+            <Plus className="h-3.5 w-3.5" /> {t.common.newTicket}
           </Link>
         </div>
       </div>
@@ -205,7 +206,7 @@ export function TicketDashboard({ currentUserId }: { currentUserId: string }) {
               : 'border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-zinc-200',
           )}
         >
-          All processes
+          {t.tickets.allProcesses}
         </button>
         {TICKET_TYPES.map((type) => (
           <button
@@ -219,7 +220,7 @@ export function TicketDashboard({ currentUserId }: { currentUserId: string }) {
                 : 'border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-zinc-200',
             )}
           >
-            {ticketTypeMeta[type].label}
+            {t.tickets.type[type]}
             <span className="ml-1.5 font-mono text-[10px] text-zinc-500">
               {tickets.filter((ticket) => ticket.type === type).length}
             </span>
@@ -236,11 +237,17 @@ export function TicketDashboard({ currentUserId }: { currentUserId: string }) {
             className={cn(
               'rounded-md border px-3 py-1.5 text-xs font-medium transition-all duration-200 ease-out hover:-translate-y-0.5',
               activeQueue === queue.id
-                ? 'border-zinc-600 bg-zinc-800 text-white'
+                ? 'border-zinc-600 bg-zinc-800 text-zinc-50'
                 : 'border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-zinc-200',
             )}
           >
-            {queue.label}
+            {queue.id === 'all'
+              ? t.tickets.queueAll
+              : queue.id === 'mine'
+                ? t.tickets.queueMine
+                : queue.id === 'queue'
+                  ? t.tickets.queueGroups
+                  : t.tickets.queueUnassigned}
             <span className="ml-1.5 font-mono text-[10px] text-zinc-500">
               {queue.id === 'all'
                 ? tickets.length
@@ -257,7 +264,7 @@ export function TicketDashboard({ currentUserId }: { currentUserId: string }) {
       {activeType !== 'all' ? (
         <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-3">
           <p className="mb-2 text-[11px] uppercase tracking-[0.16em] text-zinc-500">
-            {ticketTypeMeta[activeType].description}
+            {t.tickets.typeHint[activeType]}
           </p>
           <ProcessStrip type={activeType} status="open" />
         </div>
@@ -265,15 +272,15 @@ export function TicketDashboard({ currentUserId }: { currentUserId: string }) {
 
       <div className="grid gap-3 md:grid-cols-4">
         {[
-          { label: 'In queue', value: visibleTickets.length, className: 'text-zinc-500' },
-          { label: 'New', value: openCount, className: 'text-sky-400' },
-          { label: 'Unassigned', value: unassignedCount, className: 'text-amber-400' },
-          { label: 'SLA risk', value: atRiskCount, className: 'text-rose-400' },
+          { label: t.tickets.inQueue, value: visibleTickets.length, className: 'text-zinc-500' },
+          { label: t.tickets.new, value: openCount, className: 'text-sky-400' },
+          { label: t.tickets.unassigned, value: unassignedCount, className: 'text-amber-400' },
+          { label: t.tickets.slaRisk, value: atRiskCount, className: 'text-rose-400' },
         ].map((stat) => (
           <Card key={stat.label}>
             <CardContent className="p-4">
               <p className={`text-[11px] uppercase tracking-[0.16em] ${stat.className}`}>{stat.label}</p>
-              <p className="mt-1 text-xl font-semibold text-white">{loading ? '—' : stat.value}</p>
+              <p className="mt-1 text-xl font-semibold text-zinc-50">{loading ? '—' : stat.value}</p>
             </CardContent>
           </Card>
         ))}

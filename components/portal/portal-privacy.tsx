@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRealtimeTable } from '@/lib/supabase/realtime';
 import { DSAR_TYPES, type DataSubjectRequest, type PrivacySettings } from '@/lib/governance/schema';
-import { getDsarSla, slaLabel, slaTone } from '@/lib/governance/flow';
+import { getDsarSla, slaTone } from '@/lib/governance/flow';
 import { formatRelativeId } from '@/lib/utils/dates';
 
 export function PortalPrivacy() {
@@ -46,7 +46,7 @@ export function PortalPrivacy() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">UU PDP</p>
-          <h1 className="text-2xl font-semibold text-white">Privacy</h1>
+          <h1 className="text-2xl font-semibold text-zinc-50">Privacy</h1>
         </div>
         <Link
           href="/portal/privacy/new"
@@ -65,7 +65,7 @@ export function PortalPrivacy() {
             </div>
             {settings?.isPublished ? (
               <>
-                <h2 className="text-lg font-semibold text-white">{settings.noticeTitle || 'Privacy notice'}</h2>
+                <h2 className="text-lg font-semibold text-zinc-50">{settings.noticeTitle || 'Privacy notice'}</h2>
                 <p className="whitespace-pre-wrap text-sm leading-6 text-zinc-300">{settings.noticeBody}</p>
               </>
             ) : (
@@ -76,10 +76,10 @@ export function PortalPrivacy() {
         <Card className="lg:col-span-4">
           <CardContent className="space-y-3 p-5">
             <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Controller</p>
-            <p className="text-sm text-white">{settings?.controllerName ?? '—'}</p>
+            <p className="text-sm text-zinc-50">{settings?.controllerName ?? '—'}</p>
             <p className="text-xs text-zinc-500">{settings?.controllerAddress}</p>
             <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Data protection officer</p>
-            <p className="text-sm text-white">{settings?.dpoName ?? '—'}</p>
+            <p className="text-sm text-zinc-50">{settings?.dpoName ?? '—'}</p>
             <p className="text-xs text-zinc-500">{settings?.dpoEmail}</p>
             <p className="text-xs text-zinc-500">{settings?.dpoPhone}</p>
           </CardContent>
@@ -102,7 +102,7 @@ export function PortalPrivacy() {
                     className="flex items-center justify-between gap-3 border-b border-zinc-800/80 px-3 py-2 last:border-b-0 hover:bg-zinc-900/80"
                   >
                     <div>
-                      <p className="text-sm text-white">{DSAR_TYPES.find((item) => item.id === row.requestType)?.label}</p>
+                      <p className="text-sm text-zinc-50">{DSAR_TYPES.find((item) => item.id === row.requestType)?.label}</p>
                       <p className="font-mono text-[11px] text-zinc-500">
                         {row.number} · {formatRelativeId(row.createdAt)}
                       </p>

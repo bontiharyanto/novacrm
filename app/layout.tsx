@@ -2,6 +2,8 @@ import { Inter, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import type { Metadata } from 'next';
 import { RuntimePublicEnv } from '@/components/layout/runtime-public-env';
+import { PreferencesProvider } from '@/components/layout/preferences-provider';
+import { getPreferences } from '@/lib/preferences';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -21,11 +23,15 @@ export const metadata: Metadata = {
 export const dynamic = 'force-dynamic';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const { theme, locale } = getPreferences();
+
   return (
-    <html lang="id" className={`${inter.variable} ${jetbrains.variable}`}>
+    <html lang={locale} className={`${inter.variable} ${jetbrains.variable} ${theme}`} suppressHydrationWarning>
       <body className="font-sans">
         <RuntimePublicEnv />
-        {children}
+        <PreferencesProvider locale={locale} theme={theme}>
+          {children}
+        </PreferencesProvider>
       </body>
     </html>
   );

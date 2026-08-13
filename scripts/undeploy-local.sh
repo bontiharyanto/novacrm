@@ -8,5 +8,6 @@ echo "==> Stopping local production containers"
 docker compose -f docker-compose.local.yml down
 
 echo "App/worker stopped. Supabase is still running."
-echo "Back to hot reload: npm run local:dev"
-echo "Stop everything:     npm run local:stop"
+echo "Docker was on http://localhost:${APP_PORT:-3001}"
+echo "Hot reload: npm run local:dev   → http://localhost:3000"
+echo "Stop everything: npm run local:stop"

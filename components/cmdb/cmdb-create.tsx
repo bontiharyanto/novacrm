@@ -120,7 +120,7 @@ export function CmdbCreate() {
             <Link href="/cmdb" className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-200">
               <ArrowLeft className="h-3.5 w-3.5" /> CMDB
             </Link>
-            <h1 className="mt-1 text-xl font-semibold text-white">New {meta?.label.toLowerCase() ?? 'CI'}</h1>
+            <h1 className="mt-1 text-xl font-semibold text-zinc-50">New {meta?.label.toLowerCase() ?? 'CI'}</h1>
             <p className="mt-1 text-sm text-zinc-500">{meta?.hint}</p>
           </div>
           <div className="flex items-center gap-2">
@@ -165,7 +165,7 @@ export function CmdbCreate() {
                         : 'border-zinc-800 bg-zinc-900 hover:border-zinc-700',
                     )}
                   >
-                    <p className="text-sm font-medium text-white">{item.label}</p>
+                    <p className="text-sm font-medium text-zinc-50">{item.label}</p>
                     <p className="mt-0.5 text-[11px] text-zinc-500">{item.hint || 'Custom type'}</p>
                   </button>
                 ))}

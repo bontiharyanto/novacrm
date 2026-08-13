@@ -32,7 +32,7 @@ export function Dialog({
       <button type="button" className="absolute inset-0 cursor-default" aria-label="Close" onClick={onClose} />
       <div className={cn('relative w-full max-w-lg rounded-xl border border-zinc-800 bg-zinc-900', className)}>
         <div className="flex items-center justify-between border-b border-zinc-800 px-5 py-4">
-          <h2 className="text-sm font-medium text-white">{title}</h2>
+          <h2 className="text-sm font-medium text-zinc-50">{title}</h2>
           <button type="button" onClick={onClose} className="text-xs text-zinc-500 hover:text-zinc-200">
             Esc
           </button>

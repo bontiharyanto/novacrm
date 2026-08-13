@@ -1,5 +1,7 @@
 # Local laptop test
 
+Operator training (login, tickets, CMDB, portal): [user-guide/README.md](user-guide/README.md).
+
 Use this before any VPS/GitHub deploy. Auth, tickets, Kanban, and uploads all need local Docker services plus a local (or hosted) Supabase.
 
 ## One-time setup
@@ -29,19 +31,18 @@ Open [http://localhost:3000](http://localhost:3000)
 
 ## Deploy production-like on this laptop
 
-This builds the same Docker image that will go to VPS, without Traefik/HTTPS.
+This builds the same Docker image that will go to VPS, without Traefik/HTTPS. It listens on **3001** so `npm run local:dev` can keep using **3000**.
 
 ```bash
 npm run local:deploy
 ```
 
-That stops `next dev` on port 3000, builds the production image, and starts **app + worker + Redis + MinIO**. Local Supabase stays running.
-
-Open [http://localhost:3000](http://localhost:3000) — this is `next start` inside Docker, not the dev server.
+Open [http://localhost:3001](http://localhost:3001) — this is `next start` inside Docker.
 
 ```bash
-npm run local:undeploy   # stop containers, keep Supabase
-npm run local:dev        # back to hot reload
+APP_PORT=3002 npm run local:deploy   # optional other host port
+npm run local:undeploy               # stop Docker app/worker, keep Supabase
+npm run local:dev                    # hot reload on :3000
 ```
 
 VPS/Traefik: [DEPLOYMENT.md](DEPLOYMENT.md). To point this laptop at **hosted** Supabase (keep local Redis/MinIO):
@@ -67,7 +68,7 @@ npm run local:dev
 5. Assets: list + filters, **New asset**, CSV import, detail QR / warranty / book value. Type list is editable: on New asset, type a name (CCTV, UPS…) and press +. Detail also records **Move** (lokasi), **Transfer** (pemakai), **Replace** (retire + ganti aset). Demo: switch to **Bank Nusantara** → `AST-1001` Laptop Finance — history Jakarta HQ → Lt. 3, then Finance → Operations.
 6. CMDB: Graph view is **per account**. Switch to **Bank Nusantara** for WAN Indosat → FW → core → Lt.2 AP (`10.20.50.0/24` VLAN 50). Sidebar lists IP segments. New CI: site + network role + CIDR/VLAN/gateway. **Add card** di sidebar untuk tipe CI baru (mis. CCTV). Open a CI to add more segments or see impact.
 7. Attach a file (MinIO console: [http://localhost:9001](http://localhost:9001))
-8. Settings → **Integrations**: AI defaults to **Groq (free)**. Create a key at [console.groq.com](https://console.groq.com/keys) (no credit card), paste, **Test connection**. Then open [Assistant](http://localhost:3000/assistant). Email test inbox: [Mailpit](http://127.0.0.1:54324)
+8. Settings → **Appearance** for **Midnight / Daylight** theme and **EN / ID**. **Integrations**: AI defaults to **Groq (free)**. Create a key at [console.groq.com](https://console.groq.com/keys), paste, **Test connection**. Then open [Assistant](http://localhost:3000/assistant). Email test inbox: [Mailpit](http://127.0.0.1:54324)
 9. Sign out, login as **customer** → [portal](http://localhost:3000/portal): **Catalog** to submit a record producer, or **New request** for a freeform ticket, then track `/portal/{id}`
 10. Automation: [Workflows](http://localhost:3000/workflows) → **New flow** → pick **Standard / Normal / Complex**. Canvas supports condition (Yes/No) nodes. Ticket create/status/comment, **machine alert**, and **inbound message** can run BullMQ actions (assign, email, WhatsApp, Telegram, status, asset). Check **Recent runs** on the flow.
     - Auto-create ticket: `POST /api/webhooks/whatsapp` (secret `local-whatsapp-secret`), `/api/webhooks/telegram`, `/api/webhooks/email`, `/api/webhooks/alerts` (Prometheus/Grafana JSON), `/api/webhooks/generic`. Repeat alerts within 24h update the same ticket.

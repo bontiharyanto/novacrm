@@ -92,11 +92,11 @@ export function PortalTicket({ ticketId, authorName }: { ticketId: string; autho
             <ArrowLeft className="h-3.5 w-3.5" /> My tickets
           </Link>
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            <h1 className="font-mono text-xl font-semibold text-white">{displayTicketNumber(ticket.number, ticket.id)}</h1>
+            <h1 className="font-mono text-xl font-semibold text-zinc-50">{displayTicketNumber(ticket.number, ticket.id)}</h1>
             <TypeBadge type={type} />
             <Badge tone={statusTone[ticket.status]}>{stageLabel(type, ticket.status)}</Badge>
           </div>
-          <h2 className="mt-1 text-2xl font-semibold text-white">{ticket.title}</h2>
+          <h2 className="mt-1 text-2xl font-semibold text-zinc-50">{ticket.title}</h2>
         </div>
 
         <Card>
@@ -148,11 +148,11 @@ export function PortalTicket({ ticketId, authorName }: { ticketId: string; autho
         <Card>
           <CardContent className="space-y-3 p-5">
             <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Status</p>
-            <p className="text-sm text-white">{stageLabel(type, ticket.status)}</p>
+            <p className="text-sm text-zinc-50">{stageLabel(type, ticket.status)}</p>
             <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Priority</p>
-            <p className="text-sm capitalize text-white">{ticket.priority}</p>
+            <p className="text-sm capitalize text-zinc-50">{ticket.priority}</p>
             <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Requester</p>
-            <p className="text-sm text-white">{ticket.requesterName}</p>
+            <p className="text-sm text-zinc-50">{ticket.requesterName}</p>
           </CardContent>
         </Card>
       </aside>

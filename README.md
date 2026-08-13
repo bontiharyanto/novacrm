@@ -20,6 +20,14 @@ Repository: [github.com/bontiharyanto/novacrm](https://github.com/bontiharyanto/
 - MinIO presigned uploads
 - Docker Compose (dev + production with Traefik)
 
+## Documentation
+
+| Document | Audience |
+| --- | --- |
+| [User guide (training pack)](docs/user-guide/README.md) | Staff and customers — trainer agenda + participant manual |
+| [Local laptop setup](docs/LOCAL.md) | Engineers running the demo |
+| [Production deploy](docs/DEPLOYMENT.md) | VPS / Traefik / GHCR |
+
 ## Getting started (laptop)
 
 Full walkthrough: [docs/LOCAL.md](docs/LOCAL.md)

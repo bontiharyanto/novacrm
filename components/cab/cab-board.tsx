@@ -59,7 +59,7 @@ export function CabBoard() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Change enablement</p>
-          <h1 className="text-2xl font-semibold text-white">CAB</h1>
+          <h1 className="text-2xl font-semibold text-zinc-50">CAB</h1>
         </div>
         <Link
           href="/tickets/new?type=change"
@@ -79,7 +79,7 @@ export function CabBoard() {
           <Card key={stat.label}>
             <CardContent className="p-4">
               <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{stat.label}</p>
-              <p className={`mt-1 text-xl font-semibold ${stat.danger ? 'text-rose-400' : 'text-white'}`}>
+              <p className={`mt-1 text-xl font-semibold ${stat.danger ? 'text-rose-400' : 'text-zinc-50'}`}>
                 {loading ? '—' : stat.value}
               </p>
             </CardContent>
@@ -108,7 +108,7 @@ export function CabBoard() {
                       className="block rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2.5 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-zinc-700"
                     >
                       <p className="font-mono text-[11px] text-zinc-500">{displayTicketNumber(change.number, change.id)}</p>
-                      <p className="mt-0.5 text-sm text-white">{change.title}</p>
+                      <p className="mt-0.5 text-sm text-zinc-50">{change.title}</p>
                       <div className="mt-2 flex flex-wrap gap-1">
                         <Badge tone={change.changeType === 'emergency' ? 'danger' : 'info'}>
                           {change.changeType ?? 'normal'}

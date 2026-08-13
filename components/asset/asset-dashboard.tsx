@@ -98,7 +98,7 @@ export function AssetDashboard() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">ITAM</p>
-          <h1 className="text-2xl font-semibold text-white">Assets</h1>
+          <h1 className="text-2xl font-semibold text-zinc-50">Assets</h1>
         </div>
         <div className="flex items-center gap-2">
           <input
@@ -140,7 +140,7 @@ export function AssetDashboard() {
           <Card key={stat.label}>
             <CardContent className="p-4">
               <p className={`text-[11px] uppercase tracking-[0.16em] ${stat.className}`}>{stat.label}</p>
-              <p className="mt-1 text-xl font-semibold text-white">{loading ? '—' : stat.value}</p>
+              <p className="mt-1 text-xl font-semibold text-zinc-50">{loading ? '—' : stat.value}</p>
             </CardContent>
           </Card>
         ))}
@@ -212,7 +212,7 @@ export function AssetDashboard() {
                           </Link>
                         </td>
                         <td className="px-3 py-2.5">
-                          <Link href={`/assets/${asset.id}`} className="text-white hover:text-blue-200">
+                          <Link href={`/assets/${asset.id}`} className="text-zinc-50 hover:text-blue-200">
                             {asset.name}
                           </Link>
                         </td>
@@ -271,7 +271,7 @@ function FilterChip({
         'rounded-full border px-3 py-1 text-[11px] font-medium capitalize transition-all duration-200 ease-out hover:-translate-y-0.5',
         active
           ? muted
-            ? 'border-zinc-600 bg-zinc-800 text-white'
+            ? 'border-zinc-600 bg-zinc-800 text-zinc-50'
             : 'border-blue-500/40 bg-blue-500/15 text-blue-200'
           : 'border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-zinc-200',
       )}

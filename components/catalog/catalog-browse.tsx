@@ -32,7 +32,7 @@ export function CatalogBrowse() {
     <div className="mx-auto max-w-5xl space-y-6 p-6">
       <div>
         <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Service catalog</p>
-        <h1 className="text-2xl font-semibold text-white">Request something</h1>
+        <h1 className="text-2xl font-semibold text-zinc-50">Request something</h1>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -74,7 +74,7 @@ export function CatalogBrowse() {
                   <CatalogIcon id={item.icon} />
                 </span>
                 <div>
-                  <p className="text-sm font-medium text-white">{item.name}</p>
+                  <p className="text-sm font-medium text-zinc-50">{item.name}</p>
                   <p className="mt-1 text-xs text-zinc-500">{item.shortDescription || ticketTypeMeta[item.ticketType].description}</p>
                 </div>
               </div>

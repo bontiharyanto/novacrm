@@ -53,7 +53,7 @@ export function DsarCreate() {
           <Link href="/governance/requests" className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-200">
             <ArrowLeft className="h-3.5 w-3.5" /> DSAR
           </Link>
-          <h1 className="mt-1 text-2xl font-semibold text-white">Log data subject request</h1>
+          <h1 className="mt-1 text-2xl font-semibold text-zinc-50">Log data subject request</h1>
         </div>
         <GovernanceNav />
       </div>

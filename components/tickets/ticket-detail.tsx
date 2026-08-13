@@ -211,12 +211,12 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
             <ArrowLeft className="h-3.5 w-3.5" /> Tickets
           </Link>
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            <h1 className="font-mono text-xl font-semibold text-white">{displayTicketNumber(ticket.number, ticket.id)}</h1>
+            <h1 className="font-mono text-xl font-semibold text-zinc-50">{displayTicketNumber(ticket.number, ticket.id)}</h1>
             <TypeBadge type={type} />
             <Badge tone={statusTone[ticket.status]}>{ticket.status.replace('_', ' ')}</Badge>
             <Badge tone={priorityTone[ticket.priority]}>{ticket.priority}</Badge>
           </div>
-          <h2 className="mt-1 text-2xl font-semibold text-white">{ticket.title}</h2>
+          <h2 className="mt-1 text-2xl font-semibold text-zinc-50">{ticket.title}</h2>
         </div>
 
         <Card>

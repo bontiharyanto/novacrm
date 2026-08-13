@@ -35,7 +35,7 @@ export function DsarBoard() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Data subject rights · 30 days</p>
-          <h1 className="text-2xl font-semibold text-white">DSAR queue</h1>
+          <h1 className="text-2xl font-semibold text-zinc-50">DSAR queue</h1>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <GovernanceNav />
@@ -71,7 +71,7 @@ export function DsarBoard() {
                           href={`/governance/requests/${row.id}`}
                           className="block rounded-lg border border-zinc-800 p-2.5 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-zinc-700"
                         >
-                          <p className="truncate text-sm text-white">{row.subjectName}</p>
+                          <p className="truncate text-sm text-zinc-50">{row.subjectName}</p>
                           <p className="mt-0.5 font-mono text-[11px] text-zinc-500">{row.number}</p>
                           <div className="mt-2 flex flex-wrap gap-1">
                             <Badge tone="info">{DSAR_TYPES.find((item) => item.id === row.requestType)?.label}</Badge>

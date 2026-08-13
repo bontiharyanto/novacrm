@@ -41,7 +41,7 @@ export function AssistantChat() {
       <div className="flex flex-col p-6">
         <div className="mb-4">
           <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Operations</p>
-          <h1 className="text-2xl font-semibold text-white">Assistant</h1>
+          <h1 className="text-2xl font-semibold text-zinc-50">Assistant</h1>
           <p className="mt-1 text-sm text-zinc-500">ITSM Q&A over the last 7 days of the active account.</p>
         </div>
 

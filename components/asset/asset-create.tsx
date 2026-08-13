@@ -106,7 +106,7 @@ export function AssetCreate() {
             <Link href="/assets" className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-200">
               <ArrowLeft className="h-3.5 w-3.5" /> Assets
             </Link>
-            <h1 className="mt-1 text-xl font-semibold text-white">New asset</h1>
+            <h1 className="mt-1 text-xl font-semibold text-zinc-50">New asset</h1>
           </div>
           <div className="flex gap-2">
             <Button type="button" variant="ghost" onClick={() => router.push('/assets')}>

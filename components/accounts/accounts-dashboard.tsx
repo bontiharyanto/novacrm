@@ -20,7 +20,7 @@ export function AccountsDashboard({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Configuration</p>
-            <h1 className="text-2xl font-semibold text-white">Accounts</h1>
+            <h1 className="text-2xl font-semibold text-zinc-50">Accounts</h1>
           </div>
           {canCreate ? (
             <Link
@@ -49,7 +49,7 @@ export function AccountsDashboard({
                 {accounts.map((account) => (
                   <tr key={account.id} className="border-b border-zinc-800/80 hover:bg-zinc-900/80">
                     <td className="px-3 py-2.5">
-                      <Link href={`/accounts/${account.id}`} className="text-white hover:text-blue-200">
+                      <Link href={`/accounts/${account.id}`} className="text-zinc-50 hover:text-blue-200">
                         {account.name}
                       </Link>
                     </td>
@@ -74,13 +74,13 @@ export function AccountsDashboard({
           <Card>
             <CardContent className="p-4">
               <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Accounts</p>
-              <p className="mt-1 text-xl font-semibold text-white">{accounts.length}</p>
+              <p className="mt-1 text-xl font-semibold text-zinc-50">{accounts.length}</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
               <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Customers</p>
-              <p className="mt-1 text-xl font-semibold text-white">{customers}</p>
+              <p className="mt-1 text-xl font-semibold text-zinc-50">{customers}</p>
             </CardContent>
           </Card>
           <p className="text-sm leading-6 text-zinc-400">

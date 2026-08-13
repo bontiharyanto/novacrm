@@ -38,7 +38,7 @@ export function RopaList() {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Pasal 16</p>
-          <h1 className="text-2xl font-semibold text-white">Record of processing</h1>
+          <h1 className="text-2xl font-semibold text-zinc-50">Record of processing</h1>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <GovernanceNav />
@@ -75,7 +75,7 @@ export function RopaList() {
                   >
                     <span className="font-mono text-[11px] text-zinc-500">{row.number}</span>
                     <span className="min-w-0">
-                      <p className="truncate text-sm text-white">{row.name}</p>
+                      <p className="truncate text-sm text-zinc-50">{row.name}</p>
                       <p className="truncate text-xs text-zinc-500">{row.purpose}</p>
                     </span>
                     <span className="text-xs text-zinc-400">

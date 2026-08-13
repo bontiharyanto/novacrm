@@ -165,10 +165,10 @@ export function AssetDetail({ assetId }: { assetId: string }) {
             <ArrowLeft className="h-3.5 w-3.5" /> Assets
           </Link>
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            <h1 className="font-mono text-xl font-semibold text-white">{asset.assetTag}</h1>
+            <h1 className="font-mono text-xl font-semibold text-zinc-50">{asset.assetTag}</h1>
             <Badge tone={statusTone[asset.status]}>{asset.status.replace('_', ' ')}</Badge>
           </div>
-          <h2 className="mt-1 text-2xl font-semibold text-white">{asset.name}</h2>
+          <h2 className="mt-1 text-2xl font-semibold text-zinc-50">{asset.name}</h2>
           <p className="mt-1 text-sm text-zinc-500">
             {[asset.brand, asset.model].filter(Boolean).join(' · ') || asset.type} · opened {formatRelativeId(asset.createdAt)}
           </p>
@@ -187,14 +187,14 @@ export function AssetDetail({ assetId }: { assetId: string }) {
           <Card>
             <CardContent className="p-4">
               <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Book value</p>
-              <p className="mt-1 font-mono text-lg text-white">{formatIdr(book.bookValue)}</p>
+              <p className="mt-1 font-mono text-lg text-zinc-50">{formatIdr(book.bookValue)}</p>
               <p className="text-[11px] text-zinc-500">{book.percent}% depreciated</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
               <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Cost</p>
-              <p className="mt-1 font-mono text-lg text-white">{formatIdr(asset.cost)}</p>
+              <p className="mt-1 font-mono text-lg text-zinc-50">{formatIdr(asset.cost)}</p>
             </CardContent>
           </Card>
           <Card>
@@ -205,7 +205,7 @@ export function AssetDetail({ assetId }: { assetId: string }) {
                   'mt-1 text-lg',
                   warranty === 'expired' && 'text-rose-400',
                   warranty === 'soon' && 'text-amber-400',
-                  warranty === 'ok' && 'text-white',
+                  warranty === 'ok' && 'text-zinc-50',
                   warranty === 'none' && 'text-zinc-500',
                 )}
               >
@@ -229,7 +229,7 @@ export function AssetDetail({ assetId }: { assetId: string }) {
                     <Badge tone={movementTone[item.eventType]}>{movementLabel[item.eventType]}</Badge>
                     <span className="text-[11px] text-zinc-500">{formatRelativeId(item.createdAt)}</span>
                   </div>
-                  <p className="mt-1.5 text-sm text-white">{movementSummary(item)}</p>
+                  <p className="mt-1.5 text-sm text-zinc-50">{movementSummary(item)}</p>
                   {item.relatedAssetId && item.eventType === 'replace' ? (
                     <Link
                       href={`/assets/${item.relatedAssetId}`}
@@ -255,7 +255,7 @@ export function AssetDetail({ assetId }: { assetId: string }) {
             ) : (
               asset.tickets.map((ticket) => (
                 <Link key={ticket.id} href={`/tickets/${ticket.id}`} className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 hover:border-zinc-700">
-                  <span className="text-sm text-white">{ticket.title}</span>
+                  <span className="text-sm text-zinc-50">{ticket.title}</span>
                   <span className="font-mono text-[11px] text-zinc-500">{displayTicketNumber(ticket.number, ticket.id)}</span>
                 </Link>
               ))
@@ -273,7 +273,7 @@ export function AssetDetail({ assetId }: { assetId: string }) {
             ) : (
               asset.configurationItems.map((item) => (
                 <Link key={item.id} href={`/cmdb/${item.id}`} className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 hover:border-zinc-700">
-                  <span className="text-sm text-white">{item.name}</span>
+                  <span className="text-sm text-zinc-50">{item.name}</span>
                   <span className="text-[11px] text-zinc-500">{item.type}</span>
                 </Link>
               ))

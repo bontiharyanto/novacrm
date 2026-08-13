@@ -54,7 +54,7 @@ export function AccountDetail({
             <Link href="/accounts" className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-200">
               <ArrowLeft className="h-3.5 w-3.5" /> Accounts
             </Link>
-            <h1 className="mt-1 text-xl font-semibold text-white">{account.name}</h1>
+            <h1 className="mt-1 text-xl font-semibold text-zinc-50">{account.name}</h1>
             <div className="mt-2 flex items-center gap-2">
               <Badge tone={account.type === 'internal' ? 'info' : 'neutral'}>
                 {account.type === 'internal' ? 'Internal' : 'Customer'}
@@ -112,7 +112,7 @@ export function AccountDetail({
         {message ? <p className="text-sm text-zinc-400">{message}</p> : null}
 
         <div>
-          <h2 className="text-sm font-medium text-white">Members</h2>
+          <h2 className="text-sm font-medium text-zinc-50">Members</h2>
           <div className="mt-3 overflow-hidden rounded-xl border border-zinc-800">
             <table className="w-full text-left text-sm">
               <thead className="border-b border-zinc-800 bg-zinc-950 text-[11px] uppercase tracking-[0.12em] text-zinc-500">
@@ -126,7 +126,7 @@ export function AccountDetail({
                 {members.map((member) => (
                   <tr key={member.id} className="border-b border-zinc-800/80">
                     <td className="px-3 py-2.5">
-                      <p className="text-white">{member.fullName ?? member.userId.slice(0, 8)}</p>
+                      <p className="text-zinc-50">{member.fullName ?? member.userId.slice(0, 8)}</p>
                       <p className="text-xs text-zinc-500">{member.email}</p>
                     </td>
                     <td className="px-3 py-2.5 font-mono text-xs text-zinc-400">{member.role}</td>

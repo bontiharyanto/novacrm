@@ -129,7 +129,7 @@ export function SlaDashboard({
         <div className="space-y-6 p-6">
           <div>
             <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Configuration</p>
-            <h1 className="text-2xl font-semibold text-white">SLA</h1>
+            <h1 className="text-2xl font-semibold text-zinc-50">SLA</h1>
             {accountName ? <p className="mt-1 text-sm text-zinc-500">{accountName}</p> : null}
           </div>
           <p className="rounded-xl border border-zinc-800 px-4 py-10 text-center text-sm text-zinc-500">
@@ -154,7 +154,7 @@ export function SlaDashboard({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Configuration</p>
-            <h1 className="text-2xl font-semibold text-white">SLA</h1>
+            <h1 className="text-2xl font-semibold text-zinc-50">SLA</h1>
             <p className="mt-1 text-sm text-zinc-500">
               {accountName ?? 'Current account'} · {sample}
             </p>
@@ -201,7 +201,7 @@ export function SlaDashboard({
               {TICKET_TYPES.map((type) => (
                 <tr key={type} className="border-b border-zinc-800/80">
                   <td className="px-3 py-3">
-                    <p className="text-sm text-white">{ticketTypeMeta[type].label}</p>
+                    <p className="text-sm text-zinc-50">{ticketTypeMeta[type].label}</p>
                     <p className="text-[11px] text-zinc-500">Response / resolve (min)</p>
                   </td>
                   {PRIORITIES.map((priority) => {

@@ -2,16 +2,55 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: 222 47% 11%;
-  --foreground: 210 40% 98%;
-  --muted: 220 26% 14%;
-  --muted-foreground: 220 9% 76%;
-  --card: 224 38% 15%;
-  --card-foreground: 210 40% 98%;
-  --border: 220 13% 24%;
+:root,
+html.dark {
+  color-scheme: dark;
+  --background: 240 6% 4%;
+  --foreground: 240 6% 96%;
+  --muted: 240 5% 10%;
+  --muted-foreground: 240 5% 64%;
+  --card: 240 5% 7%;
+  --card-foreground: 240 6% 96%;
+  --border: 240 4% 16%;
   --primary: 217 91% 60%;
   --primary-foreground: 210 40% 98%;
+  --zinc-50: 250 250 250;
+  --zinc-100: 244 244 245;
+  --zinc-200: 228 228 231;
+  --zinc-300: 212 212 216;
+  --zinc-400: 161 161 170;
+  --zinc-500: 113 113 122;
+  --zinc-600: 82 82 91;
+  --zinc-700: 63 63 70;
+  --zinc-800: 39 39 42;
+  --zinc-900: 24 24 27;
+  --zinc-950: 9 9 11;
+  --scroll-thumb: 63 63 70;
+}
+
+html.light {
+  color-scheme: light;
+  --background: 240 6% 97%;
+  --foreground: 240 6% 8%;
+  --muted: 0 0% 100%;
+  --muted-foreground: 240 4% 42%;
+  --card: 0 0% 100%;
+  --card-foreground: 240 6% 8%;
+  --border: 240 6% 90%;
+  --primary: 217 91% 53%;
+  --primary-foreground: 210 40% 98%;
+  --zinc-50: 9 9 11;
+  --zinc-100: 24 24 27;
+  --zinc-200: 39 39 42;
+  --zinc-300: 63 63 70;
+  --zinc-400: 82 82 91;
+  --zinc-500: 113 113 122;
+  --zinc-600: 161 161 170;
+  --zinc-700: 212 212 216;
+  --zinc-800: 228 228 231;
+  --zinc-900: 255 255 255;
+  --zinc-950: 247 247 248;
+  --scroll-thumb: 212 212 216;
 }
 
 * {
@@ -19,14 +58,14 @@
 }
 
 html {
-  color-scheme: dark;
+  color-scheme: inherit;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
-  background: hsl(var(--background));
-  color: hsl(var(--foreground));
+  background: rgb(var(--zinc-950));
+  color: rgb(var(--zinc-100));
   font-family: var(--font-sans), Inter, sans-serif;
 }
 
@@ -37,7 +76,9 @@ kbd {
 }
 
 button,
-input {
+input,
+select,
+textarea {
   font: inherit;
 }
 
@@ -55,7 +96,7 @@ input {
 
 .nova-scroll {
   scrollbar-width: thin;
-  scrollbar-color: rgb(63 63 70) transparent;
+  scrollbar-color: rgb(var(--scroll-thumb)) transparent;
 }
 
 .nova-scroll::-webkit-scrollbar {
@@ -67,8 +108,37 @@ input {
 }
 
 .nova-scroll::-webkit-scrollbar-thumb {
-  background: rgb(63 63 70);
+  background: rgb(var(--scroll-thumb));
   border-radius: 999px;
+}
+
+html.light .nova-card {
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.05);
+}
+
+html.light .text-blue-200,
+html.light .text-blue-300,
+html.light .text-blue-400 {
+  color: rgb(37 99 235);
+}
+
+html.light .text-sky-400 {
+  color: rgb(2 132 199);
+}
+
+html.light .text-emerald-400,
+html.light .text-emerald-300 {
+  color: rgb(5 150 105);
+}
+
+html.light .text-amber-400,
+html.light .text-amber-300 {
+  color: rgb(217 119 6);
+}
+
+html.light .text-rose-400,
+html.light .text-rose-300 {
+  color: rgb(225 29 72);
 }
 
 .cmdk-item {
@@ -78,11 +148,11 @@ input {
   border-radius: 0.375rem;
   padding: 0.5rem 0.625rem;
   font-size: 0.8125rem;
-  color: rgb(212 212 216);
+  color: rgb(var(--zinc-300));
   cursor: pointer;
 }
 
 .cmdk-item[data-selected='true'] {
-  background: rgb(24 24 27);
-  color: white;
+  background: rgb(var(--zinc-800));
+  color: rgb(var(--zinc-50));
 }

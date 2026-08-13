@@ -46,7 +46,7 @@ export function UsersDashboard({ users, canCreate }: { users: DirectoryUser[]; c
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Configuration</p>
-            <h1 className="text-2xl font-semibold text-white">Users</h1>
+            <h1 className="text-2xl font-semibold text-zinc-50">Users</h1>
             <p className="mt-1 text-sm text-zinc-500">Access is the app role. Level is L1/L2/L3 from assignment groups.</p>
           </div>
           {canCreate ? (
@@ -106,7 +106,7 @@ export function UsersDashboard({ users, canCreate }: { users: DirectoryUser[]; c
                 rows.map((user) => (
                   <tr key={user.id} className="border-b border-zinc-800/80 hover:bg-zinc-900/80">
                     <td className="px-3 py-2.5">
-                      <Link href={`/users/${user.id}`} className="text-white hover:text-blue-200">
+                      <Link href={`/users/${user.id}`} className="text-zinc-50 hover:text-blue-200">
                         {user.fullName}
                       </Link>
                       <p className="text-xs text-zinc-500">{user.email ?? '—'}</p>
@@ -134,13 +134,13 @@ export function UsersDashboard({ users, canCreate }: { users: DirectoryUser[]; c
         <Card>
           <CardContent className="p-4">
             <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Staff</p>
-            <p className="mt-1 text-xl font-semibold text-white">{staffCount}</p>
+            <p className="mt-1 text-xl font-semibold text-zinc-50">{staffCount}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">L2 / L3</p>
-            <p className="mt-1 text-xl font-semibold text-white">{l2Count}</p>
+            <p className="mt-1 text-xl font-semibold text-zinc-50">{l2Count}</p>
           </CardContent>
         </Card>
         <p className="text-sm leading-6 text-zinc-400">

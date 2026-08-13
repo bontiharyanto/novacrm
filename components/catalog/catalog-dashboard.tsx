@@ -38,7 +38,7 @@ export function CatalogDashboard() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Service catalog</p>
-          <h1 className="text-2xl font-semibold text-white">Catalog items</h1>
+          <h1 className="text-2xl font-semibold text-zinc-50">Catalog items</h1>
         </div>
         <div className="flex gap-2">
           <Link
@@ -65,7 +65,7 @@ export function CatalogDashboard() {
           <Card key={stat.label}>
             <CardContent className="p-4">
               <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{stat.label}</p>
-              <p className="mt-1 text-xl font-semibold text-white">{loading ? '—' : stat.value}</p>
+              <p className="mt-1 text-xl font-semibold text-zinc-50">{loading ? '—' : stat.value}</p>
             </CardContent>
           </Card>
         ))}
@@ -92,7 +92,7 @@ export function CatalogDashboard() {
                 {items.map((item) => (
                   <tr key={item.id} className="border-b border-zinc-800/80 hover:bg-zinc-900/80">
                     <td className="px-3 py-2.5">
-                      <Link href={`/catalog/${item.id}`} className="flex items-center gap-2 text-white hover:text-blue-200">
+                      <Link href={`/catalog/${item.id}`} className="flex items-center gap-2 text-zinc-50 hover:text-blue-200">
                         <CatalogIcon id={item.icon} className="h-3.5 w-3.5 text-zinc-400" />
                         {item.name}
                       </Link>
@@ -121,7 +121,7 @@ export function CatalogDashboard() {
                 href={`/catalog/sets/${set.id}`}
                 className="rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-3 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-zinc-700"
               >
-                <p className="text-sm text-white">{set.name}</p>
+                <p className="text-sm text-zinc-50">{set.name}</p>
                 <p className="text-[11px] text-zinc-500">{set.variables.length} variables</p>
               </Link>
             ))}

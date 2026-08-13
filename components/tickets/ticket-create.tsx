@@ -141,7 +141,7 @@ export function TicketCreate({ currentUserId }: { currentUserId: string }) {
               <ArrowLeft className="h-3.5 w-3.5" /> Tickets
             </Link>
             <div className="mt-1 flex flex-wrap items-center gap-2">
-              <h1 className="text-xl font-semibold text-white">New {meta.label.toLowerCase()}</h1>
+              <h1 className="text-xl font-semibold text-zinc-50">New {meta.label.toLowerCase()}</h1>
               <TypeBadge type={ticketType} />
             </div>
             <p className="mt-1 text-sm text-zinc-500">{meta.description}</p>
@@ -176,7 +176,7 @@ export function TicketCreate({ currentUserId }: { currentUserId: string }) {
                   )}
                 >
                   <p className="font-mono text-[11px] text-zinc-500">{option.prefix}</p>
-                  <p className="mt-1 text-sm font-medium text-white">{option.label}</p>
+                  <p className="mt-1 text-sm font-medium text-zinc-50">{option.label}</p>
                   <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-zinc-500">{option.description}</p>
                 </button>
               );
@@ -191,7 +191,7 @@ export function TicketCreate({ currentUserId }: { currentUserId: string }) {
               placeholder="Short description"
               required
               autoFocus
-              className="w-full bg-transparent text-2xl font-semibold text-white outline-none placeholder:text-zinc-600"
+              className="w-full bg-transparent text-2xl font-semibold text-zinc-50 outline-none placeholder:text-zinc-600"
             />
             <p className="mb-2 mt-5 text-[11px] uppercase tracking-[0.16em] text-zinc-500">Details</p>
             <CommentEditor value={description} onChange={setDescription} minHeightClass="min-h-56" />

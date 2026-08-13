@@ -20,8 +20,9 @@ services:
       MINIO_PUBLIC_ENDPOINT: http://127.0.0.1:9000
       SMTP_HOST: host.docker.internal
       SMTP_PORT: '54325'
+      APP_URL: http://127.0.0.1:${APP_PORT:-3001}
     ports:
-      - '3000:3000'
+      - '${APP_PORT:-3001}:3000'
     depends_on:
       redis:
         condition: service_started
