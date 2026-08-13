@@ -1,64 +1,121 @@
-export type AssetRecord = {
+'use server';
+
+import { assetSchema, type AssetRecord } from '@/lib/assets/schema';
+import { getSessionProfile } from '@/lib/auth/session';
+import { canRole } from '@/lib/rbac/ability';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
+
+type AssetRow = {
   id: string;
-  tenantId: string;
+  tenant_id: string;
   name: string;
-  assetTag: string;
-  type: 'laptop' | 'server' | 'network' | 'printer' | 'mobile';
-  brand?: string;
-  model?: string;
-  serial?: string;
-  purchaseDate?: string;
-  cost?: number;
-  status: 'active' | 'in_repair' | 'retired' | 'lost';
-  location?: string;
-  assignedTo?: string;
-  notes?: string;
-  createdAt: string;
+  asset_tag: string;
+  type: AssetRecord['type'];
+  brand?: string | null;
+  model?: string | null;
+  serial?: string | null;
+  purchase_date?: string | null;
+  cost?: number | string | null;
+  status: AssetRecord['status'];
+  location?: string | null;
+  assigned_to?: string | null;
+  notes?: { text?: string } | string | null;
+  created_at: string;
 };
 
-const assets = new Map<string, AssetRecord>();
+function mapAsset(row: AssetRow): AssetRecord {
+  const notes = typeof row.notes === 'string' ? row.notes : row.notes?.text;
+  return {
+    id: row.id,
+    tenantId: row.tenant_id,
+    name: row.name,
+    assetTag: row.asset_tag,
+    type: row.type,
+    brand: row.brand ?? undefined,
+    model: row.model ?? undefined,
+    serial: row.serial ?? undefined,
+    purchaseDate: row.purchase_date ?? undefined,
+    cost: row.cost == null ? undefined : Number(row.cost),
+    status: row.status,
+    location: row.location ?? undefined,
+    assignedTo: row.assigned_to ?? undefined,
+    notes,
+    createdAt: row.created_at,
+  };
+}
 
 export async function listAssets() {
-  return Array.from(assets.values()).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  const session = await getSessionProfile();
+  if (!session || !canRole(session.profile.role, 'read', 'Asset')) {
+    return [];
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from('assets')
+    .select('*')
+    .eq('tenant_id', session.profile.tenantId)
+    .order('created_at', { ascending: false });
+
+  if (error || !data) {
+    return [];
+  }
+
+  return data.map((row) => mapAsset(row as AssetRow));
 }
 
 export async function createAsset(input: unknown) {
-  const payload = input as Partial<AssetRecord> & {
-    name?: string;
-    type?: AssetRecord['type'];
-    status?: AssetRecord['status'];
-    assignedTo?: string;
-    location?: string;
-    notes?: string;
-  };
+  const parsed = assetSchema.parse(input);
+  const session = await getSessionProfile();
 
-  const name = payload.name?.trim() || 'Untitled asset';
-  const assetType = payload.type || 'laptop';
-  const status = payload.status || 'active';
+  if (!session || !canRole(session.profile.role, 'create', 'Asset')) {
+    return { data: null, error: 'Unauthorized' };
+  }
+
+  const supabase = await createSupabaseServerClient();
   const assetTag = `AST-${Date.now().toString().slice(-6)}`;
 
-  const record: AssetRecord = {
-    id: `AST-${Date.now()}`,
-    tenantId: 'demo-tenant',
-    name,
-    assetTag,
-    type: assetType,
-    brand: payload.brand,
-    model: payload.model,
-    serial: payload.serial,
-    purchaseDate: payload.purchaseDate,
-    cost: payload.cost,
-    status,
-    location: payload.location,
-    assignedTo: payload.assignedTo,
-    notes: payload.notes,
-    createdAt: new Date().toISOString(),
-  };
+  const { data, error } = await supabase
+    .from('assets')
+    .insert({
+      tenant_id: session.profile.tenantId,
+      name: parsed.name,
+      asset_tag: assetTag,
+      type: parsed.type,
+      brand: parsed.brand,
+      model: parsed.model,
+      serial: parsed.serial,
+      purchase_date: parsed.purchaseDate || null,
+      cost: parsed.cost ?? null,
+      status: parsed.status,
+      location: parsed.location,
+      assigned_to: parsed.assignedTo,
+      notes: { text: parsed.notes ?? '' },
+      created_by: session.userId,
+    })
+    .select('*')
+    .single();
 
-  assets.set(record.id, record);
-  return { data: record, error: null };
+  if (error || !data) {
+    return { data: null, error: error?.message ?? 'Unable to create asset' };
+  }
+
+  return { data: mapAsset(data as AssetRow), error: null };
 }
 
 export async function getAssetById(assetId: string) {
-  return assets.get(assetId) ?? null;
+  const session = await getSessionProfile();
+  if (!session || !canRole(session.profile.role, 'read', 'Asset')) {
+    return null;
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data } = await supabase
+    .from('assets')
+    .select('*')
+    .eq('id', assetId)
+    .eq('tenant_id', session.profile.tenantId)
+    .maybeSingle();
+
+  return data ? mapAsset(data as AssetRow) : null;
 }

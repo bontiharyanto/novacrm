@@ -2,6 +2,7 @@ version: '3.9'
 
 services:
   app:
+    platform: linux/arm64
     build:
       context: .
       dockerfile: Dockerfile
@@ -11,19 +12,48 @@ services:
       NODE_ENV: development
       NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-https://example.supabase.co}
       NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-public-anon-key}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:-}
       REDIS_URL: redis://redis:6379
+      MINIO_ENDPOINT: http://minio:9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_BUCKET: novacrm
     depends_on:
       - redis
       - minio
     restart: unless-stopped
 
+  worker:
+    platform: linux/arm64
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: npm run worker
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-https://example.supabase.co}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-public-anon-key}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY:-}
+      REDIS_URL: redis://redis:6379
+      WHATSAPP_API_KEY: ${WHATSAPP_API_KEY:-}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-NovaCRM <no-reply@novacrm.app>}
+    depends_on:
+      - redis
+    restart: unless-stopped
+
   redis:
+    platform: linux/arm64
     image: redis:7-alpine
     ports:
       - '6379:6379'
+    volumes:
+      - redis_data:/data
     restart: unless-stopped
 
   minio:
+    platform: linux/arm64
     image: minio/minio:latest
     command: server /data --console-address ':9001'
     environment:
@@ -36,5 +66,19 @@ services:
       - minio_data:/data
     restart: unless-stopped
 
+  minio-init:
+    platform: linux/arm64
+    image: minio/mc:latest
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      sleep 4;
+      mc alias set local http://minio:9000 minioadmin minioadmin;
+      mc mb -p local/novacrm || true;
+      exit 0;
+      "
+
 volumes:
   minio_data:
+  redis_data:

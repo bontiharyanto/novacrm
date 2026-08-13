@@ -1,6 +1,6 @@
-import { processNotificationJob } from '@/lib/queue/notification.worker';
-import { getTicketTemplates } from '@/lib/notifications/templates';
-import { renderTemplate } from '@/lib/notifications/templates';
+import { enqueueNotification } from '@/lib/queue/notification.queue';
+import type { NotificationJobPayload } from '@/lib/notifications/types';
+import { getTicketTemplates, renderTemplate } from '@/lib/notifications/templates';
 import { buildTicketNotificationMessage } from '@/lib/notifications/helpers';
 
 export type TicketEventContext = {
@@ -22,12 +22,6 @@ export type TicketEventContext = {
 export async function dispatchTicketNotification(context: TicketEventContext) {
   const { event, ticket, message } = context;
   const templates = getTicketTemplates(event);
-  renderTemplate(templates.subject ?? 'NovaCRM Ticket Update', {
-    id: ticket.id,
-    name: ticket.requesterName ?? 'Customer',
-    status: ticket.status,
-    title: ticket.title,
-  });
 
   const body = renderTemplate(templates.body, {
     id: ticket.id,
@@ -44,11 +38,11 @@ export async function dispatchTicketNotification(context: TicketEventContext) {
       status: ticket.status,
       requesterName: ticket.requesterName,
     },
-    body
+    body,
   );
 
-  return processNotificationJob({
-    tenantId: ticket.tenantId ?? 'demo-tenant',
+  const payload: NotificationJobPayload = {
+    tenantId: ticket.tenantId ?? '',
     event,
     ticketId: ticket.id,
     title: ticket.title,
@@ -59,5 +53,7 @@ export async function dispatchTicketNotification(context: TicketEventContext) {
     requesterPhone: ticket.requesterPhone,
     assigneeChatId: ticket.assigneeChatId,
     message: notificationMessage,
-  });
+  };
+
+  return enqueueNotification(payload);
 }

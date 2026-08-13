@@ -21,6 +21,9 @@ type SettingsState = {
   telegramChatId: string;
   emailApiKey: string;
   emailFrom: string;
+  whatsappConfigured?: boolean;
+  telegramConfigured?: boolean;
+  emailConfigured?: boolean;
 };
 
 const initialState: SettingsState = {
@@ -42,7 +45,14 @@ export function NotificationSettingsForm() {
       const response = await fetch('/api/settings/notifications');
       const payload = await response.json();
       if (payload.data) {
-        setSettings({ ...initialState, ...payload.data });
+        setSettings({
+          ...initialState,
+          telegramChatId: payload.data.telegramChatId ?? '',
+          emailFrom: payload.data.emailFrom ?? initialState.emailFrom,
+          whatsappConfigured: payload.data.whatsappConfigured,
+          telegramConfigured: payload.data.telegramConfigured,
+          emailConfigured: payload.data.emailConfigured,
+        });
       }
 
       const logResponse = await fetch('/api/notifications/logs');
@@ -100,7 +110,7 @@ export function NotificationSettingsForm() {
                 type="password"
                 value={settings.whatsappApiKey}
                 onChange={(event) => setSettings((prev) => ({ ...prev, whatsappApiKey: event.target.value }))}
-                placeholder="Fonnte token"
+                placeholder={settings.whatsappConfigured ? 'Tersimpan (biarkan kosong untuk keep)' : 'Fonnte token'}
               />
             </div>
             <Button onClick={() => void testChannel('whatsapp')}>Kirim Test</Button>

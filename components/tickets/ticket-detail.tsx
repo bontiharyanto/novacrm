@@ -3,12 +3,16 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { formatRelativeId } from '@/lib/utils/dates';
+import { useRealtimeTable } from '@/lib/supabase/realtime';
+import { CommentEditor, CommentHtml } from '@/components/tickets/comment-editor';
+import type { TicketStatus } from '@/lib/tickets/schema';
 
 type TicketItem = {
   id: string;
   title: string;
   description: string;
-  status: 'open' | 'in_progress' | 'waiting' | 'on_hold' | 'resolved' | 'closed';
+  status: TicketStatus;
   priority: 'low' | 'medium' | 'high' | 'critical';
   dueDate?: string;
   requesterName: string;
@@ -22,18 +26,20 @@ type TicketItem = {
 const statusColors: Record<string, string> = {
   open: 'bg-sky-500/15 text-sky-300 border-sky-500/30',
   in_progress: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
-  waiting: 'bg-purple-500/15 text-purple-300 border-purple-500/30',
-  on_hold: 'bg-orange-500/15 text-orange-300 border-orange-500/30',
+  waiting: 'bg-sky-500/15 text-sky-300 border-sky-500/30',
+  hold: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
   resolved: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
   closed: 'bg-zinc-500/15 text-zinc-300 border-zinc-500/30',
 };
 
 export function TicketDetail({ ticketId }: { ticketId: string }) {
   const [ticket, setTicket] = useState<TicketItem | null>(null);
-  const [status, setStatus] = useState<'open' | 'in_progress' | 'waiting' | 'on_hold' | 'resolved' | 'closed'>('open');
+  const [status, setStatus] = useState<TicketStatus>('open');
   const [comment, setComment] = useState('');
+  const [editorKey, setEditorKey] = useState(0);
   const [author, setAuthor] = useState('Agent');
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
 
   const loadTicket = useCallback(async () => {
     const response = await fetch(`/api/tickets/${ticketId}`);
@@ -48,6 +54,9 @@ export function TicketDetail({ ticketId }: { ticketId: string }) {
   useEffect(() => {
     void loadTicket();
   }, [loadTicket]);
+
+  useRealtimeTable('tickets', loadTicket);
+  useRealtimeTable('ticket_comments', loadTicket);
 
   async function handleStatusUpdate() {
     if (!ticket) return;
@@ -74,8 +83,41 @@ export function TicketDetail({ ticketId }: { ticketId: string }) {
 
     if (response.ok) {
       setComment('');
+      setEditorKey((value) => value + 1);
       await loadTicket();
     }
+  }
+
+  async function handleUpload(file: File) {
+    setIsUploading(true);
+    const presign = await fetch('/api/storage/presign', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ filename: file.name, contentType: file.type || 'application/octet-stream' }),
+    });
+    const payload = await presign.json();
+    if (!presign.ok || !payload.data?.url) {
+      setIsUploading(false);
+      return;
+    }
+
+    await fetch(payload.data.url, {
+      method: 'PUT',
+      headers: { 'Content-Type': file.type || 'application/octet-stream' },
+      body: file,
+    });
+
+    await fetch(`/api/tickets/${ticketId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        author,
+        comment: `Attachment uploaded: ${file.name} (${payload.data.key})`,
+      }),
+    });
+
+    await loadTicket();
+    setIsUploading(false);
   }
 
   const slaLabel = (() => {
@@ -96,7 +138,7 @@ export function TicketDetail({ ticketId }: { ticketId: string }) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-blue-400">Ticket</p>
-          <h1 className="text-3xl font-bold text-white">#{ticket.id}</h1>
+          <h1 className="font-mono text-3xl font-bold text-white">#{ticket.id.slice(0, 8)}</h1>
         </div>
         <span className={`inline-flex rounded-full border px-3 py-1 text-xs font-medium ${statusColors[ticket.status] ?? 'bg-zinc-800 text-zinc-200'}`}>
           {ticket.status.replace('_', ' ')}
@@ -110,12 +152,12 @@ export function TicketDetail({ ticketId }: { ticketId: string }) {
           </CardHeader>
           <CardContent className="space-y-4 text-sm text-zinc-300">
             <p>{ticket.description || 'No description provided.'}</p>
-            <div className="grid gap-3 sm:grid-cols-2 text-xs text-zinc-400">
+            <div className="grid gap-3 text-xs text-zinc-400 sm:grid-cols-2">
               <div><span className="text-zinc-500">Requester:</span> {ticket.requesterName}</div>
               {ticket.requesterEmail && <div><span className="text-zinc-500">Email:</span> {ticket.requesterEmail}</div>}
               {ticket.requesterPhone && <div><span className="text-zinc-500">WhatsApp:</span> {ticket.requesterPhone}</div>}
               {ticket.assigneeName && <div><span className="text-zinc-500">Assignee:</span> {ticket.assigneeName}</div>}
-              {ticket.dueDate && <div><span className="text-zinc-500">Due:</span> {new Date(ticket.dueDate).toLocaleString()}</div>}
+              {ticket.dueDate && <div><span className="text-zinc-500">Due:</span> {new Date(ticket.dueDate).toLocaleString('id-ID')}</div>}
               <div><span className="text-zinc-500">SLA:</span> {slaLabel}</div>
             </div>
           </CardContent>
@@ -128,13 +170,13 @@ export function TicketDetail({ ticketId }: { ticketId: string }) {
           <CardContent className="space-y-4">
             <select
               value={status}
-              onChange={(event) => setStatus(event.target.value as typeof status)}
+              onChange={(event) => setStatus(event.target.value as TicketStatus)}
               className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100"
             >
               <option value="open">Open</option>
               <option value="in_progress">In Progress</option>
               <option value="waiting">Waiting</option>
-              <option value="on_hold">On Hold</option>
+              <option value="hold">Hold</option>
               <option value="resolved">Resolved</option>
               <option value="closed">Closed</option>
             </select>
@@ -156,13 +198,23 @@ export function TicketDetail({ ticketId }: { ticketId: string }) {
             className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100"
             placeholder="Agent name"
           />
-          <textarea
-            value={comment}
-            onChange={(event) => setComment(event.target.value)}
-            className="min-h-28 w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100"
-            placeholder="Write a comment or update"
-          />
-          <Button onClick={() => void handleAddComment()} disabled={!comment.trim()}>Add comment</Button>
+          <CommentEditor key={editorKey} value={comment} onChange={setComment} />
+          <div className="flex flex-wrap items-center gap-3">
+            <Button onClick={() => void handleAddComment()} disabled={!comment.trim()}>Add comment</Button>
+            <label className="cursor-pointer text-xs text-blue-300">
+              {isUploading ? 'Uploading...' : 'Attach file (MinIO)'}
+              <input
+                type="file"
+                className="hidden"
+                disabled={isUploading}
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (file) void handleUpload(file);
+                  event.target.value = '';
+                }}
+              />
+            </label>
+          </div>
         </CardContent>
       </Card>
 
@@ -178,9 +230,9 @@ export function TicketDetail({ ticketId }: { ticketId: string }) {
               <div key={item.id} className="rounded-lg border border-zinc-800 bg-zinc-950/60 p-3">
                 <div className="mb-2 flex items-center justify-between gap-3 text-xs text-zinc-400">
                   <span>{item.author}</span>
-                  <span>{new Date(item.createdAt).toLocaleString()}</span>
+                  <span>{formatRelativeId(item.createdAt)}</span>
                 </div>
-                <p className="text-sm text-zinc-200">{item.comment}</p>
+                <CommentHtml html={item.comment} />
               </div>
             ))
           )}

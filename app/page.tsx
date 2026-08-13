@@ -1,10 +1,13 @@
-import { AdminShell } from '@/components/layout/admin-shell';
-import { TicketDashboard } from '@/components/tickets/ticket-dashboard';
+import { redirect } from 'next/navigation';
+import { getSessionProfile } from '@/lib/auth/session';
 
-export default function HomePage() {
-  return (
-    <AdminShell>
-      <TicketDashboard />
-    </AdminShell>
-  );
+export default async function HomePage() {
+  const session = await getSessionProfile();
+  if (!session) {
+    redirect('/login');
+  }
+  if (session.profile.role === 'customer') {
+    redirect('/portal');
+  }
+  redirect('/tickets');
 }

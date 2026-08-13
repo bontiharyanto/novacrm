@@ -1,7 +1,11 @@
-export type WorkflowEvent =
-  | 'ticket.create'
-  | 'ticket.status_change'
-  | 'ticket.comment_add';
+'use server';
+
+import { z } from 'zod';
+import { getSessionProfile } from '@/lib/auth/session';
+import { canRole } from '@/lib/rbac/ability';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
+
+export type WorkflowEvent = 'ticket.create' | 'ticket.status_change' | 'ticket.comment_add';
 
 export type WorkflowRule = {
   id: string;
@@ -12,56 +16,109 @@ export type WorkflowRule = {
   createdAt: string;
 };
 
-const rules: WorkflowRule[] = [
-  {
-    id: 'wf-1',
-    name: 'Auto acknowledge new ticket',
-    event: 'ticket.create',
-    action: 'send_email',
-    target: 'requester',
-    createdAt: new Date().toISOString(),
-  },
-  {
-    id: 'wf-2',
-    name: 'Escalate high priority',
-    event: 'ticket.status_change',
-    action: 'assign',
-    target: 'ops-team',
-    createdAt: new Date().toISOString(),
-  },
-];
+const workflowSchema = z.object({
+  name: z.string().min(1).max(200),
+  event: z.enum(['ticket.create', 'ticket.status_change', 'ticket.comment_add']),
+  action: z.enum(['send_email', 'assign', 'change_status', 'create_asset']),
+  target: z.string().optional(),
+});
+
+type WorkflowRow = {
+  id: string;
+  name: string;
+  event: WorkflowEvent;
+  action: WorkflowRule['action'];
+  target?: string | null;
+  created_at: string;
+};
+
+function mapRule(row: WorkflowRow): WorkflowRule {
+  return {
+    id: row.id,
+    name: row.name,
+    event: row.event,
+    action: row.action,
+    target: row.target ?? undefined,
+    createdAt: row.created_at,
+  };
+}
 
 export async function listWorkflowRules() {
-  return rules;
+  const session = await getSessionProfile();
+  if (!session || !canRole(session.profile.role, 'read', 'Workflow')) {
+    return [];
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from('workflow_rules')
+    .select('*')
+    .eq('tenant_id', session.profile.tenantId)
+    .order('created_at', { ascending: false });
+
+  if (error || !data) {
+    return [];
+  }
+
+  return data.map((row) => mapRule(row as WorkflowRow));
 }
 
 export async function createWorkflowRule(input: unknown) {
-  const payload = input as Partial<WorkflowRule> & { name?: string; event?: WorkflowEvent; action?: WorkflowRule['action'] };
+  const parsed = workflowSchema.parse(input);
+  const session = await getSessionProfile();
 
-  const rule: WorkflowRule = {
-    id: `WF-${Date.now()}`,
-    name: payload.name || 'New workflow rule',
-    event: payload.event || 'ticket.create',
-    action: payload.action || 'send_email',
-    target: payload.target,
-    createdAt: new Date().toISOString(),
-  };
+  if (!session || !canRole(session.profile.role, 'create', 'Workflow')) {
+    return { data: null, error: 'Unauthorized' };
+  }
 
-  rules.push(rule);
-  return { data: rule, error: null };
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from('workflow_rules')
+    .insert({
+      tenant_id: session.profile.tenantId,
+      name: parsed.name,
+      event: parsed.event,
+      action: parsed.action,
+      target: parsed.target,
+      created_by: session.userId,
+    })
+    .select('*')
+    .single();
+
+  if (error || !data) {
+    return { data: null, error: error?.message ?? 'Unable to create workflow rule' };
+  }
+
+  return { data: mapRule(data as WorkflowRow), error: null };
 }
 
 export async function evaluateWorkflow(event: WorkflowEvent, context: Record<string, unknown>) {
-  const matches = rules.filter((rule) => rule.event === event);
+  const tenantId = typeof context.tenantId === 'string' ? context.tenantId : null;
+  if (!tenantId) {
+    return { data: [], error: null };
+  }
 
-  return {
-    data: matches.map((rule) => ({
-      ruleId: rule.id,
-      name: rule.name,
-      action: rule.action,
-      target: rule.target,
-      context,
-    })),
-    error: null,
-  };
+  try {
+    const { createSupabaseAdminClient, hasServiceRole } = await import('@/lib/supabase/admin');
+    const supabase = hasServiceRole() ? createSupabaseAdminClient() : await createSupabaseServerClient();
+    const { data } = await supabase
+      .from('workflow_rules')
+      .select('*')
+      .eq('tenant_id', tenantId)
+      .eq('event', event)
+      .eq('is_active', true);
+
+    return {
+      data: (data ?? []).map((rule) => ({
+        ruleId: rule.id,
+        name: rule.name,
+        action: rule.action,
+        target: rule.target,
+        context,
+      })),
+      error: null,
+    };
+  } catch {
+    return { data: [], error: null };
+  }
 }

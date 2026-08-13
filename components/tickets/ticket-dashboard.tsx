@@ -1,17 +1,19 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TicketKanban } from '@/components/tickets/ticket-kanban';
+import { useRealtimeTable } from '@/lib/supabase/realtime';
+import type { TicketStatus } from '@/lib/tickets/schema';
 
 type TicketItem = {
   id: string;
   title: string;
   description: string;
-  status: 'open' | 'in_progress' | 'waiting' | 'on_hold' | 'resolved' | 'closed';
+  status: TicketStatus;
   priority: 'low' | 'medium' | 'high' | 'critical';
   dueDate?: string;
   requesterName: string;
@@ -31,15 +33,18 @@ export function TicketDashboard() {
   const [dueDate, setDueDate] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  async function loadTickets() {
+  const loadTickets = useCallback(async () => {
     const response = await fetch('/api/tickets');
     const payload = await response.json();
     setTickets(payload.data ?? []);
-  }
+  }, []);
 
   useEffect(() => {
     void loadTickets();
-  }, []);
+  }, [loadTickets]);
+
+  useRealtimeTable('tickets', loadTickets);
+  useRealtimeTable('ticket_comments', loadTickets);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -76,8 +81,20 @@ export function TicketDashboard() {
     setIsSubmitting(false);
   }
 
+  async function handleStatusChange(ticketId: string, status: TicketStatus) {
+    setTickets((current) => current.map((ticket) => (ticket.id === ticketId ? { ...ticket, status } : ticket)));
+    const response = await fetch(`/api/tickets/${ticketId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    });
+    if (!response.ok) {
+      await loadTickets();
+    }
+  }
+
   const openCount = tickets.filter((ticket) => ticket.status === 'open').length;
-  const onHoldCount = tickets.filter((ticket) => ticket.status === 'on_hold').length;
+  const onHoldCount = tickets.filter((ticket) => ticket.status === 'hold').length;
   const atRiskCount = tickets.filter((ticket) => {
     if (ticket.status === 'resolved' || ticket.status === 'closed') return false;
     if (!ticket.dueDate) return false;
@@ -93,7 +110,9 @@ export function TicketDashboard() {
           <p className="text-sm uppercase tracking-[0.2em] text-blue-400">Tickets</p>
           <h1 className="text-3xl font-bold text-white">Operations dashboard</h1>
         </div>
-        <Button type="button">New ticket</Button>
+        <Button type="button" onClick={() => document.getElementById('title')?.focus()}>
+          New ticket
+        </Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
@@ -111,7 +130,7 @@ export function TicketDashboard() {
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-xs uppercase tracking-[0.2em] text-orange-400">On Hold</p>
+            <p className="text-xs uppercase tracking-[0.2em] text-amber-400">Hold</p>
             <p className="mt-2 text-2xl font-semibold text-white">{onHoldCount}</p>
           </CardContent>
         </Card>
@@ -168,7 +187,7 @@ export function TicketDashboard() {
           <CardContent className="p-6 text-zinc-400">No tickets yet.</CardContent>
         </Card>
       ) : (
-        <TicketKanban tickets={tickets} />
+        <TicketKanban tickets={tickets} onStatusChange={(ticketId, status) => void handleStatusChange(ticketId, status)} />
       )}
     </div>
   );

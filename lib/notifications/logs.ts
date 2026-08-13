@@ -1,4 +1,6 @@
-import { supabase } from '@/lib/supabase/client';
+import { createSupabaseAdminClient, hasServiceRole } from '@/lib/supabase/admin';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 export type NotificationLogEntry = {
   id: string;
@@ -12,7 +14,12 @@ export type NotificationLogEntry = {
   createdAt: string;
 };
 
-const logStore = new Map<string, NotificationLogEntry[]>();
+async function getLogClient(): Promise<SupabaseClient> {
+  if (hasServiceRole()) {
+    return createSupabaseAdminClient();
+  }
+  return createSupabaseServerClient();
+}
 
 export async function appendNotificationLog(input: {
   tenantId: string;
@@ -22,24 +29,12 @@ export async function appendNotificationLog(input: {
   body: string;
   status: 'queued' | 'sent' | 'failed';
   ticketId?: string;
+  createdBy?: string;
 }) {
-  const entry: NotificationLogEntry = {
-    id: `LOG-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
-    tenantId: input.tenantId,
-    channel: input.channel,
-    recipient: input.recipient,
-    subject: input.subject ?? 'NovaCRM notification',
-    body: input.body,
-    status: input.status,
-    ticketId: input.ticketId ?? null,
-    createdAt: new Date().toISOString(),
-  };
-
-  const tenantLogs = logStore.get(input.tenantId) ?? [];
-  logStore.set(input.tenantId, [entry, ...tenantLogs].slice(0, 50));
-
-  try {
-    const { error } = await supabase.from('notification_logs').insert({
+  const client = await getLogClient();
+  const { data, error } = await client
+    .from('notification_logs')
+    .insert({
       tenant_id: input.tenantId,
       channel: input.channel,
       recipient: input.recipient,
@@ -47,47 +42,51 @@ export async function appendNotificationLog(input: {
       body: input.body,
       status: input.status,
       ticket_id: input.ticketId ?? null,
-    });
+      created_by: input.createdBy ?? null,
+    })
+    .select('*')
+    .single();
 
-    if (error) {
-      return { data: entry, error: error.message };
-    }
+  const entry: NotificationLogEntry = {
+    id: data?.id ?? `LOG-${Date.now()}`,
+    tenantId: input.tenantId,
+    channel: input.channel,
+    recipient: input.recipient,
+    subject: input.subject ?? 'NovaCRM notification',
+    body: input.body,
+    status: input.status,
+    ticketId: input.ticketId ?? null,
+    createdAt: data?.created_at ?? new Date().toISOString(),
+  };
 
-    return { data: entry, error: null };
-  } catch (error) {
-    return {
-      data: entry,
-      error: error instanceof Error ? error.message : 'Unable to save notification log',
-    };
-  }
+  return { data: entry, error: error?.message ?? null };
 }
 
-export async function listNotificationLogs(tenantId = 'default') {
-  try {
-    const { data, error } = await supabase.from('notification_logs').select('*').eq('tenant_id', tenantId).order('created_at', { ascending: false }).limit(20);
+export async function listNotificationLogs(tenantId: string) {
+  const client = await getLogClient();
+  const { data, error } = await client
+    .from('notification_logs')
+    .select('*')
+    .eq('tenant_id', tenantId)
+    .order('created_at', { ascending: false })
+    .limit(20);
 
-    if (!error && data) {
-      return {
-        data: (data ?? []).map((row) => ({
-          id: row.id,
-          tenantId: row.tenant_id,
-          channel: row.channel,
-          recipient: row.recipient,
-          subject: row.subject,
-          body: row.body,
-          status: row.status,
-          ticketId: row.ticket_id,
-          createdAt: row.created_at,
-        })),
-        error: null,
-      };
-    }
-  } catch {
-    // fall through to in-memory logs
+  if (error) {
+    return { data: [] as NotificationLogEntry[], error: error.message };
   }
 
   return {
-    data: logStore.get(tenantId) ?? [],
+    data: (data ?? []).map((row) => ({
+      id: row.id,
+      tenantId: row.tenant_id,
+      channel: row.channel,
+      recipient: row.recipient,
+      subject: row.subject,
+      body: row.body,
+      status: row.status,
+      ticketId: row.ticket_id,
+      createdAt: row.created_at,
+    })) as NotificationLogEntry[],
     error: null,
   };
 }

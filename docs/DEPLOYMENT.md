@@ -1,126 +1,91 @@
 # Deployment Guide
 
-This document outlines a practical production deployment setup for NovaCRM and explains the recommended runtime model for a real support operations system.
+NovaCRM production path: GitHub Actions builds a multi-arch image to GHCR, then SSH-deploys `docker-compose.prod.yml`.
 
-## Deployment Overview
+## Runtime
 
-NovaCRM is built as a Next.js application with server-side API routes. The recommended production setup is:
-
-- Frontend and API: Vercel or a containerized Node runtime
+- Web: Next.js (3 replicas behind Traefik)
+- Worker: BullMQ notification processor
 - Database: Supabase Postgres
-- Queue: Redis + BullMQ for background notification processing
-- Messaging providers: WhatsApp, Telegram, and email services via API keys
-- Hosting: Docker-compatible environment for self-hosted or cloud deployments
+- Queue: Redis
+- Files: MinIO, uploaded with presigned URLs
+- Edge: Traefik + Let's Encrypt
 
-## Recommended Production Stack
+## GitHub Actions
 
-### 1. Application hosting
-Use Vercel for a straightforward deployment of the Next.js app because it supports serverless API routes and simple environment variable management.
+Workflow: `.github/workflows/deploy.yml`
 
-### 2. Data persistence
-Use Supabase for managed Postgres and migration-based schema management.
+On pull request: test only. On push to `main`: test, build/push GHCR, deploy if SSH secrets exist.
 
-### 3. Queue and background jobs
-For production-grade notification delivery, use Redis with BullMQ.
+### Required repository secrets
 
-### 4. External integrations
-Configure secrets for:
+| Secret | Purpose |
+| --- | --- |
+| `DEPLOY_HOST` | Production server hostname |
+| `DEPLOY_USER` | SSH user |
+| `DEPLOY_SSH_KEY` | Private key |
+| `DEPLOY_PATH` | App directory on the server, e.g. `/opt/novacrm` |
+| `DATABASE_URL` | Postgres URL for `scripts/migrate.sh` |
 
-- WhatsApp API token or provider credentials
-- Telegram bot token
-- Resend or other email provider API key
-- Supabase project URL and anon/service keys
+`GITHUB_TOKEN` is provided by Actions and is used to push `ghcr.io/bontiharyanto/novacrm`.
 
-## Environment Variables
+## Server bootstrap
 
-Set the following variables in your production environment:
+```bash
+git clone https://github.com/bontiharyanto/novacrm.git /opt/novacrm
+cd /opt/novacrm
+cp .env.example .env.production
+# fill production values
+docker compose -f docker-compose.prod.yml up -d
+```
+
+Set `APP_HOST` and `ACME_EMAIL` in the environment used by Compose. Point DNS at the server.
+
+Scale web replicas (Swarm or Compose scale):
+
+```bash
+docker compose -f docker-compose.prod.yml up -d --scale web=3
+```
+
+## Environment
+
+Copy `.env.example` to `.env.production`. Minimum production keys:
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-WHATSAPP_API_KEY=
-TELEGRAM_BOT_TOKEN=
-RESEND_API_KEY=
-EMAIL_FROM=NovaCRM <no-reply@novacrm.app>
-NODE_ENV=production
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+REDIS_URL=redis://redis:6379
+MINIO_ENDPOINT=http://minio:9000
+MINIO_ACCESS_KEY=
+MINIO_SECRET_KEY=
+MINIO_BUCKET=novacrm
+WHATSAPP_WEBHOOK_SECRET=
+TELEGRAM_WEBHOOK_SECRET=
+DATABASE_URL=
 ```
 
-## Vercel Deployment
+## Backup and restore
 
-### Step 1: connect the repository
-1. Go to Vercel
-2. Import the GitHub repository
-3. Select the repository root
+Backup cron runs daily at 02:00 Asia/Jakarta.
 
-### Step 2: configure project settings
-Set the framework to Next.js. Vercel will detect the configuration automatically.
-
-### Step 3: define environment variables
-Add all required keys from the .env.example file into the Vercel project settings.
-
-### Step 4: deploy
-Push changes to the main branch and Vercel will handle the deployment automatically.
-
-## Docker Deployment
-
-A Dockerfile is included for container-based deployment. You can build and run the app locally or in a remote VM or container platform.
-
-### Build image
+- Postgres: `pg_dump` → `/backups/novacrm-YYYYMMDD.sql.gz`
+- MinIO: `mc mirror` to R2/S3 when `BACKUP_S3_*` is set
+- Retention: 7 daily files
 
 ```bash
-docker build -t novacrm .
+./scripts/backup.sh
+./scripts/restore.sh 20260813
 ```
 
-### Run container
+## Healthcheck
 
-```bash
-docker run -p 3000:3000 --env-file .env.local novacrm
-```
+`GET /api/health` returns `{ data, error }` including Redis status. Traefik and Compose use this path for load-balancer health.
 
-## Docker Compose Setup
-
-This project also includes a docker-compose.yml file for running local services such as Redis and supporting infrastructure.
+## Local Docker
 
 ```bash
 docker compose up --build
 ```
 
-## Production Database Setup
-
-1. Create a Supabase project
-2. Run the SQL migrations from the supabase/migrations directory
-3. Seed base data if needed
-4. Configure database access and connection variables
-
-## Notification Processing in Production
-
-The application includes a notification queue abstraction and processing structure. For production usage:
-
-- run Redis as a separate service
-- configure BullMQ workers for notification jobs
-- ensure job retries and failure logging are enabled
-- use service-level monitoring for failed notifications
-
-## Monitoring and Security
-
-Recommended operational controls:
-
-- use HTTPS only in production
-- store secrets in environment variables or secret managers
-- protect admin routes behind auth and authorization
-- log key customer support actions and notification deliveries
-- monitor uptime, failed jobs, and webhooks
-
-## Recommended Next Production Milestones
-
-1. connect to Supabase production database
-2. enable authentication and RBAC
-3. configure real email/WhatsApp/Telegram credentials
-4. deploy queue workers for asynchronous notification delivery
-5. add monitoring and log retention policies
-6. review security and customer support compliance requirements
-
-## Summary
-
-NovaCRM is structured for a clean transition from prototype to production-ready support platform. The current architecture supports a staged rollout: local prototype, deployed app, managed database, and eventually full operational automation with real external services.
+This starts the app, Redis, MinIO, and the notification worker.

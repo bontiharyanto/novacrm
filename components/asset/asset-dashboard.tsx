@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useRealtimeTable } from '@/lib/supabase/realtime';
 
 type AssetItem = {
   id: string;
@@ -24,15 +25,17 @@ export function AssetDashboard() {
   const [status, setStatus] = useState<AssetItem['status']>('active');
   const [assignedTo, setAssignedTo] = useState('');
 
-  async function loadAssets() {
+  const loadAssets = useCallback(async () => {
     const response = await fetch('/api/assets');
     const payload = await response.json();
     setAssets(payload.data ?? []);
-  }
+  }, []);
 
   useEffect(() => {
     void loadAssets();
-  }, []);
+  }, [loadAssets]);
+
+  useRealtimeTable('assets', loadAssets);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();

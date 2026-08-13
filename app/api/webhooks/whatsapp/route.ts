@@ -1,7 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createTicket } from '@/lib/tickets/actions';
+import { createInboundTicket } from '@/lib/tickets/actions';
+import { sendWhatsApp } from '@/lib/integrations/whatsapp';
+import { verifyWebhookSecret } from '@/lib/webhooks/verify';
+import { DEMO_TENANT_ID } from '@/lib/config/constants';
 
 export async function POST(request: NextRequest) {
+  const provided =
+    request.headers.get('x-webhook-secret') ??
+    request.headers.get('x-hub-signature-256') ??
+    request.nextUrl.searchParams.get('secret');
+
+  if (!verifyWebhookSecret(provided, process.env.WHATSAPP_WEBHOOK_SECRET)) {
+    return NextResponse.json({ data: null, error: 'Unauthorized webhook' }, { status: 401 });
+  }
+
   try {
     const payload = await request.json().catch(() => ({}));
     const message = payload?.message ?? payload?.text ?? payload?.body ?? '';
@@ -12,13 +24,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ data: null, error: 'Invalid WhatsApp payload' }, { status: 400 });
     }
 
-    const title = message
-      .replace(/^ticket\s*:\s*/i, '')
-      .replace(/^halo\s+/i, '')
-      .trim() || 'Laptop Rusak';
+    const title =
+      message.replace(/^ticket\s*:\s*/i, '').replace(/^halo\s+/i, '').trim() || 'Laptop Rusak';
 
-    const result = await createTicket({
-      tenantId: 'demo-tenant',
+    const tenantId = process.env.WEBHOOK_TENANT_ID || DEMO_TENANT_ID;
+    const result = await createInboundTicket(tenantId, {
+      tenantId,
       title,
       description: `Inbound WhatsApp message: ${message}`,
       requesterName: typeof sender === 'string' ? sender : 'Customer',
@@ -27,8 +38,13 @@ export async function POST(request: NextRequest) {
       priority: 'medium',
     });
 
-    if (result.error) {
+    if (result.error || !result.data) {
       return NextResponse.json({ data: null, error: result.error }, { status: 400 });
+    }
+
+    const reply = `Ticket #${result.data.id.slice(0, 8)} telah dibuat`;
+    if (typeof senderPhone === 'string' && senderPhone !== 'unknown') {
+      await sendWhatsApp(senderPhone, reply);
     }
 
     return NextResponse.json({
@@ -36,7 +52,7 @@ export async function POST(request: NextRequest) {
         ticketId: result.data.id,
         title: result.data.title,
         status: result.data.status,
-        message: `Ticket #${result.data.id} telah dibuat`,
+        message: reply,
         sender,
       },
       error: null,
@@ -44,7 +60,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     return NextResponse.json(
       { data: null, error: error instanceof Error ? error.message : 'Webhook processing failed' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

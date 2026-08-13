@@ -19,6 +19,22 @@ export type TicketNotificationEvent =
 
 export type NotificationLogStatus = 'queued' | 'sent' | 'failed';
 
+export type NotificationJobPayload = {
+  tenantId: string;
+  event: TicketNotificationEvent;
+  ticketId?: string;
+  requesterId?: string;
+  assigneeId?: string;
+  title?: string;
+  status?: string;
+  requesterName?: string;
+  assigneeName?: string;
+  requesterEmail?: string;
+  requesterPhone?: string;
+  assigneeChatId?: string;
+  message?: string;
+};
+
 export type NotificationChannelRow = {
   id: string;
   tenant_id: string;

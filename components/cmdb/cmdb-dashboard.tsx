@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useRealtimeTable } from '@/lib/supabase/realtime';
 
 type CmdbItem = {
   id: string;
@@ -21,15 +22,17 @@ export function CmdbDashboard() {
   const [name, setName] = useState('');
   const [type, setType] = useState('service');
 
-  async function loadItems() {
+  const loadItems = useCallback(async () => {
     const response = await fetch('/api/cmdb');
     const payload = await response.json();
     setItems(payload.data ?? []);
-  }
+  }, []);
 
   useEffect(() => {
     void loadItems();
-  }, []);
+  }, [loadItems]);
+
+  useRealtimeTable('cmdb_items', loadItems);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
