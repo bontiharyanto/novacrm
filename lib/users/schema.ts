@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { AppRole } from '@/lib/rbac/ability';
+import { APP_ROLES, type AppRole } from '@/lib/rbac/roles';
 import type { SupportTier } from '@/lib/tickets/pending';
 
 function emptyToUndefined(value: unknown) {
@@ -8,7 +8,7 @@ function emptyToUndefined(value: unknown) {
 }
 
 export const userAccessSchema = z.object({
-  role: z.enum(['admin', 'agent', 'customer']).optional(),
+  role: z.enum(APP_ROLES).optional(),
   orgUnitId: z.string().uuid().nullable().optional(),
 });
 
@@ -16,7 +16,7 @@ export const createUserSchema = z.object({
   fullName: z.string().trim().min(2).max(120),
   email: z.string().trim().email().max(160),
   phone: z.preprocess(emptyToUndefined, z.string().trim().max(40).optional()),
-  role: z.enum(['admin', 'agent', 'customer']),
+  role: z.enum(APP_ROLES),
   password: z.string().min(8).max(72),
   accountId: z.string().uuid(),
   orgUnitId: z.preprocess(emptyToUndefined, z.string().uuid().optional()),

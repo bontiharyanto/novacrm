@@ -46,31 +46,47 @@ export async function completeAiChat(input: {
   baseUrl?: string;
   model?: string;
   messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>;
+  maxTokens?: number;
+  json?: boolean;
 }) {
+  const started = Date.now();
   const resolved = resolveAiSettings(input);
   const base = resolved.baseUrl.replace(/\/$/, '');
   const model = resolved.model;
   const response = await fetch(`${base}/chat/completions`, {
     method: 'POST',
     headers: {
-        Authorization: `Bearer ${resolved.apiKey}`,
+      Authorization: `Bearer ${resolved.apiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
       model,
       temperature: 0.2,
+      max_tokens: input.maxTokens ?? 700,
+      ...(input.json ? { response_format: { type: 'json_object' } } : {}),
       messages: input.messages,
     }),
   });
   const payload = await response.json().catch(() => ({}));
+  const latencyMs = Date.now() - started;
+  const usage = {
+    tokensIn: Number(payload?.usage?.prompt_tokens) || 0,
+    tokensOut: Number(payload?.usage?.completion_tokens) || 0,
+  };
   if (!response.ok) {
     const message =
       typeof payload?.error?.message === 'string' ? payload.error.message : `AI request failed (${response.status})`;
-    return { ok: false as const, error: message };
+    return { ok: false as const, error: message, latencyMs, ...usage };
   }
   const content = payload?.choices?.[0]?.message?.content;
   if (typeof content !== 'string' || !content.trim()) {
-    return { ok: false as const, error: 'AI returned an empty reply' };
+    return { ok: false as const, error: 'AI returned an empty reply', latencyMs, ...usage };
   }
-  return { ok: true as const, content: content.trim() };
+  return {
+    ok: true as const,
+    content: content.trim(),
+    model: typeof payload?.model === 'string' && payload.model ? payload.model : model,
+    latencyMs,
+    ...usage,
+  };
 }

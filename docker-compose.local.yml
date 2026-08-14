@@ -64,6 +64,39 @@ services:
         condition: service_started
     restart: unless-stopped
 
+  ops:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: npm run ops
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    env_file:
+      - .env.local
+    environment:
+      NODE_ENV: production
+      OPS_BIND: 0.0.0.0
+      OPS_PORT: '3100'
+      OPS_PROBE_HOST: host.docker.internal
+      OPS_ALLOW_UNAUTHENTICATED: 'true'
+      APP_URL: http://127.0.0.1:3000
+      DOCKER_APP_URL: http://127.0.0.1:${APP_PORT:-3001}
+      REDIS_URL: redis://redis:6379
+      MINIO_ENDPOINT: http://127.0.0.1:9000
+      MINIO_CONSOLE_URL: http://127.0.0.1:9001
+      NOVACRM_SUPABASE_URL: http://127.0.0.1:54321
+      SUPABASE_STUDIO_URL: http://127.0.0.1:54323
+      MAILPIT_URL: http://127.0.0.1:54324
+      POSTGRES_PORT: '54322'
+    ports:
+      - '127.0.0.1:3100:3100'
+    depends_on:
+      redis:
+        condition: service_started
+      app:
+        condition: service_started
+    restart: unless-stopped
+
   redis:
     image: redis:7-alpine
     ports:

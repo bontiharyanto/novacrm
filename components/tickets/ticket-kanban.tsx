@@ -44,6 +44,8 @@ export type KanbanTicket = {
   pendingReason?: TicketPendingReason;
   pendingNote?: string;
   comments: Array<{ id: string; author: string; comment: string; createdAt: string }>;
+  accountName?: string;
+  accountCode?: string;
 };
 
 const columns: Array<{ key: TicketStatus; label: string }> = [
@@ -89,7 +91,14 @@ function TicketCard({ ticket, isOverlay }: { ticket: KanbanTicket; isOverlay?: b
         </CardHeader>
         <CardContent className="space-y-3 pb-3 text-sm text-zinc-300">
           <p className="font-medium text-zinc-50">{ticket.title}</p>
-          <TypeBadge type={ticket.type ?? 'incident'} />
+          <div className="flex flex-wrap items-center gap-2">
+            <TypeBadge type={ticket.type ?? 'incident'} />
+            {ticket.accountCode || ticket.accountName ? (
+              <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-zinc-500">
+                {ticket.accountCode || ticket.accountName}
+              </span>
+            ) : null}
+          </div>
           <div className="flex items-center justify-between text-[11px] text-zinc-400">
             <span>{ticket.requesterName}</span>
             <span className={priorityColors[ticket.priority] ?? 'text-zinc-300'}>{ticket.priority}</span>

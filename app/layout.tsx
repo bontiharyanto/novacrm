@@ -1,18 +1,22 @@
-import { Inter, JetBrains_Mono } from 'next/font/google';
+import localFont from 'next/font/local';
 import './globals.css';
 import type { Metadata } from 'next';
 import { RuntimePublicEnv } from '@/components/layout/runtime-public-env';
 import { PreferencesProvider } from '@/components/layout/preferences-provider';
 import { getPreferences } from '@/lib/preferences';
 
-const inter = Inter({
-  subsets: ['latin'],
+const inter = localFont({
+  src: './fonts/Inter-Variable.woff2',
   variable: '--font-sans',
+  display: 'swap',
+  weight: '100 900',
 });
 
-const jetbrains = JetBrains_Mono({
-  subsets: ['latin'],
+const jetbrains = localFont({
+  src: './fonts/JetBrainsMono-Variable.woff2',
   variable: '--font-mono',
+  display: 'swap',
+  weight: '100 800',
 });
 
 export const metadata: Metadata = {

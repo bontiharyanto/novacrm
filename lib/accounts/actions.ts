@@ -2,8 +2,8 @@
 
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
-import { accountMemberSchema, accountSchema, accountUpdateSchema, type AccountMember, type AccountRecord } from '@/lib/accounts/schema';
-import { ACCOUNT_COOKIE, getAccountScope, listAccessibleAccounts, mapAccount } from '@/lib/accounts/scope';
+import { ACCOUNT_ALL, ACCOUNT_COOKIE, accountMemberSchema, accountSchema, accountUpdateSchema, type AccountMember, type AccountRecord } from '@/lib/accounts/schema';
+import { getAccountScope, listAccessibleAccounts, mapAccount } from '@/lib/accounts/scope';
 import { getSessionProfile } from '@/lib/auth/session';
 import { canRole } from '@/lib/rbac/ability';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
@@ -17,18 +17,38 @@ function slugify(value: string) {
   return slug || 'account';
 }
 
-export async function setActiveAccount(accountId: string) {
-  const scope = await getAccountScope();
-  if (!scope.session || !scope.accounts.some((item) => item.id === accountId)) {
-    return { data: null, error: 'Account not available' };
-  }
-
-  cookies().set(ACCOUNT_COOKIE, accountId, {
+function writeAccountCookie(value: string) {
+  cookies().set(ACCOUNT_COOKIE, value, {
     path: '/',
     sameSite: 'lax',
     httpOnly: false,
     maxAge: 60 * 60 * 24 * 30,
   });
+}
+
+export async function setActiveAccount(accountId: string) {
+  const scope = await getAccountScope();
+  if (!scope.session) {
+    return { data: null, error: 'Unauthorized' };
+  }
+
+  if (accountId === ACCOUNT_ALL) {
+    writeAccountCookie(ACCOUNT_ALL);
+    revalidatePath('/', 'layout');
+    return { data: { id: ACCOUNT_ALL }, error: null };
+  }
+
+  if (!scope.accounts.some((item) => item.id === accountId)) {
+    return { data: null, error: 'Account not available' };
+  }
+
+  writeAccountCookie(accountId);
+  const supabase = await createSupabaseServerClient();
+  await supabase
+    .from('profiles')
+    .update({ last_account_id: accountId })
+    .eq('id', scope.session.userId)
+    .eq('tenant_id', scope.session.profile.tenantId);
   revalidatePath('/', 'layout');
   return { data: { id: accountId }, error: null };
 }

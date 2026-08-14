@@ -2,9 +2,11 @@ import { Suspense } from 'react';
 import { getSessionProfile } from '@/lib/auth/session';
 import { TicketCreate } from '@/components/tickets/ticket-create';
 import { Skeleton } from '@/components/ui/skeleton';
+import { getAccountScope } from '@/lib/accounts/scope';
 
 export default async function NewTicketPage() {
   const session = await getSessionProfile();
+  const scope = await getAccountScope(session);
 
   return (
     <Suspense
@@ -15,7 +17,11 @@ export default async function NewTicketPage() {
         </div>
       }
     >
-      <TicketCreate currentUserId={session?.userId ?? ''} />
+      <TicketCreate
+        currentUserId={session?.userId ?? ''}
+        accounts={scope.accounts}
+        defaultAccountId={scope.account?.id ?? (scope.accounts.length === 1 ? scope.accounts[0].id : '')}
+      />
     </Suspense>
   );
 }

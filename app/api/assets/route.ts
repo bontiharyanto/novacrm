@@ -2,11 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createAsset, listAssets } from '@/lib/assets/actions';
 import { requireApiUser } from '@/lib/api/require-user';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   const auth = await requireApiUser('read', 'Asset');
   if (auth.error) return auth.error;
 
-  const assets = await listAssets();
+  const assets = await listAssets(request.nextUrl.searchParams.get('accountId'));
   return NextResponse.json({ data: assets, error: null });
 }
 

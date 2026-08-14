@@ -22,30 +22,52 @@ case "$DATABASE_URL" in
 esac
 export DATABASE_URL
 
-run_sql_file() {
-  file="$1"
+run_psql() {
   if command -v psql >/dev/null 2>&1; then
-    psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$file"
+    psql "$DATABASE_URL" -v ON_ERROR_STOP=1 "$@"
     return
   fi
-
   if ! command -v docker >/dev/null 2>&1; then
     echo "psql or Docker is required to run migrations."
     exit 1
   fi
-
   docker run --rm \
     -e DATABASE_URL \
     -v "$MIGRATIONS_DIR:/migrations:ro" \
     postgres:16-alpine \
-    psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "/migrations/$(basename "$file")"
+    psql "$DATABASE_URL" -v ON_ERROR_STOP=1 "$@"
 }
+
+echo "Ensuring public.schema_migrations"
+run_psql -c "create table if not exists public.schema_migrations (
+  id text primary key,
+  applied_at timestamptz not null default now()
+);"
+
+if [ "${MIGRATE_STAMP:-}" = "1" ]; then
+  echo "Stamping existing files as applied (no SQL executed)."
+  for file in "$MIGRATIONS_DIR"/*.sql; do
+    [ -f "$file" ] || continue
+    id="$(basename "$file")"
+    run_psql -c "insert into public.schema_migrations (id) values ('$id') on conflict (id) do nothing;"
+    echo "  stamped $id"
+  done
+  echo "Stamp complete."
+  exit 0
+fi
 
 echo "Running NovaCRM migrations from $MIGRATIONS_DIR"
 for file in "$MIGRATIONS_DIR"/*.sql; do
   [ -f "$file" ] || continue
-  echo "-> $(basename "$file")"
-  run_sql_file "$file"
+  id="$(basename "$file")"
+  already="$(run_psql -tAc "select 1 from public.schema_migrations where id = '$id'" | tr -d '[:space:]')"
+  if [ "$already" = "1" ]; then
+    echo "  skip $id"
+    continue
+  fi
+  echo "-> $id"
+  run_psql -f "$file"
+  run_psql -c "insert into public.schema_migrations (id) values ('$id') on conflict (id) do nothing;"
 done
 
 echo "Migrations complete."

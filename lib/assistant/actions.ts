@@ -3,15 +3,25 @@ import { completeAiChat } from '@/lib/integrations/ai';
 import { getReportSnapshot } from '@/lib/reports/actions';
 import { getSessionProfile } from '@/lib/auth/session';
 import { canRole } from '@/lib/rbac/ability';
+import { upsertAssistantThread } from '@/lib/assistant/store';
+import type { AssistantMessage } from '@/lib/assistant/schema';
 
 const SYSTEM = `You are NovaCRM, an ITSM operations assistant for staff (admin/agent).
 Answer in the same language as the user. Be concise and professional.
 Use only the operations snapshot and ticket facts provided. If data is missing, say so.
 Do not invent ticket numbers, SLA times, or asset tags.
 Do not change tickets, approve changes, or send notifications — recommend the next action instead.
-Never reveal API keys or secrets.`;
+Never reveal API keys or secrets.
 
-export async function runAssistant(messages: Array<{ role: 'user' | 'assistant'; content: string }>) {
+Format with Markdown. Short paragraphs. Put each bullet on its own line:
+* Item one
+* Item two
+Bold metric names like **SLA Breached**. Never put several bullets on one line.`;
+
+export async function runAssistant(
+  messages: AssistantMessage[],
+  threadId?: string | null,
+) {
   const session = await getSessionProfile();
   if (!session || !canRole(session.profile.role, 'read', 'Ticket')) {
     return { data: null, error: 'Unauthorized' };
@@ -51,5 +61,15 @@ export async function runAssistant(messages: Array<{ role: 'user' | 'assistant';
   if (!result.ok) {
     return { data: null, error: result.error };
   }
-  return { data: { content: result.content }, error: null };
+
+  const content = result.content;
+  const saved = await upsertAssistantThread({
+    id: threadId,
+    messages: [...messages, { role: 'assistant', content }],
+  });
+
+  return {
+    data: { content, threadId: saved.data?.id ?? threadId ?? null },
+    error: null,
+  };
 }

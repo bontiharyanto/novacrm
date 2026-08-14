@@ -10,7 +10,7 @@ if [ ! -f .env.production ]; then
 fi
 
 missing=""
-for key in APP_HOST MINIO_PUBLIC_HOST NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY DATABASE_URL MINIO_ROOT_USER MINIO_ROOT_PASSWORD; do
+for key in APP_HOST MINIO_PUBLIC_HOST NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY NOVACRM_SUPABASE_URL NOVACRM_SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY DATABASE_URL MINIO_ROOT_USER MINIO_ROOT_PASSWORD; do
   value="$(grep "^${key}=" .env.production | head -n 1 | cut -d= -f2- | tr -d '"' | tr -d "'")"
   case "$value" in
     ''|*your-project*|*your-anon-key*|*change-me*|*postgres:postgres@*|*crm.example.com*|*files.crm.example.com*)

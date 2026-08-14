@@ -11,5 +11,5 @@ export default async function NewUserPage() {
     redirect('/users');
   }
   const [accounts, units, groups] = await Promise.all([listAccounts(), listHomeUnits(), listDirectoryGroups()]);
-  return <UserCreate accounts={accounts} units={units} groups={groups} />;
+  return <UserCreate accounts={accounts} units={units} groups={groups} actorRole={session.profile.role} />;
 }

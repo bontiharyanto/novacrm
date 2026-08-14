@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Plus, Upload } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -27,8 +27,6 @@ export function AssetDashboard() {
   const [type, setType] = useState<string | 'all'>('all');
   const [status, setStatus] = useState<AssetStatus | 'all'>('all');
   const [query, setQuery] = useState('');
-  const [importMessage, setImportMessage] = useState('');
-  const fileRef = useRef<HTMLInputElement>(null);
 
   const loadAssets = useCallback(async () => {
     const response = await fetch('/api/assets');
@@ -78,21 +76,6 @@ export function AssetDashboard() {
     });
   }, [assets, type, status, query]);
 
-  async function handleImport(file: File) {
-    const response = await fetch('/api/assets/import', {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/csv' },
-      body: await file.text(),
-    });
-    const payload = await response.json();
-    if (!response.ok) {
-      setImportMessage(payload.error ?? 'Import failed');
-      return;
-    }
-    setImportMessage(`${payload.data?.length ?? 0} assets imported`);
-    await loadAssets();
-  }
-
   return (
     <div className="space-y-5 p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -101,24 +84,12 @@ export function AssetDashboard() {
           <h1 className="text-2xl font-semibold text-zinc-50">Assets</h1>
         </div>
         <div className="flex items-center gap-2">
-          <input
-            ref={fileRef}
-            type="file"
-            accept=".csv,text/csv"
-            className="hidden"
-            onChange={(event) => {
-              const file = event.target.files?.[0];
-              if (file) void handleImport(file);
-              event.target.value = '';
-            }}
-          />
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
+          <Link
+            href="/import?kind=assets"
             className="inline-flex items-center gap-1.5 rounded-md border border-zinc-800 px-2.5 py-1.5 text-xs text-zinc-300 hover:bg-zinc-900"
           >
-            <Upload className="h-3.5 w-3.5" /> Import CSV
-          </button>
+            <Upload className="h-3.5 w-3.5" /> Import
+          </Link>
           <Link
             href="/assets/new"
             className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-2.5 py-1.5 text-xs font-medium text-white transition-all duration-200 ease-out hover:-translate-y-0.5 hover:bg-blue-500"
@@ -127,8 +98,6 @@ export function AssetDashboard() {
           </Link>
         </div>
       </div>
-
-      {importMessage ? <p className="text-xs text-zinc-400">{importMessage}</p> : null}
 
       <div className="grid gap-3 md:grid-cols-4">
         {[
@@ -246,7 +215,7 @@ export function AssetDashboard() {
         </div>
       )}
       <p className="text-[11px] text-zinc-600">
-        CSV headers: name, type, status, brand, model, serial, purchaseDate, warrantyExpiry, cost, location, assignedTo
+        Bulk CSV/Excel templates live in Import. Match key is assetTag.
       </p>
     </div>
   );

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Plus } from 'lucide-react';
+import { Plus, Upload } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { formatRelativeId } from '@/lib/utils/dates';
@@ -22,14 +22,22 @@ export function AccountsDashboard({
             <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Configuration</p>
             <h1 className="text-2xl font-semibold text-zinc-50">Accounts</h1>
           </div>
-          {canCreate ? (
+          <div className="flex items-center gap-2">
             <Link
-              href="/accounts/new"
-              className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-2.5 py-1.5 text-xs font-medium text-white transition-all duration-200 ease-out hover:-translate-y-0.5 hover:bg-blue-500"
+              href="/import?kind=accounts"
+              className="inline-flex items-center gap-1.5 rounded-md border border-zinc-800 px-2.5 py-1.5 text-xs text-zinc-300 hover:bg-zinc-900"
             >
-              <Plus className="h-3.5 w-3.5" /> New customer
+              <Upload className="h-3.5 w-3.5" /> Import
             </Link>
-          ) : null}
+            {canCreate ? (
+              <Link
+                href="/accounts/new"
+                className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-2.5 py-1.5 text-xs font-medium text-white transition-all duration-200 ease-out hover:-translate-y-0.5 hover:bg-blue-500"
+              >
+                <Plus className="h-3.5 w-3.5" /> New customer
+              </Link>
+            ) : null}
+          </div>
         </div>
 
         <div className="overflow-hidden rounded-xl border border-zinc-800">

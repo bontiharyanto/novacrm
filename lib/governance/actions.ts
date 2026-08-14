@@ -2,6 +2,7 @@
 
 import { getSessionProfile } from '@/lib/auth/session';
 import { canRole } from '@/lib/rbac/ability';
+import { isTenantAdminRole } from '@/lib/rbac/roles';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getBreachNotifySla, getDsarSla } from '@/lib/governance/flow';
 import {
@@ -111,7 +112,7 @@ export async function getPrivacySettings() {
 export async function savePrivacySettings(input: unknown) {
   const parsed = privacySettingsSchema.parse(input);
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'update', 'Governance') || session.profile.role !== 'admin') {
+  if (!session || !canRole(session.profile.role, 'update', 'Governance') || !isTenantAdminRole(session.profile.role)) {
     return { data: null, error: 'Unauthorized' };
   }
   const supabase = await createSupabaseServerClient();

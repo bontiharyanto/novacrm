@@ -15,8 +15,19 @@ import {
   DEFAULT_EMAIL_FROM,
   resolveAiSettings,
   type HubIntegrations,
-  type IntegrationKind,
 } from '@/lib/integrations/types';
+import {
+  createPluginSchema,
+  isBuiltinKind,
+  pluginFieldSchema,
+  pluginTestSpecSchema,
+  slugifyPlugin,
+  type IntegrationCatalog,
+  type PluginCard,
+  type PluginField,
+  type PluginTestSpec,
+} from '@/lib/integrations/plugin-schema';
+import { pingPluginHttp, pluginHasRequired } from '@/lib/integrations/plugin-test';
 
 function asRecord(config: unknown) {
   return (config ?? {}) as Record<string, string | undefined>;
@@ -148,7 +159,44 @@ async function recordTest(
   }
 }
 
-export async function saveIntegration(kind: IntegrationKind, values: Record<string, string | undefined>) {
+const CHANNEL_KINDS = new Set(['whatsapp', 'telegram', 'email']);
+
+function parseFields(value: unknown): PluginField[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    const parsed = pluginFieldSchema.safeParse(item);
+    return parsed.success ? [parsed.data] : [];
+  });
+}
+
+function parseTestSpec(value: unknown): PluginTestSpec {
+  const parsed = pluginTestSpecSchema.safeParse(value ?? { kind: 'save' });
+  return parsed.success ? parsed.data : { kind: 'save' };
+}
+
+function maskedValues(fields: PluginField[], config: Record<string, string | undefined>) {
+  const values: Record<string, string> = {};
+  for (const field of fields) {
+    const raw = config[field.key] ?? '';
+    values[field.key] = field.secret || field.type === 'password' ? maskSecret(raw) : String(raw);
+  }
+  return values;
+}
+
+function isConfigured(fields: PluginField[], config: Record<string, string | undefined>, extras?: boolean) {
+  if (extras) return true;
+  if (fields.length === 0) return Object.values(config).some(Boolean);
+  const required = fields.filter((field) => field.required);
+  if (required.length > 0) return required.every((field) => Boolean(config[field.key]));
+  return fields.some((field) => Boolean(config[field.key]));
+}
+
+const CUSTOM_FIELDS: PluginField[] = [
+  { key: 'baseUrl', label: 'Base URL', type: 'url' },
+  { key: 'apiKey', label: 'API key', type: 'password', secret: true, required: true },
+];
+
+export async function saveIntegration(kind: string, values: Record<string, string | undefined>) {
   const session = await getSessionProfile();
   if (!session || !canRole(session.profile.role, 'update', 'NotificationSettings')) {
     return { data: null, error: 'Unauthorized' };
@@ -179,28 +227,50 @@ export async function saveIntegration(kind: IntegrationKind, values: Record<stri
     if (merged.id) payload.id = merged.id;
     const { error } = await supabase.from('integrations').upsert(payload, { onConflict: 'tenant_id,kind' });
     if (error) return { data: null, error: error.message };
-    return { data: await getIntegrationHub(), error: null };
+    return { data: await getIntegrationCatalog(), error: null };
   }
 
-  const incoming =
-    kind === 'whatsapp'
-      ? { apiKey: values.apiKey }
-      : kind === 'telegram'
-        ? { botToken: values.botToken, chatId: values.chatId }
-        : { apiKey: values.apiKey, from: values.from };
-  const merged = await mergeJson('notification_channels', { tenant_id: tenantId, type: kind }, incoming);
+  if (CHANNEL_KINDS.has(kind)) {
+    const incoming =
+      kind === 'whatsapp'
+        ? { apiKey: values.apiKey }
+        : kind === 'telegram'
+          ? { botToken: values.botToken, chatId: values.chatId }
+          : { apiKey: values.apiKey, from: values.from };
+    const merged = await mergeJson('notification_channels', { tenant_id: tenantId, type: kind }, incoming);
+    const supabase = await createSupabaseServerClient();
+    const payload: Record<string, unknown> = {
+      tenant_id: tenantId,
+      type: kind,
+      config: merged.config,
+      is_active: true,
+      created_by: session.userId,
+    };
+    if (merged.id) payload.id = merged.id;
+    const { error } = await supabase.from('notification_channels').upsert(payload, { onConflict: 'tenant_id,type' });
+    if (error) return { data: null, error: error.message };
+    return { data: await getIntegrationCatalog(), error: null };
+  }
+
+  const plugin = await loadPluginRow(kind);
+  if (!plugin) return { data: null, error: 'Unknown plugin' };
+  const incoming: Record<string, string | undefined> = {};
+  for (const field of plugin.fields) {
+    incoming[field.key] = values[field.key];
+  }
+  const merged = await mergeJson('integrations', { tenant_id: tenantId, kind }, incoming);
   const supabase = await createSupabaseServerClient();
   const payload: Record<string, unknown> = {
     tenant_id: tenantId,
-    type: kind,
+    kind,
     config: merged.config,
     is_active: true,
     created_by: session.userId,
   };
   if (merged.id) payload.id = merged.id;
-  const { error } = await supabase.from('notification_channels').upsert(payload, { onConflict: 'tenant_id,type' });
+  const { error } = await supabase.from('integrations').upsert(payload, { onConflict: 'tenant_id,kind' });
   if (error) return { data: null, error: error.message };
-  return { data: await getIntegrationHub(), error: null };
+  return { data: await getIntegrationCatalog(), error: null };
 }
 
 async function resolveSecret(stored: string | undefined, incoming?: string) {
@@ -208,7 +278,7 @@ async function resolveSecret(stored: string | undefined, incoming?: string) {
   return stored;
 }
 
-export async function testIntegration(kind: IntegrationKind, values: Record<string, string | undefined>) {
+export async function testIntegration(kind: string, values: Record<string, string | undefined>) {
   const session = await getSessionProfile();
   if (!session || !canRole(session.profile.role, 'update', 'NotificationSettings')) {
     return { ok: false, error: 'Unauthorized' };
@@ -277,6 +347,10 @@ export async function testIntegration(kind: IntegrationKind, values: Record<stri
       result,
     );
     return result;
+  }
+
+  if (!CHANNEL_KINDS.has(kind)) {
+    return testPluginConnection(kind, values, session.profile.tenantId, session.userId);
   }
 
   const { data: row } = await supabase
@@ -392,4 +466,211 @@ export async function getWebhookSecretFromDb(kind: 'alert' | 'email' | 'generic'
   if (kind === 'email') return config.emailSecret;
   if (kind === 'generic') return config.genericSecret;
   return undefined;
+}
+
+async function loadPluginRow(slug: string) {
+  const session = await getSessionProfile();
+  if (!session) return null;
+  const supabase = await createSupabaseServerClient();
+  const { data } = await supabase
+    .from('integration_plugins')
+    .select('*')
+    .eq('slug', slug)
+    .eq('is_active', true)
+    .or(`tenant_id.is.null,tenant_id.eq.${session.profile.tenantId}`)
+    .order('tenant_id', { ascending: false, nullsFirst: false })
+    .limit(2);
+  const rows = data ?? [];
+  const row = rows.find((item) => item.tenant_id === session.profile.tenantId) ?? rows.find((item) => !item.tenant_id);
+  if (!row) return null;
+  return {
+    id: row.id as string,
+    slug: row.slug as string,
+    fields: parseFields(row.fields),
+    testSpec: parseTestSpec(row.test_spec),
+    tenantId: (row.tenant_id as string | null) ?? null,
+  };
+}
+
+async function testPluginConnection(
+  slug: string,
+  values: Record<string, string | undefined>,
+  tenantId: string,
+  userId: string,
+) {
+  const plugin = await loadPluginRow(slug);
+  if (!plugin) return { ok: false, error: 'Unknown plugin' };
+  const supabase = await createSupabaseServerClient();
+  const { data: row } = await supabase
+    .from('integrations')
+    .select('id, config')
+    .eq('tenant_id', tenantId)
+    .eq('kind', slug)
+    .maybeSingle();
+  const stored = asRecord(row?.config);
+  const resolved: Record<string, string> = {};
+  for (const field of plugin.fields) {
+    const next = await resolveSecret(stored[field.key], values[field.key]);
+    resolved[field.key] = next ?? '';
+  }
+  let result: { ok: boolean; error?: string; message?: string };
+  if (plugin.testSpec.kind === 'http') {
+    result = await pingPluginHttp(plugin.testSpec, plugin.fields, resolved);
+  } else if (!pluginHasRequired(plugin.fields, resolved)) {
+    result = { ok: false, error: 'Fill the required fields, then test again.' };
+  } else {
+    result = { ok: true, message: 'Credentials saved. This plugin validates on save.' };
+  }
+  await recordTest(
+    'integrations',
+    row?.id,
+    {
+      tenant_id: tenantId,
+      kind: slug,
+      config: { ...stored, ...resolved },
+      is_active: true,
+      created_by: userId,
+    },
+    result,
+  );
+  return result;
+}
+
+export async function getIntegrationCatalog(): Promise<IntegrationCatalog> {
+  const session = await getSessionProfile();
+  if (!session || !canRole(session.profile.role, 'read', 'NotificationSettings')) {
+    return { plugins: [] };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const tenantId = session.profile.tenantId;
+  const [{ data: pluginRows, error: pluginError }, { data: channels }, { data: integrations }] = await Promise.all([
+    supabase
+      .from('integration_plugins')
+      .select('*')
+      .eq('is_active', true)
+      .or(`tenant_id.is.null,tenant_id.eq.${tenantId}`)
+      .order('sort_order', { ascending: true }),
+    supabase.from('notification_channels').select('*').eq('tenant_id', tenantId),
+    supabase.from('integrations').select('*').eq('tenant_id', tenantId),
+  ]);
+
+  if (pluginError || !pluginRows?.length) {
+    return { plugins: [] };
+  }
+
+  const channelByType = new Map((channels ?? []).map((row) => [row.type as string, row]));
+  const integrationByKind = new Map((integrations ?? []).map((row) => [row.kind as string, row]));
+  const seen = new Set<string>();
+  const plugins: PluginCard[] = [];
+
+  for (const row of pluginRows) {
+    const slug = row.slug as string;
+    if (seen.has(slug) && row.tenant_id) {
+      const index = plugins.findIndex((item) => item.slug === slug && !item.tenantId);
+      if (index >= 0) plugins.splice(index, 1);
+    }
+    if (seen.has(slug) && !row.tenant_id) continue;
+    seen.add(slug);
+
+    const fields =
+      slug === 'ai'
+        ? [
+            { key: 'baseUrl', label: 'Base URL', type: 'url' as const },
+            { key: 'apiKey', label: 'API key', type: 'password' as const, secret: true },
+            { key: 'model', label: 'Model', type: 'text' as const },
+          ]
+        : parseFields(row.fields);
+    const storedRow = CHANNEL_KINDS.has(slug) ? channelByType.get(slug) : integrationByKind.get(slug);
+    const config = asRecord(storedRow?.config);
+    const tested = statusOf(storedRow);
+    const uiVariant = row.ui_variant === 'ai' || row.ui_variant === 'webhook' ? row.ui_variant : 'fields';
+    plugins.push({
+      id: row.id as string,
+      slug,
+      label: row.label as string,
+      hint: row.hint as string,
+      category: (row.category as PluginCard['category']) ?? 'other',
+      uiVariant,
+      fields,
+      helpTest: row.help_test as string,
+      helpAfter: row.help_after as string,
+      testSpec: parseTestSpec(row.test_spec),
+      tenantId: (row.tenant_id as string | null) ?? null,
+      sortOrder: Number(row.sort_order) || 100,
+      configured:
+        slug === 'email'
+          ? isConfigured(fields, config, Boolean(process.env.SMTP_HOST))
+          : isConfigured(fields, config),
+      lastOk: tested.lastOk,
+      lastError: tested.lastError,
+      lastTestedAt: tested.lastTestedAt,
+      values: maskedValues(fields, config),
+    });
+  }
+
+  plugins.sort((a, b) => a.sortOrder - b.sortOrder || a.label.localeCompare(b.label));
+  return { plugins };
+}
+
+export async function createIntegrationPlugin(input: unknown) {
+  const session = await getSessionProfile();
+  if (!session || !canRole(session.profile.role, 'update', 'NotificationSettings')) {
+    return { data: null, error: 'Unauthorized' };
+  }
+  const parsed = createPluginSchema.safeParse(input);
+  if (!parsed.success) return { data: null, error: parsed.error.issues[0]?.message ?? 'Invalid plugin' };
+
+  let slug = parsed.data.slug ?? slugifyPlugin(parsed.data.label);
+  if (isBuiltinKind(slug)) {
+    slug = `${slug}_custom`;
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data: existing } = await supabase
+    .from('integration_plugins')
+    .select('id')
+    .eq('slug', slug)
+    .or(`tenant_id.is.null,tenant_id.eq.${session.profile.tenantId}`)
+    .limit(1);
+  if (existing?.length) {
+    slug = `${slug}_${String(Date.now()).slice(-4)}`;
+  }
+
+  const { error } = await supabase.from('integration_plugins').insert({
+    tenant_id: session.profile.tenantId,
+    slug,
+    label: parsed.data.label.trim(),
+    hint: parsed.data.hint?.trim() || 'Custom plugin',
+    category: parsed.data.category,
+    ui_variant: 'fields',
+    fields: CUSTOM_FIELDS,
+    help_test: 'Save required fields, then Test connection. Custom plugins validate locally (no outbound HTTP).',
+    help_after: 'Credentials stay in this tenant. Wire a workflow action when you are ready to call the provider.',
+    test_spec: { kind: 'save' },
+    sort_order: 200,
+    is_active: true,
+    created_by: session.userId,
+  });
+  if (error) return { data: null, error: error.message };
+  return { data: await getIntegrationCatalog(), error: null, slug };
+}
+
+export async function deleteIntegrationPlugin(id: string) {
+  const session = await getSessionProfile();
+  if (!session || !canRole(session.profile.role, 'update', 'NotificationSettings')) {
+    return { data: null, error: 'Unauthorized' };
+  }
+  const supabase = await createSupabaseServerClient();
+  const { data: row } = await supabase
+    .from('integration_plugins')
+    .select('id, slug, tenant_id')
+    .eq('id', id)
+    .eq('tenant_id', session.profile.tenantId)
+    .maybeSingle();
+  if (!row) return { data: null, error: 'Only tenant plugins can be removed' };
+  await supabase.from('integrations').delete().eq('tenant_id', session.profile.tenantId).eq('kind', row.slug);
+  const { error } = await supabase.from('integration_plugins').delete().eq('id', id);
+  if (error) return { data: null, error: error.message };
+  return { data: await getIntegrationCatalog(), error: null };
 }

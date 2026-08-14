@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import { getServerSupabaseConfig, isSupabaseConfigured } from '@/lib/config/env';
+import { homePathForRole, isCustomerRole, isTenantAdminRole } from '@/lib/rbac/roles';
 
 function isPublicPath(pathname: string) {
   return (
@@ -76,26 +77,33 @@ export async function updateSession(request: NextRequest) {
   if (user && pathname === '/login') {
     const role = roleFromUser(user);
     const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = role === 'customer' ? '/portal' : '/dashboard';
+    redirectUrl.pathname = homePathForRole(role);
+    redirectUrl.search = '';
+    return NextResponse.redirect(redirectUrl);
+  }
+
+  if (user && isCustomerRole(roleFromUser(user)) && pathname === '/select-account') {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = '/portal';
     redirectUrl.search = '';
     return NextResponse.redirect(redirectUrl);
   }
 
   const role = roleFromUser(user);
 
-  if (user && role === 'customer' && !pathname.startsWith('/portal') && !pathname.startsWith('/api/')) {
+  if (user && isCustomerRole(role) && !pathname.startsWith('/portal') && !pathname.startsWith('/api/')) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = '/portal';
     return NextResponse.redirect(redirectUrl);
   }
 
-  if (user && role && role !== 'customer' && pathname.startsWith('/portal')) {
+  if (user && role && !isCustomerRole(role) && pathname.startsWith('/portal')) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = '/dashboard';
     return NextResponse.redirect(redirectUrl);
   }
 
-  if (user && role === 'agent' && pathname.startsWith('/settings') && pathname !== '/settings/appearance') {
+  if (user && role && !isTenantAdminRole(role) && pathname.startsWith('/settings') && pathname !== '/settings/appearance') {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = '/dashboard';
     return NextResponse.redirect(redirectUrl);

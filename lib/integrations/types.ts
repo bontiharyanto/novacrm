@@ -1,4 +1,4 @@
-export type IntegrationKind = 'ai' | 'whatsapp' | 'telegram' | 'email' | 'webhook';
+export type IntegrationKind = string;
 
 export type IntegrationStatus = {
   configured: boolean;

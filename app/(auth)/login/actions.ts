@@ -1,7 +1,10 @@
 'use server';
 
+import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { ACCOUNT_ALL, ACCOUNT_COOKIE } from '@/lib/accounts/schema';
+import { homePathForRole, isCustomerRole, parseAppRole } from '@/lib/rbac/roles';
 
 export type SignInState = { error: string } | null;
 
@@ -24,9 +27,18 @@ export async function signInAction(_prev: SignInState, formData: FormData): Prom
     return { error: error.message };
   }
 
-  const role = String(data.user?.user_metadata?.role ?? '');
-  if (next) {
-    redirect(next);
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', data.user.id).maybeSingle();
+  const role = parseAppRole(profile?.role ?? data.user.user_metadata?.role);
+  if (isCustomerRole(role)) {
+    redirect(next && next.startsWith('/portal') ? next : '/portal');
   }
-  redirect(role === 'customer' ? '/portal' : '/dashboard');
+
+  cookies().set(ACCOUNT_COOKIE, ACCOUNT_ALL, {
+    path: '/',
+    sameSite: 'lax',
+    httpOnly: false,
+    maxAge: 60 * 60 * 24 * 30,
+  });
+  const dest = next && !next.startsWith('/portal') ? next : homePathForRole(role);
+  redirect(dest);
 }

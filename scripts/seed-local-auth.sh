@@ -71,3 +71,16 @@ upsert_profile "33333333-3333-3333-3333-333333333333" "agent@novacrm.app" "agent
 
 upsert_user "44444444-4444-4444-4444-444444444444" "customer@novacrm.app" "customer" "Nova Customer"
 upsert_profile "44444444-4444-4444-4444-444444444444" "customer@novacrm.app" "customer" "Nova Customer"
+
+upsert_user "33333333-3333-3333-3333-333333333334" "sari.l1@novacrm.app" "agent" "Sari L1"
+upsert_profile "33333333-3333-3333-3333-333333333334" "sari.l1@novacrm.app" "agent" "Sari L1"
+upsert_user "33333333-3333-3333-3333-333333333335" "budi.l1@novacrm.app" "agent" "Budi L1"
+upsert_profile "33333333-3333-3333-3333-333333333335" "budi.l1@novacrm.app" "agent" "Budi L1"
+upsert_user "33333333-3333-3333-3333-333333333336" "dewi.l1@novacrm.app" "agent" "Dewi L1"
+upsert_profile "33333333-3333-3333-3333-333333333336" "dewi.l1@novacrm.app" "agent" "Dewi L1"
+upsert_user "33333333-3333-3333-3333-333333333337" "raka.l2@novacrm.app" "agent" "Raka L2"
+upsert_profile "33333333-3333-3333-3333-333333333337" "raka.l2@novacrm.app" "agent" "Raka L2"
+upsert_user "33333333-3333-3333-3333-333333333338" "maya.l3@novacrm.app" "agent" "Maya L3"
+upsert_profile "33333333-3333-3333-3333-333333333338" "maya.l3@novacrm.app" "agent" "Maya L3"
+upsert_user "33333333-3333-3333-3333-333333333339" "andi.oncall@novacrm.app" "agent" "Andi On-call"
+upsert_profile "33333333-3333-3333-3333-333333333339" "andi.oncall@novacrm.app" "agent" "Andi On-call"

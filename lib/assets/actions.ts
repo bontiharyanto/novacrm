@@ -92,22 +92,22 @@ function makeTag(index = 0) {
   return `AST-${suffix}`;
 }
 
-export async function listAssets() {
+export async function listAssets(accountId?: string | null) {
   const session = await getSessionProfile();
   if (!session || !canRole(session.profile.role, 'read', 'Asset')) {
     return [];
   }
 
-  const scoped = await requireAccountId(session);
-  if (!scoped.accountId) return [];
+  const scoped = await requireAccountId(session, accountId);
+  if (accountId && !scoped.accountId) return [];
 
   const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
-    .from('assets')
-    .select('*')
-    .eq('tenant_id', session.profile.tenantId)
-    .eq('account_id', scoped.accountId)
-    .order('created_at', { ascending: false });
+  let query = supabase.from('assets').select('*').eq('tenant_id', session.profile.tenantId).order('created_at', { ascending: false });
+  if (scoped.accountId) {
+    query = query.eq('account_id', scoped.accountId);
+  }
+
+  const { data, error } = await query;
 
   if (error || !data) {
     return [];

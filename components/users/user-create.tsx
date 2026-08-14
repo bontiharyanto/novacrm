@@ -11,7 +11,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { createDirectoryUser } from '@/lib/users/actions';
+import { RoleSelect } from '@/components/users/role-select';
 import type { AppRole } from '@/lib/rbac/ability';
+import { isCustomerRole } from '@/lib/rbac/roles';
 import type { AccountRecord } from '@/lib/accounts/schema';
 import type { AssignmentGroup } from '@/lib/org/schema';
 import { supportTierLabel } from '@/lib/tickets/pending';
@@ -27,10 +29,12 @@ export function UserCreate({
   accounts,
   units,
   groups,
+  actorRole,
 }: {
   accounts: AccountRecord[];
   units: Array<{ id: string; name: string; type: string }>;
   groups: AssignmentGroup[];
+  actorRole: AppRole;
 }) {
   const router = useRouter();
   const [fullName, setFullName] = useState('');
@@ -45,7 +49,7 @@ export function UserCreate({
   const [error, setError] = useState('');
 
   const accountOptions = useMemo(() => {
-    if (role === 'customer') return accounts.filter((item) => item.type === 'customer');
+    if (isCustomerRole(role)) return accounts.filter((item) => item.type === 'customer');
     return accounts;
   }, [accounts, role]);
 
@@ -61,7 +65,7 @@ export function UserCreate({
       password,
       accountId,
       orgUnitId,
-      groupId: role === 'customer' ? undefined : groupId,
+      groupId: isCustomerRole(role) ? undefined : groupId,
     });
     if (result.error || !result.data?.id) {
       setError(result.error ?? 'Unable to create user.');
@@ -116,24 +120,20 @@ export function UserCreate({
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="role">Access</Label>
-            <Select
+            <RoleSelect
               id="role"
               value={role}
-              onChange={(event) => {
-                const next = event.target.value as AppRole;
+              actorRole={actorRole}
+              onChange={(next) => {
                 setRole(next);
-                if (next === 'customer') {
+                if (isCustomerRole(next)) {
                   const firstCustomer = accounts.find((item) => item.type === 'customer');
                   setAccountId(firstCustomer?.id ?? '');
                   setGroupId('');
                   setOrgUnitId('');
                 }
               }}
-            >
-              <option value="admin">Admin — full desk + settings</option>
-              <option value="agent">Agent — service desk</option>
-              <option value="customer">Customer — portal only</option>
-            </Select>
+            />
           </div>
           <div className="space-y-1.5 sm:col-span-2">
             <Label htmlFor="password">Temporary password</Label>

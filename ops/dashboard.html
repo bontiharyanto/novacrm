@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>NovaCRM Ops</title>
+    <style>
+      :root {
+        --bg: #09090b;
+        --card: #18181b;
+        --line: #27272a;
+        --text: #fafafa;
+        --muted: #71717a;
+        --blue: #3b82f6;
+        --ok: #10b981;
+        --warn: #f59e0b;
+        --bad: #f43f5e;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--text);
+        font: 13px/1.45 Inter, ui-sans-serif, system-ui, sans-serif;
+      }
+      header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 20px 24px 16px;
+        border-bottom: 1px solid var(--line);
+      }
+      header p.kicker {
+        margin: 0;
+        font-size: 10px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+      h1 { margin: 4px 0 0; font-size: 22px; font-weight: 600; letter-spacing: -0.02em; }
+      .sub { margin: 4px 0 0; color: var(--muted); }
+      .meta { color: var(--muted); font-variant-numeric: tabular-nums; }
+      main { padding: 20px 24px 40px; display: grid; gap: 20px; }
+      .grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        padding: 14px;
+      }
+      .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+      .label { font-weight: 550; }
+      .hint { margin-top: 6px; color: var(--muted); font-size: 11px; }
+      a { color: #93c5fd; text-decoration: none; }
+      a:hover { color: #bfdbfe; }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        border: 1px solid;
+        padding: 1px 8px;
+        font-size: 11px;
+        font-weight: 500;
+      }
+      .up { color: #6ee7b7; border-color: rgba(16, 185, 129, 0.35); background: rgba(16, 185, 129, 0.12); }
+      .down { color: #fda4af; border-color: rgba(244, 63, 94, 0.35); background: rgba(244, 63, 94, 0.12); }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+      th { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); font-weight: 500; }
+      .mono { font-family: ui-monospace, 'JetBrains Mono', monospace; font-size: 12px; }
+      button {
+        border: 1px solid #3f3f46;
+        background: transparent;
+        color: var(--text);
+        border-radius: 6px;
+        padding: 5px 10px;
+        font: inherit;
+        cursor: pointer;
+      }
+      button.primary { background: #2563eb; border-color: #2563eb; color: white; }
+      button:hover { transform: translateY(-1px); }
+      .links { display: flex; flex-wrap: wrap; gap: 8px; }
+      .chip { border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; background: var(--card); }
+      .fail { color: #fda4af; font-size: 12px; }
+      .empty { color: var(--muted); padding: 12px 10px; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>
+        <p class="kicker">System</p>
+        <h1>NovaCRM Ops</h1>
+        <p class="sub">Health, queues, and retries for the system administrator. Independent of the agent desk.</p>
+      </div>
+      <div class="meta" id="stamp">Loading…</div>
+    </header>
+    <main>
+      <section>
+        <div class="row" style="margin-bottom: 10px">
+          <p class="kicker">Services</p>
+          <button type="button" id="refresh">Refresh</button>
+        </div>
+        <div class="grid" id="services"></div>
+      </section>
+      <section class="card">
+        <div class="row" style="margin-bottom: 8px">
+          <p class="label">Queues</p>
+          <p class="hint" style="margin:0">BullMQ on Redis · retry does not change ticket data</p>
+        </div>
+        <div id="queues"></div>
+      </section>
+      <section class="card">
+        <p class="label">Failed jobs</p>
+        <div id="failed"></div>
+      </section>
+      <section>
+        <p class="kicker" style="margin-bottom: 8px">Consoles</p>
+        <div class="links" id="links"></div>
+      </section>
+    </main>
+    <script>
+      const $ = (id) => document.getElementById(id);
+
+      function pill(ok) {
+        return `<span class="pill ${ok ? 'up' : 'down'}">${ok ? 'up' : 'down'}</span>`;
+      }
+
+      async function load() {
+        const response = await fetch('/api/status');
+        const payload = await response.json();
+        const data = payload.data;
+        if (!data) {
+          $('stamp').textContent = payload.error || 'Unable to load ops status';
+          return;
+        }
+        $('stamp').textContent = 'Updated ' + new Date(data.generatedAt).toLocaleString();
+        $('services').innerHTML = data.services
+          .map(
+            (item) => `
+          <article class="card">
+            <div class="row">
+              <span class="label">${item.label}</span>
+              ${pill(item.ok)}
+            </div>
+            <p class="hint mono">:${item.port}${item.status ? ' · HTTP ' + item.status : ''}</p>
+          </article>`,
+          )
+          .join('');
+
+        const queues = data.queues || [];
+        $('queues').innerHTML = queues.length
+          ? `<table>
+              <thead><tr><th>Queue</th><th>Wait</th><th>Active</th><th>Delay</th><th>Fail</th><th>Done</th><th>Workers</th><th></th></tr></thead>
+              <tbody>
+                ${queues
+                  .map((queue) => {
+                    const c = queue.counts || {};
+                    return `<tr>
+                      <td>${queue.label || queue.name}<div class="hint mono">${queue.name}</div></td>
+                      <td>${c.waiting || 0}</td>
+                      <td>${c.active || 0}</td>
+                      <td>${c.delayed || 0}</td>
+                      <td>${c.failed || 0}</td>
+                      <td>${c.completed || 0}</td>
+                      <td>${queue.workers || 0}</td>
+                      <td><button class="primary" data-retry-all="${queue.key}">Retry failed</button></td>
+                    </tr>`;
+                  })
+                  .join('')}
+              </tbody>
+            </table>`
+          : `<p class="empty">${data.queueError || 'No queue data. Start Redis and the worker.'}</p>`;
+
+        const failed = (data.queues || []).flatMap((queue) =>
+          (queue.failed || []).map((job) => ({ ...job, queue: queue.key, queueName: queue.name })),
+        );
+        $('failed').innerHTML = failed.length
+          ? `<table>
+              <thead><tr><th>Queue</th><th>Job</th><th>When</th><th>Reason</th><th></th></tr></thead>
+              <tbody>
+                ${failed
+                  .map(
+                    (job) => `<tr>
+                      <td class="mono">${job.queueName}</td>
+                      <td class="mono">${job.id}<div class="hint">${job.name} · ${job.attempts} attempts</div></td>
+                      <td class="mono">${job.timestamp ? new Date(job.timestamp).toLocaleString() : '—'}</td>
+                      <td class="fail">${job.failedReason || '—'}</td>
+                      <td><button data-retry="${job.queue}" data-id="${job.id}">Retry</button></td>
+                    </tr>`,
+                  )
+                  .join('')}
+              </tbody>
+            </table>`
+          : '<p class="empty">No failed jobs.</p>';
+
+        const links = [
+          ['Desk :3000', data.links.app],
+          ['Docker :3001', data.links.docker],
+          ['Studio :54323', data.links.studio],
+          ['MinIO :9001', data.links.minio],
+          ['Mailpit :54324', data.links.mailpit],
+        ];
+        $('links').innerHTML = links
+          .map(([label, href]) => `<a class="chip" href="${href}" target="_blank" rel="noreferrer">${label}</a>`)
+          .join('');
+      }
+
+      document.addEventListener('click', async (event) => {
+        const button = event.target.closest('button');
+        if (!button) return;
+        if (button.id === 'refresh') {
+          await load();
+          return;
+        }
+        if (button.dataset.retryAll) {
+          await fetch('/api/queues/' + button.dataset.retryAll + '/failed/retry', { method: 'POST' });
+          await load();
+        }
+        if (button.dataset.retry) {
+          await fetch('/api/queues/' + button.dataset.retry + '/jobs/' + encodeURIComponent(button.dataset.id) + '/retry', {
+            method: 'POST',
+          });
+          await load();
+        }
+      });
+
+      load();
+      setInterval(load, 8000);
+    </script>
+  </body>
+</html>

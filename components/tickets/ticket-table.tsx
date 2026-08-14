@@ -22,6 +22,8 @@ export type TicketRow = {
   groupName?: string;
   assetName?: string;
   assetTag?: string;
+  accountName?: string;
+  accountCode?: string;
   dueDate?: string;
   slaResponseAt?: string;
   slaResolveBy?: string;
@@ -67,6 +69,8 @@ export function TicketTable({ tickets }: { tickets: TicketRow[] }) {
         ticket.requesterName,
         ticket.assigneeName ?? '',
         ticket.groupName ?? '',
+        ticket.accountName ?? '',
+        ticket.accountCode ?? '',
       ]
         .join(' ')
         .toLowerCase()
@@ -89,6 +93,7 @@ export function TicketTable({ tickets }: { tickets: TicketRow[] }) {
           <thead className="border-b border-zinc-800 bg-zinc-950 text-[11px] uppercase tracking-[0.12em] text-zinc-500">
             <tr>
               <th className="px-3 py-2 font-medium">Number</th>
+              <th className="px-3 py-2 font-medium">Account</th>
               <th className="px-3 py-2 font-medium">Title</th>
               <th className="px-3 py-2 font-medium">Process</th>
               <th className="px-3 py-2 font-medium">State</th>
@@ -104,7 +109,7 @@ export function TicketTable({ tickets }: { tickets: TicketRow[] }) {
           <tbody>
             {rows.length === 0 ? (
               <tr>
-                <td colSpan={11} className="px-3 py-8 text-center text-zinc-500">
+                <td colSpan={12} className="px-3 py-8 text-center text-zinc-500">
                   No tickets match this filter.
                 </td>
               </tr>
@@ -115,6 +120,9 @@ export function TicketTable({ tickets }: { tickets: TicketRow[] }) {
                     <Link href={`/tickets/${ticket.id}`} className="font-mono text-xs text-blue-300 hover:text-blue-200">
                       {displayTicketNumber(ticket.number, ticket.id)}
                     </Link>
+                  </td>
+                  <td className="px-3 py-2.5 font-mono text-[11px] text-zinc-400">
+                    {ticket.accountCode || ticket.accountName || '—'}
                   </td>
                   <td className="px-3 py-2.5">
                     <Link href={`/tickets/${ticket.id}`} className="text-sm text-zinc-50 hover:text-blue-200">

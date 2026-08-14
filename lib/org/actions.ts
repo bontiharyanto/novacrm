@@ -78,16 +78,18 @@ export async function listOrgUnits(): Promise<OrgUnit[]> {
   const session = await getSessionProfile();
   if (!session || !canRole(session.profile.role, 'read', 'Org')) return [];
   const scoped = await requireAccountId(session);
-  if (!scoped.accountId) return [];
-
   const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from('org_units')
     .select('id, tenant_id, account_id, parent_id, type, name, slug, manager_id, created_at')
     .eq('tenant_id', session.profile.tenantId)
-    .eq('account_id', scoped.accountId)
     .order('type', { ascending: true })
     .order('name', { ascending: true });
+  if (scoped.accountId) {
+    query = query.eq('account_id', scoped.accountId);
+  }
+
+  const { data, error } = await query;
 
   if (error || !data) return [];
   return withManagers(data as OrgUnitRow[]);
@@ -233,19 +235,23 @@ function mapGroup(
   };
 }
 
-export async function listAssignmentGroups(): Promise<AssignmentGroup[]> {
+export async function listAssignmentGroups(accountId?: string | null): Promise<AssignmentGroup[]> {
   const session = await getSessionProfile();
   if (!session || !canRole(session.profile.role, 'read', 'Org')) return [];
-  const scoped = await requireAccountId(session);
-  if (!scoped.accountId) return [];
+  const scoped = await requireAccountId(session, accountId);
+  if (accountId && !scoped.accountId) return [];
 
   const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from('assignment_groups')
     .select('id, tenant_id, account_id, name, slug, kind, tier, is_active, created_at')
     .eq('tenant_id', session.profile.tenantId)
-    .eq('account_id', scoped.accountId)
     .order('name');
+  if (scoped.accountId) {
+    query = query.eq('account_id', scoped.accountId);
+  }
+
+  const { data, error } = await query;
 
   if (error || !data) return [];
   const members = await loadGroupMembers(data.map((row) => row.id));

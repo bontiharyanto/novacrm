@@ -8,7 +8,8 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const messages = Array.isArray(body.messages) ? body.messages : [];
-    const result = await runAssistant(messages);
+    const threadId = typeof body.threadId === 'string' ? body.threadId : null;
+    const result = await runAssistant(messages, threadId);
     if (result.error) {
       return NextResponse.json({ data: null, error: result.error }, { status: 400 });
     }

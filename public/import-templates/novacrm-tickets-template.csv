@@ -1,0 +1,2 @@
+﻿title,type,priority,status,description,requesterName,requesterEmail,assetTag,accountCode
+VPN timeout after hours,incident,high,open,Users cannot stay on VPN after 18:00.,Budi Portal,budi@banknusantara.id,AST-2001,BNK

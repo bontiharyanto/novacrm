@@ -22,6 +22,7 @@ export default async function UserDetailPage({ params }: { params: { id: string 
       units={units}
       groups={groups}
       canEdit={canRole(session.profile.role, 'update', 'User')}
+      actorRole={session.profile.role}
     />
   );
 }

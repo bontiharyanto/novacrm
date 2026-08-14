@@ -47,6 +47,8 @@ CASL on the frontend; RLS on the backend. Sidebar account filter: one customer a
 | [User guide (training pack)](docs/user-guide/README.md) | Staff and customers — trainer agenda + participant manual |
 | [Local laptop setup](docs/LOCAL.md) | Engineers running the demo |
 | [Sysadmin Ops](docs/OPS.md) | Health, queues, retries on `:3100` |
+| [RBAC](docs/RBAC.md) | Roles vs CASL vs RLS |
+| [Server cutover](docs/SERVER.md) | Hosted Supabase + VPS checklist |
 | [Production deploy](docs/DEPLOYMENT.md) | VPS / Traefik / GHCR |
 
 ## Getting started (laptop)

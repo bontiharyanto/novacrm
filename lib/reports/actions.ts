@@ -20,18 +20,22 @@ export async function getReportSnapshot(input?: {
 
   const period = parseReportPeriod(input ?? {});
   const scoped = await requireAccountId(session);
-  if (!scoped.accountId) return null;
-
   const supabase = await createSupabaseServerClient();
   const tenantId = session.profile.tenantId;
 
+  let ticketQuery = supabase
+    .from('tickets')
+    .select('id, number, title, type, status, priority, due_date, sla_resolve_by, sla_paused_at, sla_resolve_minutes, created_at, updated_at, assignee_id, assignee_name, change_type')
+    .eq('tenant_id', tenantId);
+  let assetQuery = supabase.from('assets').select('warranty_expiry').eq('tenant_id', tenantId);
+  if (scoped.accountId) {
+    ticketQuery = ticketQuery.eq('account_id', scoped.accountId);
+    assetQuery = assetQuery.eq('account_id', scoped.accountId);
+  }
+
   const [{ data: tickets }, { data: assets }, { count: catalogPublished }] = await Promise.all([
-    supabase
-      .from('tickets')
-      .select('id, number, title, type, status, priority, due_date, sla_resolve_by, sla_paused_at, sla_resolve_minutes, created_at, updated_at, assignee_id, assignee_name, change_type')
-      .eq('tenant_id', tenantId)
-      .eq('account_id', scoped.accountId),
-    supabase.from('assets').select('warranty_expiry').eq('tenant_id', tenantId).eq('account_id', scoped.accountId),
+    ticketQuery,
+    assetQuery,
     supabase
       .from('catalog_items')
       .select('id', { count: 'exact', head: true })

@@ -104,7 +104,7 @@ function WorkflowEditorInner({ ruleId, template }: { ruleId?: string; template?:
         setEdges(next.edges);
         setRuns(rule.runs ?? []);
       });
-  }, [ruleId, setEdges, setNodes]);
+  }, [ruleId, seed, setEdges, setNodes]);
 
   const onConnect = useCallback(
     (connection: Connection) =>

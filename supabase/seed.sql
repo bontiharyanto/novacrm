@@ -866,4 +866,6 @@ on conflict (tenant_id, kind) do update
 set config = public.integrations.config || excluded.config
 where coalesce(public.integrations.config->>'apiKey', '') = '';
 
+-- Assistant threads are created at runtime per staff user. No demo chats.
+
 

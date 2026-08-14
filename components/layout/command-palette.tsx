@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Command } from 'cmdk';
-import { BarChart3, BookOpen, Building2, Clock, LayoutDashboard, LayoutGrid, Package, Palette, Scale, Settings, ShieldCheck, Sparkles, Ticket, UserCog, Users, Workflow } from 'lucide-react';
-import type { AppRole } from '@/lib/rbac/ability';
+import { BarChart3, BookOpen, Building2, CalendarClock, Clock, LayoutDashboard, LayoutGrid, Lightbulb, Package, Palette, Scale, Settings, ShieldCheck, Sparkles, Ticket, Upload, UserCog, Users, Workflow } from 'lucide-react';
+import { canRole, type AppRole } from '@/lib/rbac/ability';
+import { isTenantAdminRole } from '@/lib/rbac/roles';
 import { useI18n } from '@/components/layout/preferences-provider';
 
 type TicketHit = { id: string; number?: string; title: string; status: string };
@@ -65,6 +66,12 @@ export function CommandPalette({ open, onOpenChange, role }: { open: boolean; on
               <Command.Item className="cmdk-item" onSelect={() => go('/assistant')}>
                 <Sparkles className="h-3.5 w-3.5" /> {t.nav.assistant}
               </Command.Item>
+              <Command.Item className="cmdk-item" onSelect={() => go('/insights')}>
+                <Lightbulb className="h-3.5 w-3.5" /> {t.nav.insights}
+              </Command.Item>
+              <Command.Item className="cmdk-item" onSelect={() => go('/wfm')}>
+                <CalendarClock className="h-3.5 w-3.5" /> {t.nav.wfm}
+              </Command.Item>
               <Command.Item className="cmdk-item" onSelect={() => go('/tickets')}>
                 <Ticket className="h-3.5 w-3.5" /> {t.tickets.title}
               </Command.Item>
@@ -80,12 +87,16 @@ export function CommandPalette({ open, onOpenChange, role }: { open: boolean; on
               <Command.Item className="cmdk-item" onSelect={() => go('/org')}>
                 <Users className="h-3.5 w-3.5" /> {t.nav.organization}
               </Command.Item>
-              <Command.Item className="cmdk-item" onSelect={() => go('/users')}>
-                <UserCog className="h-3.5 w-3.5" /> {t.nav.users}
-              </Command.Item>
-              <Command.Item className="cmdk-item" onSelect={() => go('/sla')}>
-                <Clock className="h-3.5 w-3.5" /> {t.nav.sla}
-              </Command.Item>
+              {canRole(role, 'read', 'User') ? (
+                <Command.Item className="cmdk-item" onSelect={() => go('/users')}>
+                  <UserCog className="h-3.5 w-3.5" /> {t.nav.users}
+                </Command.Item>
+              ) : null}
+              {canRole(role, 'read', 'Sla') ? (
+                <Command.Item className="cmdk-item" onSelect={() => go('/sla')}>
+                  <Clock className="h-3.5 w-3.5" /> {t.nav.sla}
+                </Command.Item>
+              ) : null}
               <Command.Item className="cmdk-item" onSelect={() => go('/assets')}>
                 <Package className="h-3.5 w-3.5" /> {t.nav.assets}
               </Command.Item>
@@ -98,18 +109,27 @@ export function CommandPalette({ open, onOpenChange, role }: { open: boolean; on
               <Command.Item className="cmdk-item" onSelect={() => go('/cmdb/new')}>
                 <LayoutGrid className="h-3.5 w-3.5" /> {t.command.newCi}
               </Command.Item>
+              {canRole(role, 'create', 'Import') ? (
+                <Command.Item className="cmdk-item" onSelect={() => go('/import')}>
+                  <Upload className="h-3.5 w-3.5" /> {t.nav.import}
+                </Command.Item>
+              ) : null}
               <Command.Item className="cmdk-item" onSelect={() => go('/catalog')}>
                 <BookOpen className="h-3.5 w-3.5" /> {t.nav.catalog}
               </Command.Item>
               <Command.Item className="cmdk-item" onSelect={() => go('/catalog/new')}>
                 <BookOpen className="h-3.5 w-3.5" /> {t.command.newCatalog}
               </Command.Item>
-              <Command.Item className="cmdk-item" onSelect={() => go('/workflows')}>
-                <Workflow className="h-3.5 w-3.5" /> {t.nav.automation}
-              </Command.Item>
-              <Command.Item className="cmdk-item" onSelect={() => go('/workflows/new')}>
-                <Workflow className="h-3.5 w-3.5" /> {t.command.newFlow}
-              </Command.Item>
+              {canRole(role, 'read', 'Workflow') ? (
+                <>
+                  <Command.Item className="cmdk-item" onSelect={() => go('/workflows')}>
+                    <Workflow className="h-3.5 w-3.5" /> {t.nav.automation}
+                  </Command.Item>
+                  <Command.Item className="cmdk-item" onSelect={() => go('/workflows/new')}>
+                    <Workflow className="h-3.5 w-3.5" /> {t.command.newFlow}
+                  </Command.Item>
+                </>
+              ) : null}
               <Command.Item className="cmdk-item" onSelect={() => go('/governance')}>
                 <Scale className="h-3.5 w-3.5" /> {t.nav.governance}
               </Command.Item>
@@ -119,7 +139,7 @@ export function CommandPalette({ open, onOpenChange, role }: { open: boolean; on
               <Command.Item className="cmdk-item" onSelect={() => go('/settings/appearance')}>
                 <Palette className="h-3.5 w-3.5" /> {t.nav.appearance}
               </Command.Item>
-              {role === 'admin' ? (
+              {isTenantAdminRole(role) ? (
                 <Command.Item className="cmdk-item" onSelect={() => go('/settings')}>
                   <Settings className="h-3.5 w-3.5" /> {t.nav.integrations}
                 </Command.Item>

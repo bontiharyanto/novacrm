@@ -1,5 +1,8 @@
 import { z } from 'zod';
 
+export const ACCOUNT_COOKIE = 'novacrm_account';
+export const ACCOUNT_ALL = 'all';
+
 export const accountTypeSchema = z.enum(['internal', 'customer']);
 export const accountStatusSchema = z.enum(['active', 'paused', 'archived']);
 export const accountMemberRoleSchema = z.enum(['owner', 'member', 'portal']);
@@ -51,4 +54,5 @@ export type AccountMember = {
 export type AccountScope = {
   accounts: AccountRecord[];
   account: AccountRecord | null;
+  viewingAll: boolean;
 };

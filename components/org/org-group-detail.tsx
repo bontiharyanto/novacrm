@@ -10,7 +10,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { addGroupMember, removeGroupMember, updateAssignmentGroup } from '@/lib/org/actions';
+import { upsertDispatchPolicy } from '@/lib/wfm/actions';
 import type { AssignmentGroup, AssignmentGroupKind, GroupMemberRole, SupportTier } from '@/lib/org/schema';
+import type { WfmDispatchPolicy, WfmDispatchStrategy, WfmSkill } from '@/lib/wfm/schema';
 import { supportTierLabel } from '@/lib/tickets/pending';
 
 const kindLabel: Record<AssignmentGroupKind, string> = {
@@ -24,10 +26,16 @@ export function OrgGroupDetail({
   group,
   agents,
   canEdit,
+  policy,
+  skills = [],
+  groups = [],
 }: {
   group: AssignmentGroup;
   agents: Array<{ id: string; fullName: string }>;
   canEdit: boolean;
+  policy: WfmDispatchPolicy | null;
+  skills?: WfmSkill[];
+  groups?: Array<{ id: string; name: string; kind: string }>;
 }) {
   const router = useRouter();
   const [name, setName] = useState(group.name);
@@ -37,6 +45,10 @@ export function OrgGroupDetail({
   const [userId, setUserId] = useState('');
   const [role, setRole] = useState<GroupMemberRole>('member');
   const [message, setMessage] = useState('');
+  const [strategy, setStrategy] = useState<WfmDispatchStrategy>(policy?.strategy ?? 'manual');
+  const [maxOpen, setMaxOpen] = useState(String(policy?.maxOpenTickets ?? 8));
+  const [skillId, setSkillId] = useState(policy?.requiredSkillIds[0] ?? '');
+  const [oncallGroupId, setOncallGroupId] = useState(policy?.oncallGroupId ?? '');
   const available = agents.filter((agent) => !group.members.some((member) => member.userId === agent.id));
 
   async function save() {
@@ -101,6 +113,68 @@ export function OrgGroupDetail({
           </Button>
         ) : null}
         {message ? <p className="text-sm text-zinc-400">{message}</p> : null}
+
+        <div className="space-y-3 rounded-xl border border-zinc-800 p-4">
+          <h2 className="text-sm font-medium text-zinc-50">Dispatch</h2>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Select value={strategy} disabled={!canEdit} onChange={(event) => setStrategy(event.target.value as WfmDispatchStrategy)}>
+              <option value="manual">Manual</option>
+              <option value="least_loaded">Least loaded</option>
+              <option value="round_robin">Round robin</option>
+              <option value="skill">Skill</option>
+              <option value="oncall">On-call</option>
+            </Select>
+            <input
+              type="number"
+              min={1}
+              max={50}
+              value={maxOpen}
+              disabled={!canEdit}
+              onChange={(event) => setMaxOpen(event.target.value)}
+              className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100"
+            />
+            <Select value={skillId} disabled={!canEdit} onChange={(event) => setSkillId(event.target.value)}>
+              <option value="">No required skill</option>
+              {skills.map((skill) => (
+                <option key={skill.id} value={skill.id}>
+                  {skill.name}
+                </option>
+              ))}
+            </Select>
+            <Select value={oncallGroupId} disabled={!canEdit} onChange={(event) => setOncallGroupId(event.target.value)}>
+              <option value="">No on-call fallback</option>
+              {groups
+                .filter((item) => item.kind === 'oncall')
+                .map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+            </Select>
+          </div>
+          {canEdit ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                void upsertDispatchPolicy({
+                  groupId: group.id,
+                  strategy,
+                  maxOpenTickets: Number(maxOpen) || 8,
+                  requiredSkillIds: skillId ? [skillId] : [],
+                  oncallGroupId: oncallGroupId || undefined,
+                  isActive: true,
+                }).then((result) => {
+                  setMessage(result.error ?? 'Dispatch saved');
+                  router.refresh();
+                });
+              }}
+            >
+              Save dispatch
+            </Button>
+          ) : null}
+        </div>
 
         <div>
           <h2 className="text-sm font-medium text-zinc-50">Members</h2>

@@ -1,0 +1,3 @@
+﻿name,type,assetTag,environment,owner,accountCode
+core-switch-01,network,,prod,NetOps,BNK
+internet-banking,application,,prod,AppOps,BNK

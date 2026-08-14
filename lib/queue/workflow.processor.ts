@@ -5,6 +5,7 @@ import { sendTelegram } from '@/lib/integrations/telegram';
 import { orderedActionNodes, triggerMatches, definitionFromLegacy } from '@/lib/workflows/graph';
 import type { WorkflowDefinition, WorkflowEvent } from '@/lib/workflows/schema';
 import type { TicketStatus } from '@/lib/tickets/schema';
+import { dispatchTicket, resolveInboundGroupId } from '@/lib/wfm/dispatch';
 
 export type WorkflowJobPayload = {
   tenantId: string;
@@ -96,18 +97,30 @@ export async function processWorkflowJob(payload: WorkflowJobPayload): Promise<{
       }
 
       if (action === 'assign') {
-        let assigneeId = target;
-        if (!/^[0-9a-f-]{36}$/i.test(assigneeId)) {
-          const { data: agent } = await supabase
-            .from('profiles')
-            .select('id, full_name')
+        const uuidTarget = /^[0-9a-f-]{36}$/i.test(target);
+        if (!uuidTarget) {
+          const { data: ticketRow } = await supabase
+            .from('tickets')
+            .select('id, group_id, assignee_id')
+            .eq('id', payload.ticketId)
             .eq('tenant_id', payload.tenantId)
-            .in('role', ['admin', 'agent'])
-            .order('full_name')
-            .limit(1)
             .maybeSingle();
-          assigneeId = agent?.id ?? '';
+          let groupId = ticketRow?.group_id as string | null | undefined;
+          if (!groupId) {
+            groupId = await resolveInboundGroupId(supabase, payload.tenantId);
+            if (groupId) {
+              await supabase.from('tickets').update({ group_id: groupId }).eq('id', payload.ticketId).eq('tenant_id', payload.tenantId);
+            }
+          }
+          const dispatched = await dispatchTicket(payload.tenantId, payload.ticketId, { client: supabase, force: true });
+          results.push({
+            action,
+            ok: dispatched.ok,
+            detail: dispatched.assigneeName ?? dispatched.error ?? (dispatched.skipped ? 'skipped' : 'wfm'),
+          });
+          continue;
         }
+        const assigneeId = target;
         if (assigneeId) {
           const { data: profile } = await supabase
             .from('profiles')

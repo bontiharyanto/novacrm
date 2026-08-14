@@ -1,6 +1,6 @@
 # Production deploy
 
-Laptop first: [LOCAL.md](LOCAL.md). Sysadmin console (laptop): [OPS.md](OPS.md). This runbook is hosted Supabase + VPS.
+Laptop first: [LOCAL.md](LOCAL.md). Sysadmin console (laptop): [OPS.md](OPS.md). Cutover checklist: [SERVER.md](SERVER.md). Roles: [RBAC.md](RBAC.md).
 
 **Order:** create Supabase project → `npm run hosted:setup` → fill `.env.production` on the VPS → DNS → GitHub secrets → push `main`.
 
@@ -70,7 +70,9 @@ Change MinIO and demo passwords after first login. Do not ship `minioadmin`.
 Workflow: `.github/workflows/deploy.yml`
 
 - Pull request: test only
-- Push to `main` or **Run workflow**: test → multi-arch GHCR → SSH deploy if secrets exist
+- Push to `main` or **Run workflow**: test → multi-arch GHCR (local Inter / JetBrains fonts — no Google Fonts during `linux/arm64` build) → SSH deploy when `DEPLOY_HOST` is set
+- Compose on the VPS pins `IMAGE_TAG` to the git SHA that just published
+- `scripts/migrate.sh` records each file in `public.schema_migrations` and skips repeats. Existing databases: `MIGRATE_STAMP=1 sh scripts/migrate.sh`
 
 Image: `ghcr.io/bontiharyanto/novacrm`
 
@@ -104,7 +106,7 @@ Make the GHCR package public, or leave the deploy job’s `docker login ghcr.io`
 - Public Supabase URL/anon key come from `.env.production` (`NOVACRM_SUPABASE_*`) so one image works per environment
 - Ops (`:3100`) is **not** published by `docker-compose.prod.yml`. Use it on the laptop, or add a loopback-only service with `OPS_TOKEN` if you need it on the VPS
 
-Email in production needs `RESEND_API_KEY`. Without it, outbound mail is logged as failed (no local sink). After pull, run `scripts/migrate.sh` so new SQL (RBAC, WFM, insights, integration plugins, assistant threads) is applied.
+Email in production needs `RESEND_API_KEY`. Without it, outbound mail is logged as failed (no local sink). After pull, `migrate.sh` applies only **new** SQL files (RBAC, WFM, insights, plugins, account access).
 
 ## 6. Backup
 

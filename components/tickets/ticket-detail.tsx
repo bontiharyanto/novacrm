@@ -25,6 +25,8 @@ import {
   type TicketPendingReason,
 } from '@/lib/tickets/pending';
 import type { TicketPriority, TicketStatus } from '@/lib/tickets/schema';
+import { dispatchTicketAction } from '@/lib/wfm/actions';
+import { useI18n } from '@/components/layout/preferences-provider';
 
 type TicketItem = {
   id: string;
@@ -56,11 +58,20 @@ type TicketItem = {
   assetId?: string;
   assetName?: string;
   assetTag?: string;
+  accountId?: string;
+  accountName?: string;
+  accountCode?: string;
   createdAt: string;
   comments: Array<{ id: string; author: string; comment: string; createdAt: string }>;
 };
 
-type AgentOption = { id: string; fullName: string };
+type AgentOption = {
+  id: string;
+  fullName: string;
+  eligible?: boolean;
+  reasons?: string[];
+  openTickets?: number;
+};
 type AssetOption = { id: string; name: string; assetTag: string; type: string };
 type GroupOption = { id: string; name: string; kind: string; tier?: 'l1' | 'l2' | 'l3' };
 
@@ -81,6 +92,7 @@ const priorityTone: Record<TicketPriority, 'success' | 'warning' | 'danger' | 'n
 };
 
 export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; currentUserId: string }) {
+  const { t } = useI18n();
   const [ticket, setTicket] = useState<TicketItem | null>(null);
   const [agents, setAgents] = useState<AgentOption[]>([]);
   const [assets, setAssets] = useState<AssetOption[]>([]);
@@ -118,19 +130,33 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
 
   useEffect(() => {
     void loadTicket();
-    void fetch('/api/agents')
-      .then((response) => response.json())
-      .then((payload) => setAgents(payload.data ?? []))
-      .catch(() => setAgents([]));
-    void fetch('/api/assets')
+  }, [loadTicket]);
+
+  useEffect(() => {
+    const accountId = ticket?.accountId;
+    if (!accountId) {
+      setAssets([]);
+      setGroups([]);
+      return;
+    }
+    const query = `?accountId=${encodeURIComponent(accountId)}`;
+    void fetch(`/api/assets${query}`)
       .then((response) => response.json())
       .then((payload) => setAssets(payload.data ?? []))
       .catch(() => setAssets([]));
-    void fetch('/api/org/groups')
+    void fetch(`/api/org/groups${query}`)
       .then((response) => response.json())
       .then((payload) => setGroups(payload.data ?? []))
       .catch(() => setGroups([]));
-  }, [loadTicket]);
+  }, [ticket?.accountId]);
+
+  useEffect(() => {
+    const query = groupId ? `?groupId=${groupId}` : '';
+    void fetch(`/api/agents${query}`)
+      .then((response) => response.json())
+      .then((payload) => setAgents(payload.data ?? []))
+      .catch(() => setAgents([]));
+  }, [groupId]);
 
   useRealtimeTable('tickets', loadTicket);
   useRealtimeTable('ticket_comments', loadTicket);
@@ -213,6 +239,9 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <h1 className="font-mono text-xl font-semibold text-zinc-50">{displayTicketNumber(ticket.number, ticket.id)}</h1>
             <TypeBadge type={type} />
+            {ticket.accountCode || ticket.accountName ? (
+              <Badge tone="neutral">{ticket.accountCode ? `${ticket.accountCode} · ${ticket.accountName}` : ticket.accountName}</Badge>
+            ) : null}
             <Badge tone={statusTone[ticket.status]}>{ticket.status.replace('_', ' ')}</Badge>
             <Badge tone={priorityTone[ticket.priority]}>{ticket.priority}</Badge>
           </div>
@@ -365,6 +394,8 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
                 {agents.map((agent) => (
                   <option key={agent.id} value={agent.id}>
                     {agent.fullName}
+                    {agent.eligible === false ? ` · ${(agent.reasons ?? []).join(', ') || 'unavailable'}` : ''}
+                    {typeof agent.openTickets === 'number' ? ` (${agent.openTickets})` : ''}
                   </option>
                 ))}
               </Select>
@@ -376,6 +407,18 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
                   disabled={isSaving}
                 >
                   Save assignee
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={isSaving}
+                  onClick={() =>
+                    void dispatchTicketAction(ticketId, true).then(() => {
+                      void loadTicket();
+                    })
+                  }
+                >
+                  {t.wfm.assignNext}
                 </Button>
                 {currentUserId && ticket.assigneeId !== currentUserId ? (
                   <Button

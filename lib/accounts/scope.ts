@@ -1,9 +1,9 @@
 import { cookies } from 'next/headers';
 import { getSessionProfile, type AppSession } from '@/lib/auth/session';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import type { AccountRecord, AccountScope } from '@/lib/accounts/schema';
+import { ACCOUNT_ALL, ACCOUNT_COOKIE, type AccountRecord, type AccountScope } from '@/lib/accounts/schema';
 
-export const ACCOUNT_COOKIE = 'novacrm_account';
+export { ACCOUNT_ALL, ACCOUNT_COOKIE };
 
 type AccountRow = {
   id: string;
@@ -48,23 +48,23 @@ export async function listAccessibleAccounts(session?: AppSession | null): Promi
 export async function getAccountScope(session?: AppSession | null): Promise<AccountScope & { session: AppSession | null }> {
   const current = session ?? (await getSessionProfile());
   if (!current) {
-    return { session: null, accounts: [], account: null };
+    return { session: null, accounts: [], account: null, viewingAll: false };
   }
 
   const all = await listAccessibleAccounts(current);
   const accounts = all.filter((item) => item.status === 'active');
   if (current.profile.role === 'customer') {
-    return { session: current, accounts, account: accounts[0] ?? null };
+    return { session: current, accounts, account: accounts[0] ?? null, viewingAll: false };
   }
 
   const cookieId = cookies().get(ACCOUNT_COOKIE)?.value;
+  if (cookieId === ACCOUNT_ALL || (!cookieId && accounts.length !== 1)) {
+    return { session: current, accounts, account: null, viewingAll: true };
+  }
   const account =
-    accounts.find((item) => item.id === cookieId) ??
-    accounts.find((item) => item.type === 'internal') ??
-    accounts[0] ??
-    null;
+    accounts.find((item) => item.id === cookieId) ?? (accounts.length === 1 ? accounts[0] : null);
 
-  return { session: current, accounts, account };
+  return { session: current, accounts, account, viewingAll: !account };
 }
 
 export async function requireAccountId(session?: AppSession | null, requested?: string | null) {
@@ -74,9 +74,14 @@ export async function requireAccountId(session?: AppSession | null, requested?: 
     if (!scope.account) return { accountId: null, error: 'No customer account assigned', scope };
     return { accountId: scope.account.id, error: null, scope };
   }
-  const accountId = requested || scope.account?.id || null;
-  if (!accountId || !scope.accounts.some((item) => item.id === accountId)) {
-    return { accountId: null, error: 'Select an account', scope };
+  if (requested) {
+    if (!scope.accounts.some((item) => item.id === requested)) {
+      return { accountId: null, error: 'Account is not available', scope };
+    }
+    return { accountId: requested, error: null, scope };
   }
-  return { accountId, error: null, scope };
+  if (scope.account) {
+    return { accountId: scope.account.id, error: null, scope };
+  }
+  return { accountId: null, error: null, scope };
 }

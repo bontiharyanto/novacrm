@@ -1,25 +1,21 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import type { HubIntegrations, IntegrationKind } from '@/lib/integrations/types';
-import { AI_PROVIDERS, DEFAULT_EMAIL_FROM, GROQ_MODELS, matchAiProvider } from '@/lib/integrations/types';
-import { formatRelativeId } from '@/lib/utils/dates';
 import { Select } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { AI_PROVIDERS, DEFAULT_EMAIL_FROM, GROQ_MODELS, matchAiProvider } from '@/lib/integrations/types';
+import type { IntegrationCatalog, PluginField } from '@/lib/integrations/plugin-schema';
+import { formatRelativeId } from '@/lib/utils/dates';
 import { useI18n } from '@/components/layout/preferences-provider';
 
-const KINDS: Array<{ id: IntegrationKind; label: string; hint: string }> = [
-  { id: 'ai', label: 'AI', hint: 'Groq free / Gemini / Ollama' },
-  { id: 'telegram', label: 'Telegram', hint: 'Bot API' },
-  { id: 'whatsapp', label: 'WhatsApp', hint: 'Fonnte / Wabot' },
-  { id: 'email', label: 'Email', hint: 'Resend or Mailpit' },
-  { id: 'webhook', label: 'Other', hint: 'Alert / email / generic inbound' },
-];
+const NEW_SLUG = '__new__';
 
 function statusOf(item?: { configured?: boolean; lastOk?: boolean | null }) {
   if (item?.lastOk === true) return { tone: 'success' as const, label: 'connected' };
@@ -30,69 +26,98 @@ function statusOf(item?: { configured?: boolean; lastOk?: boolean | null }) {
 
 export function IntegrationsSettings() {
   const { t, locale } = useI18n();
-  const [hub, setHub] = useState<HubIntegrations | null>(null);
-  const [kind, setKind] = useState<IntegrationKind>('ai');
+  const [catalog, setCatalog] = useState<IntegrationCatalog | null>(null);
+  const [slug, setSlug] = useState('ai');
   const [values, setValues] = useState<Record<string, string>>({});
+  const [draft, setDraft] = useState({ label: '', hint: '', category: 'other' });
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState('');
   const origin = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+
+  const plugins = useMemo(() => catalog?.plugins ?? [], [catalog]);
+  const current = useMemo(() => plugins.find((item) => item.slug === slug) ?? plugins[0] ?? null, [plugins, slug]);
+  const adding = slug === NEW_SLUG;
 
   useEffect(() => {
     void fetch('/api/settings/integrations')
       .then((response) => response.json())
       .then((payload) => {
-        if (payload.data) setHub(payload.data);
+        if (payload.data) {
+          setCatalog(payload.data);
+          const first = (payload.data as IntegrationCatalog).plugins[0]?.slug;
+          if (first) setSlug(first);
+        }
       });
   }, []);
 
   useEffect(() => {
-    if (!hub) return;
-    if (kind === 'ai') {
-      setValues({ baseUrl: hub.ai.baseUrl, apiKey: hub.ai.apiKey, model: hub.ai.model });
-    } else if (kind === 'whatsapp') {
-      setValues({ apiKey: hub.whatsapp.apiKey });
-    } else if (kind === 'telegram') {
-      setValues({ botToken: hub.telegram.botToken, chatId: hub.telegram.chatId });
-    } else if (kind === 'email') {
-      setValues({ apiKey: hub.email.apiKey, from: hub.email.from });
-    } else {
-      setValues({
-        alertSecret: hub.webhook.alertSecret,
-        emailSecret: hub.webhook.emailSecret,
-        genericSecret: hub.webhook.genericSecret,
-      });
-    }
+    if (!current || adding) return;
+    setValues(current.values);
     setMessage('');
-  }, [hub, kind]);
+  }, [current, adding]);
 
   async function save() {
+    if (!current) return;
     setBusy(true);
     const response = await fetch('/api/settings/integrations', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ kind, values }),
+      body: JSON.stringify({ kind: current.slug, values }),
     });
     const payload = await response.json();
-    if (payload.data) setHub(payload.data);
+    if (payload.data) setCatalog(payload.data);
     setMessage(payload.error ?? 'Saved.');
     setBusy(false);
   }
 
   async function test() {
+    if (!current) return;
     setBusy(true);
     const response = await fetch('/api/settings/integrations', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ kind, values }),
+      body: JSON.stringify({ kind: current.slug, values }),
     });
     const payload = await response.json();
     setMessage(payload.data?.message ?? payload.error ?? 'Test failed.');
     const refresh = await fetch('/api/settings/integrations').then((item) => item.json());
-    if (refresh.data) setHub(refresh.data);
+    if (refresh.data) setCatalog(refresh.data);
     setBusy(false);
   }
 
-  if (!hub) {
+  async function addPlugin() {
+    setBusy(true);
+    const response = await fetch('/api/settings/integrations/plugins', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(draft),
+    });
+    const payload = await response.json();
+    if (payload.data) {
+      setCatalog(payload.data);
+      setSlug(typeof payload.slug === 'string' ? payload.slug : NEW_SLUG);
+      setDraft({ label: '', hint: '', category: 'other' });
+      setMessage(payload.error ?? t.integrations.pluginAdded);
+    } else {
+      setMessage(payload.error ?? t.integrations.failed);
+    }
+    setBusy(false);
+  }
+
+  async function removePlugin() {
+    if (!current?.tenantId) return;
+    setBusy(true);
+    const response = await fetch(`/api/settings/integrations/plugins?id=${current.id}`, { method: 'DELETE' });
+    const payload = await response.json();
+    if (payload.data) {
+      setCatalog(payload.data);
+      setSlug((payload.data as IntegrationCatalog).plugins[0]?.slug ?? NEW_SLUG);
+    }
+    setMessage(payload.error ?? t.integrations.pluginRemoved);
+    setBusy(false);
+  }
+
+  if (!catalog) {
     return (
       <div className="grid gap-6 p-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <Skeleton className="h-[480px] w-full" />
@@ -101,9 +126,8 @@ export function IntegrationsSettings() {
     );
   }
 
-  const current = hub[kind === 'webhook' ? 'webhook' : kind];
-  const badge = statusOf(current);
-  const testedAt = 'lastTestedAt' in current ? current.lastTestedAt : null;
+  const badge = statusOf(current ?? undefined);
+  const testedAt = current?.lastTestedAt ?? null;
 
   return (
     <div className="grid min-h-[calc(100vh-3.5rem)] lg:grid-cols-[minmax(0,1fr)_320px]">
@@ -115,16 +139,15 @@ export function IntegrationsSettings() {
         </div>
 
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {KINDS.map((item) => {
-            const row = hub[item.id === 'webhook' ? 'webhook' : item.id];
-            const state = statusOf(row);
+          {plugins.map((item) => {
+            const state = statusOf(item);
             return (
               <button
                 key={item.id}
                 type="button"
-                onClick={() => setKind(item.id)}
+                onClick={() => setSlug(item.slug)}
                 className={`rounded-xl border px-3 py-3 text-left transition-all duration-200 ease-out hover:-translate-y-0.5 ${
-                  kind === item.id ? 'border-blue-500/40 bg-blue-500/10' : 'border-zinc-800 bg-zinc-900 hover:border-zinc-700'
+                  slug === item.slug ? 'border-blue-500/40 bg-blue-500/10' : 'border-zinc-800 bg-zinc-900 hover:border-zinc-700'
                 }`}
               >
                 <div className="flex items-center justify-between gap-2">
@@ -135,176 +158,108 @@ export function IntegrationsSettings() {
               </button>
             );
           })}
+          <button
+            type="button"
+            onClick={() => {
+              setSlug(NEW_SLUG);
+              setMessage('');
+            }}
+            className={`rounded-xl border border-dashed px-3 py-3 text-left transition-all duration-200 ease-out hover:-translate-y-0.5 ${
+              adding ? 'border-blue-500/40 bg-blue-500/10' : 'border-zinc-800 bg-zinc-900/40 hover:border-zinc-700'
+            }`}
+          >
+            <div className="flex items-center gap-2 text-sm font-medium text-zinc-50">
+              <Plus className="h-3.5 w-3.5 text-blue-400" />
+              {t.integrations.addPlugin}
+            </div>
+            <p className="mt-1 text-[11px] text-zinc-500">{t.integrations.addPluginHint}</p>
+          </button>
         </div>
 
         <Card>
           <CardContent className="space-y-4 p-5">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-sm font-medium text-zinc-50">{KINDS.find((item) => item.id === kind)?.label}</p>
-              <Badge tone={badge.tone}>{badge.label}</Badge>
-            </div>
-
-            {kind === 'ai' ? (
+            {adding ? (
               <>
+                <p className="text-sm font-medium text-zinc-50">{t.integrations.addPlugin}</p>
                 <div className="space-y-1.5">
-                  <Label>Provider</Label>
+                  <Label>{t.integrations.pluginLabel}</Label>
+                  <Input
+                    value={draft.label}
+                    onChange={(event) => setDraft((currentDraft) => ({ ...currentDraft, label: event.target.value }))}
+                    placeholder="ServiceNow"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>{t.integrations.pluginHint}</Label>
+                  <Input
+                    value={draft.hint}
+                    onChange={(event) => setDraft((currentDraft) => ({ ...currentDraft, hint: event.target.value }))}
+                    placeholder="REST API"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>{t.integrations.pluginCategory}</Label>
                   <Select
-                    value={matchAiProvider(values.baseUrl).id}
-                    onChange={(event) => {
-                      const provider = AI_PROVIDERS.find((item) => item.id === event.target.value) ?? AI_PROVIDERS[0];
-                      setValues((current) => ({
-                        ...current,
-                        baseUrl: provider.baseUrl,
-                        model: provider.model,
-                        apiKey: provider.id === 'ollama' ? current.apiKey || 'ollama' : current.apiKey,
-                      }));
-                    }}
+                    value={draft.category}
+                    onChange={(event) => setDraft((currentDraft) => ({ ...currentDraft, category: event.target.value }))}
                   >
-                    {AI_PROVIDERS.map((item) => (
-                      <option key={item.id} value={item.id}>
-                        {item.label}
-                      </option>
-                    ))}
+                    <option value="identity">{t.integrations.categories.identity}</option>
+                    <option value="mail">{t.integrations.categories.mail}</option>
+                    <option value="itsm">{t.integrations.categories.itsm}</option>
+                    <option value="chat">{t.integrations.categories.chat}</option>
+                    <option value="crm">{t.integrations.categories.crm}</option>
+                    <option value="other">{t.integrations.categories.other}</option>
                   </Select>
-                  <p className="text-[11px] text-zinc-500">{matchAiProvider(values.baseUrl).hint}</p>
                 </div>
-                <div className="space-y-1.5">
-                  <Label>API key</Label>
-                  <Input
-                    type="password"
-                    value={values.apiKey ?? ''}
-                    onChange={(event) => setValues((current) => ({ ...current, apiKey: event.target.value }))}
-                    placeholder={matchAiProvider(values.baseUrl).keyPlaceholder}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Model</Label>
-                  {matchAiProvider(values.baseUrl).id === 'groq' ? (
-                    <Select
-                      value={GROQ_MODELS.some((item) => item === values.model) ? values.model : GROQ_MODELS[0]}
-                      onChange={(event) => setValues((current) => ({ ...current, model: event.target.value }))}
-                      className="font-mono"
-                    >
-                      {GROQ_MODELS.map((item) => (
-                        <option key={item} value={item}>
-                          {item}
-                        </option>
-                      ))}
-                    </Select>
-                  ) : (
-                    <Input
-                      value={values.model ?? ''}
-                      onChange={(event) => setValues((current) => ({ ...current, model: event.target.value }))}
-                      className="font-mono"
-                    />
-                  )}
-                </div>
-                <p className="font-mono text-[11px] text-zinc-500">{values.baseUrl}</p>
+                {message ? <p className="text-sm text-zinc-300">{message}</p> : null}
+                <Button size="sm" disabled={busy || draft.label.trim().length < 2} onClick={() => void addPlugin()}>
+                  {busy ? t.integrations.working : t.integrations.addPlugin}
+                </Button>
               </>
-            ) : null}
-
-            {kind === 'whatsapp' ? (
-              <div className="space-y-1.5">
-                <Label>API key</Label>
-                <Input
-                  type="password"
-                  value={values.apiKey ?? ''}
-                  onChange={(event) => setValues((current) => ({ ...current, apiKey: event.target.value }))}
-                  placeholder="Fonnte token"
-                />
-              </div>
-            ) : null}
-
-            {kind === 'telegram' ? (
+            ) : current ? (
               <>
-                <div className="space-y-1.5">
-                  <Label>Bot token</Label>
-                  <Input
-                    type="password"
-                    value={values.botToken ?? ''}
-                    onChange={(event) => setValues((current) => ({ ...current, botToken: event.target.value }))}
-                  />
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-sm font-medium text-zinc-50">{current.label}</p>
+                  <Badge tone={badge.tone}>{badge.label}</Badge>
                 </div>
-                <div className="space-y-1.5">
-                  <Label>Chat ID</Label>
-                  <Input
-                    value={values.chatId ?? ''}
-                    onChange={(event) => setValues((current) => ({ ...current, chatId: event.target.value }))}
-                    placeholder="-100..."
-                    className="font-mono"
+
+                {current.uiVariant === 'ai' ? (
+                  <AiFields values={values} setValues={setValues} />
+                ) : (
+                  <FieldList
+                    fields={current.fields}
+                    values={values}
+                    setValues={setValues}
+                    emailFallback={current.slug === 'email'}
                   />
+                )}
+
+                {testedAt ? (
+                  <p className="text-[11px] text-zinc-500">
+                    Last test {formatRelativeId(testedAt, locale)}
+                    {current.lastError ? ` · ${current.lastError}` : ''}
+                  </p>
+                ) : null}
+
+                {message ? <p className="text-sm text-zinc-300">{message}</p> : null}
+
+                <div className="flex flex-wrap gap-2">
+                  <Button size="sm" variant="outline" disabled={busy} onClick={() => void save()}>
+                    {busy ? t.integrations.working : t.integrations.save}
+                  </Button>
+                  <Button size="sm" disabled={busy} onClick={() => void test()}>
+                    {t.integrations.test}
+                  </Button>
+                  {current.tenantId ? (
+                    <Button size="sm" variant="ghost" disabled={busy} onClick={() => void removePlugin()}>
+                      {t.integrations.removePlugin}
+                    </Button>
+                  ) : null}
                 </div>
               </>
-            ) : null}
-
-            {kind === 'email' ? (
-              <>
-                <div className="space-y-1.5">
-                  <Label>API key (Resend)</Label>
-                  <Input
-                    type="password"
-                    value={values.apiKey ?? ''}
-                    onChange={(event) => setValues((current) => ({ ...current, apiKey: event.target.value }))}
-                    placeholder="Optional on laptop — Mailpit is used"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>From</Label>
-                  <Input
-                    value={values.from ?? ''}
-                    onChange={(event) => setValues((current) => ({ ...current, from: event.target.value }))}
-                    placeholder={DEFAULT_EMAIL_FROM}
-                  />
-                </div>
-              </>
-            ) : null}
-
-            {kind === 'webhook' ? (
-              <>
-                <div className="space-y-1.5">
-                  <Label>Alert secret</Label>
-                  <Input
-                    type="password"
-                    value={values.alertSecret ?? ''}
-                    onChange={(event) => setValues((current) => ({ ...current, alertSecret: event.target.value }))}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Email inbound secret</Label>
-                  <Input
-                    type="password"
-                    value={values.emailSecret ?? ''}
-                    onChange={(event) => setValues((current) => ({ ...current, emailSecret: event.target.value }))}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>Generic secret</Label>
-                  <Input
-                    type="password"
-                    value={values.genericSecret ?? ''}
-                    onChange={(event) => setValues((current) => ({ ...current, genericSecret: event.target.value }))}
-                  />
-                </div>
-              </>
-            ) : null}
-
-            {testedAt ? (
-              <p className="text-[11px] text-zinc-500">
-                Last test {formatRelativeId(testedAt, locale)}
-                {current.lastError ? ` · ${current.lastError}` : ''}
-              </p>
-            ) : null}
-
-            {message ? <p className="text-sm text-zinc-300">{message}</p> : null}
-
-            <div className="flex flex-wrap gap-2">
-              <Button size="sm" variant="outline" disabled={busy} onClick={() => void save()}>
-                {busy ? t.integrations.working : t.integrations.save}
-              </Button>
-              <Button size="sm" disabled={busy} onClick={() => void test()}>
-                {t.integrations.test}
-              </Button>
-            </div>
+            ) : (
+              <p className="text-sm text-zinc-400">{t.integrations.empty}</p>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -312,28 +267,18 @@ export function IntegrationsSettings() {
       <aside className="space-y-4 border-t border-zinc-800 bg-zinc-900/40 p-6 lg:border-l lg:border-t-0">
         <Card>
           <CardContent className="space-y-3 p-4 text-sm leading-6 text-zinc-400">
-            <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">How to test</p>
-            {kind === 'ai' ? (
-              <p>
-                Default is <span className="text-zinc-200">Groq (free)</span> — no credit card. Use a{' '}
-                <span className="font-mono text-zinc-200">gsk_</span> key from{' '}
-                <span className="font-mono text-zinc-200">console.groq.com</span>. Model must be Groq (for example{' '}
-                <span className="font-mono text-zinc-200">llama-3.1-8b-instant</span>), not OpenAI{' '}
-                <span className="font-mono text-zinc-200">gpt-4o-mini</span>.
-              </p>
-            ) : null}
-            {kind === 'telegram' ? <p>Runs getMe on the bot token. If Chat ID is set, also sends a test message.</p> : null}
-            {kind === 'whatsapp' ? <p>Sends a test to the admin phone on the profile, or a placeholder if empty.</p> : null}
-            {kind === 'email' ? <p>Sends to your login email. On this laptop that lands in Mailpit.</p> : null}
-            {kind === 'webhook' ? (
-              <p>Stores secrets used by inbound routes. Env secrets still work as fallback.</p>
-            ) : null}
+            <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{t.integrations.howToTest}</p>
+            <p>
+              {adding
+                ? t.integrations.addPluginHelp
+                : current?.helpTest || t.integrations.genericHelp}
+            </p>
           </CardContent>
         </Card>
-        {kind === 'webhook' ? (
+        {current?.uiVariant === 'webhook' && !adding ? (
           <Card>
             <CardContent className="space-y-2 p-4">
-              <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Inbound URLs</p>
+              <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{t.integrations.inboundUrls}</p>
               {[
                 ['Alerts', `${origin}/api/webhooks/alerts`],
                 ['Email', `${origin}/api/webhooks/email`],
@@ -349,18 +294,124 @@ export function IntegrationsSettings() {
             </CardContent>
           </Card>
         ) : null}
-        {kind === 'ai' ? (
+        {current?.helpAfter && !adding ? (
           <Card>
             <CardContent className="space-y-2 p-4 text-sm text-zinc-400">
-              <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">After connect</p>
-              <p>
-                Open <span className="text-zinc-200">Assistant</span> in the sidebar. It reads the last 7 days of
-                tickets for the active account.
-              </p>
+              <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{t.integrations.afterConnect}</p>
+              <p>{current.helpAfter}</p>
             </CardContent>
           </Card>
         ) : null}
       </aside>
     </div>
+  );
+}
+
+function FieldList({
+  fields,
+  values,
+  setValues,
+  emailFallback,
+}: {
+  fields: PluginField[];
+  values: Record<string, string>;
+  setValues: (next: (current: Record<string, string>) => Record<string, string>) => void;
+  emailFallback: boolean;
+}) {
+  return (
+    <>
+      {fields.map((field) => (
+        <div key={field.key} className="space-y-1.5">
+          <Label>{field.label}</Label>
+          {field.type === 'textarea' ? (
+            <Textarea
+              rows={5}
+              value={values[field.key] ?? ''}
+              onChange={(event) => setValues((current) => ({ ...current, [field.key]: event.target.value }))}
+              placeholder={field.placeholder}
+              className="font-mono text-xs"
+            />
+          ) : (
+            <Input
+              type={field.type === 'password' ? 'password' : field.type === 'url' ? 'url' : 'text'}
+              value={values[field.key] ?? ''}
+              onChange={(event) => setValues((current) => ({ ...current, [field.key]: event.target.value }))}
+              placeholder={
+                field.key === 'from' && emailFallback ? DEFAULT_EMAIL_FROM : field.placeholder
+              }
+              className={field.type === 'url' || field.key.toLowerCase().includes('id') ? 'font-mono' : undefined}
+            />
+          )}
+        </div>
+      ))}
+    </>
+  );
+}
+
+function AiFields({
+  values,
+  setValues,
+}: {
+  values: Record<string, string>;
+  setValues: (next: (current: Record<string, string>) => Record<string, string>) => void;
+}) {
+  const provider = matchAiProvider(values.baseUrl);
+  return (
+    <>
+      <div className="space-y-1.5">
+        <Label>Provider</Label>
+        <Select
+          value={provider.id}
+          onChange={(event) => {
+            const next = AI_PROVIDERS.find((item) => item.id === event.target.value) ?? AI_PROVIDERS[0];
+            setValues((current) => ({
+              ...current,
+              baseUrl: next.baseUrl,
+              model: next.model,
+              apiKey: next.id === 'ollama' ? current.apiKey || 'ollama' : current.apiKey,
+            }));
+          }}
+        >
+          {AI_PROVIDERS.map((item) => (
+            <option key={item.id} value={item.id}>
+              {item.label}
+            </option>
+          ))}
+        </Select>
+        <p className="text-[11px] text-zinc-500">{provider.hint}</p>
+      </div>
+      <div className="space-y-1.5">
+        <Label>API key</Label>
+        <Input
+          type="password"
+          value={values.apiKey ?? ''}
+          onChange={(event) => setValues((current) => ({ ...current, apiKey: event.target.value }))}
+          placeholder={provider.keyPlaceholder}
+        />
+      </div>
+      <div className="space-y-1.5">
+        <Label>Model</Label>
+        {provider.id === 'groq' ? (
+          <Select
+            value={GROQ_MODELS.some((item) => item === values.model) ? values.model : GROQ_MODELS[0]}
+            onChange={(event) => setValues((current) => ({ ...current, model: event.target.value }))}
+            className="font-mono"
+          >
+            {GROQ_MODELS.map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
+            ))}
+          </Select>
+        ) : (
+          <Input
+            value={values.model ?? ''}
+            onChange={(event) => setValues((current) => ({ ...current, model: event.target.value }))}
+            className="font-mono"
+          />
+        )}
+      </div>
+      <p className="font-mono text-[11px] text-zinc-500">{values.baseUrl}</p>
+    </>
   );
 }

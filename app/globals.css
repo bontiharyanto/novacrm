@@ -99,17 +99,37 @@ textarea {
   scrollbar-color: rgb(var(--scroll-thumb)) transparent;
 }
 
-.nova-scroll::-webkit-scrollbar {
-  width: 8px;
+.nova-scroll-thin {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
 }
 
-.nova-scroll::-webkit-scrollbar-track {
+.nova-scroll-thin:hover {
+  scrollbar-color: rgb(var(--scroll-thumb)) transparent;
+}
+
+.nova-scroll::-webkit-scrollbar,
+.nova-scroll-thin::-webkit-scrollbar {
+  width: 6px;
+}
+
+.nova-scroll::-webkit-scrollbar-track,
+.nova-scroll-thin::-webkit-scrollbar-track {
   background: transparent;
 }
 
 .nova-scroll::-webkit-scrollbar-thumb {
   background: rgb(var(--scroll-thumb));
   border-radius: 999px;
+}
+
+.nova-scroll-thin::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 999px;
+}
+
+.nova-scroll-thin:hover::-webkit-scrollbar-thumb {
+  background: rgb(var(--scroll-thumb));
 }
 
 html.light .nova-card {

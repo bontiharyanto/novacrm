@@ -51,6 +51,8 @@ type TicketItem = {
   assetId?: string;
   assetName?: string;
   assetTag?: string;
+  accountName?: string;
+  accountCode?: string;
   createdAt: string;
   comments: Array<{ id: string; author: string; comment: string; createdAt: string }>;
 };
@@ -83,6 +85,8 @@ function normalizeTicket(row: Partial<TicketItem> & { id: string; title: string 
     assetId: row.assetId,
     assetName: row.assetName,
     assetTag: row.assetTag,
+    accountName: row.accountName,
+    accountCode: row.accountCode,
     createdAt: row.createdAt ?? new Date().toISOString(),
     comments: row.comments ?? [],
   };

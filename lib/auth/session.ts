@@ -1,6 +1,6 @@
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { isSupabaseConfigured } from '@/lib/config/env';
-import type { AppRole } from '@/lib/rbac/ability';
+import { parseAppRole, type AppRole } from '@/lib/rbac/roles';
 
 export type SessionProfile = {
   id: string;
@@ -47,7 +47,7 @@ export async function getSessionProfile(): Promise<AppSession | null> {
       profile: {
         id: profile.id,
         tenantId: profile.tenant_id,
-        role: profile.role as AppRole,
+        role: parseAppRole(profile.role),
         fullName: profile.full_name,
         email: profile.email ?? user.email,
         phone: profile.phone ?? undefined,

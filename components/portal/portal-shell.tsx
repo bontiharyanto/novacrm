@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 import { PreferenceControls } from '@/components/layout/preference-controls';
 import { useI18n } from '@/components/layout/preferences-provider';
+import { NovaMark } from '@/components/brand/nova-mark';
 import { cn } from '@/lib/utils';
 
 export function PortalShell({ children, fullName }: { children: React.ReactNode; fullName: string }) {
@@ -25,9 +26,12 @@ export function PortalShell({ children, fullName }: { children: React.ReactNode;
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
       <header className="sticky top-0 z-20 border-b border-zinc-800 bg-zinc-950/90 px-6 py-4 backdrop-blur">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4">
-          <div>
-            <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-blue-400">{t.brand.portal}</p>
-            <p className="mt-0.5 text-sm text-zinc-50">{fullName}</p>
+          <div className="flex items-center gap-3">
+            <NovaMark size={28} />
+            <div>
+              <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-blue-400">{t.brand.portal}</p>
+              <p className="mt-0.5 text-sm text-zinc-50">{fullName}</p>
+            </div>
           </div>
           <div className="flex flex-wrap items-center justify-end gap-2">
             <PreferenceControls compact />

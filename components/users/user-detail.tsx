@@ -12,12 +12,18 @@ import { Select } from '@/components/ui/select';
 import { addGroupMember, removeGroupMember } from '@/lib/org/actions';
 import { updateUserAccess } from '@/lib/users/actions';
 import type { DirectoryUser } from '@/lib/users/schema';
+import { RoleSelect } from '@/components/users/role-select';
 import type { AppRole } from '@/lib/rbac/ability';
+import { ROLE_LABEL } from '@/lib/rbac/roles';
 import { supportTierLabel } from '@/lib/tickets/pending';
 import type { AssignmentGroup } from '@/lib/org/schema';
 
-const roleTone: Record<AppRole, 'danger' | 'info' | 'neutral'> = {
+const roleTone: Record<AppRole, 'danger' | 'info' | 'warning' | 'neutral'> = {
+  superadmin: 'danger',
   admin: 'danger',
+  manager: 'warning',
+  supervisor: 'warning',
+  team_lead: 'info',
   agent: 'info',
   customer: 'neutral',
 };
@@ -27,11 +33,13 @@ export function UserDetail({
   units,
   groups,
   canEdit,
+  actorRole,
 }: {
   user: DirectoryUser;
   units: Array<{ id: string; name: string; type: string }>;
   groups: AssignmentGroup[];
   canEdit: boolean;
+  actorRole: AppRole;
 }) {
   const router = useRouter();
   const [role, setRole] = useState<AppRole>(user.role);
@@ -55,7 +63,7 @@ export function UserDetail({
           </Link>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <h1 className="text-xl font-semibold text-zinc-50">{user.fullName}</h1>
-            <Badge tone={roleTone[user.role]}>{user.role}</Badge>
+            <Badge tone={roleTone[user.role]}>{ROLE_LABEL[user.role]}</Badge>
             {user.supportLevel ? <Badge tone="warning">{supportTierLabel[user.supportLevel]}</Badge> : null}
           </div>
           <p className="mt-1 text-sm text-zinc-500">{user.email ?? 'No email'}</p>
@@ -64,11 +72,7 @@ export function UserDetail({
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label>Access</Label>
-            <Select value={role} disabled={!canEdit} onChange={(event) => setRole(event.target.value as AppRole)}>
-              <option value="admin">Admin — full desk + settings</option>
-              <option value="agent">Agent — service desk</option>
-              <option value="customer">Customer — portal only</option>
-            </Select>
+            <RoleSelect value={role} actorRole={actorRole} disabled={!canEdit} onChange={setRole} />
           </div>
           <div className="space-y-1.5">
             <Label>Home unit</Label>

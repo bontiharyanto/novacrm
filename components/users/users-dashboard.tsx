@@ -2,14 +2,19 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Plus } from 'lucide-react';
+import { Plus, Upload } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import type { DirectoryUser } from '@/lib/users/schema';
 import { supportTierLabel } from '@/lib/tickets/pending';
+import { ROLE_LABEL, isCustomerRole, type AppRole } from '@/lib/rbac/roles';
 
-const roleTone: Record<DirectoryUser['role'], 'danger' | 'info' | 'neutral'> = {
+const roleTone: Record<AppRole, 'danger' | 'info' | 'warning' | 'neutral'> = {
+  superadmin: 'danger',
   admin: 'danger',
+  manager: 'warning',
+  supervisor: 'warning',
+  team_lead: 'info',
   agent: 'info',
   customer: 'neutral',
 };
@@ -26,8 +31,8 @@ export function UsersDashboard({ users, canCreate }: { users: DirectoryUser[]; c
 
   const rows = useMemo(() => {
     return users.filter((user) => {
-      if (filter === 'staff' && user.role === 'customer') return false;
-      if (filter === 'portal' && user.role !== 'customer') return false;
+      if (filter === 'staff' && isCustomerRole(user.role)) return false;
+      if (filter === 'portal' && !isCustomerRole(user.role)) return false;
       const needle = query.trim().toLowerCase();
       if (!needle) return true;
       return [user.fullName, user.email ?? '', user.role, user.orgUnitName ?? '', user.supportLevel ?? '']
@@ -37,7 +42,7 @@ export function UsersDashboard({ users, canCreate }: { users: DirectoryUser[]; c
     });
   }, [users, query, filter]);
 
-  const staffCount = users.filter((user) => user.role !== 'customer').length;
+  const staffCount = users.filter((user) => !isCustomerRole(user.role)).length;
   const l2Count = users.filter((user) => user.supportLevel === 'l2' || user.supportLevel === 'l3').length;
 
   return (
@@ -49,14 +54,24 @@ export function UsersDashboard({ users, canCreate }: { users: DirectoryUser[]; c
             <h1 className="text-2xl font-semibold text-zinc-50">Users</h1>
             <p className="mt-1 text-sm text-zinc-500">Access is the app role. Level is L1/L2/L3 from assignment groups.</p>
           </div>
-          {canCreate ? (
-            <Link
-              href="/users/new"
-              className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-2.5 py-1.5 text-xs font-medium text-white transition-all duration-200 ease-out hover:-translate-y-0.5 hover:bg-blue-500"
-            >
-              <Plus className="h-3.5 w-3.5" /> New user
-            </Link>
-          ) : null}
+          <div className="flex items-center gap-2">
+            {canCreate ? (
+              <Link
+                href="/import?kind=users"
+                className="inline-flex items-center gap-1.5 rounded-md border border-zinc-800 px-2.5 py-1.5 text-xs text-zinc-300 hover:bg-zinc-900"
+              >
+                <Upload className="h-3.5 w-3.5" /> Import
+              </Link>
+            ) : null}
+            {canCreate ? (
+              <Link
+                href="/users/new"
+                className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-2.5 py-1.5 text-xs font-medium text-white transition-all duration-200 ease-out hover:-translate-y-0.5 hover:bg-blue-500"
+              >
+                <Plus className="h-3.5 w-3.5" /> New user
+              </Link>
+            ) : null}
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -112,7 +127,7 @@ export function UsersDashboard({ users, canCreate }: { users: DirectoryUser[]; c
                       <p className="text-xs text-zinc-500">{user.email ?? '—'}</p>
                     </td>
                     <td className="px-3 py-2.5">
-                      <Badge tone={roleTone[user.role]}>{user.role}</Badge>
+                      <Badge tone={roleTone[user.role]}>{ROLE_LABEL[user.role]}</Badge>
                     </td>
                     <td className="px-3 py-2.5">
                       {user.supportLevel ? (

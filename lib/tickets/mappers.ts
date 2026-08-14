@@ -13,6 +13,7 @@ export type TicketRecord = {
   tenantId: string;
   accountId: string;
   accountName?: string;
+  accountCode?: string;
   number: string;
   title: string;
   description: string;
@@ -177,6 +178,22 @@ export function mapTicketRow(row: TicketRow): TicketRecord {
         createdAt: comment.created_at,
       })),
   };
+}
+
+export function withAccounts(
+  tickets: TicketRecord[],
+  accounts: Array<{ id: string; name: string; code?: string }>,
+): TicketRecord[] {
+  const byId = new Map(accounts.map((account) => [account.id, account]));
+  return tickets.map((ticket) => {
+    const account = ticket.accountId ? byId.get(ticket.accountId) : undefined;
+    if (!account) return ticket;
+    return {
+      ...ticket,
+      accountName: account.name,
+      accountCode: account.code,
+    };
+  });
 }
 
 export function withAssets(

@@ -20,7 +20,9 @@ import {
   type TicketType,
 } from '@/lib/tickets/process';
 import type { TicketPriority } from '@/lib/tickets/schema';
+import type { AccountRecord } from '@/lib/accounts/schema';
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/components/layout/preferences-provider';
 
 type AgentOption = { id: string; fullName: string };
 type AssetOption = { id: string; name: string; assetTag: string; type: string };
@@ -37,14 +39,24 @@ const PRIORITIES: Array<{ id: TicketPriority; label: string }> = [
   { id: 'critical', label: 'Critical' },
 ];
 
-export function TicketCreate({ currentUserId }: { currentUserId: string }) {
+export function TicketCreate({
+  currentUserId,
+  accounts,
+  defaultAccountId,
+}: {
+  currentUserId: string;
+  accounts: AccountRecord[];
+  defaultAccountId?: string;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const typeParam = searchParams.get('type');
+  const { t } = useI18n();
 
   const [agents, setAgents] = useState<AgentOption[]>([]);
   const [assets, setAssets] = useState<AssetOption[]>([]);
   const [groups, setGroups] = useState<GroupOption[]>([]);
+  const [accountId, setAccountId] = useState(defaultAccountId ?? (accounts.length === 1 ? accounts[0].id : ''));
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [ticketType, setTicketType] = useState<TicketType>(isTicketType(typeParam) ? typeParam : 'incident');
@@ -64,8 +76,10 @@ export function TicketCreate({ currentUserId }: { currentUserId: string }) {
   const [error, setError] = useState('');
 
   const meta = ticketTypeMeta[ticketType];
-  const canSubmit = title.trim().length >= 3 && !isSubmitting;
+  const resolvedTitle = title.trim() || htmlToText(description).slice(0, 200);
   const backHref = ticketType ? `/tickets?type=${ticketType}` : '/tickets';
+  const customerAccounts = accounts.filter((account) => account.type === 'customer');
+  const internalAccounts = accounts.filter((account) => account.type === 'internal');
 
   const selectedAsset = useMemo(
     () => assets.find((asset) => asset.id === assetId),
@@ -77,19 +91,40 @@ export function TicketCreate({ currentUserId }: { currentUserId: string }) {
       .then((response) => response.json())
       .then((payload) => setAgents(payload.data ?? []))
       .catch(() => setAgents([]));
-    void fetch('/api/assets')
+  }, []);
+
+  useEffect(() => {
+    if (!accountId) {
+      setAssets([]);
+      setGroups([]);
+      setAssetId('');
+      setGroupId('');
+      return;
+    }
+    const query = `?accountId=${encodeURIComponent(accountId)}`;
+    void fetch(`/api/assets${query}`)
       .then((response) => response.json())
       .then((payload) => setAssets(payload.data ?? []))
       .catch(() => setAssets([]));
-    void fetch('/api/org/groups')
+    void fetch(`/api/org/groups${query}`)
       .then((response) => response.json())
       .then((payload) => setGroups(payload.data ?? []))
       .catch(() => setGroups([]));
-  }, []);
+    setAssetId('');
+    setGroupId('');
+  }, [accountId]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!canSubmit) return;
+    if (isSubmitting) return;
+    if (!accountId) {
+      setError(t.tickets.needAccount);
+      return;
+    }
+    if (resolvedTitle.length < 3) {
+      setError(t.tickets.needTitle);
+      return;
+    }
     setIsSubmitting(true);
     setError('');
 
@@ -97,9 +132,10 @@ export function TicketCreate({ currentUserId }: { currentUserId: string }) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        title: title.trim(),
-        description: htmlToText(description) ? description : title.trim(),
+        title: resolvedTitle,
+        description: htmlToText(description) ? description : resolvedTitle,
         type: ticketType,
+        accountId,
         requesterName,
         requesterEmail: requesterEmail || undefined,
         requesterPhone: requesterPhone || undefined,
@@ -150,8 +186,8 @@ export function TicketCreate({ currentUserId }: { currentUserId: string }) {
             <Button type="button" variant="ghost" onClick={() => router.push(backHref)}>
               Cancel
             </Button>
-            <Button type="submit" disabled={!canSubmit}>
-              {isSubmitting ? 'Creating...' : 'Create ticket'}
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? t.tickets.creating : t.tickets.create}
             </Button>
           </div>
         </div>
@@ -184,15 +220,17 @@ export function TicketCreate({ currentUserId }: { currentUserId: string }) {
           </div>
 
           <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-6">
-            <input
+            <Label htmlFor="title">{t.tickets.shortDescription}</Label>
+            <Input
               id="title"
               value={title}
               onChange={(event) => setTitle(event.target.value)}
-              placeholder="Short description"
+              placeholder={t.tickets.shortDescription}
               required
               autoFocus
-              className="w-full bg-transparent text-2xl font-semibold text-zinc-50 outline-none placeholder:text-zinc-600"
+              className="mt-2 h-12 text-lg font-semibold"
             />
+            <p className="mt-1.5 text-[11px] text-zinc-500">{t.tickets.shortDescriptionHint}</p>
             <p className="mb-2 mt-5 text-[11px] uppercase tracking-[0.16em] text-zinc-500">Details</p>
             <CommentEditor value={description} onChange={setDescription} minHeightClass="min-h-56" />
             {error ? <p className="mt-3 text-sm text-rose-400">{error}</p> : null}
@@ -202,6 +240,36 @@ export function TicketCreate({ currentUserId }: { currentUserId: string }) {
         <aside className="space-y-4">
           <Card>
             <CardContent className="space-y-4 p-5">
+              <div className="space-y-1.5">
+                <Label htmlFor="accountId">{t.accountPick.ticketAccount}</Label>
+                <Select
+                  id="accountId"
+                  value={accountId}
+                  required
+                  onChange={(event) => setAccountId(event.target.value)}
+                >
+                  <option value="">{t.accountPick.required}</option>
+                  {customerAccounts.length > 0 ? (
+                    <optgroup label={t.accountPick.customer}>
+                      {customerAccounts.map((account) => (
+                        <option key={account.id} value={account.id}>
+                          {account.code ? `${account.code} · ${account.name}` : account.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ) : null}
+                  {internalAccounts.length > 0 ? (
+                    <optgroup label={t.accountPick.internal}>
+                      {internalAccounts.map((account) => (
+                        <option key={account.id} value={account.id}>
+                          {account.code ? `${account.code} · ${account.name}` : account.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ) : null}
+                </Select>
+                <p className="text-[11px] text-zinc-500">{t.accountPick.ticketAccountHint}</p>
+              </div>
               <div>
                 <p className="mb-2 text-[11px] uppercase tracking-[0.16em] text-zinc-500">Process</p>
                 <ProcessStrip type={ticketType} status="open" />
@@ -260,7 +328,7 @@ export function TicketCreate({ currentUserId }: { currentUserId: string }) {
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="group">Assignment group</Label>
-                <Select id="group" value={groupId} onChange={(event) => setGroupId(event.target.value)}>
+                <Select id="group" value={groupId} onChange={(event) => setGroupId(event.target.value)} disabled={!accountId}>
                   <option value="">None</option>
                   {groups.map((group) => (
                     <option key={group.id} value={group.id}>
@@ -304,7 +372,7 @@ export function TicketCreate({ currentUserId }: { currentUserId: string }) {
               ) : null}
               <div className="space-y-1.5">
                 <Label htmlFor="asset">Configuration item</Label>
-                <Select id="asset" value={assetId} onChange={(event) => setAssetId(event.target.value)}>
+                <Select id="asset" value={assetId} onChange={(event) => setAssetId(event.target.value)} disabled={!accountId}>
                   <option value="">None</option>
                   {assets.map((asset) => (
                     <option key={asset.id} value={asset.id}>

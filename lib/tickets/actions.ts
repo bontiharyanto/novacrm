@@ -7,11 +7,13 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { canRole } from '@/lib/rbac/ability';
 import { normalizePhone, safeNotificationText } from '@/lib/notifications/helpers';
-import { mapTicketRow, textToDescription, withAssets, withGroups, type TicketRecord } from '@/lib/tickets/mappers';
+import { mapTicketRow, textToDescription, withAccounts, withAssets, withGroups, type TicketRecord } from '@/lib/tickets/mappers';
 import { evaluateWorkflow } from '@/lib/workflows/actions';
 import { requireAccountId } from '@/lib/accounts/scope';
 import { applyTicketSlaChange, snapshotSla } from '@/lib/sla/engine';
 import { defaultPendingReason, isPauseStatus } from '@/lib/tickets/pending';
+import { dispatchTicket, resolveInboundGroupId } from '@/lib/wfm/dispatch';
+import { enqueueWfmDispatch } from '@/lib/queue/wfm.queue';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 const TICKET_SELECT = '*, ticket_comments(*)';
@@ -82,26 +84,27 @@ export async function listTickets() {
   }
 
   const scoped = await requireAccountId(session);
-  if (!scoped.accountId) {
-    return [];
-  }
-
   const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from('tickets')
     .select(TICKET_SELECT)
     .eq('tenant_id', session.profile.tenantId)
-    .eq('account_id', scoped.accountId)
     .order('created_at', { ascending: false });
+  if (scoped.accountId) {
+    query = query.eq('account_id', scoped.accountId);
+  }
+
+  const { data, error } = await query;
 
   if (error || !data) {
     return [];
   }
 
-  return hydrateTicketAssets(
+  const tickets = await hydrateTicketAssets(
     supabase,
     data.map((row) => mapTicketRow(row)),
   );
+  return withAccounts(tickets, scoped.scope.accounts);
 }
 
 export async function getTicketById(ticketId: string) {
@@ -112,15 +115,31 @@ export async function getTicketById(ticketId: string) {
 
   const supabase = await createSupabaseServerClient();
   const result = await loadTicket(supabase, ticketId, session.profile.tenantId);
-  return result.data;
+  if (!result.data) return null;
+  const scoped = await requireAccountId(session);
+  const [ticket] = withAccounts([result.data], scoped.scope.accounts);
+  return ticket;
 }
 
 export async function createTicket(input: unknown) {
-  const parsed = ticketSchema.parse(input);
+  const parsedResult = ticketSchema.safeParse(input);
+  if (!parsedResult.success) {
+    const issue = parsedResult.error.issues[0];
+    const message =
+      issue?.path[0] === 'title'
+        ? 'Fill the short description (ticket title) before creating.'
+        : issue?.message ?? 'Invalid ticket';
+    return { data: null, error: message };
+  }
+  const parsed = parsedResult.data;
   const session = await getSessionProfile();
 
   if (!session || !canRole(session.profile.role, 'create', 'Ticket')) {
     return { data: null, error: 'Unauthorized' };
+  }
+
+  if (session.profile.role !== 'customer' && !parsed.accountId) {
+    return { data: null, error: 'Select the customer account for this ticket' };
   }
 
   const supabase = await createSupabaseServerClient();
@@ -128,7 +147,7 @@ export async function createTicket(input: unknown) {
   const assigneePatch = await resolveAssignee(supabase, session.profile.tenantId, parsed.assigneeId ?? undefined);
   const scoped = await requireAccountId(session, parsed.accountId);
   if (!scoped.accountId) {
-    return { data: null, error: scoped.error ?? 'Select an account' };
+    return { data: null, error: scoped.error ?? 'Select the customer account for this ticket' };
   }
 
   const sla = await snapshotSla(supabase, {
@@ -206,6 +225,8 @@ export async function createInboundTicket(tenantId: string, input: unknown) {
     dueDateOverride: parsed.dueDate || undefined,
   });
 
+  const groupId = parsed.groupId ?? (await resolveInboundGroupId(supabase, tenantId));
+
   const { data, error } = await supabase
     .from('tickets')
     .insert({
@@ -223,6 +244,7 @@ export async function createInboundTicket(tenantId: string, input: unknown) {
       assignee_chat_id: parsed.assigneeChatId,
       category: parsed.category ?? 'inbound',
       asset_id: parsed.assetId ?? null,
+      group_id: groupId,
     })
     .select(TICKET_SELECT)
     .single();
@@ -367,6 +389,16 @@ export async function updateTicket(ticketId: string, input: unknown) {
   if (escalating && ticket.groupName) {
     messages.push(`Escalated to ${ticket.groupTier ? ticket.groupTier.toUpperCase() + ' ' : ''}${ticket.groupName}. SLA keeps running.`);
   }
+
+  let hydrated = ticket;
+  if (escalating && ticket.groupId) {
+    const dispatched = await dispatchTicket(session.profile.tenantId, ticket.id, { force: true });
+    if (dispatched.ok && dispatched.assigneeName) {
+      messages.push(`Assigned to ${dispatched.assigneeName}`);
+      const reloaded = await loadTicket(supabase, ticketId, session.profile.tenantId);
+      if (reloaded.data) hydrated = reloaded.data;
+    }
+  }
   if (ticket.pendingReason && ticket.status !== previousStatus) {
     messages.push(
       ticket.pendingReason === 'vendor'
@@ -377,8 +409,8 @@ export async function updateTicket(ticketId: string, input: unknown) {
     );
   }
 
-  await afterTicketMutation('ticket.status_change', ticket, messages.join('. ') || undefined);
-  return { data: ticket, error: null };
+  await afterTicketMutation('ticket.status_change', hydrated, messages.join('. ') || undefined);
+  return { data: hydrated, error: null };
 }
 
 export async function updateTicketStatus(ticketId: string, input: unknown) {
@@ -452,6 +484,9 @@ async function afterTicketMutation(
   message?: string,
 ) {
   await evaluateWorkflow(event, { ticketId: ticket.id, tenantId: ticket.tenantId, status: ticket.status }, ticket);
+  if (event === 'ticket.create' && !ticket.assigneeId) {
+    await enqueueWfmDispatch({ tenantId: ticket.tenantId, ticketId: ticket.id });
+  }
   await dispatchTicketNotification({
     event,
     ticket: {

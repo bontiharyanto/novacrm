@@ -31,3 +31,4 @@ export async function pingRedis() {
 
 export const notificationQueueName = 'novacrm-notifications';
 export const workflowQueueName = 'novacrm-workflows';
+export const wfmQueueName = 'novacrm-wfm';

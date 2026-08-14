@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { getSessionProfile } from '@/lib/auth/session';
-import { canRole } from '@/lib/rbac/ability';
+import { canRole, canAssignRole, isCustomerRole, isTenantAdminRole } from '@/lib/rbac/ability';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { isSupportTier, type SupportTier } from '@/lib/tickets/pending';
 import { createUserSchema, highestSupportLevel, userAccessSchema, type DirectoryUser } from '@/lib/users/schema';
@@ -186,6 +186,9 @@ export async function createDirectoryUser(input: unknown) {
   if (!session || !canRole(session.profile.role, 'create', 'User')) {
     return { data: null, error: 'Unauthorized' };
   }
+  if (!canAssignRole(session.profile.role, parsed.role)) {
+    return { data: null, error: 'You cannot assign that role' };
+  }
   if (!hasServiceRole()) {
     return { data: null, error: 'Service role is not configured. Cannot create logins.' };
   }
@@ -209,7 +212,7 @@ export async function createDirectoryUser(input: unknown) {
     .eq('tenant_id', session.profile.tenantId)
     .maybeSingle();
   if (!account) return { data: null, error: 'Account not found' };
-  if (parsed.role === 'customer' && account.type === 'internal') {
+  if (isCustomerRole(parsed.role) && account.type === 'internal') {
     return { data: null, error: 'Portal users must join a customer account' };
   }
 
@@ -248,9 +251,9 @@ export async function createDirectoryUser(input: unknown) {
     return { data: null, error: profileError?.message ?? 'Profile was not created' };
   }
 
-  const memberRole = parsed.role === 'customer' ? 'portal' : 'member';
+  const memberRole = isCustomerRole(parsed.role) ? 'portal' : 'member';
   const accountIds = new Set<string>([parsed.accountId]);
-  if (parsed.role !== 'customer') {
+  if (!isCustomerRole(parsed.role)) {
     const { data: internal } = await supabase
       .from('accounts')
       .select('id')
@@ -310,15 +313,19 @@ export async function updateUserAccess(userId: string, input: unknown) {
     return { data: null, error: 'Unauthorized' };
   }
 
-  if (parsed.role && parsed.role !== 'admin' && userId === session.userId) {
+  if (parsed.role && !canAssignRole(session.profile.role, parsed.role)) {
+    return { data: null, error: 'You cannot assign that role' };
+  }
+
+  if (parsed.role && !isTenantAdminRole(parsed.role) && userId === session.userId && isTenantAdminRole(session.profile.role)) {
     const supabaseCount = await createSupabaseServerClient();
     const { count } = await supabaseCount
       .from('profiles')
       .select('id', { count: 'exact', head: true })
       .eq('tenant_id', session.profile.tenantId)
-      .eq('role', 'admin');
+      .in('role', ['admin', 'superadmin']);
     if ((count ?? 0) <= 1) {
-      return { data: null, error: 'Cannot remove the last admin' };
+      return { data: null, error: 'Cannot remove the last tenant admin' };
     }
   }
 
@@ -334,6 +341,12 @@ export async function updateUserAccess(userId: string, input: unknown) {
     .eq('tenant_id', session.profile.tenantId);
 
   if (error) return { data: null, error: error.message };
+  if (parsed.role && hasServiceRole()) {
+    const admin = createSupabaseAdminClient();
+    await admin.auth.admin.updateUserById(userId, {
+      user_metadata: { role: parsed.role },
+    });
+  }
   revalidatePath('/users');
   revalidatePath(`/users/${userId}`);
   return { data: await getDirectoryUser(userId), error: null };

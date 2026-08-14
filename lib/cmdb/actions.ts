@@ -95,15 +95,13 @@ export async function listCmdbItems() {
   }
 
   const scoped = await requireAccountId(session);
-  if (!scoped.accountId) return [];
-
   const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
-    .from('cmdb_items')
-    .select('*')
-    .eq('tenant_id', session.profile.tenantId)
-    .eq('account_id', scoped.accountId)
-    .order('created_at', { ascending: false });
+  let query = supabase.from('cmdb_items').select('*').eq('tenant_id', session.profile.tenantId).order('created_at', { ascending: false });
+  if (scoped.accountId) {
+    query = query.eq('account_id', scoped.accountId);
+  }
+
+  const { data, error } = await query;
 
   if (error || !data) {
     return [];

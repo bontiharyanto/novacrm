@@ -15,7 +15,7 @@ export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
     id: 'standard',
     name: 'Auto assign new ticket',
     title: 'Standard',
-    hint: 'Ticket created → assign to first agent. One trigger, one action.',
+    hint: 'Ticket created → WFM dispatch to an eligible agent on the assignment group.',
     definition: {
       nodes: [
         {
