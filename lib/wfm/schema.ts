@@ -1,16 +1,12 @@
 import { z } from 'zod';
 import type { AppRole } from '@/lib/rbac/roles';
+import { emptyToUndefined, optionalUuidSchema, uuidSchema } from '@/lib/validation/id';
 
 export const wfmPresenceStatusSchema = z.enum(['available', 'busy', 'break', 'offline']);
 export const wfmTimeOffTypeSchema = z.enum(['leave', 'sick', 'training', 'other']);
 export const wfmTimeOffStatusSchema = z.enum(['pending', 'approved', 'rejected']);
 export const wfmDispatchStrategySchema = z.enum(['manual', 'least_loaded', 'round_robin', 'skill', 'oncall']);
 export const wfmRosterSourceSchema = z.enum(['planned', 'override']);
-
-function emptyToUndefined(value: unknown) {
-  if (value === '' || value === null || value === undefined) return undefined;
-  return value;
-}
 
 export const presenceSchema = z.object({
   status: wfmPresenceStatusSchema,
@@ -27,15 +23,15 @@ export const shiftTemplateSchema = z.object({
 });
 
 export const rosterEntrySchema = z.object({
-  userId: z.string().uuid(),
-  groupId: z.string().uuid(),
+  userId: uuidSchema,
+  groupId: uuidSchema,
   workDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-  templateId: z.string().uuid(),
+  templateId: uuidSchema,
   source: wfmRosterSourceSchema.optional().default('override'),
 });
 
 export const timeOffSchema = z.object({
-  userId: z.string().uuid(),
+  userId: uuidSchema,
   startsAt: z.string(),
   endsAt: z.string(),
   type: wfmTimeOffTypeSchema.default('leave'),
@@ -52,32 +48,32 @@ export const skillSchema = z.object({
 });
 
 export const agentSkillSchema = z.object({
-  userId: z.string().uuid(),
-  skillId: z.string().uuid(),
+  userId: uuidSchema,
+  skillId: uuidSchema,
   level: z.number().int().min(1).max(5).default(3),
 });
 
 export const dispatchPolicySchema = z.object({
-  groupId: z.string().uuid(),
+  groupId: uuidSchema,
   strategy: wfmDispatchStrategySchema.default('manual'),
   maxOpenTickets: z.number().int().min(1).max(50).default(8),
-  requiredSkillIds: z.array(z.string().uuid()).default([]),
-  oncallGroupId: z.preprocess(emptyToUndefined, z.string().uuid().optional()),
+  requiredSkillIds: z.array(uuidSchema).default([]),
+  oncallGroupId: optionalUuidSchema,
   isActive: z.boolean().optional().default(true),
 });
 
 export const oncallRotationSchema = z.object({
-  groupId: z.string().uuid(),
+  groupId: uuidSchema,
   name: z.string().min(2).max(80),
   cadenceHours: z.number().int().min(1).max(720).default(168),
 });
 
 export const oncallSlotSchema = z.object({
-  rotationId: z.string().uuid(),
+  rotationId: uuidSchema,
   startsAt: z.string(),
   endsAt: z.string(),
-  primaryUserId: z.string().uuid(),
-  backupUserId: z.preprocess(emptyToUndefined, z.string().uuid().optional()),
+  primaryUserId: uuidSchema,
+  backupUserId: optionalUuidSchema,
 });
 
 export type WfmPresenceStatus = z.infer<typeof wfmPresenceStatusSchema>;

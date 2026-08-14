@@ -1,15 +1,11 @@
 import { z } from 'zod';
 import { APP_ROLES, type AppRole } from '@/lib/rbac/roles';
 import type { SupportTier } from '@/lib/tickets/pending';
-
-function emptyToUndefined(value: unknown) {
-  if (value === '' || value === null || value === undefined) return undefined;
-  return value;
-}
+import { emptyToUndefined, optionalUuidSchema, uuidSchema } from '@/lib/validation/id';
 
 export const userAccessSchema = z.object({
   role: z.enum(APP_ROLES).optional(),
-  orgUnitId: z.string().uuid().nullable().optional(),
+  orgUnitId: z.preprocess((value) => (value === '' ? null : value), uuidSchema.nullable().optional()),
 });
 
 export const createUserSchema = z.object({
@@ -18,9 +14,9 @@ export const createUserSchema = z.object({
   phone: z.preprocess(emptyToUndefined, z.string().trim().max(40).optional()),
   role: z.enum(APP_ROLES),
   password: z.string().min(8).max(72),
-  accountId: z.string().uuid(),
-  orgUnitId: z.preprocess(emptyToUndefined, z.string().uuid().optional()),
-  groupId: z.preprocess(emptyToUndefined, z.string().uuid().optional()),
+  accountId: uuidSchema,
+  orgUnitId: optionalUuidSchema,
+  groupId: optionalUuidSchema,
 });
 
 export type DirectoryUser = {

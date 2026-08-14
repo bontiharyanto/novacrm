@@ -6,6 +6,7 @@ import { getSessionProfile } from '@/lib/auth/session';
 import { canRole } from '@/lib/rbac/ability';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { requireAccountId } from '@/lib/accounts/scope';
+import { formatZodError } from '@/lib/validation/zod-error';
 
 type CmdbRow = {
   id: string;
@@ -113,7 +114,7 @@ export async function listCmdbItems() {
 export async function createCmdbItem(input: unknown) {
   const parsedResult = cmdbSchema.safeParse(input);
   if (!parsedResult.success) {
-    return { data: null, error: parsedResult.error.issues[0]?.message ?? 'Invalid CI' };
+    return { data: null, error: formatZodError(parsedResult.error) };
   }
   const parsed = parsedResult.data;
   const session = await getSessionProfile();
@@ -217,7 +218,7 @@ export async function getCmdbById(itemId: string) {
 export async function createIpSegment(input: unknown) {
   const parsedResult = ipSegmentSchema.safeParse(input);
   if (!parsedResult.success) {
-    return { data: null, error: parsedResult.error.issues[0]?.message ?? 'Invalid segment' };
+    return { data: null, error: formatZodError(parsedResult.error) };
   }
   const parsed = parsedResult.data;
   const session = await getSessionProfile();
@@ -297,7 +298,7 @@ export async function listCiClasses(): Promise<CiClass[]> {
 export async function createCiClass(input: unknown) {
   const parsedResult = ciClassSchema.safeParse(input);
   if (!parsedResult.success) {
-    return { data: null, error: parsedResult.error.issues[0]?.message ?? 'Invalid class' };
+    return { data: null, error: formatZodError(parsedResult.error) };
   }
   const parsed = parsedResult.data;
   const session = await getSessionProfile();

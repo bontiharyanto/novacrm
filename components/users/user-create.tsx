@@ -67,8 +67,8 @@ export function UserCreate({
       role,
       password,
       accountId,
-      orgUnitId,
-      groupId: isCustomerRole(role) ? undefined : groupId,
+      orgUnitId: orgUnitId || undefined,
+      groupId: isCustomerRole(role) ? undefined : groupId || undefined,
     });
     if (result.error || !result.data?.id) {
       const message = result.error ?? t.common.createFailed;

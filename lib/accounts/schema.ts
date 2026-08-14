@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { uuidSchema } from '@/lib/validation/id';
 
 export const ACCOUNT_COOKIE = 'novacrm_account';
 export const ACCOUNT_ALL = 'all';
@@ -21,7 +22,7 @@ export const accountSchema = z.object({
 export const accountUpdateSchema = accountSchema.partial();
 
 export const accountMemberSchema = z.object({
-  userId: z.string().uuid(),
+  userId: uuidSchema,
   role: accountMemberRoleSchema.default('member'),
 });
 

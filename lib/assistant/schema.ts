@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { nullableUuidSchema } from '@/lib/validation/id';
 
 export const assistantMessageSchema = z.object({
   role: z.enum(['user', 'assistant']),
@@ -6,7 +7,7 @@ export const assistantMessageSchema = z.object({
 });
 
 export const assistantThreadSaveSchema = z.object({
-  id: z.string().uuid().nullable().optional(),
+  id: nullableUuidSchema,
   messages: z.array(assistantMessageSchema).max(40),
 });
 

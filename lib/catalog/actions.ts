@@ -13,6 +13,7 @@ import {
 } from '@/lib/catalog/schema';
 import { formatAnswers, mergeVariables, missingRequired, parseVariables, slugify } from '@/lib/catalog/variables';
 import { getSessionProfile } from '@/lib/auth/session';
+import { formatZodError } from '@/lib/validation/zod-error';
 import { canRole } from '@/lib/rbac/ability';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { createTicket } from '@/lib/tickets/actions';
@@ -241,7 +242,11 @@ export async function updateCatalogVariableSet(setId: string, input: unknown) {
 }
 
 export async function createCatalogItem(input: unknown) {
-  const parsed = catalogItemSchema.parse(input);
+  const parsedResult = catalogItemSchema.safeParse(input);
+  if (!parsedResult.success) {
+    return { data: null, error: formatZodError(parsedResult.error) };
+  }
+  const parsed = parsedResult.data;
   const session = await getSessionProfile();
   if (!session || !canRole(session.profile.role, 'create', 'Catalog')) {
     return { data: null, error: 'Unauthorized' };

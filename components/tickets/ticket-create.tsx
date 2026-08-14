@@ -9,10 +9,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { TypeBadge } from '@/components/tickets/type-badge';
 import { ProcessStrip } from '@/components/tickets/process-strip';
 import { CommentEditor } from '@/components/tickets/comment-editor';
+import { CatalogVariableFields } from '@/components/catalog/catalog-variable-fields';
+import type { CatalogItem } from '@/lib/catalog/schema';
+import { formatAnswers, missingRequired } from '@/lib/catalog/variables';
 import {
   TICKET_TYPES,
   isTicketType,
@@ -73,8 +77,13 @@ export function TicketCreate({
   const [riskLevel, setRiskLevel] = useState('medium');
   const [plannedStart, setPlannedStart] = useState('');
   const [plannedEnd, setPlannedEnd] = useState('');
+  const [implementationPlan, setImplementationPlan] = useState('');
+  const [backoutPlan, setBackoutPlan] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [catalogItems, setCatalogItems] = useState<CatalogItem[]>([]);
+  const [catalogItemId, setCatalogItemId] = useState('');
+  const [catalogAnswers, setCatalogAnswers] = useState<Record<string, string | boolean>>({});
 
   const meta = ticketTypeMeta[ticketType];
   const resolvedTitle = title.trim() || htmlToText(description).slice(0, 200);
@@ -86,12 +95,25 @@ export function TicketCreate({
     () => assets.find((asset) => asset.id === assetId),
     [assets, assetId],
   );
+  const requestCatalogItems = useMemo(
+    () => catalogItems.filter((item) => item.isActive && item.ticketType === ticketType),
+    [catalogItems, ticketType],
+  );
+  const selectedCatalog = requestCatalogItems.find((item) => item.id === catalogItemId) ?? null;
+  const showCatalog =
+    ticketType === 'request' ||
+    (ticketType === 'incident' && requestCatalogItems.length > 0) ||
+    (ticketType === 'change' && changeType === 'standard');
 
   useEffect(() => {
     void fetch('/api/agents')
       .then((response) => response.json())
       .then((payload) => setAgents(payload.data ?? []))
       .catch(() => setAgents([]));
+    void fetch('/api/catalog')
+      .then((response) => response.json())
+      .then((payload) => setCatalogItems(payload.data ?? []))
+      .catch(() => setCatalogItems([]));
   }, []);
 
   useEffect(() => {
@@ -123,6 +145,19 @@ export function TicketCreate({
       toastError(t.tickets.needAccount);
       return;
     }
+    if (ticketType === 'change' && changeType === 'standard' && !selectedCatalog) {
+      setError(t.tickets.needStandardTemplate);
+      toastError(t.tickets.needStandardTemplate);
+      return;
+    }
+    if (selectedCatalog) {
+      const missing = missingRequired(selectedCatalog.mergedVariables, catalogAnswers);
+      if (missing.length > 0) {
+        setError(t.tickets.needCatalogFields);
+        toastError(`${t.tickets.needCatalogFields} ${missing.join(', ')}`);
+        return;
+      }
+    }
     if (resolvedTitle.length < 3) {
       setError(t.tickets.needTitle);
       toastError(t.tickets.needTitle);
@@ -131,12 +166,14 @@ export function TicketCreate({
     setIsSubmitting(true);
     setError('');
 
+    const body = htmlToText(description) ? description : resolvedTitle;
+    const catalogText = selectedCatalog ? formatAnswers(selectedCatalog.mergedVariables, catalogAnswers) : '';
     const response = await fetch('/api/tickets', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         title: resolvedTitle,
-        description: htmlToText(description) ? description : resolvedTitle,
+        description: catalogText ? `${body}\n\n${catalogText}` : body,
         type: ticketType,
         accountId,
         requesterName,
@@ -152,6 +189,18 @@ export function TicketCreate({
         riskLevel: ticketType === 'change' ? riskLevel : undefined,
         plannedStart: ticketType === 'change' && plannedStart ? new Date(plannedStart).toISOString() : undefined,
         plannedEnd: ticketType === 'change' && plannedEnd ? new Date(plannedEnd).toISOString() : undefined,
+        implementationPlan: ticketType === 'change' ? implementationPlan.trim() || undefined : undefined,
+        backoutPlan: ticketType === 'change' ? backoutPlan.trim() || undefined : undefined,
+        catalogItemId: selectedCatalog?.id,
+        category: selectedCatalog?.categoryName ?? selectedCatalog?.slug,
+        catalogAnswers: selectedCatalog
+          ? Object.fromEntries(
+              selectedCatalog.mergedVariables.map((variable) => [
+                variable.key,
+                catalogAnswers[variable.key] == null ? '' : String(catalogAnswers[variable.key]),
+              ]),
+            )
+          : undefined,
       }),
     });
 
@@ -209,7 +258,15 @@ export function TicketCreate({
                 <button
                   key={type}
                   type="button"
-                  onClick={() => setTicketType(type)}
+                  onClick={() => {
+                    setTicketType(type);
+                    setCatalogItemId('');
+                    setCatalogAnswers({});
+                    if (type !== 'change') {
+                      setImplementationPlan('');
+                      setBackoutPlan('');
+                    }
+                  }}
                   className={cn(
                     'rounded-xl border px-3 py-3 text-left transition-all duration-200 ease-out hover:-translate-y-0.5',
                     selected
@@ -226,6 +283,86 @@ export function TicketCreate({
           </div>
 
           <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-6">
+            {ticketType === 'change' ? (
+              <div className="mb-5 space-y-1.5">
+                <Label htmlFor="changeType">{t.tickets.changeType}</Label>
+                <Select
+                  id="changeType"
+                  value={changeType}
+                  onChange={(event) => {
+                    const next = event.target.value;
+                    setChangeType(next);
+                    if (next !== 'standard') {
+                      setCatalogItemId('');
+                      setCatalogAnswers({});
+                    }
+                  }}
+                >
+                  <option value="standard">Standard</option>
+                  <option value="normal">Normal</option>
+                  <option value="emergency">Emergency</option>
+                </Select>
+                <p className="text-[11px] text-zinc-500">{t.tickets.changeTypeHint}</p>
+              </div>
+            ) : null}
+            {showCatalog ? (
+              <div className="mb-5 space-y-1.5">
+                <Label htmlFor="catalogItemId">
+                  {ticketType === 'change' ? t.tickets.standardTemplate : t.tickets.catalogItem}
+                </Label>
+                <Select
+                  id="catalogItemId"
+                  value={catalogItemId}
+                  required={ticketType === 'change' && changeType === 'standard'}
+                  onChange={(event) => {
+                    const nextId = event.target.value;
+                    setCatalogItemId(nextId);
+                    const next = requestCatalogItems.find((item) => item.id === nextId) ?? null;
+                    const initial: Record<string, string | boolean> = {};
+                    for (const variable of next?.mergedVariables ?? []) {
+                      initial[variable.key] = variable.type === 'checkbox' ? false : '';
+                    }
+                    setCatalogAnswers(initial);
+                    if (next) {
+                      setTitle(next.name);
+                      setPriority(next.priority);
+                      if (ticketType === 'change') {
+                        setImplementationPlan(next.description || '');
+                        setBackoutPlan(
+                          'Revert the previous configuration, restore the prior artifact, and verify health checks.',
+                        );
+                      }
+                    }
+                  }}
+                >
+                  <option value="">
+                    {ticketType === 'change' ? t.tickets.needStandardTemplate : t.tickets.catalogNone}
+                  </option>
+                  {Object.entries(
+                    requestCatalogItems.reduce<Record<string, CatalogItem[]>>((groups, item) => {
+                      const key = item.categoryName || 'Catalog';
+                      groups[key] = groups[key] ? [...groups[key], item] : [item];
+                      return groups;
+                    }, {}),
+                  ).map(([category, items]) => (
+                    <optgroup key={category} label={category}>
+                      {items.map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </Select>
+                <p className="text-[11px] text-zinc-500">
+                  {requestCatalogItems.length === 0
+                    ? t.tickets.catalogEmpty
+                    : ticketType === 'change'
+                      ? t.tickets.standardTemplateHint
+                      : t.tickets.catalogItemHint}
+                </p>
+              </div>
+            ) : null}
             <Label htmlFor="title">{t.tickets.shortDescription}</Label>
             <Input
               id="title"
@@ -239,6 +376,37 @@ export function TicketCreate({
             <p className="mt-1.5 text-[11px] text-zinc-500">{t.tickets.shortDescriptionHint}</p>
             <p className="mb-2 mt-5 text-[11px] uppercase tracking-[0.16em] text-zinc-500">Details</p>
             <CommentEditor value={description} onChange={setDescription} minHeightClass="min-h-56" />
+            {selectedCatalog ? (
+              <CatalogVariableFields
+                variables={selectedCatalog.mergedVariables}
+                answers={catalogAnswers}
+                onChange={setCatalogAnswers}
+              />
+            ) : null}
+            {ticketType === 'change' ? (
+              <div className="mt-5 space-y-4 border-t border-zinc-800 pt-5">
+                <div className="space-y-1.5">
+                  <Label htmlFor="implementationPlan">{t.tickets.implementationPlan}</Label>
+                  <Textarea
+                    id="implementationPlan"
+                    rows={5}
+                    value={implementationPlan}
+                    onChange={(event) => setImplementationPlan(event.target.value)}
+                    placeholder={t.tickets.implementationPlanHint}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="backoutPlan">{t.tickets.backoutPlan}</Label>
+                  <Textarea
+                    id="backoutPlan"
+                    rows={4}
+                    value={backoutPlan}
+                    onChange={(event) => setBackoutPlan(event.target.value)}
+                    placeholder={t.tickets.backoutPlanHint}
+                  />
+                </div>
+              </div>
+            ) : null}
             {error ? <p className="mt-3 text-sm text-rose-400">{error}</p> : null}
           </div>
         </div>
@@ -349,14 +517,6 @@ export function TicketCreate({
               </div>
               {ticketType === 'change' ? (
                 <>
-                  <div className="space-y-1.5">
-                    <Label>Change type</Label>
-                    <Select value={changeType} onChange={(event) => setChangeType(event.target.value)}>
-                      <option value="standard">Standard</option>
-                      <option value="normal">Normal</option>
-                      <option value="emergency">Emergency</option>
-                    </Select>
-                  </div>
                   <div className="space-y-1.5">
                     <Label>Risk</Label>
                     <Select value={riskLevel} onChange={(event) => setRiskLevel(event.target.value)}>

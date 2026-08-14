@@ -126,10 +126,15 @@ export async function createTicket(input: unknown) {
   const parsedResult = ticketSchema.safeParse(input);
   if (!parsedResult.success) {
     const issue = parsedResult.error.issues[0];
+    const field = issue?.path?.length ? String(issue.path[0]) : '';
     const message =
-      issue?.path[0] === 'title'
+      field === 'title'
         ? 'Fill the short description (ticket title) before creating.'
-        : issue?.message ?? 'Invalid ticket';
+        : field === 'accountId' || field === 'assigneeId' || field === 'groupId' || field === 'assetId'
+          ? 'One of the selected records has an invalid id.'
+          : field === 'requesterEmail'
+            ? 'Requester email is not valid.'
+            : issue?.message ?? 'Invalid ticket';
     return { data: null, error: message };
   }
   const parsed = parsedResult.data;

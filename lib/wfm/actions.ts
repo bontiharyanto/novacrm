@@ -33,6 +33,7 @@ import { listEligibleAgentsForGroup, loadDispatchPolicy } from '@/lib/wfm/eligib
 import { dispatchTicket } from '@/lib/wfm/dispatch';
 import { computeAdherence, computeForecast } from '@/lib/wfm/forecast';
 import { isOpenTicketStatus } from '@/lib/wfm/time';
+import { formatZodError } from '@/lib/validation/zod-error';
 
 function slugify(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'skill';
@@ -229,7 +230,11 @@ export async function listRoster(fromDate: string, toDate: string, groupId?: str
 }
 
 export async function upsertRosterEntry(input: unknown) {
-  const parsed = rosterEntrySchema.parse(input);
+  const parsedResult = rosterEntrySchema.safeParse(input);
+  if (!parsedResult.success) {
+    return { data: null, error: formatZodError(parsedResult.error) };
+  }
+  const parsed = parsedResult.data;
   const session = await getSessionProfile();
   if (!session || !canRole(session.profile.role, 'create', 'Wfm')) {
     return { data: null, error: 'Unauthorized' };

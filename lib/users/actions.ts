@@ -8,6 +8,7 @@ import { isSupportTier, type SupportTier } from '@/lib/tickets/pending';
 import { createUserSchema, highestSupportLevel, userAccessSchema, type DirectoryUser } from '@/lib/users/schema';
 import type { AssignmentGroup, AssignmentGroupKind } from '@/lib/org/schema';
 import { createSupabaseAdminClient, hasServiceRole } from '@/lib/supabase/admin';
+import { formatZodError } from '@/lib/validation/zod-error';
 
 type ProfileRow = {
   id: string;
@@ -179,7 +180,7 @@ export async function listHomeUnits() {
 export async function createDirectoryUser(input: unknown) {
   const parsedResult = createUserSchema.safeParse(input);
   if (!parsedResult.success) {
-    return { data: null, error: parsedResult.error.issues[0]?.message ?? 'Invalid input' };
+    return { data: null, error: formatZodError(parsedResult.error) };
   }
   const parsed = parsedResult.data;
   const session = await getSessionProfile();
@@ -307,7 +308,11 @@ export async function createDirectoryUser(input: unknown) {
 }
 
 export async function updateUserAccess(userId: string, input: unknown) {
-  const parsed = userAccessSchema.parse(input);
+  const parsedResult = userAccessSchema.safeParse(input);
+  if (!parsedResult.success) {
+    return { data: null, error: formatZodError(parsedResult.error) };
+  }
+  const parsed = parsedResult.data;
   const session = await getSessionProfile();
   if (!session || !canRole(session.profile.role, 'update', 'User')) {
     return { data: null, error: 'Unauthorized' };

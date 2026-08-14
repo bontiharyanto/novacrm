@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { emptyToUndefined, optionalUuidSchema } from '@/lib/validation/id';
 
 export { ASSET_TYPES, DEFAULT_ASSET_TYPES, formatAssetTypeLabel, type AssetTypeOption } from '@/lib/assets/types';
 
@@ -10,11 +11,6 @@ export const ASSET_STATUSES = ['active', 'in_repair', 'retired', 'lost'] as cons
 export const assetTypeCatalogSchema = z.object({
   label: z.string().trim().min(2).max(80),
 });
-
-function emptyToUndefined(value: unknown) {
-  if (value === '' || value === null || value === undefined) return undefined;
-  return value;
-}
 
 export const assetSchema = z.object({
   name: z.string().min(1).max(200),
@@ -44,11 +40,11 @@ export const assetSchema = z.object({
   location: z.preprocess(emptyToUndefined, z.string().max(120).optional()),
   assignedTo: z.preprocess(emptyToUndefined, z.string().max(120).optional()),
   notes: z.preprocess(emptyToUndefined, z.string().max(4000).optional()),
-  accountId: z.preprocess(emptyToUndefined, z.string().uuid().optional()),
+  accountId: optionalUuidSchema,
 });
 
 export const assetUpdateSchema = assetSchema.partial().extend({
-  replacedById: z.preprocess(emptyToUndefined, z.string().uuid().optional()),
+  replacedById: optionalUuidSchema,
 });
 
 export type AssetType = string;
@@ -86,7 +82,7 @@ export const assetMovementSchema = z.object({
   eventType: z.enum(ASSET_MOVEMENT_TYPES),
   location: z.preprocess(emptyToUndefined, z.string().max(120).optional()),
   assignedTo: z.preprocess(emptyToUndefined, z.string().max(120).optional()),
-  replacementId: z.preprocess(emptyToUndefined, z.string().uuid().optional()),
+  replacementId: optionalUuidSchema,
   note: z.preprocess(emptyToUndefined, z.string().max(400).optional()),
 });
 

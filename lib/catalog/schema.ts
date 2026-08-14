@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { ticketPrioritySchema, ticketTypeSchema } from '@/lib/tickets/schema';
+import { nullableUuidSchema } from '@/lib/validation/id';
 
 export const catalogVariableTypeSchema = z.enum(['text', 'textarea', 'select', 'checkbox']);
 
@@ -34,8 +35,8 @@ export const catalogItemSchema = z.object({
   shortDescription: z.string().max(240).optional(),
   description: z.string().max(4000).optional(),
   icon: z.string().max(40).optional(),
-  categoryId: z.string().uuid().optional().nullable(),
-  variableSetId: z.string().uuid().optional().nullable(),
+  categoryId: nullableUuidSchema,
+  variableSetId: nullableUuidSchema,
   ticketType: ticketTypeSchema.default('request'),
   priority: ticketPrioritySchema.default('medium'),
   variables: z.array(catalogVariableSchema).default([]),

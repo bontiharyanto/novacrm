@@ -6,6 +6,7 @@ import { getSessionProfile } from '@/lib/auth/session';
 import { canRole } from '@/lib/rbac/ability';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { requireAccountId } from '@/lib/accounts/scope';
+import { formatZodError } from '@/lib/validation/zod-error';
 
 type AssetRow = {
   id: string;
@@ -117,7 +118,11 @@ export async function listAssets(accountId?: string | null) {
 }
 
 export async function createAsset(input: unknown) {
-  const parsed = assetSchema.parse(input);
+  const parsedResult = assetSchema.safeParse(input);
+  if (!parsedResult.success) {
+    return { data: null, error: formatZodError(parsedResult.error) };
+  }
+  const parsed = parsedResult.data;
   const session = await getSessionProfile();
 
   if (!session || !canRole(session.profile.role, 'create', 'Asset')) {

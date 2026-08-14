@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { nullableUuidSchema } from '@/lib/validation/id';
 
 export const lawfulBasisSchema = z.enum([
   'consent',
@@ -115,7 +116,7 @@ export const dsarInputSchema = z.object({
 
 export const dsarUpdateSchema = z.object({
   status: dsarStatusSchema.optional(),
-  assignedTo: z.string().uuid().nullable().optional(),
+  assignedTo: nullableUuidSchema,
   assignedName: z.string().max(120).optional(),
   resolution: z.string().max(8000).optional(),
 });

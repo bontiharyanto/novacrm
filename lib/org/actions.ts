@@ -13,6 +13,7 @@ import {
 } from '@/lib/org/schema';
 import { requireAccountId } from '@/lib/accounts/scope';
 import { getSessionProfile } from '@/lib/auth/session';
+import { formatZodError } from '@/lib/validation/zod-error';
 import { canRole } from '@/lib/rbac/ability';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
@@ -111,7 +112,11 @@ export async function getOrgUnitById(unitId: string): Promise<OrgUnit | null> {
 }
 
 export async function createOrgUnit(input: unknown) {
-  const parsed = orgUnitSchema.parse(input);
+  const parsedResult = orgUnitSchema.safeParse(input);
+  if (!parsedResult.success) {
+    return { data: null, error: formatZodError(parsedResult.error) };
+  }
+  const parsed = parsedResult.data;
   const session = await getSessionProfile();
   if (!session || !canRole(session.profile.role, 'create', 'Org')) {
     return { data: null, error: 'Unauthorized' };
@@ -342,7 +347,11 @@ export async function updateAssignmentGroup(groupId: string, input: unknown) {
 }
 
 export async function addGroupMember(groupId: string, input: unknown) {
-  const parsed = groupMemberSchema.parse(input);
+  const parsedResult = groupMemberSchema.safeParse(input);
+  if (!parsedResult.success) {
+    return { data: null, error: formatZodError(parsedResult.error) };
+  }
+  const parsed = parsedResult.data;
   const session = await getSessionProfile();
   if (!session || !canRole(session.profile.role, 'update', 'Org')) {
     return { data: null, error: 'Unauthorized' };

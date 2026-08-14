@@ -1,20 +1,16 @@
 import { z } from 'zod';
+import { emptyToUndefined, optionalUuidSchema, uuidSchema } from '@/lib/validation/id';
 
 export const orgUnitTypeSchema = z.enum(['division', 'unit']);
 export const assignmentGroupKindSchema = z.enum(['assignment', 'cab', 'fulfillment', 'oncall']);
 export const supportTierSchema = z.enum(['l1', 'l2', 'l3']);
 export const groupMemberRoleSchema = z.enum(['lead', 'member']);
 
-function emptyToUndefined(value: unknown) {
-  if (value === '' || value === null || value === undefined) return undefined;
-  return value;
-}
-
 export const orgUnitSchema = z.object({
   name: z.string().min(2).max(120),
   type: orgUnitTypeSchema.default('unit'),
-  parentId: z.preprocess(emptyToUndefined, z.string().uuid().optional()),
-  managerId: z.preprocess(emptyToUndefined, z.string().uuid().optional()),
+  parentId: optionalUuidSchema,
+  managerId: optionalUuidSchema,
   slug: z.preprocess(emptyToUndefined, z.string().max(80).optional()),
 });
 
@@ -31,7 +27,7 @@ export const assignmentGroupSchema = z.object({
 export const assignmentGroupUpdateSchema = assignmentGroupSchema.partial();
 
 export const groupMemberSchema = z.object({
-  userId: z.string().uuid(),
+  userId: uuidSchema,
   role: groupMemberRoleSchema.default('member'),
 });
 

@@ -7,6 +7,7 @@ import { getAccountScope, listAccessibleAccounts, mapAccount } from '@/lib/accou
 import { getSessionProfile } from '@/lib/auth/session';
 import { canRole } from '@/lib/rbac/ability';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { formatZodError } from '@/lib/validation/zod-error';
 
 function slugify(value: string) {
   const slug = value
@@ -199,7 +200,11 @@ export async function updateAccount(accountId: string, input: unknown) {
 }
 
 export async function addAccountMember(accountId: string, input: unknown) {
-  const parsed = accountMemberSchema.parse(input);
+  const parsedResult = accountMemberSchema.safeParse(input);
+  if (!parsedResult.success) {
+    return { data: null, error: formatZodError(parsedResult.error) };
+  }
+  const parsed = parsedResult.data;
   const session = await getSessionProfile();
   if (!session || !canRole(session.profile.role, 'update', 'Account')) {
     return { data: null, error: 'Unauthorized' };

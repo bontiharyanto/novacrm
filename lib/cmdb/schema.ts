@@ -1,9 +1,5 @@
 import { z } from 'zod';
-
-function emptyToUndefined(value: unknown) {
-  if (value === '' || value === null || value === undefined) return undefined;
-  return value;
-}
+import { emptyToUndefined, optionalUuidSchema, uuidSchema } from '@/lib/validation/id';
 
 export const cidrSchema = z
   .string()
@@ -27,17 +23,17 @@ export const ipSegmentSchema = z.object({
   }, z.number().int().min(1).max(4094).optional()),
   gateway: z.preprocess(emptyToUndefined, ipv4Schema.optional()),
   purpose: z.preprocess(emptyToUndefined, z.string().trim().max(40).optional()),
-  cmdbItemId: z.preprocess(emptyToUndefined, z.string().uuid().optional()),
+  cmdbItemId: optionalUuidSchema,
 });
 
 export const cmdbSchema = z.object({
   name: z.string().min(1).max(200),
   type: z.string().min(1).max(80).default('service'),
-  accountId: z.preprocess((value) => (value === '' || value === null ? undefined : value), z.string().uuid().optional()),
-  assetId: z.preprocess((value) => (value === '' || value === null ? undefined : value), z.string().uuid().optional()),
+  accountId: optionalUuidSchema,
+  assetId: optionalUuidSchema,
   attributes: z.record(z.string(), z.string()).optional(),
   relations: z
-    .array(z.object({ targetId: z.string().uuid(), type: z.string().min(1).max(40) }))
+    .array(z.object({ targetId: uuidSchema, type: z.string().min(1).max(40) }))
     .optional(),
   segment: z.preprocess((value) => {
     if (!value || typeof value !== 'object') return undefined;
