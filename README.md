@@ -45,6 +45,7 @@ CASL on the frontend; RLS on the backend. Sidebar account filter: one customer a
 | Document | Audience |
 | --- | --- |
 | [User guide (training pack)](docs/user-guide/README.md) | Staff and customers — trainer agenda + participant manual |
+| [Catalog & record producer](docs/user-guide/catalog-guidance.md) | Supervisor / admin — design catalog items, variables, worked examples |
 | [Local laptop setup](docs/LOCAL.md) | Engineers running the demo |
 | [Sysadmin Ops](docs/OPS.md) | Health, queues, retries on `:3100` |
 | [RBAC](docs/RBAC.md) | Roles vs CASL vs RLS |

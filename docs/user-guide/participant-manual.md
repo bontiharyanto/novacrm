@@ -316,9 +316,18 @@ Changes use process states including **CAB Review**.
 
 ## 8. Catalog and portal
 
+Full field-by-field guide (including **Install Antivirus**): [Catalog & record producer](catalog-guidance.md).
+
 ### 8.1 Agent catalog
 
 `/catalog` — catalog items, **variable sets**, record producer type. Customers fill variables when they request.
+
+| Creates | When to use |
+| --- | --- |
+| **Request** | Approved service (software, access, hardware) |
+| **Incident** | Optional outage template — do not force |
+| **Change** | Standard change templates only |
+| **Problem** | Do not use a catalog item |
 
 ### 8.2 Customer portal
 

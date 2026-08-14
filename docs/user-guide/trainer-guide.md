@@ -61,6 +61,7 @@ Portal  customer@novacrm.app / NovaCRM!2026
 | Ticket *WiFi lantai 2* | Bank incidents | Vendor hold (SLA paused) |
 | Ticket *Backup gagal* | Internal | Already escalated to L2 |
 | SLA Gold INC P1 | `/sla` on Bank | 15m response / 4h resolve |
+| Catalog **Install software** | `/catalog` | Record producer pattern — walkthrough for a new item (Antivirus) is in [catalog-guidance.md](catalog-guidance.md) |
 
 If a participant “cannot see the graph”, they are still on **Internal**. Switch account first.
 
@@ -117,6 +118,7 @@ Participant can complete **without facilitator clicking**:
 1. Login as agent, switch to Bank Nusantara, open `AST-1001`.
 2. Create an incident, assign to self, add a comment.
 3. Login as customer, submit a catalog or freeform request, then find it as agent.
+4. (Full day / catalog owners) Open **Install software** on `/catalog` and, using [catalog-guidance.md](catalog-guidance.md), explain how they would add **Install Antivirus**.
 
 ---
 

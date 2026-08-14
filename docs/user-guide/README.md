@@ -9,6 +9,7 @@
 | --- | --- |
 | [Trainer guide](trainer-guide.md) | Facilitator: agenda, demo data, timing, pass criteria |
 | [Participant manual](participant-manual.md) | Learners: procedures, labs, expected results |
+| [Catalog & record producer](catalog-guidance.md) | Supervisor / admin: design items, variables, Install Antivirus walkthrough |
 | [Local setup](../LOCAL.md) | Engineer: run the app on a laptop |
 | [Sysadmin Ops](../OPS.md) | Engineer: health and queues on `:3100` |
 | [Deployment](../DEPLOYMENT.md) | Engineer: VPS / production |

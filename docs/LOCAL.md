@@ -89,7 +89,7 @@ WFM desk: [http://localhost:3000/wfm](http://localhost:3000/wfm) — occupancy, 
 9. Sign out, login as **customer** → [portal](http://localhost:3000/portal): **Catalog** to submit a record producer, or **New request** for a freeform ticket, then track `/portal/{id}`
 10. Automation: [Workflows](http://localhost:3000/workflows) → **New flow** → pick **Standard / Normal / Complex**. Canvas supports condition (Yes/No) nodes. Ticket create/status/comment, **machine alert**, and **inbound message** can run BullMQ actions (assign, email, WhatsApp, Telegram, status, asset). Check **Recent runs** on the flow.
     - Auto-create ticket: `POST /api/webhooks/whatsapp` (secret `local-whatsapp-secret`), `/api/webhooks/telegram`, `/api/webhooks/email`, `/api/webhooks/alerts` (Prometheus/Grafana JSON), `/api/webhooks/generic`. Repeat alerts within 24h update the same ticket.
-11. Catalog (agent): [http://localhost:3000/catalog](http://localhost:3000/catalog) — items, variable sets, record producer type
+11. Catalog (agent): [http://localhost:3000/catalog](http://localhost:3000/catalog) — items, variable sets, record producer type. Field-by-field guide: [docs/user-guide/catalog-guidance.md](user-guide/catalog-guidance.md)
 12. CAB: [http://localhost:3000/cab](http://localhost:3000/cab) — review queue, calendar, approve/reject/defer on the change record
 13. Dashboard KPIs + aging; Reports 7/30/90 or custom dates; preview then CSV / Excel / PDF
 14. Governance / UU PDP: [http://localhost:3000/governance](http://localhost:3000/governance) — RoPA, DSAR 30d, breach 72h, privacy notice. Customer: [portal/privacy](http://localhost:3000/portal/privacy)
