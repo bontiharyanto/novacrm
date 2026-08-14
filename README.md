@@ -45,6 +45,11 @@ CASL on the frontend; RLS on the backend. Sidebar account filter: one customer a
 | Document | Audience |
 | --- | --- |
 | [User guide (training pack)](docs/user-guide/README.md) | Staff and customers — trainer agenda + participant manual |
+| [Administrator sistem](docs/user-guide/admin-system.md) | Admin — tenant setup, users, SLA, integrations |
+| [Pengguna (User)](docs/user-guide/user-operator.md) | Agent desk (L1/L2/L3) + customer portal |
+| [Team Lead / SPV](docs/user-guide/lead-spv.md) | Queue lead and supervisor |
+| [Manager operasi](docs/user-guide/manager-ops.md) | Accounts, org, import, workflows |
+| [Superadmin](docs/user-guide/superadmin.md) | Platform tenant record and break-glass |
 | [Catalog & record producer](docs/user-guide/catalog-guidance.md) | Supervisor / admin — design catalog items, variables, worked examples |
 | [Local laptop setup](docs/LOCAL.md) | Engineers running the demo |
 | [Sysadmin Ops](docs/OPS.md) | Health, queues, retries on `:3100` |
@@ -79,7 +84,7 @@ npm run local:dev
 | agent | `agent@novacrm.app` | `NovaCRM!2026` |
 | customer | `customer@novacrm.app` | `NovaCRM!2026` |
 
-More seeded logins (L1 / L2 / L3 / on-call) are in [docs/LOCAL.md](docs/LOCAL.md). Demo passwords are for the lab tenant only — they are not shown on the login screen.
+Also seeded: `superadmin@` · `manager@` · `spv@` · `lead@novacrm.app` (same password). L1/L2/L3 / on-call: [docs/LOCAL.md](docs/LOCAL.md). Role playbooks: [docs/user-guide/README.md](docs/user-guide/README.md). Demo passwords are for the lab tenant only — they are not shown on the login screen.
 
 `local:setup` starts Redis + MinIO, runs local Supabase, applies migrations/seed, and writes `.env.local`. Docker Desktop must be running.
 

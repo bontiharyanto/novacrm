@@ -1,7 +1,7 @@
 # NovaCRM Participant Manual
 
 **Document type:** end-user procedures for classroom and self-study  
-**Companion:** [Trainer guide](trainer-guide.md)  
+**Companion:** [Trainer guide](trainer-guide.md) · role playbooks: [Admin](admin-system.md) · [User](user-operator.md) · [Team Lead / SPV](lead-spv.md) · [Manager](manager-ops.md) · [Superadmin](superadmin.md)  
 **UI:** labels below are the **English** chrome. Switch `EN | ID` on the top bar at any time.
 
 ---

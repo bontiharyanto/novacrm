@@ -5,22 +5,48 @@
 **Product version:** laptop demo (desk + portal + Ops)  
 **Languages:** Bahasa Indonesia (this pack). The product UI also supports English.
 
+## Role playbooks (daily use)
+
+Tujuh role produk. Pilih dokumen sesuai login.
+
+| Role | Document | Home | Login lab |
+| --- | --- | --- | --- |
+| `customer` | [Pengguna — portal](user-operator.md#bagian-b--customer-portal) | `/portal` | `customer@novacrm.app` |
+| `agent` (L1/L2/L3) | [Pengguna — desk](user-operator.md#bagian-a--agent-service-desk) | `/dashboard` | `agent@novacrm.app` |
+| `team_lead` | [Team Lead / SPV](lead-spv.md) | `/dashboard` | `lead@novacrm.app` |
+| `supervisor` | [Team Lead / SPV](lead-spv.md) | `/dashboard` | `spv@novacrm.app` |
+| `manager` | [Manager operasi](manager-ops.md) | `/dashboard` | `manager@novacrm.app` |
+| `admin` | [Administrator sistem](admin-system.md) | `/dashboard` | `admin@novacrm.app` |
+| `superadmin` | [Superadmin platform](superadmin.md) | `/dashboard` | `superadmin@novacrm.app` |
+
+Password lab semua: `NovaCRM!2026`.  
+Item katalog: [Catalog & record producer](catalog-guidance.md). Matriks hak: [RBAC](../RBAC.md).
+
+## Classroom pack
+
 | Document | Who it is for |
 | --- | --- |
 | [Trainer guide](trainer-guide.md) | Facilitator: agenda, demo data, timing, pass criteria |
 | [Participant manual](participant-manual.md) | Learners: procedures, labs, expected results |
-| [Catalog & record producer](catalog-guidance.md) | Supervisor / admin: design items, variables, Install Antivirus walkthrough |
 | [Local setup](../LOCAL.md) | Engineer: run the app on a laptop |
 | [Sysadmin Ops](../OPS.md) | Engineer: health and queues on `:3100` |
+| [Workers](../WORKERS.md) | Engineer: scale BullMQ workers |
 | [Deployment](../DEPLOYMENT.md) | Engineer: VPS / production |
 
 ## Demo logins
 
-| Role | Email | Password | Lands on |
-| --- | --- | --- | --- |
-| Admin | `admin@novacrm.app` | `NovaCRM!2026` | `/dashboard` |
-| Agent | `agent@novacrm.app` | `NovaCRM!2026` | `/dashboard` |
-| Customer | `customer@novacrm.app` | `NovaCRM!2026` | `/portal` |
+Password lab: `NovaCRM!2026` (bukan produksi).
+
+| Role | Email | Lands on |
+| --- | --- | --- |
+| Superadmin | `superadmin@novacrm.app` | `/dashboard` |
+| Admin | `admin@novacrm.app` | `/dashboard` |
+| Manager | `manager@novacrm.app` | `/dashboard` |
+| Supervisor | `spv@novacrm.app` | `/dashboard` |
+| Team lead | `lead@novacrm.app` | `/dashboard` |
+| Agent | `agent@novacrm.app` | `/dashboard` |
+| L1 / L2 / L3 / on-call | `sari.l1@` · `raka.l2@` · `maya.l3@` · `andi.oncall@novacrm.app` | `/dashboard` |
+| Customer | `customer@novacrm.app` | `/portal` |
 
 ## URLs (laptop)
 

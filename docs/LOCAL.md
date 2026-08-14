@@ -66,7 +66,11 @@ npm run local:dev
 
 | Role | Email | Password |
 | --- | --- | --- |
+| superadmin | `superadmin@novacrm.app` | `NovaCRM!2026` |
 | admin | `admin@novacrm.app` | `NovaCRM!2026` |
+| manager | `manager@novacrm.app` | `NovaCRM!2026` |
+| supervisor | `spv@novacrm.app` | `NovaCRM!2026` |
+| team lead | `lead@novacrm.app` | `NovaCRM!2026` |
 | agent | `agent@novacrm.app` | `NovaCRM!2026` |
 | customer | `customer@novacrm.app` | `NovaCRM!2026` |
 | L1 | `sari.l1@novacrm.app` `budi.l1@novacrm.app` `dewi.l1@novacrm.app` | `NovaCRM!2026` |

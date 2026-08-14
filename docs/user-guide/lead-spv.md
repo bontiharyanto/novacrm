@@ -1,0 +1,184 @@
+# Panduan Team Lead & Supervisor (SPV)
+
+**Peran**
+
+| Role | Login lab | Fokus |
+| --- | --- | --- |
+| `team_lead` | `lead@novacrm.app` / `NovaCRM!2026` | Antrian: assign, escalate, baca user & WFM |
+| `supervisor` | `spv@novacrm.app` / `NovaCRM!2026` | Semua milik lead + SLA, katalog, roster WFM, user customer/agent |
+
+Keduanya mendarat di `/dashboard`.  
+**Companion:** [Admin](admin-system.md) · [Manager](manager-ops.md) · [User](user-operator.md) · [Katalog](catalog-guidance.md)
+
+Team Lead menjaga **aliran antrian**. SPV menambah **aturan main** (SLA, katalog, tenaga kerja). Keduanya tetap boleh mengerjakan tiket seperti agent.
+
+---
+
+## 1. Bedanya Lead vs SPV
+
+| Kemampuan | Team Lead | SPV |
+| --- | :---: | :---: |
+| Tiket, aset, CMDB, hold, escalate | ● | ● |
+| Assign ke agent / group | ● | ● |
+| Baca daftar users | ● | ● |
+| Buat / edit user | | ● hanya `customer` dan `agent` |
+| Tulis SLA | | ● |
+| Tulis catalog item | | ● |
+| Roster / skills / on-call WFM | baca | ● tulis |
+| Accounts / org / import / workflow write | | |
+| Integrations | | |
+
+Lead tidak mengubah kontrak SLA atau form katalog. Jika item salah atau target P1 terlalu ketat, eskalasi ke SPV / admin.
+
+---
+
+## 2. Login dan ruang kerja
+
+1. Sign in (Lead: `lead@novacrm.app` · SPV: `spv@novacrm.app`).
+2. Switcher **Account** — tinjau per customer, lalu **All** untuk beban gabungan.
+3. Dashboard + chip **SLA risk** / **Unassigned** = titik mulai pagi.
+
+Palette `⌘K`. Jangan mengandalkan hanya **Mine** — peran Anda adalah antrian tim.
+
+---
+
+## 3. Ritual antrian (Lead dan SPV)
+
+Setiap shift, urutan ini:
+
+1. **Incidents** → filter **Unassigned**, prioritas critical/high.
+2. Chip **SLA risk** / **Breached** — assign owner, komentar, escalate jika perlu.
+3. **My groups** — tiket yang ngantri di L1/L2/L3 Anda.
+4. **Requests** menumpuk — cek item katalog lengkap; assign fulfiller.
+5. **Changes** di **CAB Review** (`/cab`) — jangan biarkan window terlewat tanpa keputusan.
+6. **Problems** terbuka lama — pastikan ada workaround di komentar.
+
+### Assign
+
+- Pilih agent yang **hadir** (WFM occupancy / roster), bukan yang sudah overload.
+- Isi **assignment group** jika eskalasi level (L2/L3).
+- **Assign to me** hanya untuk tiket yang Anda kerjakan sendiri.
+
+### Escalate
+
+**Escalate L2 / L3** mengantre ke `L2 Network` / `L3 Infra` (Internal). Jam SLA **tetap jalan**.  
+Pakai jika L1 macet, bukan sebagai pengganti Hold.
+
+### Hold
+
+Hanya jika menunggu pihak luar. Wajib alasan (`Pending vendor` + case). SLA **pause**. Review hold yang > 1 hari.
+
+---
+
+## 4. CAB (Change)
+
+`/cab` — antrian + kalender.
+
+Di record change: **approve** / **reject** / **defer**.
+
+| Change type | Perilaku |
+| --- | --- |
+| **Standard** | Wajib template katalog; pra-approve, tanpa CAB |
+| **Normal** | Rencana implementasi + backout; masuk CAB |
+| **Emergency** | CAB dipercepat; tetap ada backout |
+
+Jangan approve change lab bersama kecuali trainer/tenant terisolasi.
+
+---
+
+## 5. Khusus SPV — SLA
+
+`/sla` — matriks **type × priority** per account + kalender.
+
+- Bank lab: Gold INC P1 **15 menit / 4 jam**.
+- Edit berlaku untuk tiket **baru** saja (snapshot).
+- Waiting/Hold pause; escalate tidak.
+
+Setelah mengubah P1, buat 1 tiket uji di account itu dan baca badge.
+
+---
+
+## 6. Khusus SPV — Catalog
+
+`/catalog` — item + variable set. Langkah field: [catalog-guidance.md](catalog-guidance.md).
+
+Contoh tambah layanan: **Install Antivirus** (Creates = Request, Priority Medium, variable hostname + OS).
+
+| Jangan | Lakukan |
+| --- | --- |
+| Creates = Change untuk pasang antivirus | Request |
+| Publish tanpa uji form | Save Draft → uji Tiket baru → Published |
+| Problem sebagai catalog item | Biarkan Problem tanpa combo |
+
+Lead: jika agent bingung field katalog, minta SPV perbaiki item, jangan suruh agent mengisi sembarang.
+
+---
+
+## 7. Khusus SPV — Users
+
+`/users` → **New user**.
+
+SPV hanya assign Access **customer** atau **agent**. Team lead / manager / admin = minta admin.
+
+Pastikan: home unit, group (L1/L2/L3), **account membership**. Tanpa membership, agent tidak melihat tiket Bank.
+
+---
+
+## 8. WFM
+
+`/wfm`
+
+| Halaman | Lead | SPV |
+| --- | --- | --- |
+| Occupancy / forecast | Baca, pakai untuk assign | Baca + tindak lanjut kapasitas |
+| Roster / skills / on-call | Baca | Tulis (kelas: jangan rewrite shared roster) |
+
+Kebijakan dispatch ada di **assignment group** (`/org` — tulis = manager/admin). Lead/SPV menaati group yang sudah ada.
+
+---
+
+## 9. Laporan dan Insights
+
+- **Dashboard** — aging per account aktif.
+- **Reports** — 7/30/90; export jika briefing.
+- **AI Insights** — tekanan antrian, risiko SLA, beban WFM, kesehatan account. Narasi, bukan update tiket.
+- **Assistant** — tanya ringkasan 7 hari; tidak mengubah record.
+
+Pakai Insights untuk standup, bukan untuk menutup tiket.
+
+---
+
+## 10. Governance
+
+SPV boleh **update** governance (DSAR / breach status). Lead hanya baca.  
+SLA ingat: DSAR 30 hari, breach 72 jam. Detail: `/governance`.
+
+---
+
+## 11. Yang tidak Anda kerjakan
+
+- API key / Integrations → admin
+- Membuat account / unit / group baru → manager / admin
+- Import CSV massal → manager / admin
+- Menambah replica worker / Ops `:3100` → engineer ([WORKERS.md](../WORKERS.md))
+- Menutup tiket customer tanpa konfirmasi hanya supaya chip hijau
+
+---
+
+## 12. Checklist shift
+
+**Team Lead**
+
+- [ ] Unassigned critical/high = 0 atau sudah punya owner
+- [ ] SLA risk punya komentar + next action
+- [ ] Hold > 24 jam di-review
+- [ ] CAB hari ini ada keputusan atau jadwal ulang
+- [ ] Assign mengikuti siapa yang on-shift (WFM)
+
+**SPV (tambahan)**
+
+- [ ] Matriks SLA account aktif masih masuk akal
+- [ ] Item katalog yang dipakai minggu ini Published dan field-nya jelas
+- [ ] Agent baru punya group + account membership
+- [ ] Roster / on-call minggu berjalan terisi
+- [ ] Insights: tidak ada account yang “diam” padahal SLA breach
