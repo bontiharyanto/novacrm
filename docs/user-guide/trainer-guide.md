@@ -16,8 +16,9 @@ By the end of training, a participant can:
 4. Record asset **move / transfer / replace** and open the related CI graph.
 5. Submit a catalog request as a customer and find it on the desk.
 6. (Admin only) Open **Integrations** and **Appearance**; know that API keys are never shown in class unless the lab environment is isolated.
+7. (Full day) Open **AI Insights** and **WFM** and explain they are read/dispatch tools, not ticket editors.
 
-Out of scope for this class: VPS deploy, GitHub Actions, writing SQL migrations.
+Out of scope for this class: VPS deploy, GitHub Actions, writing SQL migrations, the Ops console on `:3100` (engineer only).
 
 ---
 
@@ -29,6 +30,7 @@ Out of scope for this class: VPS deploy, GitHub Actions, writing SQL migrations.
 | `npm run local:setup` completed once | ☐ |
 | `npm run local:dev` answers on port **3000** | ☐ |
 | Optional: `npm run local:deploy` answers on port **3001** | ☐ |
+| Ops console answers on **3100** (engineer check only) | ☐ |
 | Projector shows 1280×800 or wider | ☐ |
 | Demo accounts work (table in [README](README.md)) | ☐ |
 | Mailpit open on a second window: http://127.0.0.1:54324 | ☐ |
@@ -41,6 +43,7 @@ Write on the whiteboard:
 ```
 Dev     http://localhost:3000
 Docker  http://localhost:3001
+Ops     http://127.0.0.1:3100   (trainer/engineer only)
 Admin   admin@novacrm.app  /  NovaCRM!2026
 Agent   agent@novacrm.app  /  NovaCRM!2026
 Portal  customer@novacrm.app / NovaCRM!2026
@@ -86,8 +89,9 @@ Add after lunch:
 | 3:45–4:20 | Organization, users, assignment groups | Lab 8 |
 | 4:20–4:55 | SLA matrix + CAB | Lab 9 |
 | 4:55–5:25 | Catalog + workflows (Standard template) | Lab 10 |
-| 5:25–6:00 | Reports, Assistant, Governance (UU PDP) | Lab 11 |
-| 6:00–6:30 | Admin: Integrations overview (no live keys) | Lab 12 |
+| 5:25–5:50 | Reports, Assistant, AI Insights | Lab 11 |
+| 5:50–6:10 | WFM occupancy + roster (read-only unless isolated) | Lab 11b |
+| 6:10–6:30 | Admin: Integrations catalog (no live keys) | Lab 12 |
 | 6:30 | Q&A, parking lot | — |
 
 ---
@@ -122,6 +126,8 @@ Participant can complete **without facilitator clicking**:
 | --- | --- | --- |
 | Browser cannot open :3000 | Dev server not running | `npm run local:dev` |
 | :3000 empty, :3001 works | They are on Docker URL | Point them to the URL on the board |
+| :3000 died after a hang / Ctrl+C | `local:dev` trap stopped Next.js | Start `npm run local:dev` again (or `npm run dev` if Ops/Docker already hold :3100) |
+| Ops :3100 down | Host Ops killed when Docker deployed | Open http://127.0.0.1:3100 — Docker Ops should answer |
 | Login loops to login | Supabase down | `npx supabase start` |
 | Empty CMDB graph | Wrong account | Switch to **Bank Nusantara** |
 | Redis `down` on `/api/health` | Compose not up | `npm run local:up` or `local:deploy` |

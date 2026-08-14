@@ -1,8 +1,17 @@
 # Local laptop test
 
-Operator training (login, tickets, CMDB, portal): [user-guide/README.md](user-guide/README.md).
+Operator training (login, tickets, CMDB, portal): [user-guide/README.md](user-guide/README.md).  
+Sysadmin console: [OPS.md](OPS.md).
 
 Use this before any VPS/GitHub deploy. Auth, tickets, Kanban, and uploads all need local Docker services plus a local (or hosted) Supabase.
+
+| Process | Port | Command |
+| --- | --- | --- |
+| Next.js hot reload | **3000** | `npm run local:dev` |
+| Docker `next start` | **3001** | `npm run local:deploy` |
+| Ops (health + queues) | **3100** | started by either command above, or `npm run ops` |
+
+Both stacks can run together. `local:deploy` takes `:3100` for the Ops container (stops a host Ops process if needed). `local:dev` will not start a second Ops if `:3100` is already listening.
 
 ## One-time setup
 
@@ -29,6 +38,8 @@ npm run local:dev
 
 Open [http://localhost:3000](http://localhost:3000)
 
+Ops console (sysadmin): [http://127.0.0.1:3100](http://127.0.0.1:3100) — started automatically with `local:dev`, or `npm run ops`.
+
 ## Deploy production-like on this laptop
 
 This builds the same Docker image that will go to VPS, without Traefik/HTTPS. It listens on **3001** so `npm run local:dev` can keep using **3000**.
@@ -37,7 +48,7 @@ This builds the same Docker image that will go to VPS, without Traefik/HTTPS. It
 npm run local:deploy
 ```
 
-Open [http://localhost:3001](http://localhost:3001) — this is `next start` inside Docker.
+Open [http://localhost:3001](http://localhost:3001) — this is `next start` inside Docker. Ops in that stack: [http://127.0.0.1:3100](http://127.0.0.1:3100).
 
 ```bash
 APP_PORT=3002 npm run local:deploy   # optional other host port
@@ -58,6 +69,12 @@ npm run local:dev
 | admin | `admin@novacrm.app` | `NovaCRM!2026` |
 | agent | `agent@novacrm.app` | `NovaCRM!2026` |
 | customer | `customer@novacrm.app` | `NovaCRM!2026` |
+| L1 | `sari.l1@novacrm.app` `budi.l1@novacrm.app` `dewi.l1@novacrm.app` | `NovaCRM!2026` |
+| L2 | `raka.l2@novacrm.app` | `NovaCRM!2026` |
+| L3 | `maya.l3@novacrm.app` | `NovaCRM!2026` |
+| On-call | `andi.oncall@novacrm.app` | `NovaCRM!2026` |
+
+WFM desk: [http://localhost:3000/wfm](http://localhost:3000/wfm) — occupancy, roster, skills, on-call, forecast. Dispatch policy lives on each assignment group.
 
 ## What to click through
 
@@ -76,16 +93,23 @@ npm run local:dev
 12. CAB: [http://localhost:3000/cab](http://localhost:3000/cab) — review queue, calendar, approve/reject/defer on the change record
 13. Dashboard KPIs + aging; Reports 7/30/90 or custom dates; preview then CSV / Excel / PDF
 14. Governance / UU PDP: [http://localhost:3000/governance](http://localhost:3000/governance) — RoPA, DSAR 30d, breach 72h, privacy notice. Customer: [portal/privacy](http://localhost:3000/portal/privacy)
-15. Switch **account** in the sidebar (Internal / Bank Nusantara / Garuda). Assets + CMDB + tickets are scoped. Manage at [Accounts](http://localhost:3000/accounts)
+15. Switch **account** in the sidebar (Internal / Bank Nusantara / Garuda / **All**). Assets + CMDB + tickets are scoped. Manage at [Accounts](http://localhost:3000/accounts)
 16. Organization: [http://localhost:3000/org](http://localhost:3000/org) — Internal divisi/unit vs assignment groups. Tickets can queue to a group; filter **My groups**
 17. SLA: [http://localhost:3000/sla](http://localhost:3000/sla) — per-account matrix (type × priority) + calendar. Switch to Bank for Gold INC P1 15m/4h. Waiting/hold pauses the clock. New tickets snapshot the agreement.
 18. Hold / escalate: open a ticket → **Hold** + reason `Pending vendor` (case number) pauses SLA. **Escalate L2 / L3** queues Internal `L2 Network` / `L3 Infra` and keeps the clock running. Demo: Bank *WiFi lantai 2* (vendor hold); Internal *Backup gagal* already on L2.
-19. Users: [http://localhost:3000/users](http://localhost:3000/users) — **New user** (admin) creates a login. **Access** = admin/agent/customer. **Level** = L1/L2/L3 from group membership. Admin can change role/home unit and add someone to L2/L3.
+19. Users: [http://localhost:3000/users](http://localhost:3000/users) — **New user** (admin) creates a login. **Access** = `customer` / `agent` / `team_lead` / `supervisor` / `manager` / `admin` / `superadmin`. **Level** = L1/L2/L3 from group membership.
 20. `http://localhost:3000/api/health` should show Redis `up`
+21. Sysadmin Ops: [http://127.0.0.1:3100](http://127.0.0.1:3100) — service health, BullMQ queues (`notifications`, `workflows`, `wfm`), retry failed jobs. Independent of the desk. Details: [OPS.md](OPS.md). Optional: `OPS_TOKEN` + header `x-ops-token`.
+22. AI Insights: [http://localhost:3000/insights](http://localhost:3000/insights) — four cards (queue pressure, SLA risk, workforce load, account health). Needs Groq (or another AI plugin) on **Integrations**.
+23. WFM: [http://localhost:3000/wfm](http://localhost:3000/wfm) — occupancy, roster, skills, on-call, forecast. Dispatch policy lives on each assignment group.
+24. Bulk import: [http://localhost:3000/import](http://localhost:3000/import) — download template → fill → preview → import (manager+).
+25. Integrations catalog: Settings → **Integrations**. Built-in slugs include AI, WhatsApp, Telegram, email, Gmail, Exchange, Slack, Teams, Jira, Salesforce, Entra / Google / Okta / SAML SSO, webhook. **Tambah plugin** adds a tenant card. This stores credentials and runs a connection test — it does not yet perform OIDC/SAML login redirects.
 
 ## Useful URLs
 
-- App: http://localhost:3000
+- App (dev): http://localhost:3000
+- App (Docker): http://localhost:3001
+- Ops (sysadmin): http://127.0.0.1:3100
 - Supabase Studio: http://127.0.0.1:54323
 - MinIO console: http://localhost:9001
 - Mailpit (ticket + auth email): http://127.0.0.1:54324

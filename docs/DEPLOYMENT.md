@@ -1,6 +1,6 @@
 # Production deploy
 
-Laptop first: [LOCAL.md](LOCAL.md). This runbook is hosted Supabase + VPS.
+Laptop first: [LOCAL.md](LOCAL.md). Sysadmin console (laptop): [OPS.md](OPS.md). This runbook is hosted Supabase + VPS.
 
 **Order:** create Supabase project → `npm run hosted:setup` → fill `.env.production` on the VPS → DNS → GitHub secrets → push `main`.
 
@@ -97,13 +97,14 @@ Make the GHCR package public, or leave the deploy job’s `docker login ghcr.io`
 ## 5. Runtime
 
 - Web: Next.js, `--scale web=3`, Traefik TLS
-- Worker: BullMQ notifications
+- Worker: BullMQ — `novacrm-notifications`, `novacrm-workflows`, `novacrm-wfm`
 - DB: hosted Supabase (Auth + Postgres + Realtime)
 - Queue: Redis
 - Files: MinIO at `files.<APP_HOST>`, CORS allowed from the app origin
 - Public Supabase URL/anon key come from `.env.production` (`NOVACRM_SUPABASE_*`) so one image works per environment
+- Ops (`:3100`) is **not** published by `docker-compose.prod.yml`. Use it on the laptop, or add a loopback-only service with `OPS_TOKEN` if you need it on the VPS
 
-Email in production needs `RESEND_API_KEY`. Without it, outbound mail is logged as failed (no local sink).
+Email in production needs `RESEND_API_KEY`. Without it, outbound mail is logged as failed (no local sink). After pull, run `scripts/migrate.sh` so new SQL (RBAC, WFM, insights, integration plugins, assistant threads) is applied.
 
 ## 6. Backup
 

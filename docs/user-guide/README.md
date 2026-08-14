@@ -2,7 +2,7 @@
 
 **Audience:** staff operations (admin / agent) and portal customers  
 **Purpose:** training pack for classroom or self-paced onboarding  
-**Product version:** laptop demo (`main`)  
+**Product version:** laptop demo (desk + portal + Ops)  
 **Languages:** Bahasa Indonesia (this pack). The product UI also supports English.
 
 | Document | Who it is for |
@@ -10,6 +10,7 @@
 | [Trainer guide](trainer-guide.md) | Facilitator: agenda, demo data, timing, pass criteria |
 | [Participant manual](participant-manual.md) | Learners: procedures, labs, expected results |
 | [Local setup](../LOCAL.md) | Engineer: run the app on a laptop |
+| [Sysadmin Ops](../OPS.md) | Engineer: health and queues on `:3100` |
 | [Deployment](../DEPLOYMENT.md) | Engineer: VPS / production |
 
 ## Demo logins
@@ -26,6 +27,7 @@
 | --- | --- |
 | Dev (hot reload) | http://localhost:3000 |
 | Docker production-like | http://localhost:3001 |
+| Ops (sysadmin — not a class login) | http://127.0.0.1:3100 |
 | Mailpit (outbound email) | http://127.0.0.1:54324 |
 | MinIO console | http://localhost:9001 |
 

@@ -19,25 +19,29 @@
 
 ## 1. What NovaCRM is
 
-NovaCRM is the operations desk for IT service management:
+NovaCRM is the operations desk for IT service management. The staff sidebar has four groups:
 
-- **Service desk** — incidents, problems, changes, requests
-- **Configuration** — accounts (customers), organization, users, SLA, assets, CMDB
-- **Catalog & automation** — requestable items and workflow flows
-- **Governance** — privacy / UU PDP (RoPA, DSAR, breach)
-- **Portal** — what the customer sees
+- **Overview** — Dashboard, AI Insights, Assistant, Reports, WFM
+- **Service desk** — incidents, problems, changes, CAB, requests
+- **Configuration** — accounts, organization, users, SLA, assets, CMDB, import
+- **Platform** — catalog, automation (workflows), governance (UU PDP)
+- **Portal** — what the customer sees (separate login)
 
-Every record is isolated by **tenant**. On this demo tenant you also switch **account** (customer scope): Internal, Bank Nusantara, Garuda. Tickets, assets, and CMDB follow the active account.
+Every record is isolated by **tenant**. On this demo tenant you also switch **account** (customer scope): Internal, Bank Nusantara, Garuda, or **All**. Tickets, assets, and CMDB follow the active filter.
 
 ### Roles
 
 | Role | Typical job | Home |
 | --- | --- | --- |
-| `admin` | Configure desk, users, integrations, appearance | `/dashboard` |
-| `agent` | Work tickets, assets, CMDB, catalog | `/dashboard` |
 | `customer` | Request service, track tickets, privacy | `/portal` |
+| `agent` | Work tickets, assets, CMDB | `/dashboard` |
+| `team_lead` | Assign, escalate, read users and WFM | `/dashboard` |
+| `supervisor` | SLA, WFM roster, catalog | `/dashboard` |
+| `manager` | Accounts, org, users, import, workflows | `/dashboard` |
+| `admin` | Tenant settings and integrations | `/dashboard` |
+| `superadmin` | Platform — all tenants | `/dashboard` |
 
-An agent cannot open **Integrations** (`/settings`). They can open **Appearance**.
+Classroom logins are **admin**, **agent**, and **customer**. An agent cannot open **Integrations** (`/settings`). They can open **Appearance**.
 
 ---
 
@@ -80,6 +84,7 @@ Under the NovaCRM logo, open **Account**.
 | Internal | Default desk, L2/L3 groups |
 | Bank Nusantara | Asset movement + network topology |
 | Garuda | Second customer scope |
+| All | Combined desk filter (cookie `novacrm_account=all`) |
 
 **Expected:** ticket, asset, and CMDB lists change when you switch. If a lab says “open Bank graph” and you still see Internal, switch account first.
 
@@ -277,7 +282,7 @@ Levels **L1 / L2 / L3** come from group membership, not from a free-text field o
 
 | Field | Meaning |
 | --- | --- |
-| Access | `admin` / `agent` / `customer` |
+| Access | `customer` / `agent` / `team_lead` / `supervisor` / `manager` / `admin` / `superadmin` |
 | Level | L1/L2/L3 from groups |
 | Home unit | Organization unit |
 
@@ -369,13 +374,19 @@ Repeat alerts within 24 hours update the **same** ticket (correlation).
 
 ---
 
-## 10. Reports and Assistant
+## 10. Reports, Assistant, Insights, WFM
 
 **Dashboard** (`/dashboard`) — KPIs and aging for the active account.
 
 **Reports** (`/reports`) — range 7 / 30 / 90 days or custom. Preview, then export CSV / Excel / PDF. **Ask assistant** jumps to chat with that snapshot.
 
 **Assistant** (`/assistant`) — staff only. Reads the last 7 days of ticket facts. It **does not** change tickets. If it is disconnected, admin must set AI on **Integrations** (Groq free key) and **Test connection**.
+
+**AI Insights** (`/insights`) — four cards: queue pressure, SLA breach risk, workforce load, account health. Role-aware. Uses the same AI provider as Assistant. Narratives are tenant-scoped; do not treat them as a ticket update.
+
+**WFM** (`/wfm`) — occupancy, roster, skills, on-call, forecast. Dispatch policy lives on the assignment group. Classroom: **read** occupancy and forecast; do not rewrite the shared roster unless the trainer says the tenant is isolated.
+
+**Import** (`/import`) — manager+. Download a template, fill rows, preview, then import only if the preview has no errors.
 
 Never paste API keys into chat or slides.
 
@@ -400,15 +411,20 @@ Customer: `/portal/privacy`.
 2. Open DSAR queue — note due dates.
 3. As customer, open **Privacy** (do not file a real DSAR against production data).
 
+## Lab 11b — Insights and WFM (full day)
+
+1. Sidebar → **AI Insights**. Run one card if AI is connected (trainer confirms).
+2. Sidebar → **WFM**. Open occupancy, then forecast. Do not edit the shared roster.
+
 ---
 
 ## 12. Admin: Integrations
 
 `/settings` — admin only.
 
-Cards: **AI**, **Telegram**, **WhatsApp**, **Email**, **Other** (webhook secrets).
+The page renders a **plugin catalog** (global + tenant-custom). Built-in kinds include AI, WhatsApp, Telegram, email, Gmail, Exchange, Slack, Teams, Jira, Salesforce, Entra / Google / Okta / SAML SSO, and webhook. **Tambah plugin** adds a tenant card immediately.
 
-For each channel: paste configuration → **Save** → **Test connection**. Badge: `connected` / `failed` / `saved`.
+For each card: paste configuration → **Save** → **Test connection**. Badge: `connected` / `failed` / `saved`. This stores credentials and tests HTTP/SAML metadata. It does **not** yet redirect staff through OIDC/SAML login.
 
 AI classroom default: **Groq (free)**, model `llama-3.1-8b-instant`. Key prefix `gsk_`. Endpoint must stay `https://api.groq.com/openai/v1` — do not use `gpt-4o-mini` on Groq.
 
@@ -445,7 +461,7 @@ Daily agent loop:
 | Cannot reach the site | Confirm port **3000** (dev) vs **3001** (Docker) |
 | Empty CMDB / missing AST-1001 | Account switcher → **Bank Nusantara** |
 | No email | Mailpit http://127.0.0.1:54324 |
-| Assistant error | Admin: Integrations → AI → Test connection |
+| Assistant / Insights error | Admin: Integrations → AI → Test connection |
 | Page in the wrong language | Top bar `EN` / `ID` |
 | “Unauthorized” on Integrations | You are an agent — use Appearance only |
 
@@ -457,8 +473,11 @@ If Redis is down, realtime and workflows fail. Ask the trainer to open `/api/hea
 
 | Term | Definition |
 | --- | --- |
-| Account | Customer scope inside the tenant (Internal, Bank, Garuda) |
+| Account | Customer scope inside the tenant (Internal, Bank, Garuda, or All) |
 | CI | Configuration item in CMDB |
+| Insights | AI cards on `/insights` — signals only, no ticket writes |
+| WFM | Workforce: roster, skills, on-call, occupancy |
+| Ops | Sysadmin console on `:3100` — not a staff login |
 | CAB | Change Advisory Board |
 | DSAR | Data subject access request (UU PDP) |
 | Hold | Status that **pauses** SLA |
