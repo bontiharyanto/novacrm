@@ -22,6 +22,8 @@ Do not expose `:3100` on a public interface without `OPS_TOKEN`.
 
 Retry only re-queues the job. It does not rewrite ticket rows.
 
+Scale workers (add a second BullMQ process): [WORKERS.md](WORKERS.md). Default is **1** container. Do not confuse with `--scale web=3`.
+
 ## HTTP
 
 | Method | Path | Auth |

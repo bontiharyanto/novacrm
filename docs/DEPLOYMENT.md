@@ -99,7 +99,7 @@ Make the GHCR package public, or leave the deploy job’s `docker login ghcr.io`
 ## 5. Runtime
 
 - Web: Next.js, `--scale web=3`, Traefik TLS
-- Worker: BullMQ — `novacrm-notifications`, `novacrm-workflows`, `novacrm-wfm`
+- Worker: BullMQ — `novacrm-notifications`, `novacrm-workflows`, `novacrm-wfm`. Default **1** replica. Add a second with `--scale worker=2` — [WORKERS.md](WORKERS.md)
 - DB: hosted Supabase (Auth + Postgres + Realtime)
 - Queue: Redis
 - Files: MinIO at `files.<APP_HOST>`, CORS allowed from the app origin

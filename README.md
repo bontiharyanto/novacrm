@@ -48,6 +48,7 @@ CASL on the frontend; RLS on the backend. Sidebar account filter: one customer a
 | [Catalog & record producer](docs/user-guide/catalog-guidance.md) | Supervisor / admin — design catalog items, variables, worked examples |
 | [Local laptop setup](docs/LOCAL.md) | Engineers running the demo |
 | [Sysadmin Ops](docs/OPS.md) | Health, queues, retries on `:3100` |
+| [Workers (BullMQ)](docs/WORKERS.md) | How many workers, how to scale laptop and VPS |
 | [RBAC](docs/RBAC.md) | Roles vs CASL vs RLS |
 | [Server cutover](docs/SERVER.md) | Hosted Supabase + VPS checklist |
 | [Production deploy](docs/DEPLOYMENT.md) | VPS / Traefik / GHCR |

@@ -7,7 +7,7 @@ Use this when moving from the laptop demo to a VPS + hosted Supabase. Laptop run
 | Piece | Laptop | Server |
 | --- | --- | --- |
 | App | `:3000` hot reload / `:3001` Docker | Traefik HTTPS, 3× `web` |
-| Worker | `npm run worker` | Compose `worker` (notifications + workflows + WFM) |
+| Worker | `npm run worker` | Compose `worker` (notifications + workflows + WFM). Scale: [WORKERS.md](WORKERS.md) |
 | Ops | `:3100` loopback | Not published. Add later with `OPS_TOKEN` if needed |
 | Postgres / Auth | `npx supabase start` | Hosted Supabase |
 | Redis / MinIO | Compose on the laptop | Compose on the VPS |
@@ -92,6 +92,7 @@ Make the GHCR package public, or keep `docker login ghcr.io` on the VPS (the wor
 cd /opt/novacrm
 # previous image
 IMAGE_TAG=<previous-sha> docker compose -f docker-compose.prod.yml up -d --scale web=3
+# If you run two workers, add: --scale worker=2  (see WORKERS.md)
 ```
 
 SQL is forward-only. Restore Postgres from the daily dump if a migration must be undone.
