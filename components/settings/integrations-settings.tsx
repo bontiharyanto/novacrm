@@ -14,6 +14,7 @@ import { AI_PROVIDERS, DEFAULT_EMAIL_FROM, GROQ_MODELS, matchAiProvider } from '
 import type { IntegrationCatalog, PluginField } from '@/lib/integrations/plugin-schema';
 import { formatRelativeId } from '@/lib/utils/dates';
 import { useI18n } from '@/components/layout/preferences-provider';
+import { toastError, toastSuccess } from '@/components/ui/toast';
 
 const NEW_SLUG = '__new__';
 
@@ -66,7 +67,13 @@ export function IntegrationsSettings() {
     });
     const payload = await response.json();
     if (payload.data) setCatalog(payload.data);
-    setMessage(payload.error ?? 'Saved.');
+    if (payload.error) {
+      setMessage(payload.error);
+      toastError(payload.error);
+    } else {
+      setMessage(t.common.saved);
+      toastSuccess(t.common.saved);
+    }
     setBusy(false);
   }
 

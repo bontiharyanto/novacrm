@@ -81,7 +81,7 @@ Make the GHCR package public, or keep `docker login ghcr.io` on the VPS (the wor
 - [ ] `https://$APP_HOST/api/health` → Redis `up`
 - [ ] Admin login, then rotate demo passwords
 - [ ] Settings → Integrations (Groq / mail) — do not reuse classroom keys
-- [ ] Webhook secrets rotated (`WHATSAPP_WEBHOOK_SECRET`, …)
+- [ ] Webhook secrets rotated (`WHATSAPP_WEBHOOK_SECRET`, …) — send as `x-webhook-secret` header only, never `?secret=`
 - [ ] MinIO CORS allows `https://$APP_HOST`
 - [ ] Backup: `./scripts/backup.sh` once; confirm 02:00 cron
 - [ ] Restore drill: `./scripts/restore.sh YYYYMMDD` on a scratch project

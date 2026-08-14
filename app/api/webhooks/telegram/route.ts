@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ingestInbound } from '@/lib/inbound/ingest';
 import { sendTelegram } from '@/lib/integrations/telegram';
-import { verifyWebhookSecret } from '@/lib/webhooks/verify';
+import { verifyWebhookSecret, webhookSecretFromHeaders } from '@/lib/webhooks/verify';
 import { DEMO_TENANT_ID } from '@/lib/config/constants';
 
 export async function POST(request: NextRequest) {
-  const provided =
-    request.headers.get('x-telegram-bot-api-secret-token') ??
-    request.headers.get('x-webhook-secret') ??
-    request.nextUrl.searchParams.get('secret');
+  const provided = webhookSecretFromHeaders(request, ['x-telegram-bot-api-secret-token']);
 
   if (!verifyWebhookSecret(provided, process.env.TELEGRAM_WEBHOOK_SECRET)) {
     return NextResponse.json({ data: null, error: 'Unauthorized webhook' }, { status: 401 });

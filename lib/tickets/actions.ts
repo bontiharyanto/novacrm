@@ -15,6 +15,7 @@ import { defaultPendingReason, isPauseStatus } from '@/lib/tickets/pending';
 import { dispatchTicket, resolveInboundGroupId } from '@/lib/wfm/dispatch';
 import { enqueueWfmDispatch } from '@/lib/queue/wfm.queue';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { sanitizeCommentHtml } from '@/lib/sanitize/html';
 
 const TICKET_SELECT = '*, ticket_comments(*)';
 
@@ -166,7 +167,7 @@ export async function createTicket(input: unknown) {
       tenant_id: session.profile.tenantId,
       account_id: scoped.accountId,
       title: parsed.title,
-      description: textToDescription(parsed.description),
+      description: textToDescription(sanitizeCommentHtml(parsed.description ?? '')),
       type: parsed.type,
       status: parsed.status,
       priority: parsed.priority,
@@ -233,7 +234,7 @@ export async function createInboundTicket(tenantId: string, input: unknown) {
       tenant_id: tenantId,
       account_id: account.id,
       title: parsed.title,
-      description: textToDescription(parsed.description),
+      description: textToDescription(sanitizeCommentHtml(parsed.description ?? '')),
       type: parsed.type,
       status: parsed.status,
       priority: parsed.priority,
@@ -436,7 +437,7 @@ export async function addTicketComment(ticketId: string, input: unknown) {
     ticket_id: ticketId,
     author_id: session.userId,
     created_by: session.userId,
-    message: parsed.comment,
+    message: sanitizeCommentHtml(parsed.comment),
   });
 
   if (error) {

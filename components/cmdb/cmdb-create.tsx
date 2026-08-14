@@ -11,6 +11,8 @@ import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { toastError, toastSuccess } from '@/components/ui/toast';
+import { useI18n } from '@/components/layout/preferences-provider';
 import {
   CI_CLASS_GROUP_META,
   DEFAULT_CI_CLASSES,
@@ -26,6 +28,7 @@ const REL_TYPES = ['depends_on', 'runs_on', 'hosted_on', 'contains', 'connects',
 
 export function CmdbCreate() {
   const router = useRouter();
+  const { t } = useI18n();
   const [name, setName] = useState('');
   const [type, setType] = useState('service');
   const [assetId, setAssetId] = useState('');
@@ -74,7 +77,9 @@ export function CmdbCreate() {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (name.trim().length < 1) {
-      setError('Name is required. Type it in the field below the title.');
+      const message = 'Name is required. Type it in the field below the title.';
+      setError(message);
+      toastError(message);
       return;
     }
     setIsSubmitting(true);
@@ -99,10 +104,13 @@ export function CmdbCreate() {
     });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok || !payload.data?.id) {
-      setError(payload.error ?? 'Unable to create CI.');
+      const message = payload.error ?? t.common.createFailed;
+      setError(message);
+      toastError(message);
       setIsSubmitting(false);
       return;
     }
+    toastSuccess(t.common.created);
     router.push(`/cmdb/${payload.data.id}`);
   }
 

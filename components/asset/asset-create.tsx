@@ -13,9 +13,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { ASSET_STATUSES, type AssetStatus } from '@/lib/assets/schema';
 import { DEFAULT_ASSET_TYPES, type AssetTypeOption } from '@/lib/assets/types';
+import { toastError, toastSuccess } from '@/components/ui/toast';
+import { useI18n } from '@/components/layout/preferences-provider';
 
 export function AssetCreate() {
   const router = useRouter();
+  const { t } = useI18n();
   const [name, setName] = useState('');
   const [type, setType] = useState('laptop');
   const [types, setTypes] = useState<AssetTypeOption[]>(DEFAULT_ASSET_TYPES);
@@ -52,7 +55,9 @@ export function AssetCreate() {
     });
     const payload = await response.json().catch(() => ({}));
     if (payload.error || !payload.data) {
-      setError(payload.error ?? 'Unable to add type');
+      const message = payload.error ?? t.common.createFailed;
+      setError(message);
+      toastError(message);
       return;
     }
     setTypes((current) => [...current, payload.data]);
@@ -85,10 +90,13 @@ export function AssetCreate() {
     });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok || !payload.data?.id) {
-      setError(payload.error ?? 'Unable to create asset.');
+      const message = payload.error ?? t.common.createFailed;
+      setError(message);
+      toastError(message);
       setIsSubmitting(false);
       return;
     }
+    toastSuccess(t.common.created);
     router.push(`/assets/${payload.data.id}`);
   }
 

@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ingestInbound, mapAlertSeverity } from '@/lib/inbound/ingest';
 import { verifyInboundSecret } from '@/lib/webhooks/inbound';
+import { webhookSecretFromHeaders } from '@/lib/webhooks/verify';
 import { DEMO_TENANT_ID } from '@/lib/config/constants';
 import type { TicketPriority } from '@/lib/tickets/schema';
 
 export async function POST(request: NextRequest) {
-  const provided =
-    request.headers.get('x-webhook-secret') ?? request.nextUrl.searchParams.get('secret');
+  const provided = webhookSecretFromHeaders(request);
 
   if (!(await verifyInboundSecret(provided, process.env.WEBHOOK_SECRET ?? process.env.ALERT_WEBHOOK_SECRET, 'generic'))) {
     return NextResponse.json({ data: null, error: 'Unauthorized webhook' }, { status: 401 });

@@ -12,9 +12,12 @@ import { Select } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { createAssignmentGroup } from '@/lib/org/actions';
 import type { AssignmentGroupKind, SupportTier } from '@/lib/org/schema';
+import { toastError, toastSuccess } from '@/components/ui/toast';
+import { useI18n } from '@/components/layout/preferences-provider';
 
 export function OrgGroupCreate() {
   const router = useRouter();
+  const { t } = useI18n();
   const [name, setName] = useState('');
   const [kind, setKind] = useState<AssignmentGroupKind>('assignment');
   const [tier, setTier] = useState<SupportTier | ''>('l1');
@@ -27,10 +30,13 @@ export function OrgGroupCreate() {
     setError('');
     const result = await createAssignmentGroup({ name: name.trim(), kind, tier: tier || null });
     if (result.error || !result.data?.id) {
-      setError(result.error ?? 'Unable to create group.');
+      const message = result.error ?? t.common.createFailed;
+      setError(message);
+      toastError(message);
       setIsSubmitting(false);
       return;
     }
+    toastSuccess(t.common.created);
     router.push(`/org/groups/${result.data.id}`);
   }
 

@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import { getServerSupabaseConfig, isSupabaseConfigured } from '@/lib/config/env';
-import { homePathForRole, isCustomerRole, isTenantAdminRole } from '@/lib/rbac/roles';
+import { homePathForRole, isAppRole, isCustomerRole, isTenantAdminRole, parseAppRole } from '@/lib/rbac/roles';
 
 function isPublicPath(pathname: string) {
   return (
@@ -15,9 +15,24 @@ function hasAuthCookie(request: NextRequest) {
   return request.cookies.getAll().some((cookie) => cookie.name.includes('-auth-token') || cookie.name.startsWith('sb-'));
 }
 
-function roleFromUser(user: { user_metadata?: Record<string, unknown>; app_metadata?: Record<string, unknown> } | null) {
+function roleFromMetadata(user: { user_metadata?: Record<string, unknown>; app_metadata?: Record<string, unknown> } | null) {
   const meta = user?.user_metadata?.role ?? user?.app_metadata?.role;
-  return typeof meta === 'string' ? meta : undefined;
+  return isAppRole(meta) ? meta : undefined;
+}
+
+async function roleFromProfile(
+  supabase: ReturnType<typeof createServerClient>,
+  userId: string,
+  fallback?: string,
+) {
+  const { data, error } = await supabase.from('profiles').select('role').eq('id', userId).maybeSingle();
+  if (error) {
+    return fallback;
+  }
+  if (typeof data?.role === 'string' && isAppRole(data.role)) {
+    return data.role;
+  }
+  return parseAppRole(undefined);
 }
 
 export async function updateSession(request: NextRequest) {
@@ -74,22 +89,23 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
+  const role = user
+    ? await roleFromProfile(supabase, user.id, roleFromMetadata(user))
+    : undefined;
+
   if (user && pathname === '/login') {
-    const role = roleFromUser(user);
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = homePathForRole(role);
     redirectUrl.search = '';
     return NextResponse.redirect(redirectUrl);
   }
 
-  if (user && isCustomerRole(roleFromUser(user)) && pathname === '/select-account') {
+  if (user && isCustomerRole(role) && pathname === '/select-account') {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = '/portal';
     redirectUrl.search = '';
     return NextResponse.redirect(redirectUrl);
   }
-
-  const role = roleFromUser(user);
 
   if (user && isCustomerRole(role) && !pathname.startsWith('/portal') && !pathname.startsWith('/api/')) {
     const redirectUrl = request.nextUrl.clone();

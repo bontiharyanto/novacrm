@@ -28,10 +28,23 @@ env_value() {
   grep "^${key}=" "$file" | head -n 1 | cut -d= -f2- | tr -d '"'
 }
 
+rand_secret() {
+  if command -v openssl >/dev/null 2>&1; then
+    openssl rand -hex 24
+  else
+    python3 -c 'import secrets; print(secrets.token_hex(24))'
+  fi
+}
+
 write_env() {
   supabase_url="$1"
   anon_key="$2"
   service_key="$3"
+  wa_secret="$(rand_secret)"
+  tg_secret="$(rand_secret)"
+  email_secret="$(rand_secret)"
+  alert_secret="$(rand_secret)"
+  generic_secret="$(rand_secret)"
 
   cat > .env.local <<EOF
 NEXT_PUBLIC_SUPABASE_URL=$supabase_url
@@ -41,9 +54,12 @@ NOVACRM_SUPABASE_ANON_KEY=$anon_key
 SUPABASE_SERVICE_ROLE_KEY=$service_key
 
 WHATSAPP_API_KEY=
-WHATSAPP_WEBHOOK_SECRET=local-whatsapp-secret
+WHATSAPP_WEBHOOK_SECRET=$wa_secret
 TELEGRAM_BOT_TOKEN=
-TELEGRAM_WEBHOOK_SECRET=local-telegram-secret
+TELEGRAM_WEBHOOK_SECRET=$tg_secret
+EMAIL_WEBHOOK_SECRET=$email_secret
+ALERT_WEBHOOK_SECRET=$alert_secret
+WEBHOOK_SECRET=$generic_secret
 RESEND_API_KEY=
 EMAIL_FROM="NovaCRM <no-reply@novacrm.app>"
 SMTP_HOST=127.0.0.1

@@ -28,6 +28,8 @@ import { emptyDefinition } from '@/lib/workflows/graph';
 import { WORKFLOW_ACTIONS, WORKFLOW_EVENTS, type WorkflowDefinition } from '@/lib/workflows/schema';
 import { getWorkflowTemplate } from '@/lib/workflows/templates';
 import { DEFAULT_ASSET_TYPES, type AssetTypeOption } from '@/lib/assets/types';
+import { toastError, toastSuccess } from '@/components/ui/toast';
+import { useI18n } from '@/components/layout/preferences-provider';
 
 type AgentOption = { id: string; fullName: string };
 
@@ -63,6 +65,7 @@ export function WorkflowEditor({ ruleId, template }: { ruleId?: string; template
 
 function WorkflowEditorInner({ ruleId, template }: { ruleId?: string; template?: string }) {
   const router = useRouter();
+  const { t } = useI18n();
   const seed = template ? getWorkflowTemplate(template).definition : emptyDefinition();
   const [name, setName] = useState(template ? getWorkflowTemplate(template).name : 'New flow');
   const [isActive, setIsActive] = useState(true);
@@ -194,10 +197,13 @@ function WorkflowEditorInner({ ruleId, template }: { ruleId?: string; template?:
     });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok || !payload.data?.id) {
-      setError(payload.error ?? 'Unable to save flow.');
+      const message = payload.error ?? t.common.saveFailed;
+      setError(message);
+      toastError(message);
       setIsSaving(false);
       return;
     }
+    toastSuccess(t.common.saved);
     if (!ruleId) {
       router.replace(`/workflows/${payload.data.id}`);
     }

@@ -23,6 +23,7 @@ import type { TicketPriority } from '@/lib/tickets/schema';
 import type { AccountRecord } from '@/lib/accounts/schema';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/components/layout/preferences-provider';
+import { toastError, toastSuccess } from '@/components/ui/toast';
 
 type AgentOption = { id: string; fullName: string };
 type AssetOption = { id: string; name: string; assetTag: string; type: string };
@@ -119,10 +120,12 @@ export function TicketCreate({
     if (isSubmitting) return;
     if (!accountId) {
       setError(t.tickets.needAccount);
+      toastError(t.tickets.needAccount);
       return;
     }
     if (resolvedTitle.length < 3) {
       setError(t.tickets.needTitle);
+      toastError(t.tickets.needTitle);
       return;
     }
     setIsSubmitting(true);
@@ -154,11 +157,14 @@ export function TicketCreate({
 
     const payload = await response.json().catch(() => ({}));
     if (!response.ok || !payload.data?.id) {
-      setError(payload.error ?? 'Unable to create ticket.');
+      const message = payload.error ?? t.common.createFailed;
+      setError(message);
+      toastError(message);
       setIsSubmitting(false);
       return;
     }
 
+    toastSuccess(t.tickets.created);
     router.push(`/tickets/${payload.data.id}`);
   }
 

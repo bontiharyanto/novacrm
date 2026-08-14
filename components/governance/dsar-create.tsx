@@ -13,9 +13,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { GovernanceNav } from '@/components/governance/governance-nav';
 import { DSAR_TYPES, type DsarType } from '@/lib/governance/schema';
+import { toastError, toastSuccess } from '@/components/ui/toast';
+import { useI18n } from '@/components/layout/preferences-provider';
 
 export function DsarCreate() {
   const router = useRouter();
+  const { t } = useI18n();
   const [requestType, setRequestType] = useState<DsarType>('access');
   const [subjectName, setSubjectName] = useState('');
   const [subjectEmail, setSubjectEmail] = useState('');
@@ -35,9 +38,12 @@ export function DsarCreate() {
     const payload = await response.json();
     setSaving(false);
     if (!response.ok || payload.error) {
-      setError(payload.error ?? 'Unable to create request');
+      const message = payload.error ?? t.common.createFailed;
+      setError(message);
+      toastError(message);
       return;
     }
+    toastSuccess(t.common.created);
     router.push(`/governance/requests/${payload.data.id}`);
   }
 

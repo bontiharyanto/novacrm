@@ -10,9 +10,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { createAccount } from '@/lib/accounts/actions';
+import { toastError, toastSuccess } from '@/components/ui/toast';
+import { useI18n } from '@/components/layout/preferences-provider';
 
 export function AccountCreate() {
   const router = useRouter();
+  const { t } = useI18n();
   const [name, setName] = useState('');
   const [code, setCode] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -24,10 +27,13 @@ export function AccountCreate() {
     setError('');
     const result = await createAccount({ name: name.trim(), code, type: 'customer' });
     if (result.error || !result.data?.id) {
-      setError(result.error ?? 'Unable to create account.');
+      const message = result.error ?? t.common.createFailed;
+      setError(message);
+      toastError(message);
       setIsSubmitting(false);
       return;
     }
+    toastSuccess(t.common.created);
     router.push(`/accounts/${result.data.id}`);
   }
 

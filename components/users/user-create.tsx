@@ -17,6 +17,8 @@ import { isCustomerRole } from '@/lib/rbac/roles';
 import type { AccountRecord } from '@/lib/accounts/schema';
 import type { AssignmentGroup } from '@/lib/org/schema';
 import { supportTierLabel } from '@/lib/tickets/pending';
+import { toastError, toastSuccess } from '@/components/ui/toast';
+import { useI18n } from '@/components/layout/preferences-provider';
 
 function generatePassword() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%';
@@ -37,6 +39,7 @@ export function UserCreate({
   actorRole: AppRole;
 }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -68,10 +71,13 @@ export function UserCreate({
       groupId: isCustomerRole(role) ? undefined : groupId,
     });
     if (result.error || !result.data?.id) {
-      setError(result.error ?? 'Unable to create user.');
+      const message = result.error ?? t.common.createFailed;
+      setError(message);
+      toastError(message);
       setIsSubmitting(false);
       return;
     }
+    toastSuccess(t.common.created);
     router.push(`/users/${result.data.id}`);
   }
 

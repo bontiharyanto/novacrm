@@ -14,9 +14,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { GovernanceNav } from '@/components/governance/governance-nav';
 import { DATA_CATEGORIES, type BreachSeverity } from '@/lib/governance/schema';
 import { cn } from '@/lib/utils';
+import { toastError, toastSuccess } from '@/components/ui/toast';
+import { useI18n } from '@/components/layout/preferences-provider';
 
 export function BreachCreate() {
   const router = useRouter();
+  const { t } = useI18n();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [severity, setSeverity] = useState<BreachSeverity>('medium');
@@ -48,9 +51,12 @@ export function BreachCreate() {
     const payload = await response.json();
     setSaving(false);
     if (!response.ok || payload.error) {
-      setError(payload.error ?? 'Unable to log breach');
+      const message = payload.error ?? t.common.createFailed;
+      setError(message);
+      toastError(message);
       return;
     }
+    toastSuccess(t.common.created);
     router.push(`/governance/breaches/${payload.data.id}`);
   }
 

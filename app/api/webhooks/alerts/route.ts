@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ingestInbound, mapAlertSeverity } from '@/lib/inbound/ingest';
 import { verifyInboundSecret } from '@/lib/webhooks/inbound';
+import { webhookSecretFromHeaders } from '@/lib/webhooks/verify';
 import { DEMO_TENANT_ID } from '@/lib/config/constants';
 
 type AlertItem = {
@@ -55,10 +56,7 @@ function parseAlerts(payload: unknown): AlertItem[] {
 }
 
 export async function POST(request: NextRequest) {
-  const provided =
-    request.headers.get('x-webhook-secret') ??
-    request.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ??
-    request.nextUrl.searchParams.get('secret');
+  const provided = webhookSecretFromHeaders(request);
 
   if (!(await verifyInboundSecret(provided, process.env.ALERT_WEBHOOK_SECRET ?? process.env.WEBHOOK_SECRET, 'alert'))) {
     return NextResponse.json({ data: null, error: 'Unauthorized webhook' }, { status: 401 });

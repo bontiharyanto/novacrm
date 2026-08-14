@@ -6,6 +6,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { toastError, toastSuccess } from '@/components/ui/toast';
+import { useI18n } from '@/components/layout/preferences-provider';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -17,6 +19,7 @@ const PORTAL_TYPES = ['incident', 'request'] as const;
 
 export function PortalCreate() {
   const router = useRouter();
+  const { t } = useI18n();
   const searchParams = useSearchParams();
   const typeParam = searchParams.get('type');
   const [type, setType] = useState<TicketType>(typeParam === 'request' ? 'request' : 'incident');
@@ -48,11 +51,14 @@ export function PortalCreate() {
 
     const payload = await response.json().catch(() => ({}));
     if (!response.ok || !payload.data?.id) {
-      setError(payload.error ?? 'Unable to submit ticket.');
+      const message = payload.error ?? t.common.createFailed;
+      setError(message);
+      toastError(message);
       setIsSubmitting(false);
       return;
     }
 
+    toastSuccess(t.tickets.created);
     router.push(`/portal/${payload.data.id}`);
   }
 

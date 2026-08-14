@@ -11,9 +11,12 @@ import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { DSAR_TYPES, type DsarType } from '@/lib/governance/schema';
+import { toastError, toastSuccess } from '@/components/ui/toast';
+import { useI18n } from '@/components/layout/preferences-provider';
 
 export function PortalPrivacyCreate({ fullName, email }: { fullName: string; email?: string }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [requestType, setRequestType] = useState<DsarType>('access');
   const [description, setDescription] = useState('');
   const [saving, setSaving] = useState(false);
@@ -35,9 +38,12 @@ export function PortalPrivacyCreate({ fullName, email }: { fullName: string; ema
     const payload = await response.json();
     setSaving(false);
     if (!response.ok || payload.error) {
-      setError(payload.error ?? 'Unable to submit request');
+      const message = payload.error ?? t.common.createFailed;
+      setError(message);
+      toastError(message);
       return;
     }
+    toastSuccess(t.common.created);
     router.push(`/portal/privacy/${payload.data.id}`);
   }
 

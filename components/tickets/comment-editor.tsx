@@ -2,6 +2,7 @@
 
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
+import { sanitizeCommentHtml } from '@/lib/sanitize/html';
 
 function isEmptyHtml(html: string) {
   return html.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim().length === 0;
@@ -59,6 +60,9 @@ export function CommentHtml({ html }: { html: string }) {
     return <p className="text-sm text-zinc-200">{html}</p>;
   }
 
-  const safe = html.replace(/<(?!\/?(p|br|strong|em|ul|ol|li|b|i)\b)[^>]*>/gi, '');
+  const safe = sanitizeCommentHtml(html);
+  if (!safe.includes('<')) {
+    return <p className="text-sm text-zinc-200">{safe}</p>;
+  }
   return <div className="prose-comment text-sm text-zinc-200" dangerouslySetInnerHTML={{ __html: safe }} />;
 }

@@ -17,6 +17,8 @@ import type { AppRole } from '@/lib/rbac/ability';
 import { ROLE_LABEL } from '@/lib/rbac/roles';
 import { supportTierLabel } from '@/lib/tickets/pending';
 import type { AssignmentGroup } from '@/lib/org/schema';
+import { toastError, toastSuccess } from '@/components/ui/toast';
+import { useI18n } from '@/components/layout/preferences-provider';
 
 const roleTone: Record<AppRole, 'danger' | 'info' | 'warning' | 'neutral'> = {
   superadmin: 'danger',
@@ -42,6 +44,7 @@ export function UserDetail({
   actorRole: AppRole;
 }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [role, setRole] = useState<AppRole>(user.role);
   const [orgUnitId, setOrgUnitId] = useState(user.orgUnitId ?? '');
   const [groupId, setGroupId] = useState('');
@@ -50,7 +53,13 @@ export function UserDetail({
 
   async function save() {
     const result = await updateUserAccess(user.id, { role, orgUnitId: orgUnitId || null });
-    setMessage(result.error ?? 'Saved');
+    if (result.error) {
+      setMessage(result.error);
+      toastError(result.error);
+    } else {
+      setMessage(t.common.saved);
+      toastSuccess(t.common.saved);
+    }
     router.refresh();
   }
 

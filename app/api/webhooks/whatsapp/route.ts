@@ -1,14 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ingestInbound } from '@/lib/inbound/ingest';
 import { sendWhatsApp } from '@/lib/integrations/whatsapp';
-import { verifyWebhookSecret } from '@/lib/webhooks/verify';
+import { verifyWebhookSecret, webhookSecretFromHeaders } from '@/lib/webhooks/verify';
 import { DEMO_TENANT_ID } from '@/lib/config/constants';
 
 export async function POST(request: NextRequest) {
-  const provided =
-    request.headers.get('x-webhook-secret') ??
-    request.headers.get('x-hub-signature-256') ??
-    request.nextUrl.searchParams.get('secret');
+  const provided = webhookSecretFromHeaders(request, ['x-hub-signature-256']);
 
   if (!verifyWebhookSecret(provided, process.env.WHATSAPP_WEBHOOK_SECRET)) {
     return NextResponse.json({ data: null, error: 'Unauthorized webhook' }, { status: 401 });

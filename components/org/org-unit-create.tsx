@@ -12,6 +12,8 @@ import { Select } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { createOrgUnit } from '@/lib/org/actions';
 import type { OrgUnit, OrgUnitType } from '@/lib/org/schema';
+import { toastError, toastSuccess } from '@/components/ui/toast';
+import { useI18n } from '@/components/layout/preferences-provider';
 
 export function OrgUnitCreate({
   divisions,
@@ -21,6 +23,7 @@ export function OrgUnitCreate({
   agents: Array<{ id: string; fullName: string }>;
 }) {
   const router = useRouter();
+  const { t } = useI18n();
   const searchParams = useSearchParams();
   const [name, setName] = useState('');
   const [type, setType] = useState<OrgUnitType>(searchParams.get('type') === 'division' ? 'division' : 'unit');
@@ -40,10 +43,13 @@ export function OrgUnitCreate({
       managerId: managerId || undefined,
     });
     if (result.error || !result.data?.id) {
-      setError(result.error ?? 'Unable to create unit.');
+      const message = result.error ?? t.common.createFailed;
+      setError(message);
+      toastError(message);
       setIsSubmitting(false);
       return;
     }
+    toastSuccess(t.common.created);
     router.push(`/org/units/${result.data.id}`);
   }
 

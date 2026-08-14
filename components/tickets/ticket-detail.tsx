@@ -27,6 +27,7 @@ import {
 import type { TicketPriority, TicketStatus } from '@/lib/tickets/schema';
 import { dispatchTicketAction } from '@/lib/wfm/actions';
 import { useI18n } from '@/components/layout/preferences-provider';
+import { toastError, toastSuccess } from '@/components/ui/toast';
 
 type TicketItem = {
   id: string;
@@ -163,13 +164,24 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
 
   async function patchTicket(body: Record<string, unknown>) {
     setIsSaving(true);
-    const response = await fetch(`/api/tickets/${ticketId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    if (response.ok) await loadTicket();
-    setIsSaving(false);
+    try {
+      const response = await fetch(`/api/tickets/${ticketId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        toastError(payload.error ?? t.common.saveFailed);
+        return;
+      }
+      await loadTicket();
+      toastSuccess(t.tickets.updated);
+    } catch {
+      toastError(t.common.saveFailed);
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   async function handleAddComment() {
@@ -179,43 +191,61 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ author, comment }),
     });
-    if (response.ok) {
-      setComment('');
-      setEditorKey((value) => value + 1);
-      await loadTicket();
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      toastError(payload.error ?? t.tickets.commentFailed);
+      return;
     }
+    setComment('');
+    setEditorKey((value) => value + 1);
+    await loadTicket();
+    toastSuccess(t.tickets.commentAdded);
   }
 
   async function handleUpload(file: File) {
     setIsUploading(true);
-    const presign = await fetch('/api/storage/presign', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ filename: file.name, contentType: file.type || 'application/octet-stream' }),
-    });
-    const payload = await presign.json();
-    if (!presign.ok || !payload.data?.url) {
+    try {
+      const presign = await fetch('/api/storage/presign', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: file.name, contentType: file.type || 'application/octet-stream' }),
+      });
+      const payload = await presign.json().catch(() => ({}));
+      if (!presign.ok || !payload.data?.url) {
+        toastError(payload.error ?? t.tickets.uploadFailed);
+        return;
+      }
+
+      const uploaded = await fetch(payload.data.url, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type || 'application/octet-stream' },
+        body: file,
+      });
+      if (!uploaded.ok) {
+        toastError(t.tickets.uploadFailed);
+        return;
+      }
+
+      const commentResponse = await fetch(`/api/tickets/${ticketId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          author,
+          comment: `Attachment uploaded: ${file.name} (${payload.data.key})`,
+        }),
+      });
+      if (!commentResponse.ok) {
+        toastError(t.tickets.uploadFailed);
+        return;
+      }
+
+      await loadTicket();
+      toastSuccess(t.tickets.uploaded);
+    } catch {
+      toastError(t.tickets.uploadFailed);
+    } finally {
       setIsUploading(false);
-      return;
     }
-
-    await fetch(payload.data.url, {
-      method: 'PUT',
-      headers: { 'Content-Type': file.type || 'application/octet-stream' },
-      body: file,
-    });
-
-    await fetch(`/api/tickets/${ticketId}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        author,
-        comment: `Attachment uploaded: ${file.name} (${payload.data.key})`,
-      }),
-    });
-
-    await loadTicket();
-    setIsUploading(false);
   }
 
   if (!ticket) {
@@ -413,7 +443,9 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
                   variant="outline"
                   disabled={isSaving}
                   onClick={() =>
-                    void dispatchTicketAction(ticketId, true).then(() => {
+                    void dispatchTicketAction(ticketId, true).then((result) => {
+                      if (result.error) toastError(result.error);
+                      else toastSuccess(t.tickets.updated);
                       void loadTicket();
                     })
                   }

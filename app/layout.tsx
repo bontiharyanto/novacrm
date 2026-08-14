@@ -3,6 +3,7 @@ import './globals.css';
 import type { Metadata } from 'next';
 import { RuntimePublicEnv } from '@/components/layout/runtime-public-env';
 import { PreferencesProvider } from '@/components/layout/preferences-provider';
+import { Toaster } from '@/components/ui/toast';
 import { getPreferences } from '@/lib/preferences';
 
 const inter = localFont({
@@ -35,6 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <RuntimePublicEnv />
         <PreferencesProvider locale={locale} theme={theme}>
           {children}
+          <Toaster />
         </PreferencesProvider>
       </body>
     </html>
