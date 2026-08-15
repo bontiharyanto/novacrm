@@ -26,7 +26,7 @@ Sidebar admin: **Overview**, **Service desk**, **Configuration**, **Platform**, 
 ## 2. Login dan ruang kerja
 
 1. Buka URL desk (lab: http://localhost:3000 atau http://localhost:3001).
-2. Email + password → **Sign in**.
+2. Email + password → **Sign in**. MFA aplikasi **belum** hidup (rancangan: [MFA](../MFA.md)).
 3. Landasan: **Dashboard**.
 4. Switcher **Account** di bawah logo: Internal / Bank Nusantara / Garuda / **All**. Tiket, aset, CMDB mengikuti filter ini.
 

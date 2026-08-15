@@ -52,7 +52,7 @@ Setiap shift, urutan ini:
 4. **Requests** menumpuk — cek item katalog lengkap; assign fulfiller.
 5. **Changes** di **CAB Review** (`/cab`) — jangan biarkan window terlewat tanpa keputusan.
 6. **Problems** terbuka lama — isi panel **RCA** (workaround + Known error), tautkan incident. Jangan hanya komentar. Lab: *Backup gagal semalam*.
-7. **OLA** di `/org/groups/{id}` — jam antrian group (bukan SLA customer). Field **Party**: Internal / Vendor / Principal + nama (Fortinet, Indosat). Badge **OLA** di detail tiket. Default internal: L1 30m/4h, L2 60m/8h, L3 2h/16h. Lab: `L2 Vendor Fortinet` (4h/24h), `L3 Principal Indosat` (2h/8h).
+7. **OLA** — sidebar **Organization** (`/org`) → buka group → field **OLA response / resolve** dan **Party**. Bukan di `/sla` (itu kontrak customer). Jam antrian group. Field **Party**: Internal / Vendor / Principal + nama (Fortinet, Indosat). Badge **OLA** di detail tiket. Default internal: L1 30m/4h, L2 60m/8h, L3 2h/16h. Lab: `L2 Vendor Fortinet` (4h/24h), `L3 Principal Indosat` (2h/8h).
 
 ### Assign
 
