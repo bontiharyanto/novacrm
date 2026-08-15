@@ -50,6 +50,10 @@ export async function gatherInsightSignals(): Promise<InsightSignals | null> {
     emergencyChanges: 0,
     warrantySoon: 0,
     catalogPublished: 0,
+    frtMinutes: 0,
+    mttrMinutes: 0,
+    backlogAging: 0,
+    ucBreached: 0,
   };
 
   const groups = occupancy.map((row) => {

@@ -137,6 +137,20 @@ export async function resetUserMfa(userId: string) {
   if (!session || !isTenantAdminRole(session.profile.role) || !hasServiceRole()) {
     return { data: null, error: 'Unauthorized' };
   }
+
+  const supabase = await createSupabaseServerClient();
+  const { data: target } = await supabase
+    .from('profiles')
+    .select('id, role, tenant_id')
+    .eq('id', userId)
+    .maybeSingle();
+  if (!target || target.tenant_id !== session.profile.tenantId) {
+    return { data: null, error: 'User not found' };
+  }
+  if (!isStaffRole(target.role)) {
+    return { data: null, error: 'Portal users do not use desk MFA' };
+  }
+
   const admin = createSupabaseAdminClient();
   const { data: factors, error } = await admin.auth.admin.mfa.listFactors({ userId });
   if (error) return { data: null, error: error.message };

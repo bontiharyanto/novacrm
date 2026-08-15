@@ -16,7 +16,7 @@ const CATALOG: Record<string, Omit<SsoProviderOption, 'kind' | 'ready'>> = {
   sso_saml: {
     label: 'Continue with SAML',
     provider: null,
-    hint: 'SAML ACS is not wired. Use Google, Microsoft, Okta, or email login.',
+    hint: 'Save the IdP SSO URL and signing certificate on the SAML plugin, then retry.',
   },
 };
 
@@ -27,6 +27,12 @@ function asRecord(value: unknown): Record<string, unknown> {
 function hasClientId(config: Record<string, unknown>) {
   const clientId = typeof config.clientId === 'string' ? config.clientId.trim() : '';
   return clientId.length > 4;
+}
+
+export function hasSamlConfig(config: Record<string, unknown>) {
+  const ssoUrl = typeof config.ssoUrl === 'string' ? config.ssoUrl.trim() : '';
+  const certificate = typeof config.certificate === 'string' ? config.certificate.trim() : '';
+  return /^https:\/\//i.test(ssoUrl) && certificate.length > 20;
 }
 
 export function parseAllowedDomains(config: Record<string, unknown>) {
@@ -76,11 +82,13 @@ export async function listPublicSsoOptions(tenantSlug?: string | null) {
     const meta = CATALOG[row.kind];
     if (!meta) continue;
     const config = asRecord(row.config);
-    const ready = Boolean(meta.provider) && hasClientId(config);
+    const isSaml = row.kind === 'sso_saml';
+    const ready = isSaml ? hasSamlConfig(config) : Boolean(meta.provider) && hasClientId(config);
     options.push({
       kind: row.kind,
       label: meta.label,
       provider: (meta.provider ?? null) as SsoOauthProvider | null,
+      mode: isSaml ? 'saml' : 'oauth',
       ready,
       tenantSlug: tenant.slug,
       hint: ready ? undefined : meta.hint,
@@ -98,7 +106,7 @@ export async function loadSsoPolicy(tenantId: string) {
     .from('integrations')
     .select('config, is_active')
     .eq('tenant_id', tenantId)
-    .in('kind', ['sso_google', 'sso_entra', 'sso_okta'])
+    .in('kind', ['sso_google', 'sso_entra', 'sso_okta', 'sso_saml'])
     .eq('is_active', true);
 
   const allowed = new Set<string>();

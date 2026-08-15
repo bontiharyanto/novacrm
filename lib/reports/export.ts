@@ -1,6 +1,6 @@
 import ExcelJS from 'exceljs';
 import PDFDocument from 'pdfkit';
-import type { NamedCount, ReportExportFormat, ReportSnapshot } from '@/lib/reports/schema';
+import type { NamedCount, ReportExportFormat, ReportSnapshot, VendorScore } from '@/lib/reports/schema';
 import { reportToCsv } from '@/lib/reports/preview';
 import {
   exportFilename,
@@ -77,6 +77,25 @@ export async function reportToXlsx(report: ReportSnapshot) {
   addCountSheet('Assignees', report.assignees);
   addCountSheet('Groups', report.byGroup);
   addCountSheet('Hold', report.byHoldReason);
+
+  function addVendorSheet(name: string, rows: VendorScore[]) {
+    const sheet = workbook.addWorksheet(name);
+    sheet.columns = [
+      { header: 'ID', key: 'id', width: 36 },
+      { header: 'Label', key: 'label', width: 28 },
+      { header: 'Party', key: 'partyKind', width: 12 },
+      { header: 'Contract', key: 'contractName', width: 28 },
+      { header: 'Open', key: 'open', width: 10, style: { numFmt: '#,##0' } },
+      { header: 'OLA/UC breached', key: 'olaBreached', width: 16, style: { numFmt: '#,##0' } },
+      { header: 'Avg queue (min)', key: 'avgQueueMinutes', width: 16, style: { numFmt: '#,##0' } },
+    ];
+    rows.forEach((row) => sheet.addRow({ ...row, contractName: row.contractName ?? '' }));
+    styleHeader(sheet);
+    zebraRows(sheet);
+  }
+
+  addVendorSheet('Vendors', report.byVendor);
+  addVendorSheet('UC', report.byUc);
 
   const trend = workbook.addWorksheet('Trend');
   trend.columns = [
@@ -256,6 +275,23 @@ export async function reportToPdf(report: ReportSnapshot) {
         ['Assignee', 'Tickets'],
         report.assignees.map((row) => [row.label, String(row.value)]),
         [CONTENT_WIDTH - 80, 80],
+      );
+    }
+
+    if (report.byVendor.length > 0) {
+      y += 16;
+      section('Vendor / principal queue');
+      y = drawTable(
+        doc,
+        y,
+        ['Vendor', 'Open', 'Breach', 'Queue'],
+        report.byVendor.map((row) => [
+          row.label,
+          String(row.open),
+          String(row.olaBreached),
+          `${row.avgQueueMinutes}m`,
+        ]),
+        [CONTENT_WIDTH - 180, 60, 60, 60],
       );
     }
 

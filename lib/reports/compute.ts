@@ -4,7 +4,7 @@ import { getWarrantyLevel } from '@/lib/assets/depreciation';
 import { ticketTypeMeta } from '@/lib/tickets/process';
 import { holdReasonLabels, holdReasonOrder, priorityLabels, priorityOrder, statusLabels, statusOrder } from '@/lib/reports/labels';
 import type { ReportPeriod } from '@/lib/reports/period';
-import type { NamedCount, ReportSnapshot } from '@/lib/reports/schema';
+import type { NamedCount, ReportGroupMeta, ReportSnapshot, VendorScore } from '@/lib/reports/schema';
 
 type TicketRow = {
   id: string;
@@ -26,6 +26,9 @@ type TicketRow = {
   resolved_at?: string | null;
   group_id?: string | null;
   pending_reason?: string | null;
+  ola_resolve_by?: string | null;
+  ola_started_at?: string | null;
+  uc_id?: string | null;
 };
 
 type AssetRow = {
@@ -43,12 +46,16 @@ function average(values: number[]) {
   return Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
 }
 
+function isVendorParty(kind?: string): kind is 'vendor' | 'principal' {
+  return kind === 'vendor' || kind === 'principal';
+}
+
 export function buildReportSnapshot(
   tickets: TicketRow[],
   assets: AssetRow[],
   catalogPublished: number,
   period: ReportPeriod,
-  groupNames: Record<string, string> = {},
+  groupMeta: Record<string, ReportGroupMeta | string> = {},
 ): ReportSnapshot {
   const now = new Date();
   const since = period.start;
@@ -79,6 +86,16 @@ export function buildReportSnapshot(
   const mttrSamples: number[] = [];
   const groupMap = new Map<string, number>();
   const holdMap = new Map<string, number>();
+  const vendorMap = new Map<string, { open: number; breached: number; queue: number[]; meta: ReportGroupMeta; partyKind: 'vendor' | 'principal' }>();
+  const ucMap = new Map<string, { open: number; breached: number; queue: number[]; label: string; partyKind: 'vendor' | 'principal'; contractName?: string }>();
+  let ucBreached = 0;
+
+  const resolveGroup = (groupId?: string | null): ReportGroupMeta | undefined => {
+    if (!groupId) return undefined;
+    const raw = groupMeta[groupId];
+    if (!raw) return undefined;
+    return typeof raw === 'string' ? { name: raw } : raw;
+  };
 
   for (const ticket of tickets) {
     if (openStatuses.has(ticket.status)) {
@@ -90,6 +107,50 @@ export function buildReportSnapshot(
       }
       if (ticket.pending_reason && (ticket.status === 'hold' || ticket.status === 'waiting')) {
         holdMap.set(ticket.pending_reason, (holdMap.get(ticket.pending_reason) ?? 0) + 1);
+      }
+
+      const group = resolveGroup(ticket.group_id);
+      const partyKind = isVendorParty(group?.partyKind) ? group.partyKind : undefined;
+      const ucId = ticket.uc_id || group?.ucId || undefined;
+      if (partyKind || ucId) {
+        const ola = getSlaLevel(ticket.ola_resolve_by, ticket.status, {
+          slaResolveBy: ticket.ola_resolve_by,
+          slaPausedAt: ticket.sla_paused_at,
+        });
+        const breached = ola === 'breached';
+        if (breached) ucBreached += 1;
+        const queue = ticket.ola_started_at
+          ? minutesBetween(ticket.ola_started_at, now.toISOString())
+          : minutesBetween(ticket.created_at, now.toISOString());
+
+        if (partyKind && ticket.group_id && group) {
+          const current = vendorMap.get(ticket.group_id) ?? {
+            open: 0,
+            breached: 0,
+            queue: [],
+            meta: group,
+            partyKind,
+          };
+          current.open += 1;
+          if (breached) current.breached += 1;
+          if (queue != null) current.queue.push(queue);
+          vendorMap.set(ticket.group_id, current);
+        }
+
+        if (ucId) {
+          const current = ucMap.get(ucId) ?? {
+            open: 0,
+            breached: 0,
+            queue: [],
+            label: group?.ucName || group?.partyName || group?.name || ucId,
+            partyKind: partyKind ?? 'vendor',
+            contractName: group?.ucName,
+          };
+          current.open += 1;
+          if (breached) current.breached += 1;
+          if (queue != null) current.queue.push(queue);
+          ucMap.set(ucId, current);
+        }
       }
     }
     const sla = getSlaLevel(ticket.sla_resolve_by ?? ticket.due_date, ticket.status, {
@@ -175,6 +236,25 @@ export function buildReportSnapshot(
     Object.entries(ticketTypeMeta).map(([id, meta]) => [id, meta.label]),
   );
 
+  const groupNames = Object.fromEntries(
+    Object.entries(groupMeta).map(([id, value]) => [id, typeof value === 'string' ? value : value.name]),
+  );
+
+  const toVendorScores = (
+    map: Map<string, { open: number; breached: number; queue: number[]; partyKind: 'vendor' | 'principal'; label?: string; contractName?: string; meta?: ReportGroupMeta }>,
+  ): VendorScore[] =>
+    Array.from(map.entries())
+      .map(([id, row]) => ({
+        id,
+        label: row.label || row.meta?.partyName || row.meta?.name || id,
+        partyKind: row.partyKind,
+        contractName: row.contractName || row.meta?.ucName,
+        open: row.open,
+        olaBreached: row.breached,
+        avgQueueMinutes: average(row.queue),
+      }))
+      .sort((a, b) => b.olaBreached - a.olaBreached || b.open - a.open);
+
   return {
     rangeDays: period.rangeDays,
     preset: period.preset,
@@ -193,6 +273,7 @@ export function buildReportSnapshot(
       frtMinutes: average(frtSamples),
       mttrMinutes: average(mttrSamples),
       backlogAging,
+      ucBreached,
     },
     byType: toCounts(byTypeMap, typeLabels),
     byStatus: toCounts(byStatusMap, statusLabels, statusOrder),
@@ -201,6 +282,8 @@ export function buildReportSnapshot(
     assignees: toCounts(assigneeMap).slice(0, 8),
     byGroup: toCounts(groupMap, groupNames).slice(0, 8),
     byHoldReason: toCounts(holdMap, holdReasonLabels, holdReasonOrder),
+    byVendor: toVendorScores(vendorMap),
+    byUc: toVendorScores(ucMap),
     aging,
   };
 }

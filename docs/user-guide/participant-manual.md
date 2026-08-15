@@ -278,7 +278,7 @@ Levels **L1 / L2 / L3** come from group membership, not from a free-text field o
 
 ### 6.2 Users
 
-`/users` — admin creates logins.
+`/users` — admin creates logins. Lost TOTP: open the staff profile → **Reset authenticator** after an identity check.
 
 | Field | Meaning |
 | --- | --- |
@@ -387,7 +387,7 @@ Repeat alerts within 24 hours update the **same** ticket (correlation).
 
 **Dashboard** (`/dashboard`) — KPIs and aging for the active account.
 
-**Reports** (`/reports`) — range 7 / 30 / 90 days or custom. Preview, then export CSV / Excel / PDF. KPIs include **FRT**, **MTTR**, and **backlog 7d+**. **Ask assistant** jumps to chat with that snapshot.
+**Reports** (`/reports`) — range 7 / 30 / 90 days or custom. Preview, then export CSV / Excel / PDF. KPIs include **FRT**, **MTTR**, **backlog 7d+**, and **OLA/UC breached**. The **Vendor / UC queue** table compares Fortinet vs Indosat (open, breach, avg queue). **Ask assistant** jumps to chat with that snapshot.
 
 **Knowledge** (`/knowledge`) — articles from **Publish to knowledge** on a resolved ticket. Creating a ticket with title `VPN` should hint the seeded article. Problem *Backup gagal semalam* has RCA + a linked incident.
 
@@ -435,7 +435,7 @@ Customer: `/portal/privacy`.
 
 The page renders a **plugin catalog** (global + tenant-custom). Built-in kinds include AI, WhatsApp, Telegram, email, Gmail, Exchange, Slack, Teams, Jira, Salesforce, Entra / Google / Okta / SAML SSO, and webhook. **Tambah plugin** adds a tenant card immediately.
 
-For each card: paste configuration → **Save** → **Test connection**. Badge: `connected` / `failed` / `saved`. Google / Microsoft / Okta also drive the login buttons on `/login` (enable the provider in Supabase Auth). SAML ACS and app MFA stay off.
+For each card: paste configuration → **Save** → **Test connection**. Badge: `connected` / `failed` / `saved`. Google / Microsoft / Okta also drive the login buttons on `/login` (enable the provider in Supabase Auth). SAML: paste SSO URL + IdP cert, then **Continue with SAML** on `/login`. ACS `/api/auth/saml/acs`. App MFA stays off in the lab.
 
 AI classroom default: **Groq (free)**, model `llama-3.1-8b-instant`. Key prefix `gsk_`. Endpoint must stay `https://api.groq.com/openai/v1` — do not use `gpt-4o-mini` on Groq.
 

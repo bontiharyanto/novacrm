@@ -9,6 +9,7 @@ function isPublicPath(pathname: string) {
     pathname === '/login/mfa' ||
     pathname === '/api/health' ||
     pathname === '/api/auth/sso' ||
+    pathname.startsWith('/api/auth/saml') ||
     pathname.startsWith('/auth/callback') ||
     pathname.startsWith('/api/webhooks/')
   );
@@ -111,7 +112,9 @@ export async function updateSession(request: NextRequest) {
     pathname !== '/settings/security' &&
     !pathname.startsWith('/api/')
   ) {
-    const ssoOnly = Boolean(user.identities?.length) && !user.identities?.some((item) => item.provider === 'email');
+    const viaSaml = user.user_metadata?.auth_via === 'saml';
+    const ssoOnly =
+      viaSaml || (Boolean(user.identities?.length) && !user.identities?.some((item) => item.provider === 'email'));
     if (!ssoOnly) {
       const { data: tenant } = await supabase
         .from('tenants')

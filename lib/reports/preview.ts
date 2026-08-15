@@ -1,4 +1,4 @@
-import type { NamedCount, ReportSnapshot } from '@/lib/reports/schema';
+import type { NamedCount, ReportSnapshot, VendorScore } from '@/lib/reports/schema';
 import { formatGeneratedAt, formatReportPeriod, kpiEntries } from '@/lib/reports/labels';
 
 export type PreviewSheet = {
@@ -30,6 +30,14 @@ export function reportToCsv(report: ReportSnapshot) {
     ...countRows('assignee', report.assignees),
     ...countRows('group', report.byGroup),
     ...countRows('hold', report.byHoldReason),
+    ...report.byVendor.map(
+      (row) =>
+        `vendor,${csvEscape(row.id)},${csvEscape(row.label)},${row.open}/${row.olaBreached}/${row.avgQueueMinutes}`,
+    ),
+    ...report.byUc.map(
+      (row) =>
+        `uc,${csvEscape(row.id)},${csvEscape(row.label)},${row.open}/${row.olaBreached}/${row.avgQueueMinutes}`,
+    ),
     ...report.trend.map((row) => `trend,${row.day},Opened / closed,${row.opened}/${row.closed}`),
     ...report.aging.map(
       (row) =>
@@ -43,6 +51,22 @@ function countSheet(name: string, rows: NamedCount[]): PreviewSheet {
     name,
     columns: ['ID', 'Label', 'Value'],
     rows: rows.map((row) => [row.id, row.label, String(row.value)]),
+  };
+}
+
+function vendorSheet(name: string, rows: VendorScore[]): PreviewSheet {
+  return {
+    name,
+    columns: ['ID', 'Label', 'Party', 'Contract', 'Open', 'OLA/UC breached', 'Avg queue (min)'],
+    rows: rows.map((row) => [
+      row.id,
+      row.label,
+      row.partyKind,
+      row.contractName ?? '',
+      String(row.open),
+      String(row.olaBreached),
+      String(row.avgQueueMinutes),
+    ]),
   };
 }
 
@@ -65,6 +89,8 @@ export function reportPreviewSheets(report: ReportSnapshot): PreviewSheet[] {
     countSheet('Assignees', report.assignees),
     countSheet('Groups', report.byGroup),
     countSheet('Hold', report.byHoldReason),
+    vendorSheet('Vendors', report.byVendor),
+    vendorSheet('UC', report.byUc),
     {
       name: 'Trend',
       columns: ['Day', 'Opened', 'Closed'],

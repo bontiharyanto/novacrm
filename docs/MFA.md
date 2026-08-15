@@ -21,9 +21,9 @@ Classroom / `NovaCRM!2026` stays password-only. Do not enable the toggle on the 
 | --- | --- |
 | Toggle off | Password login unchanged. Staff may still enroll optionally. |
 | Toggle on + password | TOTP challenge or forced enroll |
-| Toggle on + Google / Microsoft / Okta | App TOTP skipped (IdP already stepped up) |
+| Toggle on + Google / Microsoft / Okta / SAML | App TOTP skipped (IdP already stepped up) |
 | Portal customer | Out of scope |
-| Lost phone | Another admin: `resetUserMfa` (clear factors) after identity check |
+| Lost phone | Another admin opens `/users/[id]` → **Reset authenticator** (identity check first) |
 
 ## Out of scope
 

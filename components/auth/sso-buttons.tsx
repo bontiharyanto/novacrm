@@ -23,7 +23,20 @@ export function SsoButtons({ tenantSlug, nextPath }: { tenantSlug?: string; next
   if (options.length === 0) return null;
 
   async function start(option: SsoProviderOption) {
-    if (!option.ready || !option.provider) {
+    if (!option.ready) {
+      setError(option.hint ?? t.login.ssoUnavailable);
+      return;
+    }
+    if (option.mode === 'saml' || option.kind === 'sso_saml') {
+      setPending(option.kind);
+      const params = new URLSearchParams();
+      const slug = option.tenantSlug || tenantSlug;
+      if (slug) params.set('tenant', slug);
+      if (nextPath) params.set('next', nextPath);
+      window.location.href = `/api/auth/saml/login?${params.toString()}`;
+      return;
+    }
+    if (!option.provider) {
       setError(option.hint ?? t.login.ssoUnavailable);
       return;
     }

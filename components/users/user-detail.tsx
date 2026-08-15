@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { addGroupMember, removeGroupMember } from '@/lib/org/actions';
+import { resetUserMfa } from '@/lib/auth/mfa';
 import { updateUserAccess } from '@/lib/users/actions';
 import type { DirectoryUser } from '@/lib/users/schema';
 import { RoleSelect } from '@/components/users/role-select';
@@ -35,12 +36,14 @@ export function UserDetail({
   units,
   groups,
   canEdit,
+  canResetMfa,
   actorRole,
 }: {
   user: DirectoryUser;
   units: Array<{ id: string; name: string; type: string }>;
   groups: AssignmentGroup[];
   canEdit: boolean;
+  canResetMfa?: boolean;
   actorRole: AppRole;
 }) {
   const router = useRouter();
@@ -49,6 +52,8 @@ export function UserDetail({
   const [orgUnitId, setOrgUnitId] = useState(user.orgUnitId ?? '');
   const [groupId, setGroupId] = useState('');
   const [message, setMessage] = useState('');
+  const [confirmReset, setConfirmReset] = useState(false);
+  const [resetting, setResetting] = useState(false);
   const available = groups.filter((group) => !user.groups.some((item) => item.groupId === group.id));
 
   async function save() {
@@ -173,6 +178,54 @@ export function UserDetail({
             )}
           </CardContent>
         </Card>
+        {canResetMfa ? (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm text-zinc-400">Authenticator</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-xs leading-5 text-zinc-500">
+                After you confirm the person&apos;s identity, clear TOTP so they can enroll again on the next login.
+              </p>
+              {confirmReset ? (
+                <div className="space-y-2">
+                  <p className="text-xs text-amber-300">This removes every authenticator on the account.</p>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      disabled={resetting}
+                      onClick={() => {
+                        setResetting(true);
+                        void resetUserMfa(user.id).then((result) => {
+                          setResetting(false);
+                          setConfirmReset(false);
+                          if (result.error) {
+                            setMessage(result.error);
+                            toastError(result.error);
+                            return;
+                          }
+                          setMessage('Authenticator reset');
+                          toastSuccess('Authenticator reset');
+                        });
+                      }}
+                    >
+                      {resetting ? 'Resetting...' : 'Confirm reset'}
+                    </Button>
+                    <Button type="button" size="sm" variant="ghost" disabled={resetting} onClick={() => setConfirmReset(false)}>
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <Button type="button" size="sm" variant="outline" onClick={() => setConfirmReset(true)}>
+                  Reset authenticator
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        ) : null}
         {canEdit ? (
           <div className="space-y-3">
             <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Add to group</p>

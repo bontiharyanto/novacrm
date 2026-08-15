@@ -26,7 +26,7 @@ Sidebar admin: **Overview**, **Service desk**, **Configuration**, **Platform**, 
 ## 2. Login dan ruang kerja
 
 1. Buka URL desk (lab: http://localhost:3000 atau http://localhost:3001).
-2. Email + password → **Sign in**. Atau tombol **Continue with Google / Microsoft / Okta** jika plugin identity aktif + provider di-enable di Supabase Auth. MFA TOTP = toggle di **Settings → Security**; lab tetap mati. Nyalakan setelah production. SAML ACS belum di-wire.
+2. Email + password → **Sign in**. Atau tombol **Continue with Google / Microsoft / Okta / SAML** jika plugin identity aktif. OIDC butuh provider di Supabase Auth. SAML butuh SSO URL + cert IdP; ACS `/api/auth/saml/acs`. MFA TOTP = toggle di **Settings → Security**; lab tetap mati. Nyalakan setelah production. Admin mereset authenticator di `/users/[id]` setelah cek identitas.
 3. Landasan: **Dashboard**.
 4. Switcher **Account** di bawah logo: Internal / Bank Nusantara / Garuda / **All**. Tiket, aset, CMDB mengikuti filter ini.
 
@@ -97,6 +97,8 @@ Tiket bisa di-queue ke group. Filter desk **My groups** memakai ini. Kebijakan d
 Admin **tidak** bisa membuat `superadmin`.  
 SPV hanya boleh membuat `customer` / `agent`. Jangan naikkan role sembarangan.
 
+Kehilangan authenticator: buka profil staf → **Reset authenticator** (dua langkah). Portal customer tidak memakai MFA desk.
+
 Password lab `NovaCRM!2026` hanya untuk tenant demo. Ganti di produksi setelah login pertama.
 
 ---
@@ -138,7 +140,7 @@ Hanya **Published** yang muncul di combo tiket dan portal.
 | --- | --- |
 | Groq (atau AI lain) | Assistant + AI Insights. **Test connection** setelah paste key |
 | WhatsApp / Telegram / Email | Outbound + webhook inbound |
-| SSO (Entra / Google / Okta) | Simpan client ID + **Allowed email domains**. Tombol login OIDC di `/login`. SAML ACS belum |
+| SSO (Entra / Google / Okta / SAML) | OIDC: client ID + **Allowed email domains**. SAML: SSO URL + cert PEM. Tombol di `/login`. ACS `/api/auth/saml/acs`, metadata `/api/auth/saml/metadata` |
 
 Jangan paste production key di kelas bersama.
 
@@ -199,7 +201,7 @@ Alert berulang dalam 24 jam meng-update tiket yang sama. Pesan WA / Telegram / e
 ## 13. Laporan, Insights, WFM
 
 - **Dashboard** — KPI + aging account aktif.
-- **Reports** — 7 / 30 / 90 hari atau custom; CSV / Excel / PDF.
+- **Reports** — 7 / 30 / 90 hari atau custom; CSV / Excel / PDF. Kartu **Vendor / UC queue** (open, breach OLA/UC, antrian rata-rata).
 - **Assistant** — baca fakta 7 hari; **tidak** mengubah tiket. Perlu AI di Integrations.
 - **AI Insights** — tekanan antrian, risiko SLA, beban WFM, kesehatan account.
 - **WFM** — occupancy, roster, skills, on-call, forecast. Admin boleh menulis roster; di kelas bersama jangan rewrite kecuali tenant terisolasi.

@@ -14,9 +14,28 @@ export type ReportKpis = {
   frtMinutes: number;
   mttrMinutes: number;
   backlogAging: number;
+  ucBreached: number;
 };
 
 export type NamedCount = { id: string; label: string; value: number };
+
+export type VendorScore = {
+  id: string;
+  label: string;
+  partyKind: 'vendor' | 'principal';
+  contractName?: string;
+  open: number;
+  olaBreached: number;
+  avgQueueMinutes: number;
+};
+
+export type ReportGroupMeta = {
+  name: string;
+  partyKind?: 'internal' | 'vendor' | 'principal' | string;
+  partyName?: string;
+  ucId?: string | null;
+  ucName?: string;
+};
 
 export type TrendPoint = { day: string; opened: number; closed: number };
 
@@ -45,5 +64,7 @@ export type ReportSnapshot = {
   assignees: NamedCount[];
   byGroup: NamedCount[];
   byHoldReason: NamedCount[];
+  byVendor: VendorScore[];
+  byUc: VendorScore[];
   aging: AgingRow[];
 };
