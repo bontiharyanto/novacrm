@@ -32,6 +32,7 @@ Item katalog: [Catalog & record producer](catalog-guidance.md). Matriks hak: [RB
 | [Sysadmin Ops](../OPS.md) | Engineer: health and queues on `:3100` |
 | [Workers](../WORKERS.md) | Engineer: scale BullMQ workers |
 | [MFA](../MFA.md) | TOTP toggle — off until production |
+| [Persiapan migrasi server](../MIGRATE-SERVER.md) | Engineer: akun, secret, DNS sebelum VPS |
 | [Deployment](../DEPLOYMENT.md) | Engineer: VPS / production |
 
 ## Demo logins

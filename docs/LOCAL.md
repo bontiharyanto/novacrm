@@ -56,7 +56,7 @@ npm run local:undeploy               # stop Docker app/worker, keep Supabase
 npm run local:dev                    # hot reload on :3000
 ```
 
-VPS/Traefik: [DEPLOYMENT.md](DEPLOYMENT.md). To point this laptop at **hosted** Supabase (keep local Redis/MinIO):
+Persiapan cutover: [MIGRATE-SERVER.md](MIGRATE-SERVER.md). VPS/Traefik: [DEPLOYMENT.md](DEPLOYMENT.md). To point this laptop at **hosted** Supabase (keep local Redis/MinIO):
 
 ```bash
 # add DATABASE_URL + cloud URL/anon/service_role to .env.local

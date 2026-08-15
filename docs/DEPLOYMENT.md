@@ -1,6 +1,6 @@
 # Production deploy
 
-Laptop first: [LOCAL.md](LOCAL.md). Sysadmin console (laptop): [OPS.md](OPS.md). Cutover checklist: [SERVER.md](SERVER.md). Roles: [RBAC.md](RBAC.md).
+Laptop first: [LOCAL.md](LOCAL.md). Prepare cutover: [MIGRATE-SERVER.md](MIGRATE-SERVER.md). Sysadmin console (laptop): [OPS.md](OPS.md). Cutover commands: [SERVER.md](SERVER.md). Roles: [RBAC.md](RBAC.md).
 
 **Order:** create Supabase project → `npm run hosted:setup` → fill `.env.production` on the VPS → DNS → GitHub secrets → push `main`.
 

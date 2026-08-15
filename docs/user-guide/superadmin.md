@@ -28,7 +28,7 @@ Hanya role ini yang lolos CASL `Tenant` (`/tenants`, `GET/POST /api/tenants`). A
 - Pause tenant (insiden keamanan, non-bayar) atau archive
 - Promote orang menjadi `admin` atau `superadmin`
 - Audit lintas-peran ketika RBAC / RLS terlihat salah
-- Cutover VPS + hosted Supabase ([SERVER.md](../SERVER.md))
+- Cutover VPS + hosted Supabase — siapkan dulu [MIGRATE-SERVER.md](../MIGRATE-SERVER.md), lalu [SERVER.md](../SERVER.md)
 
 Untuk plugin Groq/WA, user biasa, SLA, katalog: pakai **admin** atau **manager**. Jejak audit lebih jelas.
 

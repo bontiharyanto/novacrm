@@ -1,6 +1,6 @@
 # Server migration checklist
 
-Use this when moving from the laptop demo to a VPS + hosted Supabase. Laptop runbook: [LOCAL.md](LOCAL.md). Full secrets table: [DEPLOYMENT.md](DEPLOYMENT.md). Roles: [RBAC.md](RBAC.md).
+Prepare accounts and secrets first: [MIGRATE-SERVER.md](MIGRATE-SERVER.md). Then use this page to cut over. Laptop: [LOCAL.md](LOCAL.md). Secrets/Compose: [DEPLOYMENT.md](DEPLOYMENT.md). Roles: [RBAC.md](RBAC.md).
 
 ## What goes where
 
@@ -119,3 +119,6 @@ Apply in filename order (migrate.sh does this):
 - `20250815180000_tenant_mfa.sql` (tenant MFA toggle, default off)
 - `20250815190000_csat_uc_credits.sql` (CSAT after resolve + UC service credits)
 - `20250815200000_tenant_platform.sql` (superadmin tenant list/create/pause)
+- `20250815300000_staff_reviews.sql` (staff reviews under WFM)
+- `20250815310000_staff_review_ai.sql` (advisory AI scores on a review)
+- `20250815320000_assistant_threads_staff.sql` (Nova Agent threads for all staff)

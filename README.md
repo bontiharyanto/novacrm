@@ -55,6 +55,7 @@ CASL on the frontend; RLS on the backend. Sidebar account filter: one customer a
 | [Sysadmin Ops](docs/OPS.md) | Health, queues, retries on `:3100` |
 | [Workers (BullMQ)](docs/WORKERS.md) | How many workers, how to scale laptop and VPS |
 | [RBAC](docs/RBAC.md) | Roles vs CASL vs RLS |
+| [Persiapan migrasi server](docs/MIGRATE-SERVER.md) | Akun, secret, DNS, migrasi — sebelum bootstrap |
 | [Server cutover](docs/SERVER.md) | Hosted Supabase + VPS checklist |
 | [Production deploy](docs/DEPLOYMENT.md) | VPS / Traefik / GHCR |
 
