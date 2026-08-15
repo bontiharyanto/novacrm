@@ -15,8 +15,9 @@ export async function POST(request: NextRequest) {
   if (auth.error) return auth.error;
   try {
     const body = await request.json().catch(() => ({}));
+    const locale = body.locale === 'en' || body.locale === 'id' ? body.locale : undefined;
     if (body.all === true) {
-      const result = await generateAllInsights();
+      const result = await generateAllInsights(locale);
       if (result.error && !result.data) {
         return NextResponse.json({ data: null, error: result.error }, { status: 400 });
       }
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest) {
     if (!kind.success) {
       return NextResponse.json({ data: null, error: 'Unknown insight kind' }, { status: 400 });
     }
-    const result = await generateInsight(kind.data);
+    const result = await generateInsight(kind.data, locale);
     if (result.error) {
       return NextResponse.json({ data: null, error: result.error }, { status: 400 });
     }

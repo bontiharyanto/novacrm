@@ -17,15 +17,22 @@ import { gatherInsightSignals } from '@/lib/insights/signals';
 import { audienceForRole, composeNarrative, payloadForKind, snapshotCard } from '@/lib/insights/copy';
 import { parseNarrative, sanitizeInsightCard } from '@/lib/insights/parse';
 
-const SYSTEM = `You are NovaCRM Insights. Write short professional ITSM briefs for staff.
+function insightSystemPrompt(locale: 'en' | 'id') {
+  const language =
+    locale === 'id'
+      ? 'Write title, summary, and body entirely in Bahasa Indonesia. Do not use English sentences. Keep ITSM terms (SLA, CAB, ticket numbers) as-is.'
+      : 'Write title, summary, and body entirely in English.';
+  return `You are NovaCRM Insights. Write short professional ITSM briefs for staff.
 Use only the provided signals. Those numbers are ground truth — never contradict them.
 If slaBreached is 7, say 7 are breached. Never claim the queue is healthy when a count is above zero.
 Never invent ticket numbers, names, emails, or phone numbers. No PII. No secrets.
-title: one line in the requested locale, include the live counts.
-summary: one English sentence describing the metric.
-body: 2-4 plain sentences in the requested locale. Never empty. Never JSON. No markdown fences.
+${language}
+title: one line, include the live counts.
+summary: one sentence describing the metric, same language as title.
+body: 2-4 plain sentences. Never empty. Never JSON. No markdown fences.
 severity: info | success | warning | danger — danger if any breach or over-cap.
 Return a JSON object only.`;
+}
 
 function mapRow(row: {
   kind: string;
@@ -134,7 +141,10 @@ export async function getInsightsBoard(): Promise<InsightsBoard | null> {
   };
 }
 
-export async function generateInsight(kindInput: InsightKind): Promise<{ data: InsightCard | null; error: string | null }> {
+export async function generateInsight(
+  kindInput: InsightKind,
+  localeOverride?: 'en' | 'id',
+): Promise<{ data: InsightCard | null; error: string | null }> {
   const kind = insightKindSchema.parse(kindInput);
   const session = await getSessionProfile();
   if (!session || !canRole(session.profile.role, 'read', 'Ticket')) {
@@ -143,6 +153,7 @@ export async function generateInsight(kindInput: InsightKind): Promise<{ data: I
 
   const signals = await gatherInsightSignals();
   if (!signals) return { data: null, error: 'Unable to load desk signals' };
+  if (localeOverride) signals.locale = localeOverride;
 
   const scoped = await requireAccountId(session);
   const fallback = composeNarrative(kind, signals, null);
@@ -162,13 +173,14 @@ export async function generateInsight(kindInput: InsightKind): Promise<{ data: I
 
   if (ai) {
     const messages = [
-      { role: 'system' as const, content: SYSTEM },
+      { role: 'system' as const, content: insightSystemPrompt(signals.locale) },
       {
         role: 'user' as const,
         content: JSON.stringify({
           locale: signals.locale,
+          language: signals.locale === 'id' ? 'Bahasa Indonesia' : 'English',
           role: signals.role,
-          audience: audienceForRole(signals.role),
+          audience: audienceForRole(signals.role, signals.locale),
           kind,
           viewingAll: signals.viewingAll,
           accountCode: signals.accountCode,
@@ -220,13 +232,15 @@ export async function generateInsight(kindInput: InsightKind): Promise<{ data: I
   return { data: card, error: null };
 }
 
-export async function generateAllInsights(): Promise<{ data: InsightCard[] | null; error: string | null }> {
+export async function generateAllInsights(
+  localeOverride?: 'en' | 'id',
+): Promise<{ data: InsightCard[] | null; error: string | null }> {
   const session = await getSessionProfile();
   if (!session || !canRole(session.profile.role, 'read', 'Ticket')) {
     return { data: null, error: 'Unauthorized' };
   }
   const signals = await gatherInsightSignals();
-  const results = await Promise.all(INSIGHT_KINDS.map((kind) => generateInsight(kind)));
+  const results = await Promise.all(INSIGHT_KINDS.map((kind) => generateInsight(kind, localeOverride)));
   const cards = INSIGHT_KINDS.map((kind, index) => results[index].data ?? (signals ? snapshotCard(kind, signals) : null)).filter(
     (row): row is InsightCard => Boolean(row),
   );

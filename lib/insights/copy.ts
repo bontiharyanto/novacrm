@@ -78,7 +78,9 @@ export function snapshotNarrative(kind: InsightKind, signals: InsightSignals): I
       title: id
         ? `Antrian: ${signals.queue.open} open, ${signals.queue.unassigned} belum assign`
         : `Queue: ${signals.queue.open} open, ${signals.queue.unassigned} unassigned`,
-      summary: 'Open, unassigned, and aging tickets on the active desk filter.',
+      summary: id
+        ? 'Tiket open, belum assign, dan aging pada filter desk aktif.'
+        : 'Open, unassigned, and aging tickets on the active desk filter.',
       body: signals.aiConfigured ? factsBody('queue_pressure', signals) : connectBody(signals),
       severity: severityForQueue(signals),
     };
@@ -93,7 +95,9 @@ export function snapshotNarrative(kind: InsightKind, signals: InsightSignals): I
         : id
           ? `${signals.sla.slaBreached} breach, ${signals.sla.slaRisk} berisiko`
           : `${signals.sla.slaBreached} breached, ${signals.sla.slaRisk} at risk`,
-      summary: '24–48h SLA breach forecast from live clocks plus CAB and emergency changes.',
+      summary: id
+        ? 'Prakiraan breach SLA 24–48 jam dari jam live, plus CAB dan change darurat.'
+        : '24–48h SLA breach forecast from live clocks plus CAB and emergency changes.',
       body: signals.aiConfigured ? factsBody('sla_risk', signals) : connectBody(signals),
       severity: severityForSla(signals),
     };
@@ -103,7 +107,9 @@ export function snapshotNarrative(kind: InsightKind, signals: InsightSignals): I
       title: id
         ? `Snapshot utilisasi: ${signals.workforce.overCap} over, ${signals.workforce.underUtilised} under`
         : `Utilisation snapshot: ${signals.workforce.overCap} over, ${signals.workforce.underUtilised} under`,
-      summary: 'Group occupancy, agents at cap, and roster gap versus ticket volume.',
+      summary: id
+        ? 'Occupancy group, agen di kapasitas, dan gap roster versus volume tiket.'
+        : 'Group occupancy, agents at cap, and roster gap versus ticket volume.',
       body: signals.aiConfigured ? factsBody('workforce_load', signals) : connectBody(signals),
       severity: severityForWorkforce(signals),
     };
@@ -118,7 +124,9 @@ export function snapshotNarrative(kind: InsightKind, signals: InsightSignals): I
       : id
         ? `Snapshot kesehatan akun (${n} akun)`
         : `Account health snapshot (${n} accounts)`,
-    summary: 'Per-account open queue and SLA using live tickets (codes only, no requester PII).',
+    summary: id
+      ? 'Antrian open dan SLA per akun dari tiket live (kode saja, tanpa PII pemohon).'
+      : 'Per-account open queue and SLA using live tickets (codes only, no requester PII).',
     body: signals.aiConfigured ? factsBody('account_health', signals) : connectBody(signals),
     severity: severityForAccounts(signals),
   };
@@ -156,13 +164,20 @@ export function composeNarrative(
   if (hot && CALM.test(blob)) {
     return { ...fallback, body: factsBody(kind, signals) };
   }
+  const mismatch = isId(signals) && looksEnglish(`${parsed.title} ${parsed.summary} ${parsed.body}`);
   const rank: Record<InsightSeverity, number> = { info: 0, success: 0, warning: 1, danger: 2 };
   return {
-    title: parsed.title,
-    summary: parsed.summary || fallback.summary,
-    body: parsed.body || factsBody(kind, signals),
+    title: mismatch ? fallback.title : parsed.title,
+    summary: mismatch || !parsed.summary ? fallback.summary : parsed.summary,
+    body: mismatch || !parsed.body ? factsBody(kind, signals) : parsed.body,
     severity: rank[fallback.severity] > rank[parsed.severity] ? fallback.severity : parsed.severity,
   };
+}
+
+function looksEnglish(text: string) {
+  const english = (text.match(/\b(the|and|are|with|tickets|queue|breach|agents|unassigned)\b/gi) ?? []).length;
+  const indonesian = (text.match(/\b(yang|tiket|sudah|belum|dari|untuk|antrian|agen|akun)\b/gi) ?? []).length;
+  return english >= 2 && indonesian === 0;
 }
 
 export function payloadForKind(kind: InsightKind, signals: InsightSignals) {
@@ -172,18 +187,29 @@ export function payloadForKind(kind: InsightKind, signals: InsightSignals) {
   return signals.accounts;
 }
 
-export function audienceForRole(role: string) {
+export function audienceForRole(role: string, locale: 'en' | 'id' = 'en') {
+  const id = locale === 'id';
   if (role === 'agent') {
-    return 'Audience: service-desk agent. Recommend tickets they can pick up or escalate now. Do not discuss tenant settings.';
+    return id
+      ? 'Pembaca: agent service desk. Sarankan tiket yang bisa diambil atau dieskalasi sekarang. Jangan bahas pengaturan tenant.'
+      : 'Audience: service-desk agent. Recommend tickets they can pick up or escalate now. Do not discuss tenant settings.';
   }
   if (role === 'team_lead') {
-    return 'Audience: team lead. Focus on group queue, unassigned work, and who is at cap (counts only).';
+    return id
+      ? 'Pembaca: team lead. Fokus antrian group, kerja belum assign, dan siapa yang over kapasitas (angka saja).'
+      : 'Audience: team lead. Focus on group queue, unassigned work, and who is at cap (counts only).';
   }
   if (role === 'supervisor') {
-    return 'Audience: supervisor. Focus on SLA clocks, occupancy, dispatch, and 24–48h breach prevention.';
+    return id
+      ? 'Pembaca: supervisor. Fokus jam SLA, occupancy, dispatch, dan cegah breach 24–48 jam.'
+      : 'Audience: supervisor. Focus on SLA clocks, occupancy, dispatch, and 24–48h breach prevention.';
   }
   if (role === 'manager') {
-    return 'Audience: manager. Focus on account health, CAB, emergency changes, and cross-group load.';
+    return id
+      ? 'Pembaca: manager. Fokus kesehatan akun, CAB, change darurat, dan beban lintas group.'
+      : 'Audience: manager. Focus on account health, CAB, emergency changes, and cross-group load.';
   }
-  return 'Audience: tenant admin. Cover desk health, workforce, account risk, and whether AI/integrations need attention — without revealing secrets.';
+  return id
+    ? 'Pembaca: admin tenant. Bahas kesehatan desk, tenaga kerja, risiko akun, dan apakah AI/integrasi perlu perhatian — tanpa membocorkan rahasia.'
+    : 'Audience: tenant admin. Cover desk health, workforce, account risk, and whether AI/integrations need attention — without revealing secrets.';
 }

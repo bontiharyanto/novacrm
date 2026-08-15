@@ -83,7 +83,7 @@ export function InsightsBoardView({
       const response = await fetch('/api/insights', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(kind ? { kind } : { all: true }),
+        body: JSON.stringify(kind ? { kind, locale } : { all: true, locale }),
       });
       const payload = await response.json();
       if (!response.ok || payload.error) {

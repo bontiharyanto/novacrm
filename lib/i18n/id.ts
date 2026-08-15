@@ -19,7 +19,7 @@ export const id: Dictionary = {
     reports: 'Laporan',
     audit: 'Audit',
     assistant: 'Asisten',
-    insights: 'AI Insights',
+    insights: 'Wawasan AI',
     incidents: 'Insiden',
     problems: 'Problem',
     changes: 'Change',
@@ -353,7 +353,7 @@ export const id: Dictionary = {
     assignNext: 'Assign berikutnya',
   },
   insights: {
-    title: 'AI Insights',
+    title: 'Wawasan AI',
     subtitle:
       'Sinyal AI per tenant, tanpa PII: tekanan antrian, risiko SLA, beban tenaga kerja, dan kesehatan akun.',
     runAll: 'Jalankan semua insight',
