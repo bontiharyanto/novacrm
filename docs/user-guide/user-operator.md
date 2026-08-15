@@ -8,7 +8,7 @@
 | Agent | `agent@novacrm.app` | `NovaCRM!2026` | `/dashboard` |
 | Customer | `customer@novacrm.app` | `NovaCRM!2026` | `/portal` |
 
-**UI:** chrome English. `EN | ID` di top bar.  
+**UI:** default chrome **ID**. `EN | ID` di top bar. Isi tiket tetap seperti diketik.  
 **Companion:** [Admin](admin-system.md) · [Team Lead / SPV](lead-spv.md) · [Manager](manager-ops.md) · [Superadmin](superadmin.md) · [Katalog](catalog-guidance.md)
 
 Dokumen ini untuk orang yang **memakai** NovaCRM setiap hari: mengerjakan tiket (agent) atau mengajukan / melacak permintaan (customer). Konfigurasi tenant = admin. Antrian tim = Team Lead / SPV.
@@ -23,7 +23,7 @@ Dokumen ini untuk orang yang **memakai** NovaCRM setiap hari: mengerjakan tiket 
 | --- | --- |
 | Tiket: buat, assign ke diri, komentar, lampiran, hold, escalate | **Integrations** (`/settings`) |
 | Aset + pergerakan, CMDB (account yang di-assign) | Membuat user, mengubah SLA, menulis katalog |
-| Baca WFM (occupancy / forecast), update kehadiran sendiri | Roster / skills / on-call (itu SPV) |
+| Baca WFM (occupancy / forecast mengikuti filter account), update kehadiran sendiri | Roster / skills / on-call (itu SPV; tenant-wide — jangan rewrite di lab bersama) |
 | Appearance (tema / bahasa) | Import massal, workflow, accounts write |
 | Filter **Mine** / **My groups** / **Unassigned** | Melihat account yang bukan membership Anda |
 
@@ -116,9 +116,9 @@ Hold ≠ Escalate. Hold pause; escalate tidak.
 
 Demo: Account **Bank Nusantara** → `AST-1001`.
 
-**CMDB** — graf hubungan per account. Demo Bank: WAN Indosat → firewall → core → AP Lt.2 (`10.20.50.0/24` VLAN 50). Buka CI untuk impact (tiket terkait).
+**CMDB** — graf hubungan **per account**. Demo Bank: WAN Indosat → firewall → core → AP Lt.2 (`10.20.50.0/24` VLAN 50). Buka CI untuk impact (CI terkait + tiket/aset lewat `asset_id`, bukan field CI di tiket).
 
-Jika graf kosong: Anda masih di **Internal**. Switch ke Bank dulu.
+Jika graf kosong: Anda masih di **Internal** atau **All**. Switch ke **Bank Nusantara**. Jangan rewrite topologi seed. Relasi hanya diisi saat **New CI**.
 
 ## A.7 Level L1 / L2 / L3
 

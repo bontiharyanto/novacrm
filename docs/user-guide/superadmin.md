@@ -2,7 +2,7 @@
 
 **Peran:** `superadmin`  
 **Login lab:** `superadmin@novacrm.app` / `NovaCRM!2026` → `/dashboard`  
-**UI:** chrome English. `EN | ID` di top bar.  
+**UI:** default chrome **ID**. `EN | ID` di top bar. Isi tiket tetap seperti diketik.  
 **Companion:** [Admin](admin-system.md) · [Manager](manager-ops.md) · [RBAC](../RBAC.md) · [Deploy](../DEPLOYMENT.md)
 
 Superadmin adalah **pemilik platform**: semua tenant, semua role, termasuk record Tenant. Pakai hemat. Kerja harian ITSM tetap di admin / manager / SPV / agent.
@@ -41,7 +41,7 @@ Untuk plugin Groq/WA, user biasa, SLA, katalog: pakai **admin** atau **manager**
 | Field | Arti |
 | --- | --- |
 | Name / slug | Identitas platform. Login SSO: `/login?tenant={slug}` |
-| Accent color | Warna aksen (disimpan; UI desk masih biru default) |
+| Accent color | Warna chrome desk/portal klien itu (tombol, nav, process strip). Halaman login tetap biru sampai sign-in |
 | Timezone | Jam SLA / laporan |
 | Support email | Alamat support yang tampil ke operasi |
 | Status | `active` · `paused` · `archived` |

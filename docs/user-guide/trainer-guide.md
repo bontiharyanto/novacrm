@@ -110,6 +110,10 @@ Add after lunch:
 
 **Keyboard.** `⌘K` / `Ctrl+K` command palette, `⌘N` / `Ctrl+N` new ticket. Show once; many agents will use it daily.
 
+**CMDB.** Always demo on **Bank Nusantara**. Internal is a different graph; **All** mixes accounts. Impact uses the linked asset, not a ticket→CI field. Do not let the class rewrite seeded topology.
+
+**WFM.** Occupancy/forecast follow the account filter. Roster is **shared for the whole tenant** — Lab 11b is read-only. Own presence is OK. Auto-assign needs Redis + `npm run worker`.
+
 **Realtime.** Two browsers (admin + agent) on the same ticket: a status change should appear without refresh. If it does not, Redis is down — check `/api/health`.
 
 **Parking lot.** Write integrations, inbound WhatsApp, and Prometheus alerts on a flipchart. Those are “day two” unless you run the full-day agenda.
@@ -137,7 +141,10 @@ Participant can complete **without facilitator clicking**:
 | :3000 died after a hang / Ctrl+C | `local:dev` trap stopped Next.js | Start `npm run local:dev` again (or `npm run dev` if Ops/Docker already hold :3100) |
 | Ops :3100 down | Host Ops killed when Docker deployed | Open http://127.0.0.1:3100 — Docker Ops should answer |
 | Login loops to login | Supabase down | `npx supabase start` |
-| Empty CMDB graph | Wrong account | Switch to **Bank Nusantara** |
+| Empty CMDB graph | Wrong account or **All** | Switch to **Bank Nusantara** |
+| CMDB impact empty | Ticket not linked to the CI’s asset | Explain `asset_id`; WiFi lantai 2 is on the AP asset |
+| WFM occupancy empty | No groups on this account | Switch Internal or **All**; open `/org` |
+| Auto-assign idle | Worker/Redis down, or group is `manual` | `npm run worker`; L1 Helpdesk is `least_loaded` |
 | Redis `down` on `/api/health` | Compose not up | `npm run local:up` or `local:deploy` |
 | Email “sent” but inbox empty | Looking at Gmail | Open Mailpit `127.0.0.1:54324` |
 | CSAT link opens `/tickets/...` | Old email / wrong env | Resolve again; the link must be `/portal/{id}` |

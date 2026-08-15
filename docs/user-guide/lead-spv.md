@@ -137,7 +137,7 @@ Pastikan: home unit, group (L1/L2/L3), **account membership**. Tanpa membership,
 | Occupancy / forecast | Baca, pakai untuk assign | Baca + tindak lanjut kapasitas |
 | Roster / skills / on-call | Baca | Tulis (kelas: jangan rewrite shared roster) |
 
-Kebijakan dispatch ada di **assignment group** (`/org` — tulis = manager/admin). Lead/SPV menaati group yang sudah ada.
+Occupancy dan forecast mengikuti **filter account**. Roster/skills/on-call **tenant-wide** (bukan per customer). Kebijakan dispatch ada di **assignment group** (`/org` — form dispatch = manager/admin). Auto-assign butuh Redis + worker. Lead/SPV menaati group yang sudah ada.
 
 ---
 

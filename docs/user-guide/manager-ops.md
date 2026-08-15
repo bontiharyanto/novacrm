@@ -2,7 +2,7 @@
 
 **Peran:** `manager`  
 **Login lab:** `manager@novacrm.app` / `NovaCRM!2026` → `/dashboard`  
-**UI:** chrome English. `EN | ID` di top bar.  
+**UI:** default chrome **ID**. `EN | ID` di top bar. Isi tiket tetap seperti diketik.  
 **Companion:** [Admin](admin-system.md) · [SPV](lead-spv.md) · [User](user-operator.md) · [Superadmin](superadmin.md) · [RBAC](../RBAC.md)
 
 Manager merancang **cara kerja operasional**: account, organisasi, orang, SLA, katalog, workflow, import. Bukan pemegang kunci plugin (itu admin) dan bukan pemilik platform (itu superadmin).
@@ -129,7 +129,7 @@ Jenis yang tersedia mengikuti katalog import di aplikasi (users, assets, CI, …
 
 **Governance** — RoPA, DSAR 30 hari, breach 72 jam, notice portal. Anda boleh create/update.
 
-**WFM** — occupancy, roster, skills, on-call, forecast. Anda boleh menulis roster. Di tenant demo bersama, jangan rewrite kecuali isolasi disepakati.
+**WFM** — occupancy/forecast mengikuti filter account; roster/skills/on-call **satu grid untuk seluruh tenant**. Dispatch policy di `/org` (group). Anda boleh menulis roster. Di tenant demo bersama, jangan rewrite kecuali isolasi disepakati.
 
 ---
 

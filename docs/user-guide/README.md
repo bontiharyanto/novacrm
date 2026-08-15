@@ -3,7 +3,7 @@
 **Audience:** staff operations (admin / agent) and portal customers  
 **Purpose:** training pack for classroom or self-paced onboarding  
 **Product version:** laptop demo (desk + portal + Ops)  
-**Languages:** Bahasa Indonesia (this pack). The product UI also supports English.
+**Languages:** Bahasa Indonesia (this pack). Product chrome defaults to **ID**; toggle `EN | ID` on the top bar.
 
 ## Role playbooks (daily use)
 

@@ -2,7 +2,7 @@
 
 **Audience:** supervisor / admin yang merancang katalog, agent yang membuat tiket dari item, customer di portal  
 **Companion:** [Participant manual](participant-manual.md) §8, [Trainer guide](trainer-guide.md)  
-**UI:** label di editor katalog memakai **English** chrome. Ganti `EN | ID` di top bar kapan saja.
+**UI:** default chrome **ID** (Published / Draf, record producer, prioritas). Ganti `EN | ID` di top bar kapan saja.
 
 Dokumen ini menjelaskan **seluruh alur katalog**: kapan memakai item, arti setiap field, cara menambah item baru (contoh **Install Antivirus**), dan cara mengujinya dari desk serta portal.
 

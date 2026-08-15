@@ -2,7 +2,7 @@
 
 **Peran:** `admin` (tenant). Superadmin = platform, di luar dokumen ini.  
 **Login lab:** `admin@novacrm.app` / `NovaCRM!2026` → `/dashboard`  
-**UI:** chrome English. Ganti `EN | ID` di top bar.  
+**UI:** default chrome **ID**. Ganti `EN | ID` di top bar. Isi tiket tetap seperti diketik.  
 **Companion:** [User](user-operator.md) · [Team Lead / SPV](lead-spv.md) · [Manager](manager-ops.md) · [Superadmin](superadmin.md) · [Katalog](catalog-guidance.md) · [RBAC](../RBAC.md)
 
 Administrator menyiapkan tenant agar agent, SPV, dan customer bisa bekerja. Bukan menggantikan agent mengerjakan antrian harian.
@@ -181,7 +181,7 @@ Alert berulang dalam 24 jam meng-update tiket yang sama. Pesan WA / Telegram / e
 
 **Assets** — master sebelum CI. Tipe bisa ditambah (+). Detail: **Move** / **Transfer** / **Replace**, QR `asset_tag`.
 
-**CMDB** — graf **per account**. Demo Bank: WAN → FW → core → AP Lt.2. Impact: tiket/aset terkait.
+**CMDB** — graf **per account**. Demo Bank: WAN → FW → core → AP Lt.2. Impact: CI terkait + tiket/aset lewat `asset_id` (bukan field CI di tiket). Jangan rewrite topologi seed. Relasi diisi saat New CI. Filter **All** mencampur graf.
 
 ---
 
@@ -204,7 +204,7 @@ Alert berulang dalam 24 jam meng-update tiket yang sama. Pesan WA / Telegram / e
 - **Reports** — 7 / 30 / 90 hari atau custom; CSV / Excel / PDF. Kartu **Vendor / UC queue** (open, breach, antrian, kredit). KPI **CSAT**.
 - **Assistant** — baca fakta 7 hari; **tidak** mengubah tiket. Perlu AI di Integrations.
 - **AI Insights** — tekanan antrian, risiko SLA, beban WFM, kesehatan account.
-- **WFM** — occupancy, roster, skills, on-call, forecast. Admin boleh menulis roster; di kelas bersama jangan rewrite kecuali tenant terisolasi.
+- **WFM** — occupancy/forecast mengikuti filter account; roster/skills/on-call **tenant-wide**. Dispatch di assignment group. Auto-assign butuh worker. Admin boleh menulis roster; di kelas bersama jangan rewrite kecuali tenant terisolasi.
 
 ---
 

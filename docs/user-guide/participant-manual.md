@@ -2,7 +2,7 @@
 
 **Document type:** end-user procedures for classroom and self-study  
 **Companion:** [Trainer guide](trainer-guide.md) · role playbooks: [Admin](admin-system.md) · [User](user-operator.md) · [Team Lead / SPV](lead-spv.md) · [Manager](manager-ops.md) · [Superadmin](superadmin.md)  
-**UI:** labels below are the **English** chrome. Switch `EN | ID` on the top bar at any time.
+**UI:** default chrome is **ID**. Switch `EN | ID` on the top bar. Ticket *body* stays as typed. Email/WA and Assistant follow the same locale.
 
 ---
 
@@ -73,7 +73,7 @@ On the top bar:
 
 Full page: Sidebar → **Appearance** (`/settings/appearance`).
 
-Preference is stored in a browser cookie (`novacrm_theme`, `novacrm_locale`). It does not use local storage.
+Preference is stored in a browser cookie (`novacrm_theme`, `novacrm_locale`). It does not use local storage. Primary buttons follow the **tenant accent** (superadmin sets it on `/tenants`). The login page stays default blue until you sign in.
 
 ### 2.3 Account switcher
 
@@ -247,20 +247,24 @@ CSV **bulk import** is on the assets list (admin/agent).
 
 Sidebar → **CMDB**.
 
-A **configuration item (CI)** links assets and shows **relationships** (graph). The graph is **per account**.
+A **configuration item (CI)** links assets and shows **relationships** (graph). Scope is **per account** (and tenant). This is an operations CMDB for the desk — not Discovery, not 1 200 CI classes.
 
 **Demo path (Bank Nusantara):** WAN Indosat → firewall → core → Lt.2 access point. Segment example: `10.20.50.0/24` VLAN 50.
 
+**Impact** on a CI shows related CIs plus tickets/assets that share the linked `asset_id`. There is no direct ticket→CI field. Empty impact usually means the ticket is not linked to that asset.
+
+**Do not** rewrite the seeded Bank / Garuda / Internal topology or system CI classes. **New CI** is OK with a unique lab name. Relations are set at create; the detail page does not edit the graph edges. Filter **All** mixes accounts — use it for a count, not for the demo graph.
+
 ### 5.1 New CI
 
-1. **New CI**.
+1. **New CI** (switcher must be a single account, not **All**).
 2. Pick a class card (server, network, …). **Add card** if the class does not exist (e.g. CCTV).
 3. Fill site, network role, CIDR / VLAN / gateway as required.
-4. Save. Open the CI to add segments and inspect **impact** (related tickets/assets).
+4. Save. Open the CI to add segments and inspect **impact**.
 
 ## Lab 6 — Topology
 
-1. Stay on **Bank Nusantara**.
+1. Stay on **Bank Nusantara** (Internal graph is a different, smaller set).
 2. Open **CMDB** → graph view.
 3. Click the Lt.2 AP node. Note VLAN / CIDR in the side panel.
 
@@ -395,7 +399,7 @@ Repeat alerts within 24 hours update the **same** ticket (correlation).
 
 **AI Insights** (`/insights`) — four cards: queue pressure, SLA breach risk, workforce load, account health. Role-aware. Uses the same AI provider as Assistant. Narratives are tenant-scoped; do not treat them as a ticket update.
 
-**WFM** (`/wfm`) — occupancy, roster, skills, on-call, forecast. Dispatch policy lives on the assignment group. Classroom: **read** occupancy and forecast; do not rewrite the shared roster unless the trainer says the tenant is isolated.
+**WFM** (`/wfm`) — occupancy, roster, skills, on-call, forecast. Occupancy and forecast follow the **account** filter (assignment groups on that account). Roster, skills, and on-call are **tenant-wide** — one shared grid for the lab. Dispatch policy lives on the assignment group (`/org`). Auto-assign needs Redis + `npm run worker`. Classroom: **read** occupancy and forecast; set your own presence if asked. Do **not** rewrite the shared roster, skills, or on-call slots unless the trainer says the tenant is isolated.
 
 **Import** (`/import`) — manager+. Download a template, fill rows, preview, then import only if the preview has no errors.
 
@@ -425,7 +429,7 @@ Customer: `/portal/privacy`.
 ## Lab 11b — Insights and WFM (full day)
 
 1. Sidebar → **AI Insights**. Run one card if AI is connected (trainer confirms).
-2. Sidebar → **WFM**. Open occupancy, then forecast. Do not edit the shared roster.
+2. Sidebar → **WFM**. Open occupancy, then forecast. Presence (own) is OK. Do not edit the shared roster, skills, or on-call.
 
 ---
 
