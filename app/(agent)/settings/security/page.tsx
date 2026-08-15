@@ -16,6 +16,8 @@ export default async function SecurityPage({ searchParams }: { searchParams?: { 
       factors={factors.data}
       canToggle={isTenantAdminRole(session.profile.role)}
       forceEnroll={searchParams?.enroll === '1'}
+      telegramChatId={session.profile.telegramChatId ?? ''}
+      whatsappPhone={session.profile.phone ?? ''}
     />
   );
 }

@@ -19,6 +19,7 @@ import {
   LayoutDashboard,
   LayoutGrid,
   LogOut,
+  Mail,
   Menu,
   Package,
   Palette,
@@ -309,7 +310,9 @@ function SidebarFooter({
   const { t } = useI18n();
   const appearanceActive = pathname === '/settings/appearance';
   const securityActive = pathname.startsWith('/settings/security');
-  const integrationsActive = pathname.startsWith('/settings') && !appearanceActive && !securityActive;
+  const notificationsActive = pathname.startsWith('/settings/notifications');
+  const integrationsActive =
+    pathname.startsWith('/settings') && !appearanceActive && !securityActive && !notificationsActive;
   const roleLabel = t.roles[role] ?? ROLE_LABEL[role] ?? role;
 
   return (
@@ -330,13 +333,22 @@ function SidebarFooter({
           onNavigate={onNavigate}
         />
         {isTenantAdminRole(role) ? (
-          <NavLink
-            href="/settings"
-            label={t.nav.integrations}
-            icon={Settings}
-            active={integrationsActive}
-            onNavigate={onNavigate}
-          />
+          <>
+            <NavLink
+              href="/settings"
+              label={t.nav.integrations}
+              icon={Settings}
+              active={integrationsActive}
+              onNavigate={onNavigate}
+            />
+            <NavLink
+              href="/settings/notifications"
+              label={t.nav.notifications}
+              icon={Mail}
+              active={notificationsActive}
+              onNavigate={onNavigate}
+            />
+          </>
         ) : null}
       </nav>
       <div className="flex items-center gap-2 rounded-md border border-zinc-800/80 bg-zinc-900/40 px-2 py-1.5">

@@ -1,5 +1,3 @@
-import { cookies } from 'next/headers';
-
 export const THEMES = ['dark', 'light'] as const;
 export const LOCALES = ['en', 'id'] as const;
 
@@ -15,14 +13,4 @@ export function isTheme(value: unknown): value is Theme {
 
 export function isLocale(value: unknown): value is Locale {
   return value === 'en' || value === 'id';
-}
-
-export function getPreferences() {
-  const store = cookies();
-  const themeValue = store.get(THEME_COOKIE)?.value;
-  const localeValue = store.get(LOCALE_COOKIE)?.value;
-  return {
-    theme: isTheme(themeValue) ? themeValue : 'dark',
-    locale: isLocale(localeValue) ? localeValue : 'id',
-  };
 }

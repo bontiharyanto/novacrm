@@ -6,7 +6,7 @@ import { getReportSnapshot } from '@/lib/reports/actions';
 import { listWfmOccupancy, getWfmForecast } from '@/lib/wfm/actions';
 import { getSlaLevel } from '@/lib/tickets/sla';
 import { getAiConfigForTenant } from '@/lib/settings/integrations';
-import { getPreferences } from '@/lib/preferences';
+import { getPreferences } from '@/lib/preferences/server';
 import type { InsightSignals } from '@/lib/insights/schema';
 
 const OPEN = new Set(['open', 'in_progress', 'waiting', 'hold']);

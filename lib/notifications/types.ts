@@ -35,6 +35,7 @@ export type NotificationJobPayload = {
   requesterEmail?: string;
   assigneeEmail?: string;
   requesterPhone?: string;
+  assigneePhone?: string;
   assigneeChatId?: string;
   message?: string;
   locale?: 'en' | 'id';

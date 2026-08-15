@@ -1,7 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getAiConfigForTenant } from '@/lib/settings/integrations';
 import { completeAiChat } from '@/lib/integrations/ai';
-import { getPreferences, type Locale } from '@/lib/preferences';
+import type { Locale } from '@/lib/preferences';
+import { getPreferences } from '@/lib/preferences/server';
 import {
   staffReviewAiSchema,
   type StaffReviewAiAssessment,

@@ -1,9 +1,11 @@
 import { enqueueNotification } from '@/lib/queue/notification.queue';
 import type { NotificationJobPayload } from '@/lib/notifications/types';
 import { getTicketTemplates, renderTemplate } from '@/lib/notifications/templates';
+import { getMergedNotificationCopy } from '@/lib/notifications/copy-load';
 import { createSupabaseAdminClient, hasServiceRole } from '@/lib/supabase/admin';
-import { portalPermalink } from '@/lib/notifications/email-template';
-import { notificationCopy, resolveNotificationLocale } from '@/lib/notifications/locale';
+import { portalPermalink, ticketPermalink } from '@/lib/notifications/email-template';
+import { loadTenantPublicUrl } from '@/lib/notifications/public-url';
+import { resolveNotificationLocale } from '@/lib/notifications/locale';
 import { dictionaryFor, localizedStage, localizedType } from '@/lib/i18n/labels';
 import type { TicketStatus } from '@/lib/tickets/schema';
 
@@ -21,6 +23,7 @@ export type TicketEventContext = {
     assigneeId?: string;
     assigneeName?: string;
     assigneeEmail?: string;
+    assigneePhone?: string;
     assigneeChatId?: string;
     tenantId?: string;
   };
@@ -28,27 +31,48 @@ export type TicketEventContext = {
   locale?: string | null;
 };
 
-async function resolveAssigneeEmail(ticket: TicketEventContext['ticket']) {
-  if (ticket.assigneeEmail) return ticket.assigneeEmail;
-  if (!ticket.assigneeId || !hasServiceRole()) return undefined;
+async function resolveAssigneeContact(ticket: TicketEventContext['ticket']) {
+  if (
+    (ticket.assigneeEmail && ticket.assigneeChatId && ticket.assigneePhone) ||
+    !ticket.assigneeId ||
+    !hasServiceRole()
+  ) {
+    return { email: ticket.assigneeEmail, chatId: ticket.assigneeChatId, phone: ticket.assigneePhone };
+  }
   const supabase = createSupabaseAdminClient();
-  const { data } = await supabase.from('profiles').select('email').eq('id', ticket.assigneeId).maybeSingle();
-  return data?.email ?? undefined;
+  const { data } = await supabase
+    .from('profiles')
+    .select('email, phone, telegram_chat_id')
+    .eq('id', ticket.assigneeId)
+    .maybeSingle();
+  return {
+    email: ticket.assigneeEmail || data?.email || undefined,
+    chatId: ticket.assigneeChatId || data?.telegram_chat_id || undefined,
+    phone: ticket.assigneePhone || data?.phone || undefined,
+  };
 }
 
 export async function dispatchTicketNotification(context: TicketEventContext) {
   const { event, ticket, message } = context;
   const locale = resolveNotificationLocale(context.locale);
   const t = dictionaryFor(locale);
-  const copy = notificationCopy(locale);
-  const templates = getTicketTemplates(event, locale);
+  const copy = await getMergedNotificationCopy(ticket.tenantId, locale);
+  const templates = getTicketTemplates(event, locale, copy, ticket.type);
   const number = ticket.number || ticket.id.slice(0, 8);
   const typeLabel = localizedType(t, ticket.type);
   const statusLabel = localizedStage(t, ticket.type, ticket.status as TicketStatus);
-  const assigneeEmail = await resolveAssigneeEmail(ticket);
+  const assignee = await resolveAssigneeContact(ticket);
+  const assigneeEmail = assignee.email;
+  const assigneeChatId = assignee.chatId;
+  const assigneePhone = assignee.phone;
+  const publicUrl = await loadTenantPublicUrl(ticket.tenantId);
+  const detailUrl =
+    event === 'ticket.assign'
+      ? ticketPermalink(ticket.id, publicUrl)
+      : portalPermalink(ticket.id, publicUrl);
   const csat =
     ticket.status === 'resolved' || ticket.status === 'closed'
-      ? renderTemplate(copy.csat, { url: portalPermalink(ticket.id) })
+      ? renderTemplate(copy.csat, { url: detailUrl })
       : '';
 
   const body = renderTemplate(templates.body, {
@@ -60,6 +84,7 @@ export async function dispatchTicketNotification(context: TicketEventContext) {
     type: typeLabel,
     message: message ?? '',
     csat,
+    url: detailUrl,
   });
 
   const payload: NotificationJobPayload = {
@@ -76,7 +101,8 @@ export async function dispatchTicketNotification(context: TicketEventContext) {
     requesterEmail: ticket.requesterEmail,
     assigneeEmail,
     requesterPhone: ticket.requesterPhone,
-    assigneeChatId: ticket.assigneeChatId,
+    assigneePhone,
+    assigneeChatId,
     message: body,
     locale,
   };

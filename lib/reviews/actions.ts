@@ -17,7 +17,7 @@ import {
   type StaffReviewStatus,
 } from '@/lib/reviews/schema';
 import { gatherReviewSignals, runReviewAi, snapshotFromSignals } from '@/lib/reviews/ai';
-import { getPreferences } from '@/lib/preferences';
+import { getPreferences } from '@/lib/preferences/server';
 
 type ReviewRow = {
   id: string;

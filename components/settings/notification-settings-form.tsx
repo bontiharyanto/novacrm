@@ -107,7 +107,7 @@ export function NotificationSettingsForm() {
         <Card>
           <CardHeader>
             <CardTitle>WhatsApp</CardTitle>
-            <CardDescription>Fonnte / Whacenter / Wabot</CardDescription>
+            <CardDescription>API Key Fonnte wajib. Agent mengisi nomor sendiri di Security. Create/status/comment juga ke requester.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -127,7 +127,7 @@ export function NotificationSettingsForm() {
         <Card>
           <CardHeader>
             <CardTitle>Telegram</CardTitle>
-            <CardDescription>Bot token + chat ID</CardDescription>
+            <CardDescription>Bot token wajib. Chat ID grup opsional. Agent mengisi Chat ID sendiri di Security.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">

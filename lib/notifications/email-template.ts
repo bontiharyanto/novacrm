@@ -1,24 +1,20 @@
 import { dictionaryFor, localizedStage, localizedType } from '@/lib/i18n/labels';
+import type { NotificationCopy } from '@/lib/notifications/copy';
 import { notificationCopy, resolveNotificationLocale } from '@/lib/notifications/locale';
+import { getAppUrl } from '@/lib/notifications/public-url';
 import { renderTemplate } from '@/lib/notifications/templates';
 import type { Locale } from '@/lib/preferences';
 import type { TicketStatus } from '@/lib/tickets/schema';
 
-export function getAppUrl() {
-  return (
-    process.env.APP_URL ||
-    process.env.NEXT_PUBLIC_APP_URL ||
-    (process.env.NODE_ENV === 'production' ? '' : 'http://localhost:3000')
-  );
-}
+export { getAppUrl };
 
-export function ticketPermalink(ticketId: string) {
-  const base = getAppUrl().replace(/\/$/, '');
+export function ticketPermalink(ticketId: string, baseUrl?: string) {
+  const base = (baseUrl || getAppUrl()).replace(/\/$/, '');
   return base ? `${base}/tickets/${ticketId}` : `/tickets/${ticketId}`;
 }
 
-export function portalPermalink(ticketId: string) {
-  const base = getAppUrl().replace(/\/$/, '');
+export function portalPermalink(ticketId: string, baseUrl?: string) {
+  const base = (baseUrl || getAppUrl()).replace(/\/$/, '');
   return base ? `${base}/portal/${ticketId}` : `/portal/${ticketId}`;
 }
 
@@ -29,10 +25,11 @@ export function buildTicketEmailSubject(input: {
   status: string;
   type?: string;
   locale?: Locale | string | null;
+  copy?: NotificationCopy;
 }) {
   const locale = resolveNotificationLocale(input.locale);
   const t = dictionaryFor(locale);
-  const copy = notificationCopy(locale);
+  const copy = input.copy ?? notificationCopy(locale);
   const statusLabel = localizedStage(t, input.type, input.status as TicketStatus);
   const template =
     input.event === 'ticket.create'
@@ -55,10 +52,11 @@ export function buildTicketEmailHtml(input: {
   ticketUrl: string;
   ctaLabel?: string;
   locale?: Locale | string | null;
+  copy?: NotificationCopy;
 }) {
   const locale = resolveNotificationLocale(input.locale);
   const t = dictionaryFor(locale);
-  const copy = notificationCopy(locale);
+  const copy = input.copy ?? notificationCopy(locale);
   const typeLabel = localizedType(t, input.type);
   const statusLabel = localizedStage(t, input.type, input.status as TicketStatus);
   const cta = input.ctaLabel ?? copy.openTicket;

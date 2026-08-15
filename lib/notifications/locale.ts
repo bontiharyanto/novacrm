@@ -1,5 +1,6 @@
 import { getDictionary } from '@/lib/i18n';
-import { getPreferences, isLocale, type Locale } from '@/lib/preferences';
+import { isLocale, type Locale } from '@/lib/preferences';
+import { getPreferences } from '@/lib/preferences/server';
 
 export function resolveNotificationLocale(explicit?: string | null): Locale {
   if (isLocale(explicit)) return explicit;

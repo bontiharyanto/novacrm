@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Command } from 'cmdk';
-import { BarChart3, BookMarked, BookOpen, Building, Building2, CalendarClock, Clock, History, LayoutDashboard, LayoutGrid, Lightbulb, Package, Palette, Scale, Settings, ShieldCheck, Sparkles, Ticket, Upload, UserCog, Users, Workflow } from 'lucide-react';
+import { BarChart3, BookMarked, BookOpen, Building, Building2, CalendarClock, Clock, History, LayoutDashboard, LayoutGrid, Lightbulb, Mail, Package, Palette, Scale, Settings, ShieldCheck, Sparkles, Ticket, Upload, UserCog, Users, Workflow } from 'lucide-react';
 import { canAccessConfig, canRole, type AppRole } from '@/lib/rbac/ability';
 import { isTenantAdminRole } from '@/lib/rbac/roles';
 import { useI18n } from '@/components/layout/preferences-provider';
@@ -181,9 +181,14 @@ export function CommandPalette({ open, onOpenChange, role }: { open: boolean; on
                 <Palette className="h-3.5 w-3.5" /> {t.nav.appearance}
               </Command.Item>
               {isTenantAdminRole(role) ? (
-                <Command.Item className="cmdk-item" onSelect={() => go('/settings')}>
-                  <Settings className="h-3.5 w-3.5" /> {t.nav.integrations}
-                </Command.Item>
+                <>
+                  <Command.Item className="cmdk-item" onSelect={() => go('/settings')}>
+                    <Settings className="h-3.5 w-3.5" /> {t.nav.integrations}
+                  </Command.Item>
+                  <Command.Item className="cmdk-item" onSelect={() => go('/settings/notifications')}>
+                    <Mail className="h-3.5 w-3.5" /> {t.nav.notifications}
+                  </Command.Item>
+                </>
               ) : null}
             </Command.Group>
             {tickets.length > 0 ? (

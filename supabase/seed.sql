@@ -16,6 +16,10 @@ on conflict (id) do update set
   support_email = excluded.support_email,
   mfa_required = false;
 
+update public.tenants
+set public_url = coalesce(nullif(public_url, ''), 'http://localhost:3000')
+where id = '11111111-1111-1111-1111-111111111111';
+
 do $$
 declare
   admin_id uuid := '22222222-2222-2222-2222-222222222222';
@@ -443,6 +447,8 @@ values
   ('11111111-1111-1111-1111-111111111111', 'telegram', '{"chatId":"-1001234567890"}', false),
   ('11111111-1111-1111-1111-111111111111', 'email', '{"from":"NovaCRM <no-reply@novacrm.app>"}', true)
 on conflict (tenant_id, type) do nothing;
+
+-- notification_templates: empty = product i18n defaults. Admin customizes at /settings/notifications.
 
 insert into public.workflow_rules (tenant_id, name, event, action, target, is_active, definition)
 values

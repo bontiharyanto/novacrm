@@ -14,6 +14,7 @@ import {
   verifyMfaEnroll,
   type MfaPolicy,
 } from '@/lib/auth/mfa';
+import { saveOwnTelegramChatId, saveOwnWhatsAppPhone } from '@/lib/settings/telegram-link';
 
 type Factor = { id: string; status?: string; friendly_name?: string };
 
@@ -22,11 +23,15 @@ export function SecuritySettings({
   factors,
   canToggle,
   forceEnroll,
+  telegramChatId: initialTelegramChatId = '',
+  whatsappPhone: initialWhatsAppPhone = '',
 }: {
   policy: MfaPolicy;
   factors: Factor[];
   canToggle: boolean;
   forceEnroll?: boolean;
+  telegramChatId?: string;
+  whatsappPhone?: string;
 }) {
   const router = useRouter();
   const [required, setRequired] = useState(policy.required);
@@ -34,6 +39,8 @@ export function SecuritySettings({
   const [saving, setSaving] = useState(false);
   const [enroll, setEnroll] = useState<{ factorId: string; qr: string; secret: string } | null>(null);
   const [code, setCode] = useState('');
+  const [telegramChatId, setTelegramChatId] = useState(initialTelegramChatId);
+  const [whatsappPhone, setWhatsappPhone] = useState(initialWhatsAppPhone);
 
   async function saveToggle() {
     setSaving(true);
@@ -119,6 +126,81 @@ export function SecuritySettings({
             </CardContent>
           </Card>
         ) : null}
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">WhatsApp</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-zinc-500">
+              Nomor HP pribadi. Admin harus sudah mengisi API Key Fonnte di Integrations. Assign tiket ke Anda
+              masuk ke nomor ini.
+            </p>
+            <div className="space-y-1.5">
+              <Label htmlFor="whatsapp-phone">Nomor WhatsApp</Label>
+              <Input
+                id="whatsapp-phone"
+                inputMode="tel"
+                value={whatsappPhone}
+                onChange={(event) => setWhatsappPhone(event.target.value)}
+                placeholder="0812xxxxxxxx"
+              />
+            </div>
+            <Button
+              type="button"
+              disabled={saving}
+              onClick={() => {
+                void (async () => {
+                  setSaving(true);
+                  const result = await saveOwnWhatsAppPhone(whatsappPhone);
+                  setSaving(false);
+                  setMessage(result.error ?? 'Nomor WhatsApp disimpan. Assign tiket ke Anda akan masuk ke sini.');
+                  if (!result.error && result.data?.phone) setWhatsappPhone(result.data.phone);
+                  if (!result.error) router.refresh();
+                })();
+              }}
+            >
+              Simpan WhatsApp
+            </Button>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Telegram</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-zinc-500">
+              Buka Telegram, cari <span className="font-mono text-zinc-300">@userinfobot</span>, kirim /start, salin
+              Id. Admin harus sudah mengisi Bot Token di Integrations.
+            </p>
+            <div className="space-y-1.5">
+              <Label htmlFor="telegram-chat-id">Chat ID</Label>
+              <Input
+                id="telegram-chat-id"
+                inputMode="numeric"
+                value={telegramChatId}
+                onChange={(event) => setTelegramChatId(event.target.value)}
+                placeholder="123456789"
+              />
+            </div>
+            <Button
+              type="button"
+              disabled={saving}
+              onClick={() => {
+                void (async () => {
+                  setSaving(true);
+                  const result = await saveOwnTelegramChatId(telegramChatId);
+                  setSaving(false);
+                  setMessage(result.error ?? 'Telegram Chat ID disimpan. Assign tiket ke Anda akan masuk ke bot.');
+                  if (!result.error) router.refresh();
+                })();
+              }}
+            >
+              Simpan Telegram
+            </Button>
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>

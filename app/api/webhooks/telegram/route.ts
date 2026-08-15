@@ -21,6 +21,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ data: null, error: 'Invalid Telegram payload' }, { status: 400 });
     }
 
+    if (chatId && chatId !== 'unknown' && /^\/(start|chatid)\b/i.test(text.trim())) {
+      await sendTelegram(
+        String(chatId),
+        `Chat ID Anda: ${chatId}\nSimpan di NovaCRM → Security → Telegram supaya assign tiket masuk ke sini.`,
+      );
+      return NextResponse.json({ data: { chatId, linked: false }, error: null });
+    }
+
     const title = text.replace(/^ticket\s*:\s*/i, '').replace(/^halo\s+/i, '').trim() || 'Telegram request';
     const tenantId = process.env.WEBHOOK_TENANT_ID || DEMO_TENANT_ID;
     const result = await ingestInbound({

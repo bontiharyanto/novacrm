@@ -9,7 +9,9 @@ import {
   portalPermalink,
   ticketPermalink,
 } from '@/lib/notifications/email-template';
-import { notificationCopy, resolveNotificationLocale } from '@/lib/notifications/locale';
+import { getMergedNotificationCopy } from '@/lib/notifications/copy-load';
+import { resolveNotificationLocale } from '@/lib/notifications/locale';
+import { loadTenantPublicUrl } from '@/lib/notifications/public-url';
 import { renderTemplate } from '@/lib/notifications/templates';
 import type { NotificationChannelRow, NotificationJobPayload } from '@/lib/notifications/types';
 
@@ -41,6 +43,7 @@ export async function processNotificationJob(payload: NotificationJobPayload) {
     tenantId,
     event,
     requesterPhone,
+    assigneePhone,
     assigneeChatId,
     title,
     status,
@@ -70,7 +73,8 @@ export async function processNotificationJob(payload: NotificationJobPayload) {
 
   const results: Array<{ channel: string; ok: boolean; error?: string }> = [];
   const locale = resolveNotificationLocale(payload.locale);
-  const copy = notificationCopy(locale);
+  const copy = await getMergedNotificationCopy(tenantId, locale);
+  const publicUrl = await loadTenantPublicUrl(tenantId);
   const displayNumber = number || ticketId?.slice(0, 8) || 'Ticket';
   const displayTitle = title ?? 'Ticket update';
   const displayStatus = status ?? 'updated';
@@ -88,6 +92,7 @@ export async function processNotificationJob(payload: NotificationJobPayload) {
           status: displayStatus,
           type,
           locale,
+          copy,
         });
         const resolved = displayStatus === 'resolved' || displayStatus === 'closed';
 
@@ -95,9 +100,9 @@ export async function processNotificationJob(payload: NotificationJobPayload) {
           const forRequester = recipient === payload.requesterEmail;
           const ticketUrl = ticketId
             ? forRequester
-              ? portalPermalink(ticketId)
-              : ticketPermalink(ticketId)
-            : getFallbackUrl(forRequester);
+              ? portalPermalink(ticketId, publicUrl)
+              : ticketPermalink(ticketId, publicUrl)
+            : getFallbackUrl(forRequester, publicUrl);
           const html = buildTicketEmailHtml({
             number: displayNumber,
             title: displayTitle,
@@ -108,6 +113,7 @@ export async function processNotificationJob(payload: NotificationJobPayload) {
             ticketUrl,
             ctaLabel: forRequester && resolved ? copy.rateTicket : copy.openTicket,
             locale,
+            copy,
           });
           const result = await sendEmail(recipient, subject, html, {
             apiKey: channel.config.apiKey || process.env.RESEND_API_KEY,
@@ -129,8 +135,17 @@ export async function processNotificationJob(payload: NotificationJobPayload) {
 
       if (channel.type === 'telegram') {
         const botToken = channel.config.botToken || process.env.TELEGRAM_BOT_TOKEN;
-        const chatId = channel.config.chatId ?? assigneeChatId;
-        if (!botToken || !chatId) continue;
+        const targets = new Set<string>();
+        if (assigneeChatId) targets.add(String(assigneeChatId));
+        if (event !== 'ticket.assign' && channel.config.chatId) {
+          targets.add(String(channel.config.chatId));
+        }
+        if (!botToken || targets.size === 0) continue;
+        const detailUrl = ticketId
+          ? event === 'ticket.assign'
+            ? ticketPermalink(ticketId, publicUrl)
+            : portalPermalink(ticketId, publicUrl)
+          : publicUrl;
         const text =
           message ??
           renderTemplate(copy.telegramFallback, {
@@ -138,48 +153,59 @@ export async function processNotificationJob(payload: NotificationJobPayload) {
             title: displayTitle,
             status: displayStatus,
             assignee: assigneeName,
+            url: detailUrl,
           });
-        const result = await sendTelegram(chatId, text, { botToken });
-        results.push({ channel: 'telegram', ok: Boolean(result.ok), error: result.error });
-        await appendNotificationLog({
-          tenantId,
-          channel: 'telegram',
-          recipient: String(chatId),
-          subject: displayNumber,
-          body: text,
-          status: result.ok ? 'sent' : 'failed',
-          ticketId,
-        });
+        for (const chatId of targets) {
+          const result = await sendTelegram(chatId, text, { botToken });
+          results.push({ channel: 'telegram', ok: Boolean(result.ok), error: result.error });
+          await appendNotificationLog({
+            tenantId,
+            channel: 'telegram',
+            recipient: chatId,
+            subject: displayNumber,
+            body: text,
+            status: result.ok ? 'sent' : 'failed',
+            ticketId,
+          });
+        }
         continue;
       }
 
       if (channel.type === 'whatsapp') {
         const apiKey = channel.config.apiKey || process.env.FONNTE_API_KEY || process.env.WHATSAPP_API_KEY;
-        const target = channel.config.target ?? requesterPhone;
-        if (!apiKey || !target) continue;
-        const portalUrl = ticketId ? portalPermalink(ticketId) : '';
-        const text = [
+        const targets = new Set<string>();
+        if (assigneePhone) targets.add(String(assigneePhone));
+        if (event !== 'ticket.assign') {
+          if (requesterPhone) targets.add(String(requesterPhone));
+          if (channel.config.target) targets.add(String(channel.config.target));
+        }
+        if (!apiKey || targets.size === 0) continue;
+        const detailUrl = ticketId
+          ? event === 'ticket.assign'
+            ? ticketPermalink(ticketId, publicUrl)
+            : portalPermalink(ticketId, publicUrl)
+          : publicUrl;
+        const text =
           message ??
-            renderTemplate(copy.whatsappFallback, {
-              name: requesterName,
-              number: displayNumber,
-              status: displayStatus,
-            }),
-          portalUrl,
-        ]
-          .filter(Boolean)
-          .join('\n');
-        const result = await sendWhatsApp(target, text, { apiKey });
-        results.push({ channel: 'whatsapp', ok: Boolean(result.ok), error: result.error });
-        await appendNotificationLog({
-          tenantId,
-          channel: 'whatsapp',
-          recipient: String(target),
-          subject: displayNumber,
-          body: text,
-          status: result.ok ? 'sent' : 'failed',
-          ticketId,
-        });
+          renderTemplate(copy.whatsappFallback, {
+            name: event === 'ticket.assign' ? assigneeName : requesterName,
+            number: displayNumber,
+            status: displayStatus,
+            url: detailUrl,
+          });
+        for (const target of targets) {
+          const result = await sendWhatsApp(target, text, { apiKey });
+          results.push({ channel: 'whatsapp', ok: Boolean(result.ok), error: result.error });
+          await appendNotificationLog({
+            tenantId,
+            channel: 'whatsapp',
+            recipient: target,
+            subject: displayNumber,
+            body: text,
+            status: result.ok ? 'sent' : 'failed',
+            ticketId,
+          });
+        }
       }
     } catch (error) {
       results.push({
@@ -201,7 +227,10 @@ export async function processNotificationJob(payload: NotificationJobPayload) {
   };
 }
 
-function getFallbackUrl(forPortal = false) {
-  const base = (process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/$/, '');
+function getFallbackUrl(forPortal = false, baseUrl?: string) {
+  const base = (baseUrl || process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(
+    /\/$/,
+    '',
+  );
   return `${base}${forPortal ? '/portal' : '/tickets'}`;
 }
