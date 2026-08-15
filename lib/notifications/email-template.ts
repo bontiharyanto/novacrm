@@ -13,6 +13,11 @@ export function ticketPermalink(ticketId: string) {
   return base ? `${base}/tickets/${ticketId}` : `/tickets/${ticketId}`;
 }
 
+export function portalPermalink(ticketId: string) {
+  const base = getAppUrl().replace(/\/$/, '');
+  return base ? `${base}/portal/${ticketId}` : `/portal/${ticketId}`;
+}
+
 export function buildTicketEmailSubject(input: {
   event: 'ticket.create' | 'ticket.status_change' | 'ticket.comment_add';
   number: string;
@@ -36,6 +41,7 @@ export function buildTicketEmailHtml(input: {
   name: string;
   message: string;
   ticketUrl: string;
+  ctaLabel?: string;
 }) {
   const typeLabel = isTicketType(input.type) ? ticketTypeMeta[input.type].label : 'Ticket';
   const statusLabel = input.status.replace(/_/g, ' ');
@@ -70,7 +76,7 @@ export function buildTicketEmailHtml(input: {
             </tr>
             <tr>
               <td style="padding:0 28px 28px;">
-                <a href="${escapeHtml(input.ticketUrl)}" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;font-size:13px;font-weight:600;padding:10px 14px;border-radius:8px;">Open ticket</a>
+                <a href="${escapeHtml(input.ticketUrl)}" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;font-size:13px;font-weight:600;padding:10px 14px;border-radius:8px;">${escapeHtml(input.ctaLabel ?? 'Open ticket')}</a>
               </td>
             </tr>
           </table>

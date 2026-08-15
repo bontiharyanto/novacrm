@@ -3,7 +3,12 @@ import { sendEmail } from '@/lib/integrations/email';
 import { sendTelegram } from '@/lib/integrations/telegram';
 import { sendWhatsApp } from '@/lib/integrations/whatsapp';
 import { appendNotificationLog } from '@/lib/notifications/logs';
-import { buildTicketEmailHtml, buildTicketEmailSubject, ticketPermalink } from '@/lib/notifications/email-template';
+import {
+  buildTicketEmailHtml,
+  buildTicketEmailSubject,
+  portalPermalink,
+  ticketPermalink,
+} from '@/lib/notifications/email-template';
 import type { NotificationChannelRow, NotificationJobPayload } from '@/lib/notifications/types';
 
 async function loadActiveChannels(tenantId: string): Promise<NotificationChannelRow[]> {
@@ -75,17 +80,25 @@ export async function processNotificationJob(payload: NotificationJobPayload) {
           title: displayTitle,
           status: displayStatus,
         });
-        const html = buildTicketEmailHtml({
-          number: displayNumber,
-          title: displayTitle,
-          type,
-          status: displayStatus,
-          name: requesterName,
-          message: message ?? event,
-          ticketUrl: ticketId ? ticketPermalink(ticketId) : getFallbackUrl(),
-        });
+        const resolved = displayStatus === 'resolved' || displayStatus === 'closed';
 
         for (const recipient of recipients) {
+          const forRequester = recipient === payload.requesterEmail;
+          const ticketUrl = ticketId
+            ? forRequester
+              ? portalPermalink(ticketId)
+              : ticketPermalink(ticketId)
+            : getFallbackUrl(forRequester);
+          const html = buildTicketEmailHtml({
+            number: displayNumber,
+            title: displayTitle,
+            type,
+            status: displayStatus,
+            name: forRequester ? requesterName : assigneeName,
+            message: message ?? event,
+            ticketUrl,
+            ctaLabel: forRequester && resolved ? 'Rate this ticket' : 'Open ticket',
+          });
           const result = await sendEmail(recipient, subject, html, {
             apiKey: channel.config.apiKey || process.env.RESEND_API_KEY,
             from: channel.config.from || process.env.EMAIL_FROM,
@@ -127,7 +140,10 @@ export async function processNotificationJob(payload: NotificationJobPayload) {
         const apiKey = channel.config.apiKey || process.env.FONNTE_API_KEY || process.env.WHATSAPP_API_KEY;
         const target = channel.config.target ?? requesterPhone;
         if (!apiKey || !target) continue;
-        const text = message ?? `Halo ${requesterName}, ${displayNumber} status: ${displayStatus}`;
+        const portalUrl = ticketId ? portalPermalink(ticketId) : '';
+        const text = [message ?? `Halo ${requesterName}, ${displayNumber} status: ${displayStatus}`, portalUrl]
+          .filter(Boolean)
+          .join('\n');
         const result = await sendWhatsApp(target, text, { apiKey });
         results.push({ channel: 'whatsapp', ok: Boolean(result.ok), error: result.error });
         await appendNotificationLog({
@@ -160,6 +176,7 @@ export async function processNotificationJob(payload: NotificationJobPayload) {
   };
 }
 
-function getFallbackUrl() {
-  return process.env.APP_URL || 'http://localhost:3000/tickets';
+function getFallbackUrl(forPortal = false) {
+  const base = (process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/$/, '');
+  return `${base}${forPortal ? '/portal' : '/tickets'}`;
 }

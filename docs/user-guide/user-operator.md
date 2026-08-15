@@ -187,7 +187,7 @@ Buka tiket di **My tickets** / `/portal/{id}`.
 
 - Baca status dan komentar agent.
 - Tambah komentar jika diminta info.
-- Setelah **resolved** / **closed**, isi **CSAT** (1–5) di halaman tiket.
+- Setelah **resolved** / **closed**, isi **CSAT** (1–5) di halaman tiket. Email / WhatsApp ke customer memakai tautan `/portal/{id}` (tombol **Rate this ticket**), bukan desk `/tickets/{id}`.
 - Jangan buka tiket duplikat untuk isu yang sama; balas yang sudah ada.
 
 ## B.5 Privasi (UU PDP)

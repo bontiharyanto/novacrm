@@ -2,6 +2,7 @@ import { enqueueNotification } from '@/lib/queue/notification.queue';
 import type { NotificationJobPayload } from '@/lib/notifications/types';
 import { getTicketTemplates, renderTemplate } from '@/lib/notifications/templates';
 import { createSupabaseAdminClient, hasServiceRole } from '@/lib/supabase/admin';
+import { portalPermalink } from '@/lib/notifications/email-template';
 import { isTicketType, ticketTypeMeta } from '@/lib/tickets/process';
 
 export type TicketEventContext = {
@@ -49,7 +50,7 @@ export async function dispatchTicketNotification(context: TicketEventContext) {
     message: message ?? '',
     csat:
       ticket.status === 'resolved' || ticket.status === 'closed'
-        ? ' Rate the ticket from the portal after you confirm the fix.'
+        ? ` Rate the fix: ${portalPermalink(ticket.id)}`
         : '',
   });
 
