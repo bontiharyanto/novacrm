@@ -21,7 +21,7 @@
 
 NovaCRM is the operations desk for IT service management. The staff sidebar has four groups:
 
-- **Overview** — Dashboard, AI Insights, Assistant, Reports, WFM
+- **Overview** — Dashboard, WFM, Reports, AI Insights, Audit. **Tanya AI** is the top-bar / floating Nova Agent (not a sidebar item).
 - **Service desk** — incidents, problems, changes, CAB, requests
 - **Configuration** — accounts, organization, users, SLA, assets, CMDB, import
 - **Platform** — catalog, automation (workflows), governance (UU PDP)
@@ -395,11 +395,11 @@ Repeat alerts within 24 hours update the **same** ticket (correlation).
 
 **Knowledge** (`/knowledge`) — articles from **Publish to knowledge** on a resolved ticket. Creating a ticket with title `VPN` should hint the seeded article. Problem *Backup gagal semalam* has RCA + a linked incident.
 
-**Assistant** (`/assistant`) — staff only. Reads the last 7 days of ticket facts. It **does not** change tickets. If it is disconnected, admin must set AI on **Integrations** (Groq free key) and **Test connection**.
+**Assistant** — **Tanya AI** on the top bar (or the floating button) opens Nova Agent. Full page remains `/assistant`. Staff only. Reads the last 7 days of ticket facts. It **does not** change tickets. If it is disconnected, admin must set AI on **Integrations** (Groq free key) and **Test connection**.
 
 **AI Insights** (`/insights`) — four cards: queue pressure, SLA breach risk, workforce load, account health. Role-aware. Uses the same AI provider as Assistant. Narratives are tenant-scoped; do not treat them as a ticket update.
 
-**WFM** (`/wfm`) — occupancy, roster, skills, on-call, forecast. Occupancy and forecast follow the **account** filter (assignment groups on that account). Roster, skills, and on-call are **tenant-wide** — one shared grid for the lab. Dispatch policy lives on the assignment group (`/org`). Auto-assign needs Redis + `npm run worker`. Classroom: **read** occupancy and forecast; set your own presence if asked. Do **not** rewrite the shared roster, skills, or on-call slots unless the trainer says the tenant is isolated.
+**WFM** (`/wfm`) — occupancy, roster, skills, on-call, forecast, **reviews**. Occupancy and forecast follow the **account** filter (assignment groups on that account). Roster, skills, on-call, and reviews are **tenant-wide**. Dispatch policy lives on the assignment group (`/org`). Auto-assign needs Redis + `npm run worker`. Classroom: **read** occupancy and forecast; set your own presence if asked. Do **not** rewrite the shared roster, skills, on-call slots, or the seeded staff review unless the trainer says the tenant is isolated. Lead/SPV: **Penilaian** → New → scores 1–5 + notes → **Ask AI** (advisory) → Submit. Agent: open the submitted review and **Akui**. Snapshot and AI scores are period metrics, not the official score.
 
 **Import** (`/import`) — manager+. Download a template, fill rows, preview, then import only if the preview has no errors.
 
@@ -429,7 +429,7 @@ Customer: `/portal/privacy`.
 ## Lab 11b — Insights and WFM (full day)
 
 1. Sidebar → **AI Insights**. Run one card if AI is connected (trainer confirms).
-2. Sidebar → **WFM**. Open occupancy, then forecast. Presence (own) is OK. Do not edit the shared roster, skills, or on-call.
+2. Sidebar → **WFM**. Open occupancy, then forecast. Presence (own) is OK. Do not edit the shared roster, skills, or on-call. Open **Reviews** and read the seeded Sari review; do not rewrite it.
 
 ---
 
@@ -491,7 +491,7 @@ If Redis is down, realtime and workflows fail. Ask the trainer to open `/api/hea
 | Account | Customer scope inside the tenant (Internal, Bank, Garuda, or All) |
 | CI | Configuration item in CMDB |
 | Insights | AI cards on `/insights` — signals only, no ticket writes |
-| WFM | Workforce: roster, skills, on-call, occupancy |
+| WFM | Workforce: roster, skills, on-call, occupancy, staff reviews |
 | Ops | Sysadmin console on `:3100` — not a staff login |
 | CAB | Change Advisory Board |
 | DSAR | Data subject access request (UU PDP) |

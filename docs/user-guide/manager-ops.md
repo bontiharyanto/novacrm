@@ -129,7 +129,7 @@ Jenis yang tersedia mengikuti katalog import di aplikasi (users, assets, CI, …
 
 **Governance** — RoPA, DSAR 30 hari, breach 72 jam, notice portal. Anda boleh create/update.
 
-**WFM** — occupancy/forecast mengikuti filter account; roster/skills/on-call **satu grid untuk seluruh tenant**. Dispatch policy di `/org` (group). Anda boleh menulis roster. Di tenant demo bersama, jangan rewrite kecuali isolasi disepakati.
+**WFM** — occupancy/forecast mengikuti filter account; roster/skills/on-call/penilaian **satu grid untuk seluruh tenant**. Dispatch policy di `/org` (group). Anda boleh menulis roster dan penilaian. Di tenant demo bersama, jangan rewrite roster atau penilaian seed kecuali isolasi disepakati.
 
 ---
 

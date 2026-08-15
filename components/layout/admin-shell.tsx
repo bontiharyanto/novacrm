@@ -27,7 +27,6 @@ import {
   Search,
   Settings,
   ShieldCheck,
-  Sparkles,
   Lightbulb,
   Ticket,
   Upload,
@@ -38,6 +37,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
+import { AssistantWidget } from '@/components/assistant/assistant-widget';
 import { CommandPalette } from '@/components/layout/command-palette';
 import { AccountSwitcher } from '@/components/accounts/account-switcher';
 import { PreferenceControls } from '@/components/layout/preference-controls';
@@ -56,11 +56,10 @@ type ProcessItem = { href: string; type: string | null; labelKey: NavKey; icon: 
 
 const overviewItems: NavItem[] = [
   { href: '/dashboard', labelKey: 'dashboard', icon: LayoutDashboard, action: 'read', subject: 'Ticket' },
-  { href: '/insights', labelKey: 'insights', icon: Lightbulb, action: 'read', subject: 'Ticket' },
-  { href: '/assistant', labelKey: 'assistant', icon: Sparkles, action: 'read', subject: 'Ticket' },
-  { href: '/reports', labelKey: 'reports', icon: BarChart3, action: 'read', subject: 'Ticket' },
-  { href: '/audit', labelKey: 'audit', icon: History, action: 'read', subject: 'Ticket' },
   { href: '/wfm', labelKey: 'wfm', icon: CalendarClock, action: 'read', subject: 'Wfm' },
+  { href: '/reports', labelKey: 'reports', icon: BarChart3, action: 'read', subject: 'Ticket' },
+  { href: '/insights', labelKey: 'insights', icon: Lightbulb, action: 'read', subject: 'Ticket' },
+  { href: '/audit', labelKey: 'audit', icon: History, action: 'read', subject: 'Ticket' },
 ];
 
 const processItems: ProcessItem[] = [
@@ -489,6 +488,7 @@ export function AgentShell({
               <kbd className="ml-auto hidden font-mono text-[10px] text-zinc-600 sm:inline">⌘K</kbd>
             </button>
             <PreferenceControls compact />
+            <AssistantWidget firstName={fullName.split(' ')[0] || fullName} />
             {(() => {
               const active = accounts.find((account) => account.id === activeAccountId);
               return (

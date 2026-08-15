@@ -29,6 +29,7 @@ export type Subjects =
   | 'Catalog'
   | 'Governance'
   | 'Wfm'
+  | 'StaffReview'
   | 'NotificationSettings'
   | 'NotificationLog'
   | 'Tenant'
@@ -54,6 +55,7 @@ function grantDeskOps(can: AbilityBuilder<AppAbility>['can']) {
   can('read', 'Catalog');
   can('read', 'Wfm');
   can('update', 'Wfm');
+  can('read', 'StaffReview');
   can('read', 'Governance');
   can('read', 'NotificationLog');
   can('read', 'Knowledge');
@@ -99,6 +101,8 @@ export function defineAbilityFor(role: AppRole): AppAbility {
     can('update', 'Governance');
     can('create', 'Wfm');
     can('manage', 'Wfm');
+    can('create', 'StaffReview');
+    can('update', 'StaffReview');
     can('create', 'Import');
     can('read', 'Import');
     return build();
@@ -117,6 +121,8 @@ export function defineAbilityFor(role: AppRole): AppAbility {
     can('update', 'Governance');
     can('create', 'Wfm');
     can('manage', 'Wfm');
+    can('create', 'StaffReview');
+    can('update', 'StaffReview');
     return build();
   }
 
@@ -124,6 +130,8 @@ export function defineAbilityFor(role: AppRole): AppAbility {
     grantDeskOps(can);
     can('read', 'User');
     can('read', 'Workflow');
+    can('create', 'StaffReview');
+    can('update', 'StaffReview');
     return build();
   }
 

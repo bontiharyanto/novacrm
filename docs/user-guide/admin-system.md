@@ -204,7 +204,7 @@ Alert berulang dalam 24 jam meng-update tiket yang sama. Pesan WA / Telegram / e
 - **Reports** — 7 / 30 / 90 hari atau custom; CSV / Excel / PDF. Kartu **Vendor / UC queue** (open, breach, antrian, kredit). KPI **CSAT**.
 - **Assistant** — baca fakta 7 hari; **tidak** mengubah tiket. Perlu AI di Integrations.
 - **AI Insights** — tekanan antrian, risiko SLA, beban WFM, kesehatan account.
-- **WFM** — occupancy/forecast mengikuti filter account; roster/skills/on-call **tenant-wide**. Dispatch di assignment group. Auto-assign butuh worker. Admin boleh menulis roster; di kelas bersama jangan rewrite kecuali tenant terisolasi.
+- **WFM** — occupancy/forecast mengikuti filter account; roster/skills/on-call/penilaian **tenant-wide**. Dispatch di assignment group. Auto-assign butuh worker. Admin boleh menulis roster dan penilaian; di kelas bersama jangan rewrite kecuali tenant terisolasi.
 
 ---
 

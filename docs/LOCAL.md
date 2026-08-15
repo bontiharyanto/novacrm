@@ -78,7 +78,7 @@ npm run local:dev
 | L3 | `maya.l3@novacrm.app` | `NovaCRM!2026` |
 | On-call | `andi.oncall@novacrm.app` | `NovaCRM!2026` |
 
-WFM desk: [http://localhost:3000/wfm](http://localhost:3000/wfm) — occupancy, roster, skills, on-call, forecast. Dispatch policy lives on each assignment group.
+WFM desk: [http://localhost:3000/wfm](http://localhost:3000/wfm) — occupancy, roster, skills, on-call, forecast, reviews. Dispatch policy lives on each assignment group.
 
 ## What to click through
 
@@ -89,7 +89,7 @@ WFM desk: [http://localhost:3000/wfm](http://localhost:3000/wfm) — occupancy, 
 5. Assets: list + filters, **New asset**, CSV import, detail QR / warranty / book value. Type list is editable: on New asset, type a name (CCTV, UPS…) and press +. Detail also records **Move** (lokasi), **Transfer** (pemakai), **Replace** (retire + ganti aset). Demo: switch to **Bank Nusantara** → `AST-1001` Laptop Finance — history Jakarta HQ → Lt. 3, then Finance → Operations.
 6. CMDB: Graph view is **per account**. Switch to **Bank Nusantara** for WAN Indosat → FW → core → Lt.2 AP (`10.20.50.0/24` VLAN 50). Sidebar lists IP segments. New CI: site + network role + CIDR/VLAN/gateway. **Add card** di sidebar untuk tipe CI baru (mis. CCTV). Open a CI to add more segments or see impact.
 7. Attach a file (MinIO console: [http://localhost:9001](http://localhost:9001))
-8. Settings → **Appearance** for **Midnight / Daylight** theme and **EN / ID**. **Integrations**: AI defaults to **Groq (free)**. Create a key at [console.groq.com](https://console.groq.com/keys), paste, **Test connection**. Then open [Assistant](http://localhost:3000/assistant). Email test inbox: [Mailpit](http://127.0.0.1:54324)
+8. Settings → **Appearance** for **Midnight / Daylight** theme and **EN / ID**. **Integrations**: AI defaults to **Groq (free)**. Create a key at [console.groq.com](https://console.groq.com/keys), paste, **Test connection**. Then click **Tanya AI** on the top bar (or [Assistant](http://localhost:3000/assistant)). Email test inbox: [Mailpit](http://127.0.0.1:54324)
 9. Sign out, login as **customer** → [portal](http://localhost:3000/portal): **Catalog** to submit a record producer, or **New request** for a freeform ticket, then track `/portal/{id}`
 10. Automation: [Workflows](http://localhost:3000/workflows) → **New flow** → pick **Standard / Normal / Complex**. Canvas supports condition (Yes/No) nodes. Ticket create/status/comment, **machine alert**, and **inbound message** can run BullMQ actions (assign, email, WhatsApp, Telegram, status, asset). Check **Recent runs** on the flow.
     - Auto-create ticket: `POST /api/webhooks/whatsapp` (secret `local-whatsapp-secret`), `/api/webhooks/telegram`, `/api/webhooks/email`, `/api/webhooks/alerts` (Prometheus/Grafana JSON), `/api/webhooks/generic`. Repeat alerts within 24h update the same ticket.
@@ -105,7 +105,7 @@ WFM desk: [http://localhost:3000/wfm](http://localhost:3000/wfm) — occupancy, 
 20. `http://localhost:3000/api/health` should show Redis `up`
 21. Sysadmin Ops: [http://127.0.0.1:3100](http://127.0.0.1:3100) — service health, BullMQ queues (`notifications`, `workflows`, `wfm`), retry failed jobs. Independent of the desk. Details: [OPS.md](OPS.md). Scale workers: [WORKERS.md](WORKERS.md). Optional: `OPS_TOKEN` + header `x-ops-token`.
 22. AI Insights: [http://localhost:3000/insights](http://localhost:3000/insights) — four cards (queue pressure, SLA risk, workforce load, account health). Needs Groq (or another AI plugin) on **Integrations**.
-23. WFM: [http://localhost:3000/wfm](http://localhost:3000/wfm) — occupancy, roster, skills, on-call, forecast. Dispatch policy lives on each assignment group.
+23. WFM: [http://localhost:3000/wfm](http://localhost:3000/wfm) — occupancy, roster, skills, on-call, forecast, reviews (`/wfm/reviews`). Dispatch policy lives on each assignment group.
 24. Bulk import: [http://localhost:3000/import](http://localhost:3000/import) — download template → fill → preview → import (manager+).
 25. Integrations catalog: Settings → **Integrations**. Built-in slugs include AI, WhatsApp, Telegram, email, Gmail, Exchange, Slack, Teams, Jira, Salesforce, Entra / Google / Okta / SAML SSO, webhook. **Tambah plugin** adds a tenant card. Google / Microsoft / Okta show login buttons on `/login` when `clientId` is set and the same provider is enabled in Supabase Auth. SAML shows **Continue with SAML** when the plugin has an HTTPS SSO URL + IdP signing cert; ACS is `/api/auth/saml/acs`, SP metadata is `/api/auth/saml/metadata`. Optional `allowedDomains` (e.g. `novacrm.app`) JIT-provisions staff; invited emails copy memberships. MFA TOTP is a tenant toggle (Settings → Security), default off; lab cannot enable it. `/login?tenant=novacrm-demo` selects the tenant.
 

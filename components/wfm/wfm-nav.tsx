@@ -11,6 +11,7 @@ const tabs = [
   { href: '/wfm/skills', key: 'skills' as const },
   { href: '/wfm/oncall', key: 'oncall' as const },
   { href: '/wfm/forecast', key: 'forecast' as const },
+  { href: '/wfm/reviews', key: 'reviews' as const },
 ];
 
 export function WfmNav() {
@@ -25,7 +26,7 @@ export function WfmNav() {
       </div>
       <div className="flex flex-wrap gap-1 rounded-lg border border-zinc-800 bg-zinc-950 p-1">
         {tabs.map((tab) => {
-          const active = pathname === tab.href;
+          const active = tab.href === '/wfm' ? pathname === '/wfm' : pathname === tab.href || pathname.startsWith(`${tab.href}/`);
           return (
             <Link
               key={tab.href}

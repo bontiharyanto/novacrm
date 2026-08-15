@@ -112,7 +112,7 @@ Add after lunch:
 
 **CMDB.** Always demo on **Bank Nusantara**. Internal is a different graph; **All** mixes accounts. Impact uses the linked asset, not a ticket→CI field. Do not let the class rewrite seeded topology.
 
-**WFM.** Occupancy/forecast follow the account filter. Roster is **shared for the whole tenant** — Lab 11b is read-only. Own presence is OK. Auto-assign needs Redis + `npm run worker`.
+**WFM.** Occupancy/forecast follow the account filter. Roster and the seeded staff review are **shared for the whole tenant** — Lab 11b is read-only. Own presence is OK. Auto-assign needs Redis + `npm run worker`. Reviews are 1–5 human scores plus an advisory AI opinion and a ticket snapshot — not CSAT-on-person and not an HR pack.
 
 **Realtime.** Two browsers (admin + agent) on the same ticket: a status change should appear without refresh. If it does not, Redis is down — check `/api/health`.
 

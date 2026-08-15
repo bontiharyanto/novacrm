@@ -10,6 +10,8 @@ Account scope: `accessible_account_ids()` — manager+ sees every tenant account
 | Desk tickets / assets / CMDB | own tickets | ● | ● | ● | ● | ● | ● |
 | WFM read / own presence | | ● | ● | ● | ● | ● | ● |
 | WFM roster / skills / on-call | | | | ● | ● | ● | ● |
+| Staff review read (own submitted) | | ● | ● | ● | ● | ● | ● |
+| Staff review write | | | ● | ● | ● | ● | ● |
 | Users read | | | ● | ● | ● | ● | ● |
 | Users create / update (rank-limited) | | | | ● | ● | ● | ● |
 | SLA write | | | | ● | ● | ● | ● |

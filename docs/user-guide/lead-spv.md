@@ -25,6 +25,7 @@ Team Lead menjaga **aliran antrian**. SPV menambah **aturan main** (SLA, katalog
 | Tulis SLA | | ● |
 | Tulis catalog item | | ● |
 | Roster / skills / on-call WFM | baca | ● tulis |
+| Penilaian staf (`/wfm/reviews`) | ● tulis | ● tulis |
 | Accounts / org / import / workflow write | | |
 | Integrations | | |
 
@@ -136,8 +137,9 @@ Pastikan: home unit, group (L1/L2/L3), **account membership**. Tanpa membership,
 | --- | --- | --- |
 | Occupancy / forecast | Baca, pakai untuk assign | Baca + tindak lanjut kapasitas |
 | Roster / skills / on-call | Baca | Tulis (kelas: jangan rewrite shared roster) |
+| Penilaian | Tulis skor 1–5 + catatan; kirim | Sama + boleh edit draf orang lain |
 
-Occupancy dan forecast mengikuti **filter account**. Roster/skills/on-call **tenant-wide** (bukan per customer). Kebijakan dispatch ada di **assignment group** (`/org` — form dispatch = manager/admin). Auto-assign butuh Redis + worker. Lead/SPV menaati group yang sudah ada.
+Occupancy dan forecast mengikuti **filter account**. Roster/skills/on-call **tenant-wide** (bukan per customer). **Penilaian** juga tenant-wide: pilih agen, periode, skor 1–5 (mutu / SLA / kerja sama / kepemilikan), kirim. **Minta AI** mengisi opini kedua dari metrik tiket (bukan skor resmi). Snapshot + AI muncul di detail. Agent hanya melihat penilaian yang sudah dikirim, lalu **Akui**. Bukan form HR tahunan dan bukan CSAT per orang. Kelas: jangan rewrite penilaian seed. Kebijakan dispatch ada di **assignment group** (`/org` — form dispatch = manager/admin). Auto-assign butuh Redis + worker. Lead/SPV menaati group yang sudah ada.
 
 ---
 
