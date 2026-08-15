@@ -155,7 +155,7 @@ export async function processNotificationJob(payload: NotificationJobPayload) {
             assignee: assigneeName,
             url: detailUrl,
           });
-        for (const chatId of targets) {
+        for (const chatId of Array.from(targets)) {
           const result = await sendTelegram(chatId, text, { botToken });
           results.push({ channel: 'telegram', ok: Boolean(result.ok), error: result.error });
           await appendNotificationLog({
@@ -193,7 +193,7 @@ export async function processNotificationJob(payload: NotificationJobPayload) {
             status: displayStatus,
             url: detailUrl,
           });
-        for (const target of targets) {
+        for (const target of Array.from(targets)) {
           const result = await sendWhatsApp(target, text, { apiKey });
           results.push({ channel: 'whatsapp', ok: Boolean(result.ok), error: result.error });
           await appendNotificationLog({

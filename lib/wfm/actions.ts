@@ -20,6 +20,7 @@ import {
   type WfmOccupancyRow,
   type WfmOncallRotation,
   type WfmPresence,
+  type WfmPresenceStatus,
   type WfmRosterEntry,
   type WfmShiftTemplate,
   type WfmSkill,
@@ -118,6 +119,19 @@ export async function listEligibleAgents(groupId?: string): Promise<WfmEligibleA
     onShift: true,
     skillIds: [],
   }));
+}
+
+export async function getMyPresence(): Promise<WfmPresenceStatus> {
+  const session = await getSessionProfile();
+  if (!session || !canRole(session.profile.role, 'read', 'Wfm')) return 'available';
+  const supabase = await createSupabaseServerClient();
+  const { data } = await supabase
+    .from('wfm_presence')
+    .select('status')
+    .eq('tenant_id', session.profile.tenantId)
+    .eq('user_id', session.userId)
+    .maybeSingle();
+  return (data?.status as WfmPresenceStatus | undefined) ?? 'available';
 }
 
 export async function setMyPresence(input: unknown) {

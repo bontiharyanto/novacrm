@@ -2,7 +2,7 @@
 
 import { getSessionProfile } from '@/lib/auth/session';
 import { canRole } from '@/lib/rbac/ability';
-import { isTenantAdminRole } from '@/lib/rbac/roles';
+import { isTenantAdminRole, parseAppRole } from '@/lib/rbac/roles';
 import { isLocale, type Locale } from '@/lib/preferences';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import {
@@ -14,7 +14,8 @@ import {
 import { normalizePublicUrl } from '@/lib/notifications/public-url';
 
 function canEditTemplates(role: string) {
-  return isTenantAdminRole(role) && canRole(role, 'update', 'NotificationSettings');
+  const parsed = parseAppRole(role);
+  return isTenantAdminRole(parsed) && canRole(parsed, 'update', 'NotificationSettings');
 }
 
 export async function getNotificationTemplateEditor(locale: Locale) {

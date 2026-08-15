@@ -2,7 +2,7 @@
 
 import { getSessionProfile } from '@/lib/auth/session';
 import { canRole } from '@/lib/rbac/ability';
-import { isTenantAdminRole } from '@/lib/rbac/roles';
+import { isTenantAdminRole, parseAppRole } from '@/lib/rbac/roles';
 import { isLocale } from '@/lib/preferences';
 import { getAiConfigForTenant } from '@/lib/settings/integrations';
 import { completeAiChat } from '@/lib/integrations/ai';
@@ -20,7 +20,8 @@ const suggestionSchema = z.object({
 });
 
 function canEditTemplates(role: string) {
-  return isTenantAdminRole(role) && canRole(role, 'update', 'NotificationSettings');
+  const parsed = parseAppRole(role);
+  return isTenantAdminRole(parsed) && canRole(parsed, 'update', 'NotificationSettings');
 }
 
 function extractJsonObject(content: string): unknown | null {

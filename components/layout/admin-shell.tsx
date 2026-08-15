@@ -48,6 +48,7 @@ import type { AccountRecord } from '@/lib/accounts/schema';
 import type { AppRole, Actions, Subjects } from '@/lib/rbac/ability';
 import { canRole } from '@/lib/rbac/ability';
 import { isTenantAdminRole, ROLE_LABEL } from '@/lib/rbac/roles';
+import { PresenceControl } from '@/components/layout/presence-control';
 import { NovaWordmark } from '@/components/brand/nova-mark';
 import { cn } from '@/lib/utils';
 
@@ -351,23 +352,27 @@ function SidebarFooter({
           </>
         ) : null}
       </nav>
-      <div className="flex items-center gap-2 rounded-md border border-zinc-800/80 bg-zinc-900/40 px-2 py-1.5">
-        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-zinc-900 font-mono text-[10px] text-zinc-300">
-          {initials(fullName)}
+      <div className="space-y-1.5 rounded-md border border-zinc-800/80 bg-zinc-900/40 p-2">
+        <div className="flex items-center gap-2">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-zinc-900 font-mono text-[10px] text-zinc-300">
+            {initials(fullName)}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-[13px] leading-4 text-zinc-50">{fullName}</p>
+            <p className="mt-0.5 truncate font-mono text-[10px] uppercase tracking-[0.08em] text-zinc-500">{roleLabel}</p>
+          </div>
+          <form action={onSignOut}>
+            <button
+              type="submit"
+              className="inline-flex h-7 w-7 items-center justify-center rounded-md text-zinc-500 transition-colors duration-200 ease-out hover:bg-zinc-800 hover:text-zinc-50"
+              aria-label={t.common.signOut}
+              title={t.common.signOut}
+            >
+              <LogOut className="h-3.5 w-3.5" />
+            </button>
+          </form>
         </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-[13px] leading-4 text-zinc-50">{fullName}</p>
-          <p className="mt-0.5 truncate font-mono text-[10px] uppercase tracking-[0.08em] text-zinc-500">{roleLabel}</p>
-        </div>
-        <form action={onSignOut}>
-          <button
-            type="submit"
-            className="inline-flex h-9 items-center gap-1.5 rounded-md px-2 text-[12px] text-zinc-400 transition-colors duration-200 ease-out hover:bg-zinc-800 hover:text-zinc-50"
-          >
-            <LogOut className="h-3.5 w-3.5" />
-            {t.common.signOut}
-          </button>
-        </form>
+        {canRole(role, 'update', 'Wfm') ? <PresenceControl /> : null}
       </div>
     </div>
   );
