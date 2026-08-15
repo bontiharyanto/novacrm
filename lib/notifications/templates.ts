@@ -20,7 +20,7 @@ export function getTicketTemplates(event: 'ticket.create' | 'ticket.status_chang
     },
     'ticket.status_change': {
       subject: '{{number}} {{status}} · {{title}}',
-      body: 'Halo {{name}}, {{number}} status berubah menjadi {{status}}. {{message}}',
+      body: 'Halo {{name}}, {{number}} status berubah menjadi {{status}}. {{message}}{{csat}}',
     },
     'ticket.comment_add': {
       subject: '{{number}} new comment · {{title}}',

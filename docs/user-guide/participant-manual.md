@@ -387,7 +387,7 @@ Repeat alerts within 24 hours update the **same** ticket (correlation).
 
 **Dashboard** (`/dashboard`) — KPIs and aging for the active account.
 
-**Reports** (`/reports`) — range 7 / 30 / 90 days or custom. Preview, then export CSV / Excel / PDF. KPIs include **FRT**, **MTTR**, **backlog 7d+**, and **OLA/UC breached**. The **Vendor / UC queue** table compares Fortinet vs Indosat (open, breach, avg queue). **Ask assistant** jumps to chat with that snapshot.
+**Reports** (`/reports`) — range 7 / 30 / 90 days or custom. Preview, then export CSV / Excel / PDF. KPIs include **FRT**, **MTTR**, **backlog 7d+**, **OLA/UC breached**, and **CSAT**. The **Vendor / UC queue** table compares Fortinet vs Indosat (open, breach, avg queue, service credit). **Ask assistant** jumps to chat with that snapshot.
 
 **Knowledge** (`/knowledge`) — articles from **Publish to knowledge** on a resolved ticket. Creating a ticket with title `VPN` should hint the seeded article. Problem *Backup gagal semalam* has RCA + a linked incident.
 

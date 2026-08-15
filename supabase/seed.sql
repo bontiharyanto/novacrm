@@ -1077,4 +1077,101 @@ where not exists (
     and title = 'VPN disconnect from home — split tunnel check'
 );
 
+update public.tickets
+set
+  group_id = '99999999-0001-0001-0001-000000000007',
+  uc_id = 'b2b2b2b2-0001-0001-0001-000000000001',
+  ola_started_at = now() - interval '36 hours',
+  ola_resolve_by = now() - interval '6 hours',
+  sla_paused_at = null
+where title = 'Phishing email masuk'
+  and tenant_id = '11111111-1111-1111-1111-111111111111';
+
+update public.tickets
+set
+  group_id = '99999999-0001-0001-0001-000000000008',
+  uc_id = 'b2b2b2b2-0001-0001-0001-000000000002',
+  ola_started_at = now() - interval '20 hours',
+  ola_resolve_by = now() - interval '4 hours',
+  sla_paused_at = null
+where title = 'AC ruang server panas'
+  and tenant_id = '11111111-1111-1111-1111-111111111111';
+
+insert into public.ticket_csat (id, tenant_id, ticket_id, score, comment, created_by)
+select
+  'c5a7c5a7-0001-0001-0001-000000000001',
+  t.tenant_id,
+  t.id,
+  5,
+  'Monitor replaced the same day.',
+  t.requester_id
+from public.tickets t
+where t.title = 'Monitor bergaris'
+  and t.tenant_id = '11111111-1111-1111-1111-111111111111'
+on conflict (ticket_id) do nothing;
+
+insert into public.ticket_csat (id, tenant_id, ticket_id, score, comment, created_by)
+select
+  'c5a7c5a7-0001-0001-0001-000000000002',
+  t.tenant_id,
+  t.id,
+  3,
+  'Port fixed, but waited too long.',
+  t.requester_id
+from public.tickets t
+where t.title = 'Kabel LAN putus'
+  and t.tenant_id = '11111111-1111-1111-1111-111111111111'
+on conflict (ticket_id) do nothing;
+
+insert into public.ticket_csat (id, tenant_id, ticket_id, score, comment, created_by)
+select
+  'c5a7c5a7-0001-0001-0001-000000000003',
+  t.tenant_id,
+  t.id,
+  4,
+  'Account ready before start date.',
+  t.requester_id
+from public.tickets t
+where t.title = 'User baru butuh akun'
+  and t.tenant_id = '11111111-1111-1111-1111-111111111111'
+on conflict (ticket_id) do nothing;
+
+insert into public.uc_credits (
+  id, tenant_id, contract_id, ticket_id, group_id, reason, credit_minutes, amount_note, status, created_by
+)
+select
+  'd4d4d4d4-0001-0001-0001-000000000001',
+  t.tenant_id,
+  'b2b2b2b2-0001-0001-0001-000000000001',
+  t.id,
+  t.group_id,
+  'ola_resolve_breach',
+  360,
+  'Missed P1 response: service credit 2% of monthly fee.',
+  'open',
+  '22222222-2222-2222-2222-222222222222'
+from public.tickets t
+where t.title = 'Phishing email masuk'
+  and t.tenant_id = '11111111-1111-1111-1111-111111111111'
+on conflict (ticket_id) do nothing;
+
+insert into public.uc_credits (
+  id, tenant_id, contract_id, ticket_id, group_id, reason, credit_minutes, amount_note, status, created_by
+)
+select
+  'd4d4d4d4-0001-0001-0001-000000000002',
+  t.tenant_id,
+  'b2b2b2b2-0001-0001-0001-000000000002',
+  t.id,
+  t.group_id,
+  'ola_resolve_breach',
+  120,
+  'Availability below 99.5% in a month: 1-day credit.',
+  'open',
+  '22222222-2222-2222-2222-222222222222'
+from public.tickets t
+where t.title = 'AC ruang server panas'
+  and t.tenant_id = '11111111-1111-1111-1111-111111111111'
+on conflict (ticket_id) do nothing;
+
 

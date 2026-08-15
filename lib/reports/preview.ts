@@ -32,11 +32,11 @@ export function reportToCsv(report: ReportSnapshot) {
     ...countRows('hold', report.byHoldReason),
     ...report.byVendor.map(
       (row) =>
-        `vendor,${csvEscape(row.id)},${csvEscape(row.label)},${row.open}/${row.olaBreached}/${row.avgQueueMinutes}`,
+        `vendor,${csvEscape(row.id)},${csvEscape(row.label)},${row.open}/${row.olaBreached}/${row.avgQueueMinutes}/${row.creditMinutes}`,
     ),
     ...report.byUc.map(
       (row) =>
-        `uc,${csvEscape(row.id)},${csvEscape(row.label)},${row.open}/${row.olaBreached}/${row.avgQueueMinutes}`,
+        `uc,${csvEscape(row.id)},${csvEscape(row.label)},${row.open}/${row.olaBreached}/${row.avgQueueMinutes}/${row.creditMinutes}`,
     ),
     ...report.trend.map((row) => `trend,${row.day},Opened / closed,${row.opened}/${row.closed}`),
     ...report.aging.map(
@@ -57,7 +57,7 @@ function countSheet(name: string, rows: NamedCount[]): PreviewSheet {
 function vendorSheet(name: string, rows: VendorScore[]): PreviewSheet {
   return {
     name,
-    columns: ['ID', 'Label', 'Party', 'Contract', 'Open', 'OLA/UC breached', 'Avg queue (min)'],
+    columns: ['ID', 'Label', 'Party', 'Contract', 'Open', 'OLA/UC breached', 'Avg queue (min)', 'Credit (min)'],
     rows: rows.map((row) => [
       row.id,
       row.label,
@@ -66,6 +66,7 @@ function vendorSheet(name: string, rows: VendorScore[]): PreviewSheet {
       String(row.open),
       String(row.olaBreached),
       String(row.avgQueueMinutes),
+      String(row.creditMinutes),
     ]),
   };
 }

@@ -35,6 +35,17 @@ type AssetRow = {
   warranty_expiry?: string | null;
 };
 
+type CsatRow = {
+  ticket_id: string;
+  score: number;
+};
+
+type CreditRow = {
+  contract_id: string;
+  credit_minutes: number;
+  status?: string;
+};
+
 function minutesBetween(from: string, to: string) {
   const delta = new Date(to).getTime() - new Date(from).getTime();
   if (!Number.isFinite(delta) || delta < 0) return null;
@@ -56,6 +67,7 @@ export function buildReportSnapshot(
   catalogPublished: number,
   period: ReportPeriod,
   groupMeta: Record<string, ReportGroupMeta | string> = {},
+  extras: { csat?: CsatRow[]; credits?: CreditRow[] } = {},
 ): ReportSnapshot {
   const now = new Date();
   const since = period.start;
@@ -240,6 +252,17 @@ export function buildReportSnapshot(
     Object.entries(groupMeta).map(([id, value]) => [id, typeof value === 'string' ? value : value.name]),
   );
 
+  const creditByContract = new Map<string, number>();
+  for (const row of extras.credits ?? []) {
+    if (row.status === 'waived') continue;
+    creditByContract.set(row.contract_id, (creditByContract.get(row.contract_id) ?? 0) + row.credit_minutes);
+  }
+
+  const csatScores = (extras.csat ?? []).map((row) => row.score).filter((score) => score >= 1 && score <= 5);
+  const csatAverage = csatScores.length
+    ? Math.round((csatScores.reduce((sum, score) => sum + score, 0) / csatScores.length) * 10) / 10
+    : 0;
+
   const toVendorScores = (
     map: Map<string, { open: number; breached: number; queue: number[]; partyKind: 'vendor' | 'principal'; label?: string; contractName?: string; meta?: ReportGroupMeta }>,
   ): VendorScore[] =>
@@ -252,6 +275,7 @@ export function buildReportSnapshot(
         open: row.open,
         olaBreached: row.breached,
         avgQueueMinutes: average(row.queue),
+        creditMinutes: creditByContract.get(id) ?? (row.meta?.ucId ? creditByContract.get(row.meta.ucId) ?? 0 : 0),
       }))
       .sort((a, b) => b.olaBreached - a.olaBreached || b.open - a.open);
 
@@ -274,6 +298,8 @@ export function buildReportSnapshot(
       mttrMinutes: average(mttrSamples),
       backlogAging,
       ucBreached,
+      csatAverage,
+      csatCount: csatScores.length,
     },
     byType: toCounts(byTypeMap, typeLabels),
     byStatus: toCounts(byStatusMap, statusLabels, statusOrder),

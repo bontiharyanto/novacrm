@@ -47,6 +47,10 @@ export async function dispatchTicketNotification(context: TicketEventContext) {
     title: ticket.title,
     type: typeLabel,
     message: message ?? '',
+    csat:
+      ticket.status === 'resolved' || ticket.status === 'closed'
+        ? ' Rate the ticket from the portal after you confirm the fix.'
+        : '',
   });
 
   const payload: NotificationJobPayload = {

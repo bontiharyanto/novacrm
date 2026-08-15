@@ -281,6 +281,11 @@ export function ReportsPage() {
                 hint: 'Vendor / principal clock',
                 danger: true,
               },
+              {
+                label: 'CSAT',
+                value: report.kpis.csatCount ? report.kpis.csatAverage.toFixed(1) : '—',
+                hint: report.kpis.csatCount ? `${report.kpis.csatCount} ratings` : 'No ratings yet',
+              },
             ].map((item) => (
               <Card key={item.label} className="transition-all duration-200 ease-out hover:-translate-y-0.5">
                 <CardContent className="p-4">
@@ -377,18 +382,19 @@ export function ReportsPage() {
                     <p className="py-6 text-sm text-zinc-500">No open vendor or UC-backed tickets.</p>
                   ) : (
                     <div className="overflow-hidden rounded-lg border border-zinc-800">
-                      <div className="grid grid-cols-[minmax(0,1.4fr)_5.5rem_minmax(0,1fr)_4rem_5.5rem_5.5rem] gap-3 border-b border-zinc-800 bg-zinc-950 px-3 py-2 text-[11px] uppercase tracking-[0.12em] text-zinc-500">
+                      <div className="grid grid-cols-[minmax(0,1.4fr)_5.5rem_minmax(0,1fr)_4rem_5.5rem_5.5rem_5.5rem] gap-3 border-b border-zinc-800 bg-zinc-950 px-3 py-2 text-[11px] uppercase tracking-[0.12em] text-zinc-500">
                         <span>Vendor</span>
                         <span>Party</span>
                         <span>Contract</span>
                         <span className="text-right">Open</span>
                         <span className="text-right">Breach</span>
                         <span className="text-right">Queue</span>
+                        <span className="text-right">Credit</span>
                       </div>
                       {(report.byVendor.length > 0 ? report.byVendor : report.byUc).map((row) => (
                         <div
                           key={row.id}
-                          className="grid grid-cols-[minmax(0,1.4fr)_5.5rem_minmax(0,1fr)_4rem_5.5rem_5.5rem] items-center gap-3 border-b border-zinc-800/80 px-3 py-2 last:border-b-0"
+                          className="grid grid-cols-[minmax(0,1.4fr)_5.5rem_minmax(0,1fr)_4rem_5.5rem_5.5rem_5.5rem] items-center gap-3 border-b border-zinc-800/80 px-3 py-2 last:border-b-0"
                         >
                           <span className="truncate text-sm text-zinc-50">{row.label}</span>
                           <span className="text-xs capitalize text-zinc-500">{row.partyKind}</span>
@@ -399,6 +405,9 @@ export function ReportsPage() {
                           </span>
                           <span className="text-right font-mono text-xs text-zinc-400">
                             {formatDurationMinutes(row.avgQueueMinutes)}
+                          </span>
+                          <span className={`text-right font-mono text-xs ${row.creditMinutes > 0 ? 'text-amber-300' : 'text-zinc-500'}`}>
+                            {formatDurationMinutes(row.creditMinutes)}
                           </span>
                         </div>
                       ))}

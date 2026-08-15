@@ -70,6 +70,8 @@ export type TicketRecord = {
   workaround?: string;
   knownError?: boolean;
   resolvedAt?: string;
+  csatScore?: number;
+  csatComment?: string;
   aiSummary?: string;
   aiSummaryAt?: string;
   relatedIncidents?: Array<{ id: string; number: string; title: string; status: TicketStatus }>;

@@ -88,6 +88,7 @@ export async function reportToXlsx(report: ReportSnapshot) {
       { header: 'Open', key: 'open', width: 10, style: { numFmt: '#,##0' } },
       { header: 'OLA/UC breached', key: 'olaBreached', width: 16, style: { numFmt: '#,##0' } },
       { header: 'Avg queue (min)', key: 'avgQueueMinutes', width: 16, style: { numFmt: '#,##0' } },
+      { header: 'Credit (min)', key: 'creditMinutes', width: 14, style: { numFmt: '#,##0' } },
     ];
     rows.forEach((row) => sheet.addRow({ ...row, contractName: row.contractName ?? '' }));
     styleHeader(sheet);

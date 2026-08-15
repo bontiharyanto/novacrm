@@ -15,6 +15,8 @@ export type ReportKpis = {
   mttrMinutes: number;
   backlogAging: number;
   ucBreached: number;
+  csatAverage: number;
+  csatCount: number;
 };
 
 export type NamedCount = { id: string; label: string; value: number };
@@ -27,6 +29,7 @@ export type VendorScore = {
   open: number;
   olaBreached: number;
   avgQueueMinutes: number;
+  creditMinutes: number;
 };
 
 export type ReportGroupMeta = {

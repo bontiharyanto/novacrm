@@ -11,6 +11,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { createUnderpinningContract, updateUnderpinningContract } from '@/lib/uc/actions';
+import { UcCreditList } from '@/components/sla/uc-credit-list';
+import type { UcCredit } from '@/lib/uc/credits';
 import {
   defaultUcTargets,
   UC_PARTY_LABEL,
@@ -37,9 +39,11 @@ function minutesLabel(value: number) {
 export function UcEditor({
   contract,
   canEdit,
+  credits = [],
 }: {
   contract?: UnderpinningContract | null;
   canEdit: boolean;
+  credits?: UcCredit[];
 }) {
   const router = useRouter();
   const isNew = !contract;
@@ -330,6 +334,7 @@ export function UcEditor({
             ) : (
               <p>New contracts get a default matrix. Edit cells before save.</p>
             )}
+            {contract ? <UcCreditList credits={credits} /> : null}
           </CardContent>
         </Card>
       </aside>

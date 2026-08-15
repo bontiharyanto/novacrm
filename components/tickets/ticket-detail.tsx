@@ -85,6 +85,8 @@ type TicketItem = {
   aiSummary?: string;
   aiSummaryAt?: string;
   relatedIncidents?: RelatedIncident[];
+  csatScore?: number;
+  csatComment?: string;
 };
 
 type AgentOption = {
@@ -510,6 +512,15 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
               <Link href="/sla" className="mt-1 inline-block text-xs text-blue-300 hover:text-blue-200">
                 {ticket.ucId ? 'SLA + UC' : 'Agreement'}
               </Link>
+              {ticket.csatScore ? (
+                <div className="mt-3">
+                  <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">CSAT</p>
+                  <p className="mt-1 text-sm text-zinc-50">{ticket.csatScore}/5</p>
+                  {ticket.csatComment ? <p className="text-xs text-zinc-500">{ticket.csatComment}</p> : null}
+                </div>
+              ) : ticket.status === 'resolved' || ticket.status === 'closed' ? (
+                <p className="mt-3 text-xs text-zinc-500">Waiting for requester CSAT.</p>
+              ) : null}
             </div>
             <div>
               <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">Process</p>

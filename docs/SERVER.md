@@ -117,3 +117,4 @@ Apply in filename order (migrate.sh does this):
 - `20250815160000_underpinning_contracts.sql` (formal UC + targets, group/ticket `uc_id`)
 - `20250815170000_sso_oidc_fields.sql` (SSO allowedDomains + defaultRole)
 - `20250815180000_tenant_mfa.sql` (tenant MFA toggle, default off)
+- `20250815190000_csat_uc_credits.sql` (CSAT after resolve + UC service credits)

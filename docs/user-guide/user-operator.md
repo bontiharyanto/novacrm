@@ -187,6 +187,7 @@ Buka tiket di **My tickets** / `/portal/{id}`.
 
 - Baca status dan komentar agent.
 - Tambah komentar jika diminta info.
+- Setelah **resolved** / **closed**, isi **CSAT** (1–5) di halaman tiket.
 - Jangan buka tiket duplikat untuk isu yang sama; balas yang sudah ada.
 
 ## B.5 Privasi (UU PDP)
@@ -197,6 +198,7 @@ Buka tiket di **My tickets** / `/portal/{id}`.
 
 - [ ] Pakai **Catalog** jika itemnya ada
 - [ ] Satu isu = satu tiket
+- [ ] Rate tiket resolved (CSAT)
 - [ ] Lengkapi field wajib
 - [ ] Pantau **My tickets**, bukan email saja
 - [ ] Tidak mengirim kredensial di form

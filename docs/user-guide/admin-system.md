@@ -201,7 +201,7 @@ Alert berulang dalam 24 jam meng-update tiket yang sama. Pesan WA / Telegram / e
 ## 13. Laporan, Insights, WFM
 
 - **Dashboard** — KPI + aging account aktif.
-- **Reports** — 7 / 30 / 90 hari atau custom; CSV / Excel / PDF. Kartu **Vendor / UC queue** (open, breach OLA/UC, antrian rata-rata).
+- **Reports** — 7 / 30 / 90 hari atau custom; CSV / Excel / PDF. Kartu **Vendor / UC queue** (open, breach, antrian, kredit). KPI **CSAT**.
 - **Assistant** — baca fakta 7 hari; **tidak** mengubah tiket. Perlu AI di Integrations.
 - **AI Insights** — tekanan antrian, risiko SLA, beban WFM, kesehatan account.
 - **WFM** — occupancy, roster, skills, on-call, forecast. Admin boleh menulis roster; di kelas bersama jangan rewrite kecuali tenant terisolasi.

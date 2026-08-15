@@ -14,6 +14,8 @@ import { formatRelativeId } from '@/lib/utils/dates';
 import { useRealtimeTable } from '@/lib/supabase/realtime';
 import { displayTicketNumber, isTicketType, stageLabel, type TicketType } from '@/lib/tickets/process';
 import type { TicketPriority, TicketStatus } from '@/lib/tickets/schema';
+import { CsatSurvey } from '@/components/csat/csat-survey';
+import type { CsatResponse } from '@/lib/csat/schema';
 
 type TicketItem = {
   id: string;
@@ -27,6 +29,8 @@ type TicketItem = {
   requesterName: string;
   createdAt: string;
   comments: Array<{ id: string; author: string; comment: string; createdAt: string }>;
+  csatScore?: number;
+  csatComment?: string;
 };
 
 const statusTone: Record<TicketStatus, 'info' | 'warning' | 'success' | 'neutral'> = {
@@ -116,6 +120,22 @@ export function PortalTicket({ ticketId, authorName }: { ticketId: string; autho
             {ticket.description ? <CommentHtml html={ticket.description} /> : 'No description provided.'}
           </CardContent>
         </Card>
+
+        <CsatSurvey
+          ticketId={ticket.id}
+          status={ticket.status}
+          canSubmit
+          initial={
+            ticket.csatScore
+              ? ({
+                  ticketId: ticket.id,
+                  score: ticket.csatScore as CsatResponse['score'],
+                  comment: ticket.csatComment,
+                  createdAt: ticket.createdAt,
+                } satisfies CsatResponse)
+              : null
+          }
+        />
 
         <Card>
           <CardHeader>

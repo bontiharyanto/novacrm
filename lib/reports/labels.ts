@@ -15,6 +15,8 @@ export const kpiLabels: Record<keyof ReportKpis, string> = {
   mttrMinutes: 'MTTR (min)',
   backlogAging: 'Backlog 7d+',
   ucBreached: 'OLA/UC breached',
+  csatAverage: 'CSAT avg',
+  csatCount: 'CSAT responses',
 };
 
 export function formatDurationMinutes(minutes: number) {

@@ -7,6 +7,8 @@ import { buildReportSnapshot } from '@/lib/reports/compute';
 import { parseReportPeriod } from '@/lib/reports/period';
 import type { ReportGroupMeta, ReportSnapshot } from '@/lib/reports/schema';
 import { requireAccountId } from '@/lib/accounts/scope';
+import { listCsatForReports } from '@/lib/csat/actions';
+import { listUcCreditsForReports } from '@/lib/uc/credits';
 
 export async function getReportSnapshot(input?: {
   range?: string | null;
@@ -76,5 +78,9 @@ export async function getReportSnapshot(input?: {
     }
   }
 
-  return buildReportSnapshot(tickets ?? [], assets ?? [], catalogPublished ?? 0, period, groupMeta);
+  const [csat, credits] = await Promise.all([listCsatForReports(), listUcCreditsForReports()]);
+  return buildReportSnapshot(tickets ?? [], assets ?? [], catalogPublished ?? 0, period, groupMeta, {
+    csat,
+    credits,
+  });
 }

@@ -16,6 +16,7 @@ import { recordTicketAudit, recordTicketAuditDiff } from '@/lib/tickets/audit';
 import { defaultPendingReason, isPauseStatus } from '@/lib/tickets/pending';
 import { dispatchTicket, resolveInboundGroupId } from '@/lib/wfm/dispatch';
 import { enqueueWfmDispatch } from '@/lib/queue/wfm.queue';
+import { maybeRecordUcCredit } from '@/lib/uc/credits';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { sanitizeCommentHtml } from '@/lib/sanitize/html';
 
@@ -118,6 +119,17 @@ async function loadTicket(client: SupabaseClient, ticketId: string, tenantId?: s
         comment: item.message,
         createdAt: item.created_at,
       }));
+  }
+
+  const { data: csat } = await client
+    .from('ticket_csat')
+    .select('score, comment')
+    .eq('ticket_id', ticket.id)
+    .eq('tenant_id', ticket.tenantId)
+    .maybeSingle();
+  if (csat) {
+    ticket.csatScore = csat.score;
+    ticket.csatComment = csat.comment ?? undefined;
   }
 
   return { data: ticket, error: null };
@@ -542,6 +554,7 @@ export async function updateTicket(ticketId: string, input: unknown) {
     ],
   });
 
+  await maybeRecordUcCredit(supabase, hydrated, session.userId);
   await afterTicketMutation('ticket.status_change', hydrated, messages.join('. ') || undefined);
   return { data: hydrated, error: null };
 }

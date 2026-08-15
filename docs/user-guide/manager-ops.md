@@ -51,7 +51,7 @@ Jika API WhatsApp gagal: admin. Jika P1 Bank terlalu longgar: SPV atau Anda di `
 4. **Import** — aset/CMDB/user massal lewat preview, bukan Excel liar di tiket.
 5. **Workflows** — `ticket.create` auto-assign masih benar; Recent runs tanpa error bertubi.
 6. **Governance** — DSAR menumpuk? Breach terbuka?
-7. **Reports / Insights** — FRT, MTTR, backlog 7 hari+, beban per account / group.
+7. **Reports / Insights** — FRT, MTTR, backlog 7 hari+, CSAT, kredit UC Fortinet/Indosat, beban per account / group.
 
 Harian antrian tetap boleh Anda kerjakan, tetapi prioritas Anda adalah struktur, bukan menutup INC satu per satu.
 
