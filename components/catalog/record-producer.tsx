@@ -12,10 +12,11 @@ import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { TypeBadge } from '@/components/tickets/type-badge';
 import type { CatalogItem } from '@/lib/catalog/schema';
-import { ticketTypeMeta } from '@/lib/tickets/process';
+import { useI18n } from '@/components/layout/preferences-provider';
 
 export function RecordProducer({ itemId }: { itemId: string }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [item, setItem] = useState<CatalogItem | null>(null);
   const [answers, setAnswers] = useState<Record<string, string | boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -58,8 +59,6 @@ export function RecordProducer({ itemId }: { itemId: string }) {
     return <p className="p-6 text-sm text-zinc-500">Loading catalog item...</p>;
   }
 
-  const meta = ticketTypeMeta[item.ticketType];
-
   return (
     <motion.form
       onSubmit={handleSubmit}
@@ -71,20 +70,22 @@ export function RecordProducer({ itemId }: { itemId: string }) {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <Link href="/portal/catalog" className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-200">
-            <ArrowLeft className="h-3.5 w-3.5" /> Catalog
+            <ArrowLeft className="h-3.5 w-3.5" /> {t.portal.catalog}
           </Link>
           <div className="mt-2 flex items-center gap-2">
             <h1 className="text-2xl font-semibold text-zinc-50">{item.name}</h1>
             <TypeBadge type={item.ticketType} />
           </div>
-          <p className="mt-1 text-sm text-zinc-500">{item.shortDescription || meta.description}</p>
+          <p className="mt-1 text-sm text-zinc-500">
+            {item.shortDescription || t.tickets.typeHint[item.ticketType]}
+          </p>
         </div>
         <div className="flex gap-2">
           <Button type="button" variant="ghost" onClick={() => router.push('/portal/catalog')}>
-            Cancel
+            {t.common.cancel}
           </Button>
           <Button type="submit" disabled={isSubmitting}>
-            {isSubmitting ? 'Submitting...' : 'Submit request'}
+            {isSubmitting ? t.portal.submitting : t.portal.submitRequest}
           </Button>
         </div>
       </div>
@@ -92,7 +93,9 @@ export function RecordProducer({ itemId }: { itemId: string }) {
 
       <div className="space-y-4 rounded-xl border border-zinc-800 bg-zinc-900 p-5">
         {item.mergedVariables.length === 0 ? (
-          <p className="text-sm text-zinc-400">No additional fields. Submit to open a {meta.label.toLowerCase()}.</p>
+          <p className="text-sm text-zinc-400">
+            {t.tickets.type[item.ticketType]}
+          </p>
         ) : (
           item.mergedVariables.map((variable) => (
             <div key={variable.key} className="space-y-1.5">

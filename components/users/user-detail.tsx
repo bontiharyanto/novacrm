@@ -15,7 +15,7 @@ import { updateUserAccess } from '@/lib/users/actions';
 import type { DirectoryUser } from '@/lib/users/schema';
 import { RoleSelect } from '@/components/users/role-select';
 import type { AppRole } from '@/lib/rbac/ability';
-import { ROLE_LABEL } from '@/lib/rbac/roles';
+import { localizedRole } from '@/lib/i18n/labels';
 import { supportTierLabel } from '@/lib/tickets/pending';
 import type { AssignmentGroup } from '@/lib/org/schema';
 import { toastError, toastSuccess } from '@/components/ui/toast';
@@ -77,7 +77,7 @@ export function UserDetail({
           </Link>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <h1 className="text-xl font-semibold text-zinc-50">{user.fullName}</h1>
-            <Badge tone={roleTone[user.role]}>{ROLE_LABEL[user.role]}</Badge>
+            <Badge tone={roleTone[user.role]}>{localizedRole(t, user.role)}</Badge>
             {user.supportLevel ? <Badge tone="warning">{supportTierLabel[user.supportLevel]}</Badge> : null}
           </div>
           <p className="mt-1 text-sm text-zinc-500">{user.email ?? 'No email'}</p>

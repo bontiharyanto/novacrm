@@ -12,7 +12,9 @@ import { ProcessStrip } from '@/components/tickets/process-strip';
 import { CommentEditor, CommentHtml } from '@/components/tickets/comment-editor';
 import { formatRelativeId } from '@/lib/utils/dates';
 import { useRealtimeTable } from '@/lib/supabase/realtime';
-import { displayTicketNumber, isTicketType, stageLabel, type TicketType } from '@/lib/tickets/process';
+import { useI18n } from '@/components/layout/preferences-provider';
+import { localizedStage } from '@/lib/i18n/labels';
+import { displayTicketNumber, isTicketType, type TicketType } from '@/lib/tickets/process';
 import type { TicketPriority, TicketStatus } from '@/lib/tickets/schema';
 import { CsatSurvey } from '@/components/csat/csat-survey';
 import type { CsatResponse } from '@/lib/csat/schema';
@@ -43,6 +45,7 @@ const statusTone: Record<TicketStatus, 'info' | 'warning' | 'success' | 'neutral
 };
 
 export function PortalTicket({ ticketId, authorName }: { ticketId: string; authorName: string }) {
+  const { t } = useI18n();
   const [ticket, setTicket] = useState<TicketItem | null>(null);
   const [comment, setComment] = useState('');
   const [editorKey, setEditorKey] = useState(0);
@@ -98,7 +101,7 @@ export function PortalTicket({ ticketId, authorName }: { ticketId: string; autho
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <h1 className="font-mono text-xl font-semibold text-zinc-50">{displayTicketNumber(ticket.number, ticket.id)}</h1>
             <TypeBadge type={type} />
-            <Badge tone={statusTone[ticket.status]}>{stageLabel(type, ticket.status)}</Badge>
+            <Badge tone={statusTone[ticket.status]}>{localizedStage(t, type, ticket.status)}</Badge>
           </div>
           <h2 className="mt-1 text-2xl font-semibold text-zinc-50">{ticket.title}</h2>
         </div>
@@ -168,7 +171,7 @@ export function PortalTicket({ ticketId, authorName }: { ticketId: string; autho
         <Card>
           <CardContent className="space-y-3 p-5">
             <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Status</p>
-            <p className="text-sm text-zinc-50">{stageLabel(type, ticket.status)}</p>
+            <p className="text-sm text-zinc-50">{localizedStage(t, type, ticket.status)}</p>
             <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Priority</p>
             <p className="text-sm capitalize text-zinc-50">{ticket.priority}</p>
             <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Requester</p>

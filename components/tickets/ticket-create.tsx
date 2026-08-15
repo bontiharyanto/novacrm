@@ -38,12 +38,7 @@ function htmlToText(html: string) {
   return html.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/\s+/g, ' ').trim();
 }
 
-const PRIORITIES: Array<{ id: TicketPriority; label: string }> = [
-  { id: 'low', label: 'Low' },
-  { id: 'medium', label: 'Medium' },
-  { id: 'high', label: 'High' },
-  { id: 'critical', label: 'Critical' },
-];
+const PRIORITIES: TicketPriority[] = ['low', 'medium', 'high', 'critical'];
 
 export function TicketCreate({
   currentUserId,
@@ -86,7 +81,6 @@ export function TicketCreate({
   const [catalogItemId, setCatalogItemId] = useState('');
   const [catalogAnswers, setCatalogAnswers] = useState<Record<string, string | boolean>>({});
 
-  const meta = ticketTypeMeta[ticketType];
   const resolvedTitle = title.trim() || htmlToText(description).slice(0, 200);
   const backHref = ticketType ? `/tickets?type=${ticketType}` : '/tickets';
   const customerAccounts = accounts.filter((account) => account.type === 'customer');
@@ -230,17 +224,19 @@ export function TicketCreate({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <Link href={backHref} className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-200">
-              <ArrowLeft className="h-3.5 w-3.5" /> Tickets
+              <ArrowLeft className="h-3.5 w-3.5" /> {t.tickets.ticketsBack}
             </Link>
             <div className="mt-1 flex flex-wrap items-center gap-2">
-              <h1 className="text-xl font-semibold text-zinc-50">New {meta.label.toLowerCase()}</h1>
+              <h1 className="text-xl font-semibold text-zinc-50">
+                {t.common.new} {t.tickets.type[ticketType]}
+              </h1>
               <TypeBadge type={ticketType} />
             </div>
-            <p className="mt-1 text-sm text-zinc-500">{meta.description}</p>
+            <p className="mt-1 text-sm text-zinc-500">{t.tickets.typeHint[ticketType]}</p>
           </div>
           <div className="flex items-center gap-2">
             <Button type="button" variant="ghost" onClick={() => router.push(backHref)}>
-              Cancel
+              {t.common.cancel}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting ? t.tickets.creating : t.tickets.create}
@@ -271,13 +267,13 @@ export function TicketCreate({
                   className={cn(
                     'rounded-xl border px-3 py-3 text-left transition-all duration-200 ease-out hover:-translate-y-0.5',
                     selected
-                      ? 'border-blue-500/40 bg-blue-500/10'
+                      ? 'nova-accent-soft'
                       : 'border-zinc-800 bg-zinc-900 hover:border-zinc-700',
                   )}
                 >
                   <p className="font-mono text-[11px] text-zinc-500">{option.prefix}</p>
-                  <p className="mt-1 text-sm font-medium text-zinc-50">{option.label}</p>
-                  <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-zinc-500">{option.description}</p>
+                  <p className="mt-1 text-sm font-medium text-zinc-50">{t.tickets.type[type]}</p>
+                  <p className="mt-1 line-clamp-2 text-[11px] leading-4 text-zinc-500">{t.tickets.typeHint[type]}</p>
                 </button>
               );
             })}
@@ -449,29 +445,29 @@ export function TicketCreate({
                 <p className="text-[11px] text-zinc-500">{t.accountPick.ticketAccountHint}</p>
               </div>
               <div>
-                <p className="mb-2 text-[11px] uppercase tracking-[0.16em] text-zinc-500">Process</p>
+                <p className="mb-2 text-[11px] uppercase tracking-[0.16em] text-zinc-500">{t.tickets.process}</p>
                 <ProcessStrip type={ticketType} status="open" />
               </div>
               <div className="space-y-2">
-                <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Priority</p>
+                <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{t.tickets.priorityTitle}</p>
                 <div className="flex flex-wrap gap-1.5">
                   {PRIORITIES.map((item) => (
                     <button
-                      key={item.id}
+                      key={item}
                       type="button"
-                      onClick={() => setPriority(item.id)}
+                      onClick={() => setPriority(item)}
                       className={cn(
                         'rounded-full border px-2.5 py-1 text-[11px] font-medium transition-all duration-200 ease-out hover:-translate-y-0.5',
-                        priority === item.id
-                          ? item.id === 'critical' || item.id === 'high'
+                        priority === item
+                          ? item === 'critical' || item === 'high'
                             ? 'border-rose-500/40 bg-rose-500/15 text-rose-200'
-                            : item.id === 'medium'
+                            : item === 'medium'
                               ? 'border-amber-500/40 bg-amber-500/15 text-amber-200'
                               : 'border-emerald-500/40 bg-emerald-500/15 text-emerald-200'
                           : 'border-zinc-800 bg-zinc-950 text-zinc-400 hover:text-zinc-200',
                       )}
                     >
-                      {item.label}
+                      {t.tickets.priority[item]}
                     </button>
                   ))}
                 </div>
@@ -482,7 +478,7 @@ export function TicketCreate({
           <Card>
             <CardContent className="space-y-4 p-5">
               <div className="flex items-center justify-between">
-                <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Assignment</p>
+                <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{t.tickets.assignee}</p>
                 <Button
                   type="button"
                   size="sm"
@@ -490,13 +486,13 @@ export function TicketCreate({
                   onClick={() => setAssigneeId(currentUserId)}
                   disabled={!currentUserId}
                 >
-                  <UserPlus className="h-3.5 w-3.5" /> Assign to me
+                  <UserPlus className="h-3.5 w-3.5" /> {t.tickets.me}
                 </Button>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="assignee">Assignee</Label>
+                <Label htmlFor="assignee">{t.tickets.assignee}</Label>
                 <Select id="assignee" value={assigneeId} onChange={(event) => setAssigneeId(event.target.value)}>
-                  <option value="">Unassigned</option>
+                  <option value="">{t.tickets.unassigned}</option>
                   {agents.map((agent) => (
                     <option key={agent.id} value={agent.id}>
                       {agent.fullName}

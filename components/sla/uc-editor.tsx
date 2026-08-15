@@ -21,7 +21,9 @@ import {
   type UcTargetInput,
   type UnderpinningContract,
 } from '@/lib/uc/schema';
-import { TICKET_TYPES, ticketTypeMeta } from '@/lib/tickets/process';
+import { TICKET_TYPES } from '@/lib/tickets/process';
+import { useI18n } from '@/components/layout/preferences-provider';
+import { localizedType } from '@/lib/i18n/labels';
 import type { TicketPriority, TicketType } from '@/lib/tickets/schema';
 
 const PRIORITIES: TicketPriority[] = ['critical', 'high', 'medium', 'low'];
@@ -46,6 +48,7 @@ export function UcEditor({
   credits?: UcCredit[];
 }) {
   const router = useRouter();
+  const { t } = useI18n();
   const isNew = !contract;
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -267,7 +270,7 @@ export function UcEditor({
             <tbody>
               {TICKET_TYPES.map((type) => (
                 <tr key={type} className="border-t border-zinc-800">
-                  <td className="px-3 py-2 text-zinc-300">{ticketTypeMeta[type].label}</td>
+                  <td className="px-3 py-2 text-zinc-300">{localizedType(t, type)}</td>
                   {PRIORITIES.map((priority) => {
                     const key = cellKey(type, priority);
                     const cell = targets[key];

@@ -18,7 +18,7 @@ import { ProcessStrip } from '@/components/tickets/process-strip';
 import { formatRelativeId } from '@/lib/utils/dates';
 import { useRealtimeTable } from '@/lib/supabase/realtime';
 import { CommentEditor, CommentHtml } from '@/components/tickets/comment-editor';
-import { displayTicketNumber, isTicketType, TICKET_TYPES, ticketTypeMeta, type TicketType } from '@/lib/tickets/process';
+import { displayTicketNumber, isTicketType, TICKET_TYPES, type TicketType } from '@/lib/tickets/process';
 import {
   defaultPendingReason,
   isPauseStatus,
@@ -334,7 +334,7 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm text-zinc-400">Process</CardTitle>
+            <CardTitle className="text-sm text-zinc-400">{t.tickets.process}</CardTitle>
           </CardHeader>
           <CardContent>
             <ProcessStrip type={type} status={ticket.status} onSelect={(next) => void patchTicket({ status: next })} />
@@ -412,16 +412,16 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
                 value={author}
                 onChange={(event) => setAuthor(event.target.value)}
                 className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100"
-                placeholder="Agent name"
+                placeholder={t.tickets.agentName}
               />
               <CommentEditor key={editorKey} value={comment} onChange={setComment} />
               <div className="flex flex-wrap items-center gap-2">
                 <Button size="sm" onClick={() => void handleAddComment()} disabled={!comment.trim()}>
-                  Add comment
+                  {t.tickets.addComment}
                 </Button>
                 <label className="inline-flex cursor-pointer items-center gap-1.5 text-xs text-blue-300">
                   <Paperclip className="h-3.5 w-3.5" />
-                  {isUploading ? 'Uploading...' : 'Attach file'}
+                  {isUploading ? t.tickets.uploading : t.tickets.attachFile}
                   <input
                     type="file"
                     className="hidden"
@@ -444,7 +444,7 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
       <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm text-zinc-400">Properties</CardTitle>
+            <CardTitle className="text-sm text-zinc-400">{t.tickets.properties}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
             <div>
@@ -523,7 +523,7 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
               ) : null}
             </div>
             <div>
-              <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">Process</p>
+              <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">{t.tickets.process}</p>
               <Select
                 className="mt-1"
                 value={ticketType}
@@ -535,21 +535,21 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
               >
                 {TICKET_TYPES.map((item) => (
                   <option key={item} value={item}>
-                    {ticketTypeMeta[item].label}
+                    {t.tickets.type[item]}
                   </option>
                 ))}
               </Select>
             </div>
             <div>
-              <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">Requester</p>
+              <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">{t.tickets.requester}</p>
               <p className="mt-1 text-zinc-200">{ticket.requesterName}</p>
               {ticket.requesterEmail ? <p className="text-xs text-zinc-500">{ticket.requesterEmail}</p> : null}
               {ticket.requesterPhone ? <p className="text-xs text-zinc-500">{ticket.requesterPhone}</p> : null}
             </div>
             <div>
-              <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">Assignee</p>
+              <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">{t.tickets.assignee}</p>
               <Select className="mt-1" value={assigneeId} onChange={(event) => setAssigneeId(event.target.value)}>
-                <option value="">Unassigned</option>
+                <option value="">{t.tickets.unassigned}</option>
                 {agents.map((agent) => (
                   <option key={agent.id} value={agent.id}>
                     {agent.fullName}
@@ -565,7 +565,7 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
                   onClick={() => void patchTicket({ assigneeId: assigneeId || null })}
                   disabled={isSaving}
                 >
-                  Save assignee
+                  {t.tickets.saveAssignee}
                 </Button>
                 <Button
                   size="sm"
@@ -588,7 +588,7 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
                     onClick={() => void patchTicket({ assigneeId: currentUserId })}
                     disabled={isSaving}
                   >
-                    <UserPlus className="h-3.5 w-3.5" /> Me
+                    <UserPlus className="h-3.5 w-3.5" /> {t.tickets.me}
                   </Button>
                 ) : null}
               </div>

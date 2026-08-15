@@ -133,14 +133,14 @@ function NavLink({
     >
       <span
         className={cn(
-          'absolute inset-y-1.5 left-0 w-[2px] rounded-full bg-blue-500 transition-opacity duration-200',
+          'nova-accent-bar absolute inset-y-1.5 left-0 w-[2px] rounded-full transition-opacity duration-200',
           active ? 'opacity-100' : 'opacity-0',
         )}
       />
       <Icon
         className={cn(
           'h-4 w-4 shrink-0 transition-colors duration-200',
-          active ? 'text-blue-400' : 'text-zinc-500 group-hover:text-zinc-300',
+          active ? 'nova-accent-icon' : 'text-zinc-500 group-hover:text-zinc-300',
         )}
       />
       <span className="min-w-0 flex-1 truncate">{label}</span>
@@ -256,7 +256,7 @@ function NewTicketButton({ onNavigate }: { onNavigate?: () => void }) {
       <Link
         href="/tickets/new"
         onClick={onNavigate}
-        className="flex h-8 items-center justify-center gap-1.5 rounded-md bg-blue-600 text-[13px] font-medium text-white transition-all duration-200 ease-out hover:bg-blue-500 hover:-translate-y-px"
+        className="nova-accent-btn flex h-8 items-center justify-center gap-1.5 rounded-md text-[13px] font-medium text-white transition-all duration-200 ease-out hover:-translate-y-px"
       >
         <Plus className="h-3.5 w-3.5" />
         {t.common.newTicket}

@@ -3,7 +3,9 @@ import type { NotificationJobPayload } from '@/lib/notifications/types';
 import { getTicketTemplates, renderTemplate } from '@/lib/notifications/templates';
 import { createSupabaseAdminClient, hasServiceRole } from '@/lib/supabase/admin';
 import { portalPermalink } from '@/lib/notifications/email-template';
-import { isTicketType, ticketTypeMeta } from '@/lib/tickets/process';
+import { notificationCopy, resolveNotificationLocale } from '@/lib/notifications/locale';
+import { dictionaryFor, localizedStage, localizedType } from '@/lib/i18n/labels';
+import type { TicketStatus } from '@/lib/tickets/schema';
 
 export type TicketEventContext = {
   event: 'ticket.create' | 'ticket.status_change' | 'ticket.comment_add';
@@ -23,6 +25,7 @@ export type TicketEventContext = {
     tenantId?: string;
   };
   message?: string;
+  locale?: string | null;
 };
 
 async function resolveAssigneeEmail(ticket: TicketEventContext['ticket']) {
@@ -35,23 +38,28 @@ async function resolveAssigneeEmail(ticket: TicketEventContext['ticket']) {
 
 export async function dispatchTicketNotification(context: TicketEventContext) {
   const { event, ticket, message } = context;
-  const templates = getTicketTemplates(event);
+  const locale = resolveNotificationLocale(context.locale);
+  const t = dictionaryFor(locale);
+  const copy = notificationCopy(locale);
+  const templates = getTicketTemplates(event, locale);
   const number = ticket.number || ticket.id.slice(0, 8);
-  const typeLabel = isTicketType(ticket.type) ? ticketTypeMeta[ticket.type].label : ticket.type ?? 'Ticket';
+  const typeLabel = localizedType(t, ticket.type);
+  const statusLabel = localizedStage(t, ticket.type, ticket.status as TicketStatus);
   const assigneeEmail = await resolveAssigneeEmail(ticket);
+  const csat =
+    ticket.status === 'resolved' || ticket.status === 'closed'
+      ? renderTemplate(copy.csat, { url: portalPermalink(ticket.id) })
+      : '';
 
   const body = renderTemplate(templates.body, {
     id: ticket.id,
     number,
     name: ticket.requesterName ?? 'Customer',
-    status: ticket.status,
+    status: statusLabel,
     title: ticket.title,
     type: typeLabel,
     message: message ?? '',
-    csat:
-      ticket.status === 'resolved' || ticket.status === 'closed'
-        ? ` Rate the fix: ${portalPermalink(ticket.id)}`
-        : '',
+    csat,
   });
 
   const payload: NotificationJobPayload = {
@@ -70,6 +78,7 @@ export async function dispatchTicketNotification(context: TicketEventContext) {
     requesterPhone: ticket.requesterPhone,
     assigneeChatId: ticket.assigneeChatId,
     message: body,
+    locale,
   };
 
   return enqueueNotification(payload);

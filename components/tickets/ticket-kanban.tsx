@@ -21,7 +21,9 @@ import { TypeBadge } from '@/components/tickets/type-badge';
 import { SlaBadge } from '@/components/tickets/sla-badge';
 import { PendingBadge } from '@/components/tickets/pending-badge';
 import { formatRelativeId } from '@/lib/utils/dates';
-import { displayTicketNumber, stageLabel, type TicketType } from '@/lib/tickets/process';
+import { useI18n } from '@/components/layout/preferences-provider';
+import { localizedStage } from '@/lib/i18n/labels';
+import { displayTicketNumber, type TicketType } from '@/lib/tickets/process';
 import type { TicketPendingReason, TicketStatus } from '@/lib/tickets/schema';
 
 export type KanbanTicket = {
@@ -74,6 +76,7 @@ const priorityColors: Record<string, string> = {
 };
 
 function TicketCard({ ticket, isOverlay }: { ticket: KanbanTicket; isOverlay?: boolean }) {
+  const { t } = useI18n();
   return (
     <motion.div
       transition={{ duration: 0.2, ease: 'easeOut' }}
@@ -85,7 +88,7 @@ function TicketCard({ ticket, isOverlay }: { ticket: KanbanTicket; isOverlay?: b
           <div className="flex items-center justify-between gap-2">
             <CardTitle className="font-mono text-base">{displayTicketNumber(ticket.number, ticket.id)}</CardTitle>
             <span className={`inline-flex rounded-full px-2 py-1 text-[10px] font-medium ${statusColors[ticket.status]}`}>
-              {stageLabel(ticket.type ?? 'incident', ticket.status)}
+              {localizedStage(t, ticket.type ?? 'incident', ticket.status)}
             </span>
           </div>
         </CardHeader>
@@ -121,9 +124,9 @@ function TicketCard({ ticket, isOverlay }: { ticket: KanbanTicket; isOverlay?: b
           {!isOverlay && (
             <Link
               href={`/tickets/${ticket.id}`}
-              className="inline-flex rounded-md border border-blue-500/40 bg-blue-500/10 px-2.5 py-1.5 text-xs font-medium text-blue-300 hover:bg-blue-500/20"
+              className="nova-accent-chip inline-flex rounded-md border px-2.5 py-1.5 text-xs font-medium hover:opacity-90"
             >
-              View
+              {t.tickets.view}
             </Link>
           )}
         </CardContent>
@@ -158,17 +161,20 @@ function DroppableColumn({
   column: (typeof columns)[number];
   tickets: KanbanTicket[];
 }) {
+  const { t } = useI18n();
   const { setNodeRef, isOver } = useDroppable({ id: column.key });
 
   return (
     <div
       ref={setNodeRef}
       className={`min-h-[240px] rounded-xl border p-3 ${
-        isOver ? 'border-blue-500 bg-blue-500/5' : 'border-zinc-800 bg-zinc-900/60'
+        isOver ? 'nova-accent-drop' : 'border-zinc-800 bg-zinc-900/60'
       }`}
     >
       <div className="mb-4 flex items-center justify-between gap-2">
-        <h3 className="text-sm font-medium uppercase tracking-[0.15em] text-zinc-300">{column.label}</h3>
+        <h3 className="text-sm font-medium uppercase tracking-[0.15em] text-zinc-300">
+          {localizedStage(t, 'incident', column.key)}
+        </h3>
         <span className="rounded-full bg-zinc-800 px-2 py-1 text-xs text-zinc-300">{tickets.length}</span>
       </div>
       <div className="space-y-3">

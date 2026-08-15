@@ -6,16 +6,18 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRealtimeTable } from '@/lib/supabase/realtime';
-import { displayTicketNumber, stageLabel } from '@/lib/tickets/process';
+import { useI18n } from '@/components/layout/preferences-provider';
+import { localizedStage } from '@/lib/i18n/labels';
+import { displayTicketNumber } from '@/lib/tickets/process';
 import { cabQueue } from '@/lib/cab/flow';
 import type { TicketRecord } from '@/lib/tickets/mappers';
 import { CabCalendar } from '@/components/cab/cab-calendar';
 
 const QUEUES = [
-  { id: 'review', label: 'CAB review' },
-  { id: 'scheduled', label: 'Scheduled' },
-  { id: 'implement', label: 'Implement' },
-  { id: 'draft', label: 'Draft' },
+  { id: 'review', labelKey: 'queueReview' },
+  { id: 'scheduled', labelKey: 'queueScheduled' },
+  { id: 'implement', labelKey: 'queueImplement' },
+  { id: 'draft', labelKey: 'queueDraft' },
 ] as const;
 
 const riskTone: Record<string, 'success' | 'warning' | 'danger' | 'neutral'> = {
@@ -26,6 +28,7 @@ const riskTone: Record<string, 'success' | 'warning' | 'danger' | 'neutral'> = {
 };
 
 export function CabBoard() {
+  const { t } = useI18n();
   const [changes, setChanges] = useState<TicketRecord[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -58,23 +61,23 @@ export function CabBoard() {
     <div className="space-y-5 p-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Change enablement</p>
-          <h1 className="text-2xl font-semibold text-zinc-50">CAB</h1>
+          <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">{t.cab.kicker}</p>
+          <h1 className="text-2xl font-semibold text-zinc-50">{t.nav.cab}</h1>
         </div>
         <Link
           href="/tickets/new?type=change"
-          className="inline-flex items-center rounded-md bg-blue-600 px-2.5 py-1.5 text-xs font-medium text-white transition-all duration-200 ease-out hover:-translate-y-0.5 hover:bg-blue-500"
+          className="nova-accent-btn inline-flex items-center rounded-md px-2.5 py-1.5 text-xs font-medium text-white transition-all duration-200 ease-out hover:-translate-y-0.5"
         >
-          New change
+          {t.cab.newChange}
         </Link>
       </div>
 
       <div className="grid gap-3 md:grid-cols-4">
         {[
-          { label: 'In CAB', value: grouped.review.length },
-          { label: 'Scheduled', value: grouped.scheduled.length },
-          { label: 'Emergency', value: emergency, danger: true },
-          { label: 'Changes', value: changes.length },
+          { label: t.cab.inCab, value: grouped.review.length },
+          { label: t.cab.scheduled, value: grouped.scheduled.length },
+          { label: t.cab.emergency, value: emergency, danger: true },
+          { label: t.cab.changes, value: changes.length },
         ].map((stat) => (
           <Card key={stat.label}>
             <CardContent className="p-4">
@@ -94,12 +97,12 @@ export function CabBoard() {
           {QUEUES.map((queue) => (
             <div key={queue.id} className="rounded-xl border border-zinc-800 bg-zinc-950">
               <div className="flex items-center justify-between border-b border-zinc-800 px-3 py-2">
-                <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{queue.label}</p>
+                <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{t.cab[queue.labelKey]}</p>
                 <span className="font-mono text-[11px] text-zinc-500">{grouped[queue.id].length}</span>
               </div>
               <div className="space-y-2 p-2">
                 {grouped[queue.id].length === 0 ? (
-                  <p className="px-2 py-6 text-center text-xs text-zinc-600">Empty</p>
+                  <p className="px-2 py-6 text-center text-xs text-zinc-600">{t.cab.empty}</p>
                 ) : (
                   grouped[queue.id].map((change) => (
                     <Link
@@ -115,7 +118,7 @@ export function CabBoard() {
                         </Badge>
                         <Badge tone={riskTone[change.riskLevel ?? 'medium']}>{change.riskLevel ?? change.priority}</Badge>
                       </div>
-                      <p className="mt-1 text-[11px] text-zinc-500">{stageLabel('change', change.status)}</p>
+                      <p className="mt-1 text-[11px] text-zinc-500">{localizedStage(t, 'change', change.status)}</p>
                     </Link>
                   ))
                 )}

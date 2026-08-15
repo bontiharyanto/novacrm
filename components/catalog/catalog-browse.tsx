@@ -5,9 +5,11 @@ import Link from 'next/link';
 import { CatalogIcon } from '@/components/catalog/catalog-icon';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { CatalogCategory, CatalogItem } from '@/lib/catalog/schema';
-import { ticketTypeMeta } from '@/lib/tickets/process';
+import { useI18n } from '@/components/layout/preferences-provider';
+import type { TicketType } from '@/lib/tickets/process';
 
 export function CatalogBrowse() {
+  const { t } = useI18n();
   const [items, setItems] = useState<CatalogItem[]>([]);
   const [categories, setCategories] = useState<CatalogCategory[]>([]);
   const [active, setActive] = useState('all');
@@ -75,7 +77,9 @@ export function CatalogBrowse() {
                 </span>
                 <div>
                   <p className="text-sm font-medium text-zinc-50">{item.name}</p>
-                  <p className="mt-1 text-xs text-zinc-500">{item.shortDescription || ticketTypeMeta[item.ticketType].description}</p>
+                  <p className="mt-1 text-xs text-zinc-500">
+                    {item.shortDescription || t.tickets.typeHint[item.ticketType as TicketType]}
+                  </p>
                 </div>
               </div>
             </Link>

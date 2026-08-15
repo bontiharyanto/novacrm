@@ -99,7 +99,7 @@ export function AssistantChat({
     const response = await fetch('/api/assistant', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: next, threadId }),
+      body: JSON.stringify({ messages: next, threadId, locale }),
     });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok || payload.error) {

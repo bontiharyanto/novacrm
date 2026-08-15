@@ -17,10 +17,10 @@ function ThemePreview({ theme }: { theme: Theme }) {
     >
       <div className="flex h-24">
         <div className={cn('w-10 border-r', dark ? 'border-zinc-800 bg-[#09090b]' : 'border-zinc-200 bg-white')}>
-          <div className={cn('mx-1.5 mt-2 h-2 rounded-sm', dark ? 'bg-blue-600' : 'bg-blue-600')} />
+          <div className="nova-accent-bar mx-1.5 mt-2 h-2 rounded-sm" />
           <div className={cn('mx-1.5 mt-1.5 h-1.5 rounded-sm', dark ? 'bg-zinc-800' : 'bg-zinc-200')} />
           <div className={cn('mx-1.5 mt-1 h-1.5 rounded-sm', dark ? 'bg-zinc-800' : 'bg-zinc-200')} />
-          <div className={cn('mx-1.5 mt-1 h-1.5 rounded-sm bg-blue-600/40')} />
+          <div className="mx-1.5 mt-1 h-1.5 rounded-sm bg-[color-mix(in_srgb,var(--accent)_40%,transparent)]" />
         </div>
         <div className="flex-1 p-2">
           <div className={cn('h-2 w-16 rounded-sm', dark ? 'bg-zinc-200' : 'bg-zinc-800')} />

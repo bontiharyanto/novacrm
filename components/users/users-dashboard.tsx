@@ -7,7 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import type { DirectoryUser } from '@/lib/users/schema';
 import { supportTierLabel } from '@/lib/tickets/pending';
-import { ROLE_LABEL, isCustomerRole, type AppRole } from '@/lib/rbac/roles';
+import { useI18n } from '@/components/layout/preferences-provider';
+import { localizedRole } from '@/lib/i18n/labels';
+import { isCustomerRole, type AppRole } from '@/lib/rbac/roles';
 
 const roleTone: Record<AppRole, 'danger' | 'info' | 'warning' | 'neutral'> = {
   superadmin: 'danger',
@@ -26,6 +28,7 @@ const levelTone: Record<string, 'success' | 'warning' | 'danger'> = {
 };
 
 export function UsersDashboard({ users, canCreate }: { users: DirectoryUser[]; canCreate: boolean }) {
+  const { t } = useI18n();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<'all' | 'staff' | 'portal'>('all');
 
@@ -127,7 +130,7 @@ export function UsersDashboard({ users, canCreate }: { users: DirectoryUser[]; c
                       <p className="text-xs text-zinc-500">{user.email ?? '—'}</p>
                     </td>
                     <td className="px-3 py-2.5">
-                      <Badge tone={roleTone[user.role]}>{ROLE_LABEL[user.role]}</Badge>
+                      <Badge tone={roleTone[user.role]}>{localizedRole(t, user.role)}</Badge>
                     </td>
                     <td className="px-3 py-2.5">
                       {user.supportLevel ? (

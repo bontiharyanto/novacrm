@@ -15,7 +15,9 @@ import { TypeBadge } from '@/components/tickets/type-badge';
 import { ProcessStrip } from '@/components/tickets/process-strip';
 import { CHANGE_TYPES, RISK_LEVELS, type CabApproval, type ChangeType, type RiskLevel } from '@/lib/cab/schema';
 import { changeReadyForCab } from '@/lib/cab/flow';
-import { displayTicketNumber, stageLabel } from '@/lib/tickets/process';
+import { useI18n } from '@/components/layout/preferences-provider';
+import { localizedStage } from '@/lib/i18n/labels';
+import { displayTicketNumber } from '@/lib/tickets/process';
 import { formatRelativeId } from '@/lib/utils/dates';
 import type { TicketRecord } from '@/lib/tickets/mappers';
 import { useRealtimeTable } from '@/lib/supabase/realtime';
@@ -28,6 +30,7 @@ function toLocal(value?: string) {
 }
 
 export function CabRecord({ ticketId }: { ticketId: string }) {
+  const { t } = useI18n();
   const [ticket, setTicket] = useState<TicketRecord | null>(null);
   const [approvals, setApprovals] = useState<CabApproval[]>([]);
   const [changeType, setChangeType] = useState<ChangeType>('normal');
@@ -142,7 +145,7 @@ export function CabRecord({ ticketId }: { ticketId: string }) {
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <h1 className="font-mono text-xl font-semibold text-zinc-50">{displayTicketNumber(ticket.number, ticket.id)}</h1>
             <TypeBadge type="change" />
-            <Badge tone="info">{stageLabel('change', ticket.status)}</Badge>
+            <Badge tone="info">{localizedStage(t, 'change', ticket.status)}</Badge>
           </div>
           <h2 className="mt-1 text-2xl font-semibold text-zinc-50">{ticket.title}</h2>
           {error ? <p className="mt-2 text-sm text-rose-400">{error}</p> : null}

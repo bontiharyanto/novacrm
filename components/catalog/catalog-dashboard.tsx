@@ -9,10 +9,12 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { CatalogIcon } from '@/components/catalog/catalog-icon';
 import { useRealtimeTable } from '@/lib/supabase/realtime';
 import { formatRelativeId } from '@/lib/utils/dates';
-import { ticketTypeMeta } from '@/lib/tickets/process';
+import { useI18n } from '@/components/layout/preferences-provider';
+import { localizedType } from '@/lib/i18n/labels';
 import type { CatalogCategory, CatalogItem, CatalogVariableSet } from '@/lib/catalog/schema';
 
 export function CatalogDashboard() {
+  const { t } = useI18n();
   const [items, setItems] = useState<CatalogItem[]>([]);
   const [categories, setCategories] = useState<CatalogCategory[]>([]);
   const [sets, setSets] = useState<CatalogVariableSet[]>([]);
@@ -98,7 +100,7 @@ export function CatalogDashboard() {
                       </Link>
                     </td>
                     <td className="px-3 py-2.5 text-zinc-300">{item.categoryName ?? '—'}</td>
-                    <td className="px-3 py-2.5 text-zinc-300">{ticketTypeMeta[item.ticketType].label}</td>
+                    <td className="px-3 py-2.5 text-zinc-300">{localizedType(t, item.ticketType)}</td>
                     <td className="px-3 py-2.5">
                       <Badge tone={item.isActive ? 'success' : 'neutral'}>{item.isActive ? 'published' : 'draft'}</Badge>
                     </td>

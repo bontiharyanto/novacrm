@@ -29,7 +29,6 @@ export function PortalCreate() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
-  const meta = ticketTypeMeta[type];
   const canSubmit = title.trim().length >= 3 && !isSubmitting;
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -74,20 +73,26 @@ export function PortalCreate() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <Link href="/portal" className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-200">
-            <ArrowLeft className="h-3.5 w-3.5" /> My tickets
+            <ArrowLeft className="h-3.5 w-3.5" /> {t.portal.myTickets}
           </Link>
           <div className="mt-2 flex items-center gap-2">
-            <h1 className="text-2xl font-semibold text-zinc-50">New {meta.label.toLowerCase()}</h1>
+            <h1 className="text-2xl font-semibold text-zinc-50">
+              {t.common.new} {t.tickets.type[type]}
+            </h1>
             <TypeBadge type={type} />
           </div>
-          <p className="mt-1 text-sm text-zinc-500">{meta.description}</p>
+          <p className="mt-1 text-sm text-zinc-500">{t.tickets.typeHint[type]}</p>
         </div>
         <div className="flex gap-2">
           <Button type="button" variant="ghost" onClick={() => router.push('/portal')}>
-            Cancel
+            {t.common.cancel}
           </Button>
           <Button type="submit" disabled={!canSubmit}>
-            {isSubmitting ? 'Submitting...' : type === 'incident' ? 'Report incident' : 'Submit request'}
+            {isSubmitting
+              ? t.portal.submitting
+              : type === 'incident'
+                ? t.portal.reportIncident
+                : t.portal.submitRequest}
           </Button>
         </div>
       </div>
@@ -103,12 +108,12 @@ export function PortalCreate() {
               onClick={() => setType(item)}
               className={cn(
                 'rounded-xl border px-4 py-4 text-left transition-all duration-200 ease-out hover:-translate-y-0.5',
-                selected ? 'border-blue-500/40 bg-blue-500/10' : 'border-zinc-800 bg-zinc-900 hover:border-zinc-700',
+                selected ? 'nova-accent-soft' : 'border-zinc-800 bg-zinc-900 hover:border-zinc-700',
               )}
             >
               <p className="font-mono text-[11px] text-zinc-500">{option.prefix}</p>
-              <p className="mt-1 text-sm font-medium text-zinc-50">{option.label}</p>
-              <p className="mt-1 text-xs text-zinc-500">{option.description}</p>
+              <p className="mt-1 text-sm font-medium text-zinc-50">{t.tickets.type[item]}</p>
+              <p className="mt-1 text-xs text-zinc-500">{t.tickets.typeHint[item]}</p>
             </button>
           );
         })}
@@ -116,7 +121,7 @@ export function PortalCreate() {
 
       <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-6 space-y-5">
         <div className="space-y-2">
-          <Label htmlFor="title">Short description</Label>
+          <Label htmlFor="title">{t.tickets.shortDescription}</Label>
           <Input
             id="title"
             value={title}
@@ -129,7 +134,7 @@ export function PortalCreate() {
           <KnowledgeHints title={title} />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="description">Details</Label>
+          <Label htmlFor="description">{t.portal.details}</Label>
           <Textarea
             id="description"
             value={description}

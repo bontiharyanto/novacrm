@@ -29,7 +29,7 @@ export function PortalShell({ children, fullName }: { children: React.ReactNode;
           <div className="flex items-center gap-3">
             <NovaMark size={28} />
             <div>
-              <p className="font-mono text-[11px] uppercase tracking-[0.2em] text-blue-400">{t.brand.portal}</p>
+              <p className="nova-accent-text font-mono text-[11px] uppercase tracking-[0.2em]">{t.brand.portal}</p>
               <p className="mt-0.5 text-sm text-zinc-50">{fullName}</p>
             </div>
           </div>
@@ -44,7 +44,7 @@ export function PortalShell({ children, fullName }: { children: React.ReactNode;
                   !pathname.startsWith('/portal/catalog') &&
                   pathname !== '/portal/new' &&
                   !pathname.startsWith('/portal/privacy'))
-                  ? 'bg-blue-500/15 text-blue-300'
+                  ? 'nova-accent-nav'
                   : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-50',
               )}
             >
@@ -55,7 +55,7 @@ export function PortalShell({ children, fullName }: { children: React.ReactNode;
               className={cn(
                 'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs transition-all duration-200 ease-out hover:-translate-y-0.5',
                 pathname.startsWith('/portal/catalog')
-                  ? 'bg-blue-500/15 text-blue-300'
+                  ? 'nova-accent-nav'
                   : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-50',
               )}
             >
@@ -66,7 +66,7 @@ export function PortalShell({ children, fullName }: { children: React.ReactNode;
               className={cn(
                 'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs transition-all duration-200 ease-out hover:-translate-y-0.5',
                 pathname.startsWith('/portal/privacy')
-                  ? 'bg-blue-500/15 text-blue-300'
+                  ? 'nova-accent-nav'
                   : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-50',
               )}
             >
@@ -77,8 +77,8 @@ export function PortalShell({ children, fullName }: { children: React.ReactNode;
               className={cn(
                 'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs transition-all duration-200 ease-out hover:-translate-y-0.5',
                 pathname === '/portal/new'
-                  ? 'bg-blue-600 text-white'
-                  : 'bg-blue-600 text-white hover:bg-blue-500',
+                  ? 'nova-accent-btn text-white'
+                  : 'nova-accent-btn text-white',
               )}
             >
               <Plus className="h-3.5 w-3.5" /> {t.portal.newRequest}

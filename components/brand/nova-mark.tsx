@@ -26,9 +26,9 @@ export function NovaMark({ className, size = 32 }: { className?: string; size?: 
       />
       <path
         d="M36.2 10.4 37.6 14l3.6 1.4-3.6 1.4-1.4 3.6-1.4-3.6-3.6-1.4 3.6-1.4 1.4-3.6Z"
-        className="fill-blue-500"
+        className="nova-accent-fill"
       />
-      <circle cx="16.4" cy="14.8" r="1.2" className="fill-blue-500" />
+      <circle cx="16.4" cy="14.8" r="1.2" className="nova-accent-fill" />
     </svg>
   );
 }

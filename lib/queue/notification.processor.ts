@@ -9,6 +9,8 @@ import {
   portalPermalink,
   ticketPermalink,
 } from '@/lib/notifications/email-template';
+import { notificationCopy, resolveNotificationLocale } from '@/lib/notifications/locale';
+import { renderTemplate } from '@/lib/notifications/templates';
 import type { NotificationChannelRow, NotificationJobPayload } from '@/lib/notifications/types';
 
 async function loadActiveChannels(tenantId: string): Promise<NotificationChannelRow[]> {
@@ -64,6 +66,8 @@ export async function processNotificationJob(payload: NotificationJobPayload) {
         ] as NotificationChannelRow[]);
 
   const results: Array<{ channel: string; ok: boolean; error?: string }> = [];
+  const locale = resolveNotificationLocale(payload.locale);
+  const copy = notificationCopy(locale);
   const displayNumber = number || ticketId?.slice(0, 8) || 'Ticket';
   const displayTitle = title ?? 'Ticket update';
   const displayStatus = status ?? 'updated';
@@ -79,6 +83,8 @@ export async function processNotificationJob(payload: NotificationJobPayload) {
           number: displayNumber,
           title: displayTitle,
           status: displayStatus,
+          type,
+          locale,
         });
         const resolved = displayStatus === 'resolved' || displayStatus === 'closed';
 
@@ -97,7 +103,8 @@ export async function processNotificationJob(payload: NotificationJobPayload) {
             name: forRequester ? requesterName : assigneeName,
             message: message ?? event,
             ticketUrl,
-            ctaLabel: forRequester && resolved ? 'Rate this ticket' : 'Open ticket',
+            ctaLabel: forRequester && resolved ? copy.rateTicket : copy.openTicket,
+            locale,
           });
           const result = await sendEmail(recipient, subject, html, {
             apiKey: channel.config.apiKey || process.env.RESEND_API_KEY,
@@ -121,7 +128,14 @@ export async function processNotificationJob(payload: NotificationJobPayload) {
         const botToken = channel.config.botToken || process.env.TELEGRAM_BOT_TOKEN;
         const chatId = channel.config.chatId ?? assigneeChatId;
         if (!botToken || !chatId) continue;
-        const text = message ?? `${displayNumber} ${displayTitle}\nStatus: ${displayStatus}\nAssigned: ${assigneeName}`;
+        const text =
+          message ??
+          renderTemplate(copy.telegramFallback, {
+            number: displayNumber,
+            title: displayTitle,
+            status: displayStatus,
+            assignee: assigneeName,
+          });
         const result = await sendTelegram(chatId, text, { botToken });
         results.push({ channel: 'telegram', ok: Boolean(result.ok), error: result.error });
         await appendNotificationLog({
@@ -141,7 +155,15 @@ export async function processNotificationJob(payload: NotificationJobPayload) {
         const target = channel.config.target ?? requesterPhone;
         if (!apiKey || !target) continue;
         const portalUrl = ticketId ? portalPermalink(ticketId) : '';
-        const text = [message ?? `Halo ${requesterName}, ${displayNumber} status: ${displayStatus}`, portalUrl]
+        const text = [
+          message ??
+            renderTemplate(copy.whatsappFallback, {
+              name: requesterName,
+              number: displayNumber,
+              status: displayStatus,
+            }),
+          portalUrl,
+        ]
           .filter(Boolean)
           .join('\n');
         const result = await sendWhatsApp(target, text, { apiKey });

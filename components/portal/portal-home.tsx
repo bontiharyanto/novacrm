@@ -8,7 +8,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { TypeBadge } from '@/components/tickets/type-badge';
 import { Badge } from '@/components/ui/badge';
 import { formatRelativeId } from '@/lib/utils/dates';
-import { displayTicketNumber, isTicketType, stageLabel } from '@/lib/tickets/process';
+import { useI18n } from '@/components/layout/preferences-provider';
+import { localizedStage } from '@/lib/i18n/labels';
+import { displayTicketNumber, isTicketType } from '@/lib/tickets/process';
 import type { TicketStatus } from '@/lib/tickets/schema';
 
 type TicketItem = {
@@ -30,6 +32,7 @@ const statusTone: Record<TicketStatus, 'info' | 'warning' | 'success' | 'neutral
 };
 
 export function PortalHome() {
+  const { t } = useI18n();
   const [tickets, setTickets] = useState<TicketItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -45,21 +48,21 @@ export function PortalHome() {
     <div className="mx-auto max-w-5xl space-y-6 p-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Service portal</p>
-          <h1 className="text-2xl font-semibold text-zinc-50">My tickets</h1>
+          <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">{t.brand.portal}</p>
+          <h1 className="text-2xl font-semibold text-zinc-50">{t.portal.myTickets}</h1>
         </div>
         <div className="flex gap-2">
           <Link
             href="/portal/catalog"
             className="inline-flex items-center gap-2 rounded-md border border-zinc-800 px-3 py-2 text-sm text-zinc-200 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-zinc-700"
           >
-            Catalog
+            {t.portal.catalog}
           </Link>
           <Link
             href="/portal/new"
-            className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white transition-all duration-200 ease-out hover:-translate-y-0.5 hover:bg-blue-500"
+            className="nova-accent-btn inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-white transition-all duration-200 ease-out hover:-translate-y-0.5"
           >
-            <Plus className="h-3.5 w-3.5" /> New request
+            <Plus className="h-3.5 w-3.5" /> {t.portal.newRequest}
           </Link>
         </div>
       </div>
@@ -72,9 +75,9 @@ export function PortalHome() {
       ) : tickets.length === 0 ? (
         <Card>
           <CardContent className="p-8 text-center">
-            <p className="text-sm text-zinc-400">No tickets yet.</p>
+            <p className="text-sm text-zinc-400">{t.portal.empty}</p>
             <Link href="/portal/catalog" className="mt-3 inline-flex text-sm text-blue-300 hover:text-blue-200">
-              Open the service catalog
+              {t.portal.openCatalog}
             </Link>
           </CardContent>
         </Card>
@@ -95,7 +98,7 @@ export function PortalHome() {
                 <div className="flex shrink-0 flex-col items-end gap-1">
                   <div className="flex items-center gap-1.5">
                     <TypeBadge type={type} />
-                    <Badge tone={statusTone[ticket.status]}>{stageLabel(type, ticket.status)}</Badge>
+                    <Badge tone={statusTone[ticket.status]}>{localizedStage(t, type, ticket.status)}</Badge>
                   </div>
                   <p className="text-[11px] text-zinc-500">{formatRelativeId(ticket.createdAt)}</p>
                 </div>

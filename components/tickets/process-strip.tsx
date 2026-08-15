@@ -1,6 +1,8 @@
 'use client';
 
 import { cn } from '@/lib/utils';
+import { useI18n } from '@/components/layout/preferences-provider';
+import { localizedStage } from '@/lib/i18n/labels';
 import { processStages, type TicketType } from '@/lib/tickets/process';
 import type { TicketStatus } from '@/lib/tickets/schema';
 
@@ -13,6 +15,7 @@ export function ProcessStrip({
   status: TicketStatus;
   onSelect?: (status: TicketStatus) => void;
 }) {
+  const { t } = useI18n();
   const stages = processStages[type];
   const currentIndex = Math.max(0, stages.findIndex((stage) => stage.status === status));
 
@@ -29,14 +32,14 @@ export function ProcessStrip({
               onClick={() => onSelect?.(stage.status)}
               className={cn(
                 'rounded-full border px-2.5 py-1 text-[11px] font-medium tracking-wide transition-all duration-200 ease-out',
-                active && 'border-blue-500/40 bg-blue-500/15 text-blue-200',
+                active && 'nova-accent-chip',
                 done && !active && 'border-zinc-700 bg-zinc-800 text-zinc-300',
                 !active && !done && 'border-zinc-800 bg-zinc-950 text-zinc-500',
                 onSelect && 'hover:-translate-y-0.5 hover:border-zinc-600',
                 !onSelect && 'cursor-default',
               )}
             >
-              {stage.label}
+              {localizedStage(t, type, stage.status)}
             </button>
           </li>
         );

@@ -6,6 +6,9 @@ import { ACCOUNT_ALL } from '@/lib/accounts/schema';
 import { getAccountScope } from '@/lib/accounts/scope';
 import { isCustomerRole } from '@/lib/rbac/roles';
 import { setActiveAccount } from '@/lib/accounts/actions';
+import { getTenantConfig } from '@/lib/tenants/config';
+import { accentCss } from '@/lib/tenants/accent';
+import { AccentProvider } from '@/components/layout/accent-provider';
 
 export default async function AgentLayout({ children }: { children: React.ReactNode }) {
   const session = await getSessionProfile();
@@ -22,8 +25,12 @@ export default async function AgentLayout({ children }: { children: React.ReactN
     scope = await getAccountScope(session);
   }
 
+  const tenant = await getTenantConfig();
+
   return (
     <AbilityProvider role={session.profile.role}>
+      <style dangerouslySetInnerHTML={{ __html: accentCss(tenant?.accentColor) }} />
+      <AccentProvider color={tenant?.accentColor} />
       <AgentShell
         role={session.profile.role}
         fullName={session.profile.fullName}

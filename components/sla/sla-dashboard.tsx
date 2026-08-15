@@ -13,7 +13,9 @@ import { WEEKDAYS, type DayKey } from '@/lib/sla/calendar';
 import type { SlaAgreement, SlaHoliday, SlaTargetInput } from '@/lib/sla/schema';
 import type { UnderpinningContract } from '@/lib/uc/schema';
 import { UcPanel } from '@/components/sla/uc-panel';
-import { TICKET_TYPES, ticketTypeMeta } from '@/lib/tickets/process';
+import { TICKET_TYPES } from '@/lib/tickets/process';
+import { useI18n } from '@/components/layout/preferences-provider';
+import { localizedType } from '@/lib/i18n/labels';
 import type { TicketPriority, TicketType } from '@/lib/tickets/schema';
 
 const PRIORITIES: TicketPriority[] = ['critical', 'high', 'medium', 'low'];
@@ -50,6 +52,7 @@ export function SlaDashboard({
   accountName?: string;
 }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [message, setMessage] = useState('');
   const [saving, setSaving] = useState(false);
   const [name, setName] = useState(agreement?.name ?? 'Standard');
@@ -207,7 +210,7 @@ export function SlaDashboard({
               {TICKET_TYPES.map((type) => (
                 <tr key={type} className="border-b border-zinc-800/80">
                   <td className="px-3 py-3">
-                    <p className="text-sm text-zinc-50">{ticketTypeMeta[type].label}</p>
+                    <p className="text-sm text-zinc-50">{localizedType(t, type)}</p>
                     <p className="text-[11px] text-zinc-500">Response / resolve (min)</p>
                   </td>
                   {PRIORITIES.map((priority) => {

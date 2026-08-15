@@ -1,3 +1,5 @@
+import { notificationCopy } from '@/lib/notifications/locale';
+import type { Locale } from '@/lib/preferences';
 import type { NotificationTemplateContext } from './types';
 
 export type NotificationTemplate = {
@@ -12,19 +14,23 @@ export function renderTemplate(template: string, context: NotificationTemplateCo
   });
 }
 
-export function getTicketTemplates(event: 'ticket.create' | 'ticket.status_change' | 'ticket.comment_add') {
+export function getTicketTemplates(
+  event: 'ticket.create' | 'ticket.status_change' | 'ticket.comment_add',
+  locale?: Locale,
+) {
+  const t = notificationCopy(locale);
   const templates: Record<typeof event, NotificationTemplate> = {
     'ticket.create': {
-      subject: '{{number}} opened · {{title}}',
-      body: 'Halo {{name}}, {{number}} ({{type}}) telah dibuat. Status: {{status}}. Tim kami akan segera menindaklanjuti.',
+      subject: t.subjectCreated,
+      body: `${t.hello} ${t.created}`,
     },
     'ticket.status_change': {
-      subject: '{{number}} {{status}} · {{title}}',
-      body: 'Halo {{name}}, {{number}} status berubah menjadi {{status}}. {{message}}{{csat}}',
+      subject: t.subjectStatus,
+      body: `${t.hello} ${t.statusChanged}`,
     },
     'ticket.comment_add': {
-      subject: '{{number}} new comment · {{title}}',
-      body: 'Halo {{name}}, ada komentar baru di {{number}}. {{message}}',
+      subject: t.subjectComment,
+      body: `${t.hello} ${t.commentAdded}`,
     },
   };
 

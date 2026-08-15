@@ -1,4 +1,8 @@
-import { isTicketType, ticketTypeMeta } from '@/lib/tickets/process';
+import { dictionaryFor, localizedStage, localizedType } from '@/lib/i18n/labels';
+import { notificationCopy, resolveNotificationLocale } from '@/lib/notifications/locale';
+import { renderTemplate } from '@/lib/notifications/templates';
+import type { Locale } from '@/lib/preferences';
+import type { TicketStatus } from '@/lib/tickets/schema';
 
 export function getAppUrl() {
   return (
@@ -23,14 +27,20 @@ export function buildTicketEmailSubject(input: {
   number: string;
   title: string;
   status: string;
+  type?: string;
+  locale?: Locale | string | null;
 }) {
-  if (input.event === 'ticket.create') {
-    return `${input.number} opened · ${input.title}`;
-  }
-  if (input.event === 'ticket.comment_add') {
-    return `${input.number} new comment · ${input.title}`;
-  }
-  return `${input.number} ${input.status.replace('_', ' ')} · ${input.title}`;
+  const locale = resolveNotificationLocale(input.locale);
+  const t = dictionaryFor(locale);
+  const copy = notificationCopy(locale);
+  const statusLabel = localizedStage(t, input.type, input.status as TicketStatus);
+  const template =
+    input.event === 'ticket.create'
+      ? copy.subjectCreated
+      : input.event === 'ticket.comment_add'
+        ? copy.subjectComment
+        : copy.subjectStatus;
+  return renderTemplate(template, { number: input.number, title: input.title, status: statusLabel });
 }
 
 export function buildTicketEmailHtml(input: {
@@ -42,9 +52,14 @@ export function buildTicketEmailHtml(input: {
   message: string;
   ticketUrl: string;
   ctaLabel?: string;
+  locale?: Locale | string | null;
 }) {
-  const typeLabel = isTicketType(input.type) ? ticketTypeMeta[input.type].label : 'Ticket';
-  const statusLabel = input.status.replace(/_/g, ' ');
+  const locale = resolveNotificationLocale(input.locale);
+  const t = dictionaryFor(locale);
+  const copy = notificationCopy(locale);
+  const typeLabel = localizedType(t, input.type);
+  const statusLabel = localizedStage(t, input.type, input.status as TicketStatus);
+  const cta = input.ctaLabel ?? copy.openTicket;
 
   return `<!doctype html>
 <html>
@@ -70,13 +85,12 @@ export function buildTicketEmailHtml(input: {
             </tr>
             <tr>
               <td style="padding:0 28px 20px;font-size:14px;line-height:1.6;color:#d4d4d8;">
-                Halo ${escapeHtml(input.name)},<br /><br />
                 ${escapeHtml(input.message)}
               </td>
             </tr>
             <tr>
               <td style="padding:0 28px 28px;">
-                <a href="${escapeHtml(input.ticketUrl)}" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;font-size:13px;font-weight:600;padding:10px 14px;border-radius:8px;">${escapeHtml(input.ctaLabel ?? 'Open ticket')}</a>
+                <a href="${escapeHtml(input.ticketUrl)}" style="display:inline-block;background:#2563eb;color:#fff;text-decoration:none;font-size:13px;font-weight:600;padding:10px 14px;border-radius:8px;">${escapeHtml(cta)}</a>
               </td>
             </tr>
           </table>

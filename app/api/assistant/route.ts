@@ -9,7 +9,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const messages = Array.isArray(body.messages) ? body.messages : [];
     const threadId = typeof body.threadId === 'string' ? body.threadId : null;
-    const result = await runAssistant(messages, threadId);
+    const locale = body.locale === 'en' || body.locale === 'id' ? body.locale : undefined;
+    const result = await runAssistant(messages, threadId, locale);
     if (result.error) {
       return NextResponse.json({ data: null, error: result.error }, { status: 400 });
     }

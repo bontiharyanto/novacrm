@@ -14,10 +14,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { VariableBuilder } from '@/components/catalog/variable-builder';
 import { CATALOG_ICONS } from '@/lib/catalog/schema';
 import type { CatalogCategory, CatalogItem, CatalogVariable, CatalogVariableSet } from '@/lib/catalog/schema';
-import { TICKET_TYPES, ticketTypeMeta } from '@/lib/tickets/process';
+import { TICKET_TYPES } from '@/lib/tickets/process';
+import { useI18n } from '@/components/layout/preferences-provider';
+import { localizedType } from '@/lib/i18n/labels';
 
 export function CatalogItemEditor({ itemId }: { itemId?: string }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [name, setName] = useState('');
   const [shortDescription, setShortDescription] = useState('');
   const [description, setDescription] = useState('');
@@ -171,7 +174,7 @@ export function CatalogItemEditor({ itemId }: { itemId?: string }) {
                 <Select value={ticketType} onChange={(event) => setTicketType(event.target.value as (typeof TICKET_TYPES)[number])}>
                   {TICKET_TYPES.map((type) => (
                     <option key={type} value={type}>
-                      {ticketTypeMeta[type].label}
+                      {localizedType(t, type)}
                     </option>
                   ))}
                 </Select>

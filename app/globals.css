@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --accent: #3b82f6;
+  --accent-rgb: 59 130 246;
+  --accent-hover: #2563eb;
+}
+
 :root,
 html.dark {
   color-scheme: dark;
@@ -159,6 +165,51 @@ html.light .text-amber-300 {
 html.light .text-rose-400,
 html.light .text-rose-300 {
   color: rgb(225 29 72);
+}
+
+.nova-accent-bar {
+  background-color: var(--accent);
+}
+
+.nova-accent-btn {
+  background-color: var(--accent);
+}
+
+.nova-accent-btn:hover {
+  background-color: var(--accent-hover);
+}
+
+.nova-accent-chip {
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  background-color: rgb(var(--accent-rgb) / 0.15);
+  color: color-mix(in srgb, var(--accent) 72%, white);
+}
+
+.nova-accent-icon {
+  color: var(--accent);
+}
+
+.nova-accent-text {
+  color: var(--accent);
+}
+
+.nova-accent-soft {
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  background-color: rgb(var(--accent-rgb) / 0.1);
+}
+
+.nova-accent-nav {
+  background-color: rgb(var(--accent-rgb) / 0.15);
+  color: color-mix(in srgb, var(--accent) 68%, white);
+}
+
+.nova-accent-drop {
+  border-color: var(--accent);
+  background-color: rgb(var(--accent-rgb) / 0.05);
+}
+
+.nova-accent-fill {
+  fill: var(--accent);
 }
 
 .cmdk-item {
