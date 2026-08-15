@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Plus } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { TypeBadge } from '@/components/tickets/type-badge';
@@ -46,25 +45,9 @@ export function PortalHome() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-4 pb-safe md:p-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">{t.brand.portal}</p>
-          <h1 className="text-2xl font-semibold text-zinc-50">{t.portal.myTickets}</h1>
-        </div>
-        <div className="flex gap-2">
-          <Link
-            href="/portal/catalog"
-            className="inline-flex items-center gap-2 rounded-md border border-zinc-800 px-3 py-2 text-sm text-zinc-200 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-zinc-700"
-          >
-            {t.portal.catalog}
-          </Link>
-          <Link
-            href="/portal/new"
-            className="nova-accent-btn inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-white transition-all duration-200 ease-out hover:-translate-y-0.5"
-          >
-            <Plus className="h-3.5 w-3.5" /> {t.portal.newRequest}
-          </Link>
-        </div>
+      <div>
+        <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">{t.brand.portal}</p>
+        <h1 className="text-2xl font-semibold text-zinc-50">{t.portal.myTickets}</h1>
       </div>
 
       {loading ? (

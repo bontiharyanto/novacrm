@@ -49,6 +49,7 @@ import type { AppRole, Actions, Subjects } from '@/lib/rbac/ability';
 import { canRole } from '@/lib/rbac/ability';
 import { isTenantAdminRole, ROLE_LABEL } from '@/lib/rbac/roles';
 import { PresenceControl } from '@/components/layout/presence-control';
+import { NotificationBell } from '@/components/layout/notification-bell';
 import { NovaWordmark } from '@/components/brand/nova-mark';
 import { cn } from '@/lib/utils';
 
@@ -502,6 +503,7 @@ export function AgentShell({
               <kbd className="ml-auto hidden font-mono text-[10px] text-zinc-600 sm:inline">⌘K</kbd>
             </button>
             <PreferenceControls compact />
+            <NotificationBell />
             {onAssistant ? null : <AskAiButton onClick={() => setAgentOpen(true)} />}
             {(() => {
               const active = accounts.find((account) => account.id === activeAccountId);

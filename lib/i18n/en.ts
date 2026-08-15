@@ -64,6 +64,12 @@ export const en = {
     english: 'English',
     indonesian: 'Bahasa Indonesia',
   },
+  inbox: {
+    title: 'Notifications',
+    open: 'Notifications',
+    empty: 'No notifications yet.',
+    markAll: 'Mark all read',
+  },
   login: {
     title: 'Sign in',
     demo: 'Local test: admin / agent / customer on the same tenant.',
@@ -126,6 +132,7 @@ export const en = {
     reportIncident: 'Report incident',
     submitRequest: 'Submit request',
     submitting: 'Submitting…',
+    submitFailed: 'We could not submit this request. Try again or contact the service desk.',
     details: 'Details',
   },
   command: {

@@ -66,6 +66,12 @@ export const id: Dictionary = {
     english: 'English',
     indonesian: 'Bahasa Indonesia',
   },
+  inbox: {
+    title: 'Notifikasi',
+    open: 'Notifikasi',
+    empty: 'Belum ada notifikasi.',
+    markAll: 'Tandai semua dibaca',
+  },
   login: {
     title: 'Masuk',
     demo: 'Uji lokal: admin / agent / customer pada tenant yang sama.',
@@ -128,6 +134,7 @@ export const id: Dictionary = {
     reportIncident: 'Laporkan insiden',
     submitRequest: 'Kirim permintaan',
     submitting: 'Mengirim…',
+    submitFailed: 'Permintaan belum terkirim. Coba lagi atau hubungi service desk.',
     details: 'Detail',
   },
   command: {

@@ -48,7 +48,7 @@ export function RecordProducer({ itemId }: { itemId: string }) {
     });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok || !payload.data?.id) {
-      setError(payload.error ?? 'Unable to submit request.');
+      setError(t.portal.submitFailed);
       setIsSubmitting(false);
       return;
     }

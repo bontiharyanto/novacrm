@@ -34,6 +34,28 @@ async function currentOncallUserIds(client: SupabaseClient, tenantId: string, gr
   return ids;
 }
 
+export async function resolveAccountL1GroupId(
+  client: SupabaseClient,
+  tenantId: string,
+  accountId?: string | null,
+) {
+  if (accountId) {
+    const { data: accountGroup } = await client
+      .from('assignment_groups')
+      .select('id')
+      .eq('tenant_id', tenantId)
+      .eq('account_id', accountId)
+      .eq('kind', 'assignment')
+      .eq('is_active', true)
+      .eq('tier', 'l1')
+      .order('name')
+      .limit(1)
+      .maybeSingle();
+    if (accountGroup?.id) return accountGroup.id;
+  }
+  return resolveInboundGroupId(client, tenantId);
+}
+
 export async function resolveInboundGroupId(client: SupabaseClient, tenantId: string) {
   const { data: account } = await client
     .from('accounts')
@@ -76,19 +98,31 @@ export async function dispatchTicket(
   if (row.assignee_id && !options?.force) {
     return { ok: true, skipped: true, assigneeId: row.assignee_id };
   }
-  if (!row.group_id) return { ok: true, skipped: true };
+  if (!row.group_id) {
+    const fallbackGroupId = await resolveAccountL1GroupId(client, tenantId, row.account_id);
+    if (!fallbackGroupId) return { ok: true, skipped: true };
+    await client
+      .from('tickets')
+      .update({ group_id: fallbackGroupId })
+      .eq('id', ticketId)
+      .eq('tenant_id', tenantId);
+    row.group_id = fallbackGroupId;
+  }
 
-  const policy = await loadDispatchPolicy(client, tenantId, row.group_id);
+  const groupId = row.group_id;
+  if (!groupId) return { ok: true, skipped: true };
+
+  const policy = await loadDispatchPolicy(client, tenantId, groupId);
   if (policy && !policy.isActive) return { ok: true, skipped: true };
   if ((policy?.strategy ?? 'least_loaded') === 'manual' && !options?.force) {
     return { ok: true, skipped: true };
   }
 
   const at = new Date();
-  let agents = await listEligibleAgentsForGroup(client, tenantId, row.group_id, at);
+  let agents = await listEligibleAgentsForGroup(client, tenantId, groupId, at);
   let oncallIds: string[] = [];
   if (policy?.strategy === 'oncall') {
-    oncallIds = await currentOncallUserIds(client, tenantId, row.group_id, at);
+    oncallIds = await currentOncallUserIds(client, tenantId, groupId, at);
   } else if (policy?.oncallGroupId && agents.every((agent) => !agent.eligible)) {
     agents = await listEligibleAgentsForGroup(client, tenantId, policy.oncallGroupId, at);
     oncallIds = await currentOncallUserIds(client, tenantId, policy.oncallGroupId, at);

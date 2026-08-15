@@ -1,4 +1,5 @@
 import { enqueueNotification } from '@/lib/queue/notification.queue';
+import { notifyTicketInbox } from '@/lib/notifications/inbox';
 import type { NotificationJobPayload } from '@/lib/notifications/types';
 import { getTicketTemplates, renderTemplate } from '@/lib/notifications/templates';
 import { getMergedNotificationCopy } from '@/lib/notifications/copy-load';
@@ -120,6 +121,17 @@ export async function notifyTicketAssigned(tenantId: string, ticketId: string) {
     .eq('tenant_id', tenantId)
     .maybeSingle();
   if (!data?.assignee_id) return { ok: true, skipped: true };
+  await notifyTicketInbox({
+    event: 'ticket.assign',
+    tenantId,
+    ticket: {
+      id: data.id,
+      number: data.number ?? undefined,
+      title: data.title,
+      status: data.status,
+      assigneeId: data.assignee_id,
+    },
+  });
   return dispatchTicketNotification({
     event: 'ticket.assign',
     ticket: {

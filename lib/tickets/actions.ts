@@ -4,8 +4,10 @@ import { ticketCommentSchema, ticketSchema, ticketUpdateSchema } from '@/lib/tic
 import { dispatchTicketNotification } from '@/lib/notifications/dispatcher';
 import { getSessionProfile } from '@/lib/auth/session';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { createSupabaseAdminClient } from '@/lib/supabase/admin';
+import { createSupabaseAdminClient, hasServiceRole } from '@/lib/supabase/admin';
 import { canRole } from '@/lib/rbac/ability';
+import { isCustomerRole } from '@/lib/rbac/roles';
+import { notifyTicketInbox } from '@/lib/notifications/inbox';
 import { normalizePhone, safeNotificationText } from '@/lib/notifications/helpers';
 import { mapTicketRow, textToDescription, withAccounts, withAssets, withContracts, withGroups, type TicketRecord } from '@/lib/tickets/mappers';
 import { evaluateWorkflow } from '@/lib/workflows/actions';
@@ -14,13 +16,18 @@ import { applyTicketSlaChange, snapshotSla } from '@/lib/sla/engine';
 import { snapshotOla } from '@/lib/ola/engine';
 import { recordTicketAudit, recordTicketAuditDiff } from '@/lib/tickets/audit';
 import { defaultPendingReason, isPauseStatus } from '@/lib/tickets/pending';
-import { dispatchTicket, resolveInboundGroupId } from '@/lib/wfm/dispatch';
+import { dispatchTicket, resolveAccountL1GroupId, resolveInboundGroupId } from '@/lib/wfm/dispatch';
 import { enqueueWfmDispatch } from '@/lib/queue/wfm.queue';
 import { maybeRecordUcCredit } from '@/lib/uc/credits';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { sanitizeCommentHtml } from '@/lib/sanitize/html';
 
 const TICKET_SELECT = '*, ticket_comments(*)';
+
+function publicTicketWriteError(role: string, message?: string) {
+  if (isCustomerRole(role)) return 'Unable to submit request';
+  return message ?? 'Unable to create ticket';
+}
 
 async function hydrateTicketAssets(client: SupabaseClient, tickets: TicketRecord[]) {
   const ids = tickets.map((ticket) => ticket.assetId).filter((id): id is string => Boolean(id));
@@ -225,9 +232,14 @@ export async function createTicket(input: unknown) {
     assigned: 'assignee_id' in assigneePatch && Boolean(assigneePatch.assignee_id),
     dueDateOverride: parsed.dueDate || undefined,
   });
-  const ola = await snapshotOla(supabase, {
+  const isCustomer = isCustomerRole(session.profile.role);
+  const groupClient = hasServiceRole() ? createSupabaseAdminClient() : supabase;
+  const resolvedGroupId =
+    parsed.groupId ?? (await resolveAccountL1GroupId(groupClient, session.profile.tenantId, scoped.accountId));
+  const groupId = isCustomer ? null : resolvedGroupId;
+  const ola = await snapshotOla(isCustomer ? groupClient : supabase, {
     tenantId: session.profile.tenantId,
-    groupId: parsed.groupId,
+    groupId: resolvedGroupId,
     type: parsed.type,
     priority: parsed.priority,
   });
@@ -250,7 +262,7 @@ export async function createTicket(input: unknown) {
       requester_phone: normalizePhone(parsed.requesterPhone) || session.profile.phone,
       ...assigneePatch,
       asset_id: parsed.assetId ?? null,
-      group_id: parsed.groupId ?? null,
+      group_id: groupId,
       category: parsed.category,
       catalog_item_id: parsed.catalogItemId ?? null,
       catalog_answers: parsed.catalogAnswers ?? {},
@@ -266,7 +278,16 @@ export async function createTicket(input: unknown) {
     .single();
 
   if (error || !data) {
-    return { data: null, error: error?.message ?? 'Unable to create ticket' };
+    return { data: null, error: publicTicketWriteError(session.profile.role, error?.message) };
+  }
+
+  if (isCustomer && resolvedGroupId && hasServiceRole()) {
+    await createSupabaseAdminClient()
+      .from('tickets')
+      .update({ group_id: resolvedGroupId })
+      .eq('id', data.id)
+      .eq('tenant_id', session.profile.tenantId);
+    data.group_id = resolvedGroupId;
   }
 
   const [ticket] = await hydrateTicketAssets(supabase, [mapTicketRow(data)]);
@@ -651,6 +672,22 @@ async function afterTicketMutation(
   if (event === 'ticket.create' && !ticket.assigneeId) {
     await enqueueWfmDispatch({ tenantId: ticket.tenantId, ticketId: ticket.id });
   }
+  const session = await getSessionProfile();
+  await notifyTicketInbox({
+    event,
+    tenantId: ticket.tenantId,
+    actorId: session?.userId,
+    ticket: {
+      id: ticket.id,
+      number: ticket.number,
+      title: ticket.title,
+      status: ticket.status,
+      assigneeId: ticket.assigneeId,
+      requesterId: ticket.requesterId,
+      groupId: ticket.groupId,
+    },
+    message,
+  });
   await dispatchTicketNotification({
     event,
     ticket: {

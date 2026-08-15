@@ -51,7 +51,7 @@ export function PortalCreate() {
 
     const payload = await response.json().catch(() => ({}));
     if (!response.ok || !payload.data?.id) {
-      const message = payload.error ?? t.common.createFailed;
+      const message = t.portal.submitFailed;
       setError(message);
       toastError(message);
       setIsSubmitting(false);

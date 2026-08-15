@@ -6,6 +6,7 @@ import { BookOpen, LogOut, Plus, Scale, Ticket } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { signOutAction } from '@/lib/auth/actions';
 import { PreferenceControls } from '@/components/layout/preference-controls';
+import { NotificationBell } from '@/components/layout/notification-bell';
 import { useI18n } from '@/components/layout/preferences-provider';
 import { NovaMark } from '@/components/brand/nova-mark';
 import { cn } from '@/lib/utils';
@@ -27,6 +28,7 @@ export function PortalShell({ children, fullName }: { children: React.ReactNode;
                 <p className="mt-0.5 text-sm text-zinc-50">{fullName}</p>
               </div>
             </div>
+            <NotificationBell homeHref="/portal" />
             <PreferenceControls compact />
           </div>
           <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-0.5 sm:mx-0 sm:flex-wrap sm:justify-end sm:overflow-visible sm:px-0">
