@@ -1,8 +1,6 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { ArrowUp, CalendarClock, ClipboardList, History, Maximize2, Menu, ShieldCheck, Sparkles, X } from 'lucide-react';
 import { AssistantMarkdown } from '@/components/assistant/assistant-markdown';
 import { NovaMark } from '@/components/brand/nova-mark';
@@ -18,10 +16,31 @@ const FEATURES = [
   { key: 'review' as const, icon: CalendarClock, promptKey: 'aging' as const },
 ];
 
-export function AssistantWidget({ firstName }: { firstName: string }) {
-  const pathname = usePathname();
+export function AskAiButton({ onClick }: { onClick: () => void }) {
+  const { t } = useI18n();
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="hidden h-9 shrink-0 items-center gap-1.5 rounded-md border border-[color:color-mix(in_srgb,var(--accent)_45%,transparent)] px-2.5 text-[13px] text-zinc-200 transition-colors hover:bg-zinc-900 sm:inline-flex"
+    >
+      <Sparkles className="h-3.5 w-3.5 nova-accent-icon" />
+      {t.nav.askAi}
+    </button>
+  );
+}
+
+export function AssistantWidget({
+  open,
+  onOpenChange,
+  hidden,
+}: {
+  firstName?: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  hidden?: boolean;
+}) {
   const { t, locale } = useI18n();
-  const [open, setOpen] = useState(false);
   const [view, setView] = useState<'home' | 'chat' | 'history'>('home');
   const [threadId, setThreadId] = useState<string | null>(null);
   const [messages, setMessages] = useState<AssistantMessage[]>([]);
@@ -35,7 +54,7 @@ export function AssistantWidget({ firstName }: { firstName: string }) {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, busy, view]);
 
-  if (pathname.startsWith('/assistant')) return null;
+  if (hidden) return null;
 
   async function loadHistory() {
     const result = await listAssistantThreadSummaries();
@@ -105,28 +124,18 @@ export function AssistantWidget({ firstName }: { firstName: string }) {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="hidden h-9 shrink-0 items-center gap-1.5 rounded-md border border-[color:color-mix(in_srgb,var(--accent)_45%,transparent)] px-2.5 text-[13px] text-zinc-200 transition-colors hover:bg-zinc-900 sm:inline-flex"
-      >
-        <Sparkles className="h-3.5 w-3.5 nova-accent-icon" />
-        {t.nav.askAi}
-      </button>
-
       {open ? null : (
         <button
           type="button"
-          onClick={() => setOpen(true)}
-          className="nova-accent-btn fixed bottom-5 right-5 z-40 flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg md:bottom-6 md:right-6"
+          onClick={() => onOpenChange(true)}
+          className="nova-accent-btn fixed bottom-5 right-5 z-[60] flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg md:bottom-6 md:right-6"
           aria-label={t.nav.askAi}
         >
           <Sparkles className="h-5 w-5" />
         </button>
       )}
-
       {open ? (
-        <div className="fixed bottom-4 right-4 z-50 flex h-[min(640px,calc(100dvh-5rem))] w-[min(400px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950 shadow-2xl">
+        <div className="fixed bottom-4 right-4 z-[60] flex h-[min(640px,calc(100dvh-5.5rem))] w-[min(400px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950 shadow-2xl md:bottom-6 md:right-6">
           <header className="flex h-12 shrink-0 items-center gap-2 border-b border-zinc-800 px-3">
             <button
               type="button"
@@ -140,17 +149,17 @@ export function AssistantWidget({ firstName }: { firstName: string }) {
               <NovaMark size={22} />
               <p className="truncate text-[13px] font-medium text-zinc-100">Nova Agent</p>
             </div>
-            <Link
+            <a
               href="/assistant"
               className="rounded-md p-1.5 text-zinc-400 hover:bg-zinc-900 hover:text-zinc-50"
               aria-label={t.assistant.expand}
-              onClick={() => setOpen(false)}
+              onClick={() => onOpenChange(false)}
             >
               <Maximize2 className="h-3.5 w-3.5" />
-            </Link>
+            </a>
             <button
               type="button"
-              onClick={() => setOpen(false)}
+              onClick={() => onOpenChange(false)}
               className="rounded-md p-1.5 text-zinc-400 hover:bg-zinc-900 hover:text-zinc-50"
               aria-label={t.assistant.close}
             >

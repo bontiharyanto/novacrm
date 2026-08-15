@@ -37,7 +37,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
-import { AssistantWidget } from '@/components/assistant/assistant-widget';
+import { AskAiButton, AssistantWidget } from '@/components/assistant/assistant-widget';
 import { CommandPalette } from '@/components/layout/command-palette';
 import { AccountSwitcher } from '@/components/accounts/account-switcher';
 import { PreferenceControls } from '@/components/layout/preference-controls';
@@ -416,9 +416,12 @@ export function AgentShell({
   const { t } = useI18n();
   const [commandOpen, setCommandOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [agentOpen, setAgentOpen] = useState(false);
+  const onAssistant = pathname.startsWith('/assistant');
 
   useEffect(() => {
     setMobileOpen(false);
+    if (pathname.startsWith('/assistant')) setAgentOpen(false);
   }, [pathname]);
 
   useEffect(() => {
@@ -488,7 +491,7 @@ export function AgentShell({
               <kbd className="ml-auto hidden font-mono text-[10px] text-zinc-600 sm:inline">⌘K</kbd>
             </button>
             <PreferenceControls compact />
-            <AssistantWidget firstName={fullName.split(' ')[0] || fullName} />
+            {onAssistant ? null : <AskAiButton onClick={() => setAgentOpen(true)} />}
             {(() => {
               const active = accounts.find((account) => account.id === activeAccountId);
               return (
@@ -519,6 +522,12 @@ export function AgentShell({
         </motion.main>
       </div>
       <CommandPalette open={commandOpen} onOpenChange={setCommandOpen} role={role} />
+      <AssistantWidget
+        firstName={fullName.split(' ')[0] || fullName}
+        open={agentOpen}
+        onOpenChange={setAgentOpen}
+        hidden={onAssistant}
+      />
     </div>
   );
 }
