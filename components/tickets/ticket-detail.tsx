@@ -31,6 +31,7 @@ import { dispatchTicketAction } from '@/lib/wfm/actions';
 import { useI18n } from '@/components/layout/preferences-provider';
 import { toastError, toastSuccess } from '@/components/ui/toast';
 import { TicketRca, type ProblemOption, type RelatedIncident } from '@/components/tickets/ticket-rca';
+import { formatGroupQueueLabel } from '@/lib/org/schema';
 
 type TicketItem = {
   id: string;
@@ -51,6 +52,8 @@ type TicketItem = {
   olaResolveMinutes?: number;
   olaResponseAt?: string;
   olaResolveBy?: string;
+  groupPartyKind?: 'internal' | 'vendor' | 'principal';
+  groupPartyName?: string;
   requesterName: string;
   requesterEmail?: string;
   requesterPhone?: string;
@@ -90,7 +93,14 @@ type AgentOption = {
   openTickets?: number;
 };
 type AssetOption = { id: string; name: string; assetTag: string; type: string };
-type GroupOption = { id: string; name: string; kind: string; tier?: 'l1' | 'l2' | 'l3' };
+type GroupOption = {
+  id: string;
+  name: string;
+  kind: string;
+  tier?: 'l1' | 'l2' | 'l3';
+  partyKind?: 'internal' | 'vendor' | 'principal';
+  partyName?: string;
+};
 
 const statusTone: Record<TicketStatus, 'info' | 'warning' | 'success' | 'neutral'> = {
   open: 'info',
@@ -472,6 +482,12 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
                     slaPausedAt={ticket.slaPausedAt}
                   />
                 </div>
+                {ticket.groupPartyKind && ticket.groupPartyKind !== 'internal' ? (
+                  <p className="text-xs text-amber-300">
+                    {ticket.groupPartyKind === 'principal' ? 'Principal' : 'Vendor'}
+                    {ticket.groupPartyName ? ` · ${ticket.groupPartyName}` : ''}
+                  </p>
+                ) : null}
                 {ticket.olaResolveBy ? (
                   <p className="text-xs text-zinc-500">
                     Group clock {new Date(ticket.olaResolveBy).toLocaleString('id-ID')}
@@ -564,8 +580,7 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
                 <option value="">None</option>
                 {groups.map((group) => (
                   <option key={group.id} value={group.id}>
-                    {group.tier ? `${supportTierLabel[group.tier]} · ` : ''}
-                    {group.name}
+                    {formatGroupQueueLabel(group)}
                   </option>
                 ))}
               </Select>
@@ -781,7 +796,7 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
                 .filter((group) => group.tier === 'l2' || group.tier === 'l3')
                 .map((group) => (
                   <option key={group.id} value={group.id}>
-                    {supportTierLabel[group.tier!]} · {group.name}
+                    {formatGroupQueueLabel(group)}
                   </option>
                 ))}
             </Select>
@@ -794,8 +809,8 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
               Escalate · SLA keeps running
             </Button>
             <p className="text-[11px] leading-5 text-zinc-500">
-              Internal L2/L3 stays In Progress and unassigns so the next queue can pick up. Use Hold only for vendor,
-              customer wait, or change freeze.
+              L2/L3 stays In Progress. Pick an Internal, Vendor, or Principal group — that group&apos;s OLA starts.
+              Use Hold only when nobody is working the ticket (wait for a case update).
             </p>
           </CardContent>
         </Card>

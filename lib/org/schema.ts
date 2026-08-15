@@ -4,6 +4,7 @@ import { emptyToUndefined, optionalUuidSchema, uuidSchema } from '@/lib/validati
 export const orgUnitTypeSchema = z.enum(['division', 'unit']);
 export const assignmentGroupKindSchema = z.enum(['assignment', 'cab', 'fulfillment', 'oncall']);
 export const supportTierSchema = z.enum(['l1', 'l2', 'l3']);
+export const groupPartyKindSchema = z.enum(['internal', 'vendor', 'principal']);
 export const groupMemberRoleSchema = z.enum(['lead', 'member']);
 
 export const orgUnitSchema = z.object({
@@ -24,6 +25,8 @@ export const assignmentGroupSchema = z.object({
   isActive: z.boolean().optional().default(true),
   olaResponseMinutes: z.number().int().min(5).max(10080).optional(),
   olaResolveMinutes: z.number().int().min(15).max(43200).optional(),
+  partyKind: groupPartyKindSchema.optional().default('internal'),
+  partyName: z.preprocess(emptyToUndefined, z.string().max(120).optional()),
 });
 
 export const assignmentGroupUpdateSchema = assignmentGroupSchema.partial();
@@ -36,7 +39,29 @@ export const groupMemberSchema = z.object({
 export type OrgUnitType = z.infer<typeof orgUnitTypeSchema>;
 export type AssignmentGroupKind = z.infer<typeof assignmentGroupKindSchema>;
 export type SupportTier = z.infer<typeof supportTierSchema>;
+export type GroupPartyKind = z.infer<typeof groupPartyKindSchema>;
 export type GroupMemberRole = z.infer<typeof groupMemberRoleSchema>;
+
+export const PARTY_KIND_LABEL: Record<GroupPartyKind, string> = {
+  internal: 'Internal',
+  vendor: 'Vendor',
+  principal: 'Principal',
+};
+
+export function formatGroupQueueLabel(group: {
+  name: string;
+  tier?: SupportTier | string | null;
+  partyKind?: GroupPartyKind | string | null;
+  partyName?: string | null;
+}) {
+  const tier =
+    group.tier === 'l1' ? 'L1' : group.tier === 'l2' ? 'L2' : group.tier === 'l3' ? 'L3' : null;
+  const party =
+    group.partyKind === 'vendor' || group.partyKind === 'principal'
+      ? `${PARTY_KIND_LABEL[group.partyKind]}${group.partyName ? ` · ${group.partyName}` : ''}`
+      : null;
+  return [tier, party, group.name].filter(Boolean).join(' · ');
+}
 
 export type OrgUnit = {
   id: string;
@@ -71,6 +96,8 @@ export type AssignmentGroup = {
   isActive: boolean;
   olaResponseMinutes: number;
   olaResolveMinutes: number;
+  partyKind: GroupPartyKind;
+  partyName?: string;
   memberCount: number;
   isMember?: boolean;
   members: AssignmentGroupMember[];

@@ -117,6 +117,8 @@ export function OrgDashboard({
                     <th className="px-3 py-2 font-medium">Group</th>
                     <th className="px-3 py-2 font-medium">Kind</th>
                     <th className="px-3 py-2 font-medium">Tier</th>
+                    <th className="px-3 py-2 font-medium">Party</th>
+                    <th className="px-3 py-2 font-medium">OLA</th>
                     <th className="px-3 py-2 font-medium">Members</th>
                   </tr>
                 </thead>
@@ -131,6 +133,14 @@ export function OrgDashboard({
                       <td className="px-3 py-2.5 text-zinc-400">{kindLabel[group.kind]}</td>
                       <td className="px-3 py-2.5 text-zinc-400">
                         {group.tier ? supportTierLabel[group.tier as SupportTier] : '—'}
+                      </td>
+                      <td className="px-3 py-2.5 text-zinc-400">
+                        {group.partyKind === 'internal'
+                          ? 'Internal'
+                          : `${group.partyKind === 'vendor' ? 'Vendor' : 'Principal'}${group.partyName ? ` · ${group.partyName}` : ''}`}
+                      </td>
+                      <td className="px-3 py-2.5 font-mono text-xs text-zinc-500">
+                        {group.olaResponseMinutes}/{group.olaResolveMinutes}m
                       </td>
                       <td className="px-3 py-2.5 font-mono text-xs text-zinc-500">{group.memberCount}</td>
                     </tr>

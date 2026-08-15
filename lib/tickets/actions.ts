@@ -35,7 +35,10 @@ async function hydrateTicketAssets(client: SupabaseClient, tickets: TicketRecord
 
   const groupIds = withAssetRows.map((ticket) => ticket.groupId).filter((id): id is string => Boolean(id));
   if (groupIds.length === 0) return withAssetRows;
-  const { data } = await client.from('assignment_groups').select('id, name, kind, tier').in('id', groupIds);
+  const { data } = await client
+    .from('assignment_groups')
+    .select('id, name, kind, tier, party_kind, party_name')
+    .in('id', groupIds);
   return withGroups(withAssetRows, data ?? []);
 }
 

@@ -11,7 +11,8 @@ import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { addGroupMember, removeGroupMember, updateAssignmentGroup } from '@/lib/org/actions';
 import { upsertDispatchPolicy } from '@/lib/wfm/actions';
-import type { AssignmentGroup, AssignmentGroupKind, GroupMemberRole, SupportTier } from '@/lib/org/schema';
+import type { AssignmentGroup, AssignmentGroupKind, GroupMemberRole, GroupPartyKind, SupportTier } from '@/lib/org/schema';
+import { PARTY_KIND_LABEL } from '@/lib/org/schema';
 import type { WfmDispatchPolicy, WfmDispatchStrategy, WfmSkill } from '@/lib/wfm/schema';
 import { supportTierLabel } from '@/lib/tickets/pending';
 
@@ -44,6 +45,8 @@ export function OrgGroupDetail({
   const [isActive, setIsActive] = useState(group.isActive);
   const [olaResponse, setOlaResponse] = useState(String(group.olaResponseMinutes));
   const [olaResolve, setOlaResolve] = useState(String(group.olaResolveMinutes));
+  const [partyKind, setPartyKind] = useState<GroupPartyKind>(group.partyKind);
+  const [partyName, setPartyName] = useState(group.partyName ?? '');
   const [userId, setUserId] = useState('');
   const [role, setRole] = useState<GroupMemberRole>('member');
   const [message, setMessage] = useState('');
@@ -61,6 +64,8 @@ export function OrgGroupDetail({
       tier: tier || null,
       olaResponseMinutes: Number(olaResponse) || group.olaResponseMinutes,
       olaResolveMinutes: Number(olaResolve) || group.olaResolveMinutes,
+      partyKind,
+      partyName: partyKind === 'internal' ? '' : partyName.trim(),
     });
     setMessage(result.error ?? 'Saved');
     router.refresh();
@@ -77,6 +82,12 @@ export function OrgGroupDetail({
             <h1 className="text-xl font-semibold text-zinc-50">{group.name}</h1>
             <Badge tone="info">{kindLabel[group.kind]}</Badge>
             {group.tier ? <Badge>{supportTierLabel[group.tier]}</Badge> : null}
+            {group.partyKind !== 'internal' ? (
+              <Badge tone="warning">
+                {PARTY_KIND_LABEL[group.partyKind]}
+                {group.partyName ? ` · ${group.partyName}` : ''}
+              </Badge>
+            ) : null}
           </div>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -127,6 +138,27 @@ export function OrgGroupDetail({
               className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100"
             />
           </div>
+          <div className="space-y-1.5">
+            <Label>Party</Label>
+            <Select value={partyKind} disabled={!canEdit} onChange={(event) => setPartyKind(event.target.value as GroupPartyKind)}>
+              <option value="internal">Internal desk</option>
+              <option value="vendor">Vendor (L2/L3 TAC / OEM)</option>
+              <option value="principal">Principal (ISP / carrier)</option>
+            </Select>
+          </div>
+          {partyKind !== 'internal' ? (
+            <div className="space-y-1.5">
+              <Label htmlFor="party-name">{partyKind === 'principal' ? 'Principal name' : 'Vendor name'}</Label>
+              <input
+                id="party-name"
+                value={partyName}
+                disabled={!canEdit}
+                onChange={(event) => setPartyName(event.target.value)}
+                placeholder={partyKind === 'principal' ? 'Indosat' : 'Fortinet'}
+                className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100"
+              />
+            </div>
+          ) : null}
           <div className="space-y-1.5">
             <Label htmlFor="ola-resolve">OLA resolve (min)</Label>
             <input

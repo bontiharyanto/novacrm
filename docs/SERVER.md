@@ -113,3 +113,4 @@ Apply in filename order (migrate.sh does this):
 - `20250814180000_standard_change_catalog.sql`
 - `20250815130000_itsm_depth.sql` (problem link, knowledge, resolved_at)
 - `20250815140000_wave2_ops.sql` (ticket audit, group OLA)
+- `20250815150000_ola_parties.sql` (vendor / principal on assignment groups)

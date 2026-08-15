@@ -160,6 +160,7 @@ export async function listDirectoryGroups(): Promise<AssignmentGroup[]> {
     isActive: row.is_active,
     olaResponseMinutes: 45,
     olaResolveMinutes: 360,
+    partyKind: 'internal',
     memberCount: 0,
     members: [],
     createdAt: row.created_at,

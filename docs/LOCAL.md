@@ -133,6 +133,7 @@ New migration on an existing local DB (do **not** `supabase db reset` — it wip
 ```bash
 docker exec -i supabase_db_novacrm psql -U postgres -d postgres < supabase/migrations/20250815130000_itsm_depth.sql
 docker exec -i supabase_db_novacrm psql -U postgres -d postgres < supabase/migrations/20250815140000_wave2_ops.sql
+docker exec -i supabase_db_novacrm psql -U postgres -d postgres < supabase/migrations/20250815150000_ola_parties.sql
 ```
 
 Then re-run only the new `UPDATE`/`INSERT` at the end of `supabase/seed.sql` if those rows are missing.

@@ -32,6 +32,8 @@ export type TicketRecord = {
   groupName?: string;
   groupKind?: string;
   groupTier?: SupportTier;
+  groupPartyKind?: 'internal' | 'vendor' | 'principal';
+  groupPartyName?: string;
   pendingReason?: TicketPendingReason;
   pendingNote?: string;
   slaAgreementId?: string;
@@ -253,17 +255,30 @@ export function withAssets(
 
 export function withGroups(
   tickets: TicketRecord[],
-  groups: Array<{ id: string; name: string; kind?: string; tier?: string | null }>,
+  groups: Array<{
+    id: string;
+    name: string;
+    kind?: string;
+    tier?: string | null;
+    party_kind?: string | null;
+    party_name?: string | null;
+  }>,
 ): TicketRecord[] {
   const byId = new Map(groups.map((group) => [group.id, group]));
   return tickets.map((ticket) => {
     const group = ticket.groupId ? byId.get(ticket.groupId) : undefined;
     if (!group) return ticket;
+    const partyKind =
+      group.party_kind === 'vendor' || group.party_kind === 'principal' || group.party_kind === 'internal'
+        ? group.party_kind
+        : undefined;
     return {
       ...ticket,
       groupName: group.name,
       groupKind: group.kind,
       groupTier: isSupportTier(group.tier) ? group.tier : undefined,
+      groupPartyKind: partyKind,
+      groupPartyName: group.party_name ?? undefined,
     };
   });
 }

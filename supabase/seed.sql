@@ -102,6 +102,49 @@ values
   ('99999999-0001-0001-0001-000000000006', '11111111-1111-1111-1111-111111111111', '55555555-0001-0001-0001-000000000001', 'L3 Infra', 'l3-infra', 'assignment', true, '22222222-2222-2222-2222-222222222222')
 on conflict (id) do nothing;
 
+insert into public.assignment_groups (
+  id, tenant_id, account_id, name, slug, kind, is_active, created_by,
+  tier, party_kind, party_name, ola_response_minutes, ola_resolve_minutes
+)
+values
+  (
+    '99999999-0001-0001-0001-000000000007',
+    '11111111-1111-1111-1111-111111111111',
+    '55555555-0001-0001-0001-000000000001',
+    'L2 Vendor Fortinet',
+    'l2-vendor-fortinet',
+    'assignment',
+    true,
+    '22222222-2222-2222-2222-222222222222',
+    'l2',
+    'vendor',
+    'Fortinet',
+    240,
+    1440
+  ),
+  (
+    '99999999-0001-0001-0001-000000000008',
+    '11111111-1111-1111-1111-111111111111',
+    '55555555-0001-0001-0001-000000000001',
+    'L3 Principal Indosat',
+    'l3-principal-indosat',
+    'assignment',
+    true,
+    '22222222-2222-2222-2222-222222222222',
+    'l3',
+    'principal',
+    'Indosat',
+    120,
+    480
+  )
+on conflict (id) do update
+set
+  party_kind = excluded.party_kind,
+  party_name = excluded.party_name,
+  ola_response_minutes = excluded.ola_response_minutes,
+  ola_resolve_minutes = excluded.ola_resolve_minutes,
+  tier = excluded.tier;
+
 insert into public.assignment_group_members (tenant_id, group_id, user_id, role, created_by)
 values
   ('11111111-1111-1111-1111-111111111111', '99999999-0001-0001-0001-000000000001', '22222222-2222-2222-2222-222222222222', 'lead', '22222222-2222-2222-2222-222222222222'),
@@ -112,7 +155,9 @@ values
   ('11111111-1111-1111-1111-111111111111', '99999999-0001-0001-0001-000000000004', '33333333-3333-3333-3333-333333333333', 'lead', '22222222-2222-2222-2222-222222222222'),
   ('11111111-1111-1111-1111-111111111111', '99999999-0001-0001-0001-000000000005', '33333333-3333-3333-3333-333333333333', 'lead', '22222222-2222-2222-2222-222222222222'),
   ('11111111-1111-1111-1111-111111111111', '99999999-0001-0001-0001-000000000005', '22222222-2222-2222-2222-222222222222', 'member', '22222222-2222-2222-2222-222222222222'),
-  ('11111111-1111-1111-1111-111111111111', '99999999-0001-0001-0001-000000000006', '22222222-2222-2222-2222-222222222222', 'lead', '22222222-2222-2222-2222-222222222222')
+  ('11111111-1111-1111-1111-111111111111', '99999999-0001-0001-0001-000000000006', '22222222-2222-2222-2222-222222222222', 'lead', '22222222-2222-2222-2222-222222222222'),
+  ('11111111-1111-1111-1111-111111111111', '99999999-0001-0001-0001-000000000007', '22222222-2222-2222-2222-222222222222', 'lead', '22222222-2222-2222-2222-222222222222'),
+  ('11111111-1111-1111-1111-111111111111', '99999999-0001-0001-0001-000000000008', '22222222-2222-2222-2222-222222222222', 'lead', '22222222-2222-2222-2222-222222222222')
 on conflict (group_id, user_id) do nothing;
 
 insert into public.assets (id, tenant_id, account_id, name, asset_tag, type, brand, model, status, location, assigned_to, created_by)
@@ -840,7 +885,8 @@ set
     when 'l2' then 480
     when 'l3' then 960
     else coalesce(ola_resolve_minutes, 360)
-  end;
+  end
+where coalesce(party_kind, 'internal') = 'internal';
 
 update public.tickets
 set pending_reason = 'vendor', pending_note = 'ISP Indosat · case 8821'

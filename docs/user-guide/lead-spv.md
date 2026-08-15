@@ -52,7 +52,7 @@ Setiap shift, urutan ini:
 4. **Requests** menumpuk — cek item katalog lengkap; assign fulfiller.
 5. **Changes** di **CAB Review** (`/cab`) — jangan biarkan window terlewat tanpa keputusan.
 6. **Problems** terbuka lama — isi panel **RCA** (workaround + Known error), tautkan incident. Jangan hanya komentar. Lab: *Backup gagal semalam*.
-7. **OLA** di `/org/groups/{id}` — jam internal group (bukan SLA customer). Badge **OLA** di detail tiket. Default L1 30m/4h, L2 60m/8h, L3 2h/16h.
+7. **OLA** di `/org/groups/{id}` — jam antrian group (bukan SLA customer). Field **Party**: Internal / Vendor / Principal + nama (Fortinet, Indosat). Badge **OLA** di detail tiket. Default internal: L1 30m/4h, L2 60m/8h, L3 2h/16h. Lab: `L2 Vendor Fortinet` (4h/24h), `L3 Principal Indosat` (2h/8h).
 
 ### Assign
 
@@ -62,8 +62,8 @@ Setiap shift, urutan ini:
 
 ### Escalate
 
-**Escalate L2 / L3** mengantre ke `L2 Network` / `L3 Infra` (Internal). Jam SLA **tetap jalan**.  
-Pakai jika L1 macet, bukan sebagai pengganti Hold.
+**Escalate L2 / L3** mengantre ke group tier lebih tinggi. Pilih Internal (`L2 Network` / `L3 Infra`), **Vendor** (`L2 Vendor Fortinet`), atau **Principal** (`L3 Principal Indosat`). Jam SLA customer **tetap jalan**; jam **OLA** group itu mulai ulang.  
+Pakai Escalate kalau ada antrian yang mengerjakan. **Hold + Pending vendor** hanya jika tidak ada yang kerja (tunggu update case).
 
 ### Hold
 

@@ -19,7 +19,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { defaultOlaMinutes } from '@/lib/ola/engine';
 
 const GROUP_SELECT =
-  'id, tenant_id, account_id, name, slug, kind, tier, is_active, ola_response_minutes, ola_resolve_minutes, created_at';
+  'id, tenant_id, account_id, name, slug, kind, tier, is_active, ola_response_minutes, ola_resolve_minutes, party_kind, party_name, created_at';
 
 function slugify(value: string) {
   return (
@@ -54,6 +54,8 @@ type GroupRow = {
   is_active: boolean;
   ola_response_minutes?: number | null;
   ola_resolve_minutes?: number | null;
+  party_kind?: AssignmentGroup['partyKind'] | null;
+  party_name?: string | null;
   created_at: string;
 };
 
@@ -241,6 +243,8 @@ function mapGroup(
     isActive: row.is_active,
     olaResponseMinutes: row.ola_response_minutes ?? defaultOlaMinutes(row.tier).response,
     olaResolveMinutes: row.ola_resolve_minutes ?? defaultOlaMinutes(row.tier).resolve,
+    partyKind: row.party_kind ?? 'internal',
+    partyName: row.party_name ?? undefined,
     memberCount: members.length,
     isMember: userId ? members.some((member) => member.userId === userId) : false,
     members,
@@ -294,6 +298,9 @@ export async function createAssignmentGroup(input: unknown) {
   }
   const scoped = await requireAccountId(session);
   if (!scoped.accountId) return { data: null, error: scoped.error ?? 'Select an account' };
+  if (parsed.partyKind && parsed.partyKind !== 'internal' && !parsed.partyName?.trim()) {
+    return { data: null, error: 'Vendor / principal name is required' };
+  }
 
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
@@ -308,6 +315,8 @@ export async function createAssignmentGroup(input: unknown) {
       is_active: parsed.isActive ?? true,
       ola_response_minutes: parsed.olaResponseMinutes ?? defaultOlaMinutes(parsed.tier).response,
       ola_resolve_minutes: parsed.olaResolveMinutes ?? defaultOlaMinutes(parsed.tier).resolve,
+      party_kind: parsed.partyKind ?? 'internal',
+      party_name: parsed.partyKind && parsed.partyKind !== 'internal' ? parsed.partyName?.trim() || null : null,
       created_by: session.userId,
     })
     .select(GROUP_SELECT)
@@ -344,6 +353,14 @@ export async function updateAssignmentGroup(groupId: string, input: unknown) {
   if (parsed.isActive !== undefined) patch.is_active = parsed.isActive;
   if (parsed.olaResponseMinutes !== undefined) patch.ola_response_minutes = parsed.olaResponseMinutes;
   if (parsed.olaResolveMinutes !== undefined) patch.ola_resolve_minutes = parsed.olaResolveMinutes;
+  if (parsed.partyKind !== undefined) patch.party_kind = parsed.partyKind;
+  if (parsed.partyName !== undefined || parsed.partyKind !== undefined) {
+    const kind = parsed.partyKind ?? 'internal';
+    patch.party_name = kind === 'internal' ? null : parsed.partyName?.trim() || null;
+    if (kind !== 'internal' && !patch.party_name) {
+      return { data: null, error: 'Vendor / principal name is required' };
+    }
+  }
 
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase

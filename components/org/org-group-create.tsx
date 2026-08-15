@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { createAssignmentGroup } from '@/lib/org/actions';
-import type { AssignmentGroupKind, SupportTier } from '@/lib/org/schema';
+import type { AssignmentGroupKind, GroupPartyKind, SupportTier } from '@/lib/org/schema';
 import { toastError, toastSuccess } from '@/components/ui/toast';
 import { useI18n } from '@/components/layout/preferences-provider';
 
@@ -21,6 +21,8 @@ export function OrgGroupCreate() {
   const [name, setName] = useState('');
   const [kind, setKind] = useState<AssignmentGroupKind>('assignment');
   const [tier, setTier] = useState<SupportTier | ''>('l1');
+  const [partyKind, setPartyKind] = useState<GroupPartyKind>('internal');
+  const [partyName, setPartyName] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -28,7 +30,13 @@ export function OrgGroupCreate() {
     event.preventDefault();
     setIsSubmitting(true);
     setError('');
-    const result = await createAssignmentGroup({ name: name.trim(), kind, tier: tier || null });
+    const result = await createAssignmentGroup({
+      name: name.trim(),
+      kind,
+      tier: tier || null,
+      partyKind,
+      partyName: partyKind === 'internal' ? undefined : partyName.trim(),
+    });
     if (result.error || !result.data?.id) {
       const message = result.error ?? t.common.createFailed;
       setError(message);
@@ -78,6 +86,26 @@ export function OrgGroupCreate() {
               <option value="l3">L3</option>
             </Select>
           </div>
+          <div className="space-y-1.5">
+            <Label>Party</Label>
+            <Select value={partyKind} onChange={(event) => setPartyKind(event.target.value as GroupPartyKind)}>
+              <option value="internal">Internal desk</option>
+              <option value="vendor">Vendor (TAC / OEM)</option>
+              <option value="principal">Principal (ISP / carrier)</option>
+            </Select>
+          </div>
+          {partyKind !== 'internal' ? (
+            <div className="space-y-1.5">
+              <Label htmlFor="party-name">{partyKind === 'principal' ? 'Principal name' : 'Vendor name'}</Label>
+              <Input
+                id="party-name"
+                value={partyName}
+                onChange={(event) => setPartyName(event.target.value)}
+                placeholder={partyKind === 'principal' ? 'Indosat' : 'Fortinet'}
+                required
+              />
+            </div>
+          ) : null}
           {error ? <p className="text-sm text-rose-400">{error}</p> : null}
           <Button type="submit" disabled={name.trim().length < 2 || isSubmitting}>
             {isSubmitting ? 'Creating…' : 'Create group'}
