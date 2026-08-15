@@ -14,6 +14,7 @@ export const id: Dictionary = {
     knowledge: 'Knowledge',
     governance: 'Tata kelola',
     platform: 'Platform',
+    tenants: 'Tenant',
     dashboard: 'Dasbor',
     reports: 'Laporan',
     audit: 'Audit',
@@ -78,6 +79,7 @@ export const id: Dictionary = {
     ssoFailed: 'Login SSO gagal. Pastikan provider aktif di Supabase Auth, lalu coba lagi.',
     ssoEmail: 'IdP tidak mengirim email. Minta admin IdP melepas klaim email.',
     ssoDenied: 'Domain email ini tidak diizinkan untuk tenant ini. Pakai akun kerja atau login email.',
+    tenantPaused: 'Tenant ini dijeda atau diarsipkan. Minta pemilik platform untuk mengaktifkannya lagi.',
   },
   accountPick: {
     title: 'Filter desk',

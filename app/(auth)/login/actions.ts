@@ -32,6 +32,15 @@ export async function signInAction(_prev: SignInState, formData: FormData): Prom
     .select('role, tenant_id')
     .eq('id', data.user.id)
     .maybeSingle();
+
+  if (profile?.tenant_id) {
+    const { data: tenant } = await supabase.from('tenants').select('status').eq('id', profile.tenant_id).maybeSingle();
+    if (tenant?.status && tenant.status !== 'active') {
+      await supabase.auth.signOut();
+      return { error: 'This tenant is paused or archived. Ask the platform owner to resume it.' };
+    }
+  }
+
   const role = parseAppRole(profile?.role ?? data.user.user_metadata?.role);
   if (isCustomerRole(role)) {
     redirect(next && next.startsWith('/portal') ? next : '/portal');

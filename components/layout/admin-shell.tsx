@@ -10,6 +10,7 @@ import {
   BookOpen,
   Bug,
   Building2,
+  Building,
   ClipboardList,
   Clock,
   GitBranch,
@@ -82,6 +83,7 @@ const configurationItems: NavItem[] = [
 ];
 
 const platformItems: NavItem[] = [
+  { href: '/tenants', labelKey: 'tenants', icon: Building, action: 'read', subject: 'Tenant' },
   { href: '/catalog', labelKey: 'catalog', icon: BookOpen, action: 'read', subject: 'Catalog' },
   { href: '/knowledge', labelKey: 'knowledge', icon: BookMarked, action: 'read', subject: 'Knowledge' },
   { href: '/workflows', labelKey: 'automation', icon: Workflow, action: 'read', subject: 'Workflow' },

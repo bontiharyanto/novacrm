@@ -41,7 +41,9 @@ export function LoginForm() {
         ? t.login.ssoDenied
         : ssoError === 'sso'
           ? t.login.ssoFailed
-          : '';
+          : ssoError === 'tenant_paused'
+            ? t.login.tenantPaused
+            : '';
 
   return (
     <div className="w-full max-w-md space-y-4">

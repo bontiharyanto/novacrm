@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Command } from 'cmdk';
-import { BarChart3, BookMarked, BookOpen, Building2, CalendarClock, Clock, History, LayoutDashboard, LayoutGrid, Lightbulb, Package, Palette, Scale, Settings, ShieldCheck, Sparkles, Ticket, Upload, UserCog, Users, Workflow } from 'lucide-react';
+import { BarChart3, BookMarked, BookOpen, Building, Building2, CalendarClock, Clock, History, LayoutDashboard, LayoutGrid, Lightbulb, Package, Palette, Scale, Settings, ShieldCheck, Sparkles, Ticket, Upload, UserCog, Users, Workflow } from 'lucide-react';
 import { canRole, type AppRole } from '@/lib/rbac/ability';
 import { isTenantAdminRole } from '@/lib/rbac/roles';
 import { useI18n } from '@/components/layout/preferences-provider';
@@ -84,6 +84,16 @@ export function CommandPalette({ open, onOpenChange, role }: { open: boolean; on
               <Command.Item className="cmdk-item" onSelect={() => go('/cab')}>
                 <ShieldCheck className="h-3.5 w-3.5" /> {t.nav.cab}
               </Command.Item>
+              {canRole(role, 'read', 'Tenant') ? (
+                <Command.Item className="cmdk-item" onSelect={() => go('/tenants')}>
+                  <Building className="h-3.5 w-3.5" /> {t.nav.tenants}
+                </Command.Item>
+              ) : null}
+              {canRole(role, 'create', 'Tenant') ? (
+                <Command.Item className="cmdk-item" onSelect={() => go('/tenants/new')}>
+                  <Building className="h-3.5 w-3.5" /> New tenant
+                </Command.Item>
+              ) : null}
               <Command.Item className="cmdk-item" onSelect={() => go('/accounts')}>
                 <Building2 className="h-3.5 w-3.5" /> {t.nav.accounts}
               </Command.Item>

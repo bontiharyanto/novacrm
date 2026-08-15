@@ -12,6 +12,7 @@ export const en = {
     knowledge: 'Knowledge',
     governance: 'Governance',
     platform: 'Platform',
+    tenants: 'Tenants',
     dashboard: 'Dashboard',
     reports: 'Reports',
     audit: 'Audit',
@@ -76,6 +77,7 @@ export const en = {
     ssoFailed: 'SSO sign-in failed. Confirm the provider is enabled in Supabase Auth and try again.',
     ssoEmail: 'The identity provider did not return an email. Ask the IdP admin to release the email claim.',
     ssoDenied: 'That email domain is not allowed for this tenant. Use a work account or email login.',
+    tenantPaused: 'This tenant is paused or archived. Ask the platform owner to resume it.',
   },
   accountPick: {
     title: 'Filter desk',

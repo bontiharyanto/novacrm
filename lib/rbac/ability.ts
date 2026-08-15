@@ -72,6 +72,7 @@ export function defineAbilityFor(role: AppRole): AppAbility {
   if (role === 'admin') {
     can('manage', 'all');
     cannot('manage', 'Tenant');
+    cannot('read', 'Tenant');
     cannot('create', 'Tenant');
     cannot('update', 'Tenant');
     cannot('delete', 'Tenant');

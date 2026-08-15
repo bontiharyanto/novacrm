@@ -96,6 +96,21 @@ export async function updateSession(request: NextRequest) {
   const profile = user ? await roleFromProfile(supabase, user.id, roleFromMetadata(user)) : undefined;
   const role = profile?.role;
 
+  if (user && profile?.tenantId && !pathname.startsWith('/api/')) {
+    const { data: tenantStatus } = await supabase
+      .from('tenants')
+      .select('status')
+      .eq('id', profile.tenantId)
+      .maybeSingle();
+    if (tenantStatus?.status && tenantStatus.status !== 'active') {
+      await supabase.auth.signOut();
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = '/login';
+      redirectUrl.search = 'error=tenant_paused';
+      return NextResponse.redirect(redirectUrl);
+    }
+  }
+
   if (user && pathname === '/login') {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = homePathForRole(role);

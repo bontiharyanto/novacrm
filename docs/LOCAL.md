@@ -101,7 +101,7 @@ WFM desk: [http://localhost:3000/wfm](http://localhost:3000/wfm) — occupancy, 
 16. Organization: [http://localhost:3000/org](http://localhost:3000/org) — Internal divisi/unit vs assignment groups. Tickets can queue to a group; filter **My groups**
 17. SLA: [http://localhost:3000/sla](http://localhost:3000/sla) — per-account matrix (type × priority) + calendar. Switch to Bank for Gold INC P1 15m/4h. Waiting/hold pauses the clock. New tickets snapshot the agreement. **Underpinning contracts** (UC) for Fortinet / Indosat live on the same page; link them on vendor groups at `/org`.
 18. Hold / escalate: open a ticket → **Hold** + reason `Pending vendor` (case number) pauses SLA. **Escalate L2 / L3** queues Internal `L2 Network` / `L3 Infra` and keeps the clock running. Demo: Bank *WiFi lantai 2* (vendor hold); Internal *Backup gagal* already on L2.
-19. Users: [http://localhost:3000/users](http://localhost:3000/users) — **New user** (admin) creates a login. **Access** = `customer` / `agent` / `team_lead` / `supervisor` / `manager` / `admin` / `superadmin`. **Level** = L1/L2/L3 from group membership. Admin can **Reset authenticator** on a staff profile after an identity check.
+19. Users: [http://localhost:3000/users](http://localhost:3000/users) — **New user** (admin) creates a login. **Access** = `customer` / `agent` / `team_lead` / `supervisor` / `manager` / `admin` / `superadmin`. **Level** = L1/L2/L3 from group membership. Admin can **Reset authenticator** on a staff profile after an identity check. Superadmin: [Tenants](http://localhost:3000/tenants) creates a client workspace + first admin (Internal account, Service Desk L1, office-hours SLA). Pause/archive blocks login. Lab tenant cannot be paused.
 20. `http://localhost:3000/api/health` should show Redis `up`
 21. Sysadmin Ops: [http://127.0.0.1:3100](http://127.0.0.1:3100) — service health, BullMQ queues (`notifications`, `workflows`, `wfm`), retry failed jobs. Independent of the desk. Details: [OPS.md](OPS.md). Scale workers: [WORKERS.md](WORKERS.md). Optional: `OPS_TOKEN` + header `x-ops-token`.
 22. AI Insights: [http://localhost:3000/insights](http://localhost:3000/insights) — four cards (queue pressure, SLA risk, workforce load, account health). Needs Groq (or another AI plugin) on **Integrations**.
@@ -137,6 +137,8 @@ docker exec -i supabase_db_novacrm psql -U postgres -d postgres < supabase/migra
 docker exec -i supabase_db_novacrm psql -U postgres -d postgres < supabase/migrations/20250815160000_underpinning_contracts.sql
 docker exec -i supabase_db_novacrm psql -U postgres -d postgres < supabase/migrations/20250815170000_sso_oidc_fields.sql
 docker exec -i supabase_db_novacrm psql -U postgres -d postgres < supabase/migrations/20250815180000_tenant_mfa.sql
+docker exec -i supabase_db_novacrm psql -U postgres -d postgres < supabase/migrations/20250815190000_csat_uc_credits.sql
+docker exec -i supabase_db_novacrm psql -U postgres -d postgres < supabase/migrations/20250815200000_tenant_platform.sql
 ```
 
 Then re-run only the new `UPDATE`/`INSERT` at the end of `supabase/seed.sql` if those rows are missing.

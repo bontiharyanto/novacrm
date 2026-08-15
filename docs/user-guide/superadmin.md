@@ -18,7 +18,7 @@ Superadmin adalah **pemilik platform**: semua tenant, semua role, termasuk recor
 | Semua menu desk + Settings (Integrations, Notifications) | Pause/archive tenant produksi tanpa runbook |
 | Melihat seluruh account di tenant lab | Commit `.env`, service_role, atau `OPS_TOKEN` |
 
-Hanya role ini yang lolos CASL `Tenant` (`GET/POST /api/tenants`). Admin **tidak** bisa mengubah nama tenant, slug, accent, timezone, support email, status `active` / `paused` / `archived`.
+Hanya role ini yang lolos CASL `Tenant` (`/tenants`, `GET/POST /api/tenants`). Admin **tidak** bisa membuat tenant atau mengubah status tenant lain.
 
 ---
 
@@ -36,19 +36,21 @@ Untuk plugin Groq/WA, user biasa, SLA, katalog: pakai **admin** atau **manager**
 
 ## 3. Tenant
 
-Konfigurasi tenant (bukan account customer):
+`/tenants` — daftar klien. **New tenant** membuat workspace terisolasi + admin pertama.
 
 | Field | Arti |
 | --- | --- |
-| Name / slug | Identitas platform |
-| Accent color | Warna aksen UI tenant (satu warna) |
+| Name / slug | Identitas platform. Login SSO: `/login?tenant={slug}` |
+| Accent color | Warna aksen (disimpan; UI desk masih biru default) |
 | Timezone | Jam SLA / laporan |
 | Support email | Alamat support yang tampil ke operasi |
 | Status | `active` · `paused` · `archived` |
 
-`paused` / `archived` menghentikan operasi tenant itu. Pastikan admin tenant tahu sebelum mengubah status.
+Yang ikut dibuat: account **Internal**, group **Service Desk** L1, SLA office hours, admin sebagai lead.
 
-Data tetap diisolasi `tenant_id`. Superadmin lab seed terikat tenant demo `11111111-…`; produksi: satu project Supabase / satu tenant kecuali Anda menambah model multi-tenant di platform.
+`paused` / `archived` menolak login. Tenant lab `novacrm-demo` dan tenant tempat Anda sedang login **tidak** bisa di-pause.
+
+Data tetap diisolasi `tenant_id`. Superadmin lab tetap di tenant demo; setelah create, **sign out** lalu login sebagai admin klien.
 
 ---
 
@@ -98,6 +100,7 @@ Anda *bisa* melakukan semua itu. Jangan — kecuali insiden platform.
 ## 7. Checklist superadmin
 
 - [ ] Tenant status `active` kecuali ada alasan tertulis
+- [ ] Klien baru dibuat dari `/tenants`, bukan copy tenant lab
 - [ ] Ada admin tenant selain akun superadmin
 - [ ] Tidak ada superadmin idle tanpa MFA/password produksi yang diganti (lab password `NovaCRM!2026` **wajib ganti** di produksi)
 - [ ] `/api/health` OK setelah deploy
