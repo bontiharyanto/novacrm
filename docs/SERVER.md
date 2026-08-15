@@ -110,3 +110,6 @@ Apply in filename order (migrate.sh does this):
 - `20250814160000_integration_plugins.sql` + `20250814161000_sso_mail_plugins.sql`
 - `20250814170000_staff_account_access.sql`
 - `20250814171000_align_rbac_policies.sql`
+- `20250814180000_standard_change_catalog.sql`
+- `20250815130000_itsm_depth.sql` (problem link, knowledge, resolved_at)
+- `20250815140000_wave2_ops.sql` (ticket audit, group OLA)

@@ -18,6 +18,7 @@ import type { ReportExportFormat, ReportPreset, ReportSnapshot } from '@/lib/rep
 import {
   closedInRange,
   exportFilename,
+  formatDurationMinutes,
   formatLabels,
   formatReportPeriod,
   openedInRange,
@@ -258,11 +259,27 @@ export function ReportsPage() {
                 hint: `${report.kpis.slaRisk} at risk`,
                 danger: true,
               },
+              {
+                label: 'FRT',
+                value: formatDurationMinutes(report.kpis.frtMinutes),
+                hint: 'Avg first staff response',
+              },
+              {
+                label: 'MTTR',
+                value: formatDurationMinutes(report.kpis.mttrMinutes),
+                hint: 'Avg open → resolved',
+              },
+              {
+                label: 'Backlog 7d+',
+                value: report.kpis.backlogAging,
+                hint: 'Open longer than a week',
+                danger: true,
+              },
             ].map((item) => (
               <Card key={item.label} className="transition-all duration-200 ease-out hover:-translate-y-0.5">
                 <CardContent className="p-4">
                   <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{item.label}</p>
-                  <p className={`mt-1 text-2xl font-semibold ${item.danger && item.value > 0 ? 'text-rose-400' : 'text-zinc-50'}`}>
+                  <p className={`mt-1 text-2xl font-semibold ${item.danger && Number(item.value) > 0 ? 'text-rose-400' : 'text-zinc-50'}`}>
                     {item.value}
                   </p>
                   <p className="mt-1 text-[11px] text-zinc-600">{item.hint}</p>
@@ -327,8 +344,8 @@ export function ReportsPage() {
                 </Card>
                 <Card>
                   <CardContent className="p-4">
-                    <p className="mb-3 text-[11px] uppercase tracking-[0.16em] text-zinc-500">Assignee load</p>
-                    <DistributionList rows={report.assignees} empty="No assignees in range." />
+                    <p className="mb-3 text-[11px] uppercase tracking-[0.16em] text-zinc-500">Group scorecard</p>
+                    <DistributionList rows={report.byGroup} empty="No open tickets on groups." />
                     {report.kpis.emergencyChanges > 0 ? (
                       <Link href="/cab" className="mt-3 block text-xs text-rose-300 hover:text-rose-200">
                         {report.kpis.emergencyChanges} emergency change open

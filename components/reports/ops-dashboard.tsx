@@ -11,6 +11,7 @@ import { DistributionList } from '@/components/reports/distribution-list';
 import { TypeBadge } from '@/components/tickets/type-badge';
 import { useRealtimeTable } from '@/lib/supabase/realtime';
 import type { ReportSnapshot } from '@/lib/reports/schema';
+import { formatDurationMinutes } from '@/lib/reports/labels';
 import { formatRelativeId } from '@/lib/utils/dates';
 import { isTicketType } from '@/lib/tickets/process';
 
@@ -52,6 +53,8 @@ export function OpsDashboard() {
     { label: 'CAB review', value: report.kpis.cabReview, href: '/cab' },
     { label: 'Warranty risk', value: report.kpis.warrantySoon, href: '/assets' },
     { label: 'Catalog live', value: report.kpis.catalogPublished, href: '/catalog' },
+    { label: 'FRT', value: formatDurationMinutes(report.kpis.frtMinutes), href: '/reports' },
+    { label: 'MTTR', value: formatDurationMinutes(report.kpis.mttrMinutes), href: '/reports' },
   ];
 
   return (
@@ -81,7 +84,7 @@ export function OpsDashboard() {
             <Card className="transition-all duration-200 ease-out hover:-translate-y-0.5">
               <CardContent className="p-4">
                 <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{item.label}</p>
-                <p className={`mt-1 text-xl font-semibold ${item.danger && item.value > 0 ? 'text-rose-400' : 'text-zinc-50'}`}>
+                <p className={`mt-1 text-xl font-semibold ${item.danger && Number(item.value) > 0 ? 'text-rose-400' : 'text-zinc-50'}`}>
                   {item.value}
                 </p>
               </CardContent>

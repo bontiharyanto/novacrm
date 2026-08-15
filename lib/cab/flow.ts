@@ -13,6 +13,22 @@ export function submitStatusForChange(changeType?: ChangeType): TicketStatus {
   return 'waiting';
 }
 
+export function changeReadyForCab(ticket: {
+  changeType?: ChangeType | null;
+  riskLevel?: string | null;
+  implementationPlan?: string | null;
+  backoutPlan?: string | null;
+}) {
+  if (ticket.changeType === 'standard') {
+    return { ok: true, missing: [] as string[] };
+  }
+  const missing: string[] = [];
+  if (!ticket.riskLevel) missing.push('risk');
+  if (!ticket.implementationPlan?.trim()) missing.push('implementation plan');
+  if (!ticket.backoutPlan?.trim()) missing.push('backout plan');
+  return { ok: missing.length === 0, missing };
+}
+
 export function cabQueue(status: TicketStatus) {
   if (status === 'waiting') return 'review';
   if (status === 'hold') return 'scheduled';

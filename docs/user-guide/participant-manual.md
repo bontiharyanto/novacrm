@@ -387,7 +387,9 @@ Repeat alerts within 24 hours update the **same** ticket (correlation).
 
 **Dashboard** (`/dashboard`) — KPIs and aging for the active account.
 
-**Reports** (`/reports`) — range 7 / 30 / 90 days or custom. Preview, then export CSV / Excel / PDF. **Ask assistant** jumps to chat with that snapshot.
+**Reports** (`/reports`) — range 7 / 30 / 90 days or custom. Preview, then export CSV / Excel / PDF. KPIs include **FRT**, **MTTR**, and **backlog 7d+**. **Ask assistant** jumps to chat with that snapshot.
+
+**Knowledge** (`/knowledge`) — articles from **Publish to knowledge** on a resolved ticket. Creating a ticket with title `VPN` should hint the seeded article. Problem *Backup gagal semalam* has RCA + a linked incident.
 
 **Assistant** (`/assistant`) — staff only. Reads the last 7 days of ticket facts. It **does not** change tickets. If it is disconnected, admin must set AI on **Integrations** (Groq free key) and **Test connection**.
 

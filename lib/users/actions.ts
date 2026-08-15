@@ -158,6 +158,8 @@ export async function listDirectoryGroups(): Promise<AssignmentGroup[]> {
     kind: row.kind as AssignmentGroupKind,
     tier: isSupportTier(row.tier as string) ? (row.tier as SupportTier) : undefined,
     isActive: row.is_active,
+    olaResponseMinutes: 45,
+    olaResolveMinutes: 360,
     memberCount: 0,
     members: [],
     createdAt: row.created_at,

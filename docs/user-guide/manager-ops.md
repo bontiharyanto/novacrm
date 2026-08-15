@@ -51,7 +51,7 @@ Jika API WhatsApp gagal: admin. Jika P1 Bank terlalu longgar: SPV atau Anda di `
 4. **Import** — aset/CMDB/user massal lewat preview, bukan Excel liar di tiket.
 5. **Workflows** — `ticket.create` auto-assign masih benar; Recent runs tanpa error bertubi.
 6. **Governance** — DSAR menumpuk? Breach terbuka?
-7. **Reports / Insights** — beban per account untuk briefing.
+7. **Reports / Insights** — FRT, MTTR, backlog 7 hari+, beban per account / group.
 
 Harian antrian tetap boleh Anda kerjakan, tetapi prioritas Anda adalah struktur, bukan menutup INC satu per satu.
 
@@ -141,3 +141,4 @@ Jenis yang tersedia mengikuti katalog import di aplikasi (users, assets, CI, …
 - [ ] Import hanya lewat preview bersih
 - [ ] DSAR/breach tidak menunggak
 - [ ] Tidak menyimpan API key (bukan wewenang Anda)
+- [ ] Briefing: FRT / MTTR / backlog 7d+ di `/reports` atau dashboard ops

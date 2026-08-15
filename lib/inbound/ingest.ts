@@ -1,6 +1,7 @@
 import { createHash } from 'crypto';
 import { createSupabaseAdminClient, hasServiceRole } from '@/lib/supabase/admin';
 import { createInboundTicket } from '@/lib/tickets/actions';
+import { classifyInbound } from '@/lib/inbound/classify';
 import { evaluateWorkflow } from '@/lib/workflows/actions';
 import { displayTicketNumber } from '@/lib/tickets/process';
 import type { TicketPriority, TicketType } from '@/lib/tickets/schema';
@@ -124,13 +125,28 @@ export async function ingestInbound(input: IngestInput) {
     assetId = asset?.id;
   }
 
+  const classified =
+    input.channel === 'alert'
+      ? {
+          type: input.type ?? 'incident',
+          priority: input.priority ?? 'high',
+          title,
+        }
+      : await classifyInbound({
+          tenantId: input.tenantId,
+          title,
+          body,
+          fallbackType: input.type ?? 'incident',
+          fallbackPriority: input.priority ?? 'medium',
+        });
+
   const result = await createInboundTicket(input.tenantId, {
     tenantId: input.tenantId,
-    title,
-    description: body,
-    type: input.type ?? 'incident',
+    title: classified.title,
+    description: classified.note ? `${body}\n\n— VA: ${classified.note}` : body,
+    type: classified.type,
     status: 'open',
-    priority: input.priority ?? 'medium',
+    priority: classified.priority,
     requesterName: input.sender || input.channel,
     requesterEmail: input.senderEmail,
     requesterPhone: input.senderPhone,
@@ -168,7 +184,7 @@ export async function ingestInbound(input: IngestInput) {
       number: result.data.number,
       title: result.data.title,
       correlated: false,
-      message: `Ticket ${displayTicketNumber(result.data.number, result.data.id)} telah dibuat`,
+      message: `Ticket ${displayTicketNumber(result.data.number, result.data.id)} telah dibuat (${classified.type} · ${classified.priority})`,
     },
     error: null,
   };

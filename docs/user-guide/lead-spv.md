@@ -51,7 +51,8 @@ Setiap shift, urutan ini:
 3. **My groups** — tiket yang ngantri di L1/L2/L3 Anda.
 4. **Requests** menumpuk — cek item katalog lengkap; assign fulfiller.
 5. **Changes** di **CAB Review** (`/cab`) — jangan biarkan window terlewat tanpa keputusan.
-6. **Problems** terbuka lama — pastikan ada workaround di komentar.
+6. **Problems** terbuka lama — isi panel **RCA** (workaround + Known error), tautkan incident. Jangan hanya komentar. Lab: *Backup gagal semalam*.
+7. **OLA** di `/org/groups/{id}` — jam internal group (bukan SLA customer). Badge **OLA** di detail tiket. Default L1 30m/4h, L2 60m/8h, L3 2h/16h.
 
 ### Assign
 
@@ -74,7 +75,8 @@ Hanya jika menunggu pihak luar. Wajib alasan (`Pending vendor` + case). SLA **pa
 
 `/cab` — antrian + kalender.
 
-Di record change: **approve** / **reject** / **defer**.
+Di record change: **approve** / **reject** / **defer**.  
+Normal / Emergency: isi **risk**, **implementation plan**, dan **backout** sebelum Submit / Approve. Standard boleh tanpa CAB.
 
 | Change type | Perilaku |
 | --- | --- |

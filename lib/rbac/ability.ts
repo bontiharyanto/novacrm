@@ -33,6 +33,7 @@ export type Subjects =
   | 'NotificationLog'
   | 'Tenant'
   | 'Import'
+  | 'Knowledge'
   | 'all';
 
 export type AppAbility = MongoAbility<[Actions, Subjects]>;
@@ -55,6 +56,9 @@ function grantDeskOps(can: AbilityBuilder<AppAbility>['can']) {
   can('update', 'Wfm');
   can('read', 'Governance');
   can('read', 'NotificationLog');
+  can('read', 'Knowledge');
+  can('create', 'Knowledge');
+  can('update', 'Knowledge');
 }
 
 export function defineAbilityFor(role: AppRole): AppAbility {
@@ -133,6 +137,7 @@ export function defineAbilityFor(role: AppRole): AppAbility {
   can('read', 'Ticket');
   can('update', 'Ticket');
   can('read', 'Catalog');
+  can('read', 'Knowledge');
   can('create', 'Governance');
   can('read', 'Governance');
   if (!isCustomerRole(role)) {

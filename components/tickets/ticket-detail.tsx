@@ -10,6 +10,8 @@ import { Select } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SlaBadge } from '@/components/tickets/sla-badge';
+import { OlaBadge } from '@/components/tickets/ola-badge';
+import { TicketAudit } from '@/components/tickets/ticket-audit';
 import { PendingBadge } from '@/components/tickets/pending-badge';
 import { TypeBadge } from '@/components/tickets/type-badge';
 import { ProcessStrip } from '@/components/tickets/process-strip';
@@ -28,6 +30,7 @@ import type { TicketPriority, TicketStatus } from '@/lib/tickets/schema';
 import { dispatchTicketAction } from '@/lib/wfm/actions';
 import { useI18n } from '@/components/layout/preferences-provider';
 import { toastError, toastSuccess } from '@/components/ui/toast';
+import { TicketRca, type ProblemOption, type RelatedIncident } from '@/components/tickets/ticket-rca';
 
 type TicketItem = {
   id: string;
@@ -44,6 +47,10 @@ type TicketItem = {
   slaPausedAt?: string;
   slaResponseMinutes?: number;
   slaResolveMinutes?: number;
+  olaResponseMinutes?: number;
+  olaResolveMinutes?: number;
+  olaResponseAt?: string;
+  olaResolveBy?: string;
   requesterName: string;
   requesterEmail?: string;
   requesterPhone?: string;
@@ -64,6 +71,15 @@ type TicketItem = {
   accountCode?: string;
   createdAt: string;
   comments: Array<{ id: string; author: string; comment: string; createdAt: string }>;
+  problemId?: string;
+  problemNumber?: string;
+  problemTitle?: string;
+  problemWorkaround?: string;
+  workaround?: string;
+  knownError?: boolean;
+  aiSummary?: string;
+  aiSummaryAt?: string;
+  relatedIncidents?: RelatedIncident[];
 };
 
 type AgentOption = {
@@ -111,6 +127,12 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
   const [author, setAuthor] = useState('Agent');
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isSummarizing, setIsSummarizing] = useState(false);
+  const [workaround, setWorkaround] = useState('');
+  const [knownError, setKnownError] = useState(false);
+  const [problemId, setProblemId] = useState('');
+  const [problems, setProblems] = useState<ProblemOption[]>([]);
+  const [linkableIncidents, setLinkableIncidents] = useState<ProblemOption[]>([]);
 
   const loadTicket = useCallback(async () => {
     const response = await fetch(`/api/tickets/${ticketId}`);
@@ -126,6 +148,9 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
       const nextType = isTicketType(nextTicket.type) ? nextTicket.type : 'incident';
       setPendingReason(nextTicket.pendingReason ?? defaultPendingReason(nextTicket.status, nextType) ?? 'vendor');
       setPendingNote(nextTicket.pendingNote ?? '');
+      setWorkaround(nextTicket.workaround ?? '');
+      setKnownError(Boolean(nextTicket.knownError));
+      setProblemId(nextTicket.problemId ?? '');
     }
   }, [ticketId]);
 
@@ -135,20 +160,35 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
 
   useEffect(() => {
     const accountId = ticket?.accountId;
+    const query = accountId ? `?accountId=${encodeURIComponent(accountId)}` : '';
     if (!accountId) {
       setAssets([]);
       setGroups([]);
-      return;
+    } else {
+      void fetch(`/api/assets${query}`)
+        .then((response) => response.json())
+        .then((payload) => setAssets(payload.data ?? []))
+        .catch(() => setAssets([]));
+      void fetch(`/api/org/groups${query}`)
+        .then((response) => response.json())
+        .then((payload) => setGroups(payload.data ?? []))
+        .catch(() => setGroups([]));
     }
-    const query = `?accountId=${encodeURIComponent(accountId)}`;
-    void fetch(`/api/assets${query}`)
+    void fetch(`/api/tickets/problems${query}`)
       .then((response) => response.json())
-      .then((payload) => setAssets(payload.data ?? []))
-      .catch(() => setAssets([]));
-    void fetch(`/api/org/groups${query}`)
+      .then((payload) => setProblems(payload.data ?? []))
+      .catch(() => setProblems([]));
+    void fetch('/api/tickets')
       .then((response) => response.json())
-      .then((payload) => setGroups(payload.data ?? []))
-      .catch(() => setGroups([]));
+      .then((payload) => {
+        const rows = (payload.data ?? []) as Array<ProblemOption & { type?: string; problemId?: string; accountId?: string }>;
+        setLinkableIncidents(
+          rows
+            .filter((row) => row.type === 'incident' && !row.problemId && (!accountId || row.accountId === accountId))
+            .map((row) => ({ id: row.id, number: row.number, title: row.title, status: row.status })),
+        );
+      })
+      .catch(() => setLinkableIncidents([]));
   }, [ticket?.accountId]);
 
   useEffect(() => {
@@ -303,6 +343,41 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
 
         <Card>
           <CardHeader>
+            <div className="flex items-center justify-between gap-3">
+              <CardTitle className="text-sm text-zinc-400">AI summary</CardTitle>
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={isSummarizing}
+                onClick={() => {
+                  setIsSummarizing(true);
+                  void fetch(`/api/tickets/${ticketId}/summary`, { method: 'POST' })
+                    .then(async (response) => {
+                      const payload = await response.json().catch(() => ({}));
+                      if (!response.ok) {
+                        toastError(payload.error ?? t.common.saveFailed);
+                        return;
+                      }
+                      toastSuccess(t.tickets.summarized);
+                      await loadTicket();
+                    })
+                    .finally(() => setIsSummarizing(false));
+                }}
+              >
+                {isSummarizing ? t.tickets.summarizing : t.tickets.summarize}
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="whitespace-pre-wrap text-sm leading-relaxed text-zinc-300">
+            {ticket.aiSummary || t.tickets.summaryEmpty}
+            {ticket.aiSummaryAt ? (
+              <p className="mt-2 text-[11px] text-zinc-600">{formatRelativeId(ticket.aiSummaryAt)}</p>
+            ) : null}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
             <CardTitle className="text-sm text-zinc-400">Activity</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -348,6 +423,8 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
             </div>
           </CardContent>
         </Card>
+
+        <TicketAudit ticketId={ticketId} />
       </div>
 
       <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
@@ -384,6 +461,23 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
               {ticket.slaPausedAt ? (
                 <p className="text-xs text-sky-300">Paused {new Date(ticket.slaPausedAt).toLocaleString('id-ID')}</p>
               ) : null}
+              <div className="mt-3">
+                <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">OLA</p>
+                <div className="mt-1">
+                  <OlaBadge
+                    status={ticket.status}
+                    olaResolveBy={ticket.olaResolveBy}
+                    olaResponseAt={ticket.olaResponseAt}
+                    olaResolveMinutes={ticket.olaResolveMinutes}
+                    slaPausedAt={ticket.slaPausedAt}
+                  />
+                </div>
+                {ticket.olaResolveBy ? (
+                  <p className="text-xs text-zinc-500">
+                    Group clock {new Date(ticket.olaResolveBy).toLocaleString('id-ID')}
+                  </p>
+                ) : null}
+              </div>
               {ticket.pendingReason ? (
                 <div className="mt-1">
                   <PendingBadge reason={ticket.pendingReason} note={ticket.pendingNote} />
@@ -534,6 +628,75 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
                 <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">Due</p>
                 <p className="mt-1 text-zinc-200">{new Date(ticket.dueDate).toLocaleString('id-ID')}</p>
               </div>
+            ) : null}
+            {type === 'problem' || type === 'incident' ? (
+              <TicketRca
+                isProblem={type === 'problem'}
+                problemId={problemId}
+                problemNumber={ticket.problemNumber}
+                problemTitle={ticket.problemTitle}
+                problemWorkaround={ticket.problemWorkaround}
+                problems={problems.filter((item) => item.id !== ticket.id)}
+                relatedIncidents={ticket.relatedIncidents ?? []}
+                linkableIncidents={linkableIncidents}
+                workaround={workaround}
+                knownError={knownError}
+                disabled={isSaving}
+                onProblemId={setProblemId}
+                onWorkaround={setWorkaround}
+                onKnownError={setKnownError}
+                onSaveProblem={() =>
+                  void patchTicket(
+                    type === 'problem'
+                      ? { workaround: workaround.trim() || null, knownError }
+                      : { problemId: problemId || null },
+                  )
+                }
+                onLinkIncident={(incidentId) => {
+                  void fetch(`/api/tickets/${incidentId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ problemId: ticket.id }),
+                  }).then(async (response) => {
+                    const payload = await response.json().catch(() => ({}));
+                    if (!response.ok) {
+                      toastError(payload.error ?? t.common.saveFailed);
+                      return;
+                    }
+                    toastSuccess(t.tickets.updated);
+                    await loadTicket();
+                  });
+                }}
+              />
+            ) : null}
+            {ticket.status === 'resolved' || ticket.status === 'closed' ? (
+              <Button
+                size="sm"
+                variant="outline"
+                className="w-full"
+                disabled={isSaving}
+                onClick={() => {
+                  void fetch('/api/knowledge', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      ticketId: ticket.id,
+                      title: ticket.title,
+                      body: ticket.aiSummary || ticket.description || ticket.title,
+                      category: ticket.category,
+                    }),
+                  }).then(async (response) => {
+                    const payload = await response.json().catch(() => ({}));
+                    if (!response.ok) {
+                      toastError(payload.error ?? t.common.saveFailed);
+                      return;
+                    }
+                    toastSuccess(t.tickets.publishedKnowledge);
+                  });
+                }}
+              >
+                {t.tickets.publishKnowledge}
+              </Button>
             ) : null}
           </CardContent>
         </Card>

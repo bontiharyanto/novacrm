@@ -1,0 +1,47 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { ACCOUNT_ALL, ACCOUNT_COOKIE } from '@/lib/accounts/schema';
+import { homePathForRole, isCustomerRole, parseAppRole } from '@/lib/rbac/roles';
+
+function safeNextPath(value: string) {
+  if (value.startsWith('/') && !value.startsWith('//')) return value;
+  return '';
+}
+
+export async function GET(request: NextRequest) {
+  const code = request.nextUrl.searchParams.get('code');
+  const next = safeNextPath(request.nextUrl.searchParams.get('next') ?? '');
+
+  if (!code) {
+    return NextResponse.redirect(new URL('/login?error=sso', request.url));
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+  if (error || !data.user) {
+    return NextResponse.redirect(new URL('/login?error=sso', request.url));
+  }
+
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', data.user.id).maybeSingle();
+  const role = parseAppRole(profile?.role ?? data.user.user_metadata?.role);
+
+  if (!isCustomerRole(role)) {
+    cookies().set(ACCOUNT_COOKIE, ACCOUNT_ALL, {
+      path: '/',
+      sameSite: 'lax',
+      httpOnly: false,
+      maxAge: 60 * 60 * 24 * 30,
+    });
+  }
+
+  const dest = isCustomerRole(role)
+    ? next && next.startsWith('/portal')
+      ? next
+      : '/portal'
+    : next && !next.startsWith('/portal')
+      ? next
+      : homePathForRole(role);
+
+  return NextResponse.redirect(new URL(dest, request.url));
+}

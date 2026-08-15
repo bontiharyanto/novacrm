@@ -42,6 +42,8 @@ export function OrgGroupDetail({
   const [kind, setKind] = useState(group.kind);
   const [tier, setTier] = useState<SupportTier | ''>(group.tier ?? '');
   const [isActive, setIsActive] = useState(group.isActive);
+  const [olaResponse, setOlaResponse] = useState(String(group.olaResponseMinutes));
+  const [olaResolve, setOlaResolve] = useState(String(group.olaResolveMinutes));
   const [userId, setUserId] = useState('');
   const [role, setRole] = useState<GroupMemberRole>('member');
   const [message, setMessage] = useState('');
@@ -52,7 +54,14 @@ export function OrgGroupDetail({
   const available = agents.filter((agent) => !group.members.some((member) => member.userId === agent.id));
 
   async function save() {
-    const result = await updateAssignmentGroup(group.id, { name, kind, isActive, tier: tier || null });
+    const result = await updateAssignmentGroup(group.id, {
+      name,
+      kind,
+      isActive,
+      tier: tier || null,
+      olaResponseMinutes: Number(olaResponse) || group.olaResponseMinutes,
+      olaResolveMinutes: Number(olaResolve) || group.olaResolveMinutes,
+    });
     setMessage(result.error ?? 'Saved');
     router.refresh();
   }
@@ -105,6 +114,30 @@ export function OrgGroupDetail({
               <option value="active">Active</option>
               <option value="paused">Paused</option>
             </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="ola-response">OLA response (min)</Label>
+            <input
+              id="ola-response"
+              type="number"
+              min={5}
+              value={olaResponse}
+              disabled={!canEdit}
+              onChange={(event) => setOlaResponse(event.target.value)}
+              className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="ola-resolve">OLA resolve (min)</Label>
+            <input
+              id="ola-resolve"
+              type="number"
+              min={15}
+              value={olaResolve}
+              disabled={!canEdit}
+              onChange={(event) => setOlaResolve(event.target.value)}
+              className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100"
+            />
           </div>
         </div>
         {canEdit ? (

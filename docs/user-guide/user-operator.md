@@ -70,9 +70,10 @@ Chip KPI: In queue, New, Unassigned, SLA risk — kerjakan Unassigned dan SLA ri
 
 3. Pilih **Account** customer.
 4. Judul, deskripsi, prioritas (`low` / `medium` / `high` / `critical`).
-5. Isi variabel katalog jika item dipilih (field Required tidak boleh kosong).
-6. Opsional: aset/CI, group, assignee, requester.
-7. Save. Nomor muncul (`INC…` / `RITM…` / …).
+5. Setelah judul ≥ 4 karakter, panel **Knowledge** bisa muncul (contoh ketik `VPN`). Baca dulu — jangan buka duplikat jika artikel sudah menjawab.
+6. Isi variabel katalog jika item dipilih (field Required tidak boleh kosong).
+7. Opsional: aset/CI, group, assignee, requester.
+8. Save. Nomor muncul (`INC…` / `RITM…` / …).
 
 ## A.5 Kerjakan tiket (detail)
 
@@ -87,6 +88,10 @@ Layout **70 / 30**: percakapan kiri, properti kanan. Process strip di atas = sik
 | Link aset / CI | Impact dan riwayat |
 | **Hold** | Tunggu vendor/customer. Wajib alasan, mis. `Pending vendor` + nomor case. SLA **berhenti** |
 | **Escalate L2 / L3** | Antri ke group Internal `L2 Network` / `L3 Infra`. Jam SLA **tetap jalan** |
+| **RCA** (Problem / Incident) | Problem: isi workaround + **Known error**, tautkan incident. Incident: pilih problem terkait. Lab: *Backup gagal semalam* ↔ *AC ruang server panas* |
+| **Summarize** | Ringkas 3 baris (butuh plugin AI). Simpan di tiket |
+| **Publish to knowledge** | Setelah **resolved** / **closed**. Artikel muncul di `/knowledge` |
+| **Audit** | Kartu di bawah Activity: siapa mengubah status / group / assignee |
 
 Status Incident: `open` → `in_progress` → `waiting` / `hold` → `resolved` → `closed`.  
 Request: Submitted → Fulfillment → Fulfilled → Closed.  
@@ -134,6 +139,8 @@ Password lab sama: `NovaCRM!2026`. Filter **My groups** menampilkan antrian grou
 - [ ] Hold hanya jika benar-benar menunggu pihak lain + alasan
 - [ ] Request katalog: jawaban variabel lengkap sebelum fulfill
 - [ ] Tutup tiket hanya setelah solusi terverifikasi
+- [ ] Problem punya workaround; incident terkait ditautkan
+- [ ] Tiket resolved yang berguna → **Publish to knowledge**
 
 ---
 
@@ -169,6 +176,8 @@ Jangan kirim password atau data rahasia di deskripsi.
 
 **New request** — judul + uraian jika tidak ada item katalog yang cocok.  
 Untuk gangguan layanan, tulis gejala, sejak kapan, siapa terdampak — agent akan membuat / menautkan Incident.
+
+Jika judul mirip artikel terbit (contoh `VPN`), panel **Knowledge** menampilkan langkah yang sudah ada. Baca dulu sebelum submit.
 
 ## B.4 Lacak dan balas
 

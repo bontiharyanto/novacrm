@@ -41,6 +41,11 @@ export type TicketRecord = {
   slaResolveBy?: string;
   slaRespondedAt?: string;
   slaPausedAt?: string;
+  olaResponseMinutes?: number;
+  olaResolveMinutes?: number;
+  olaResponseAt?: string;
+  olaResolveBy?: string;
+  olaStartedAt?: string;
   assetId?: string;
   assetName?: string;
   assetTag?: string;
@@ -54,6 +59,16 @@ export type TicketRecord = {
   plannedEnd?: string;
   implementationPlan?: string;
   backoutPlan?: string;
+  problemId?: string;
+  problemNumber?: string;
+  problemTitle?: string;
+  problemWorkaround?: string;
+  workaround?: string;
+  knownError?: boolean;
+  resolvedAt?: string;
+  aiSummary?: string;
+  aiSummaryAt?: string;
+  relatedIncidents?: Array<{ id: string; number: string; title: string; status: TicketStatus }>;
   createdAt: string;
   updatedAt?: string;
   createdBy?: string;
@@ -101,6 +116,11 @@ type TicketRow = {
   sla_resolve_by?: string | null;
   sla_responded_at?: string | null;
   sla_paused_at?: string | null;
+  ola_response_minutes?: number | null;
+  ola_resolve_minutes?: number | null;
+  ola_response_at?: string | null;
+  ola_resolve_by?: string | null;
+  ola_started_at?: string | null;
   asset_id?: string | null;
   category?: string | null;
   catalog_item_id?: string | null;
@@ -111,6 +131,12 @@ type TicketRow = {
   planned_end?: string | null;
   implementation_plan?: string | null;
   backout_plan?: string | null;
+  problem_id?: string | null;
+  workaround?: string | null;
+  known_error?: boolean | null;
+  resolved_at?: string | null;
+  ai_summary?: string | null;
+  ai_summary_at?: string | null;
   created_at: string;
   updated_at?: string;
   created_by?: string | null;
@@ -152,6 +178,11 @@ export function mapTicketRow(row: TicketRow): TicketRecord {
     slaResolveBy: row.sla_resolve_by ?? undefined,
     slaRespondedAt: row.sla_responded_at ?? undefined,
     slaPausedAt: row.sla_paused_at ?? undefined,
+    olaResponseMinutes: row.ola_response_minutes ?? undefined,
+    olaResolveMinutes: row.ola_resolve_minutes ?? undefined,
+    olaResponseAt: row.ola_response_at ?? undefined,
+    olaResolveBy: row.ola_resolve_by ?? undefined,
+    olaStartedAt: row.ola_started_at ?? undefined,
     assetId: row.asset_id ?? undefined,
     assetName: undefined,
     assetTag: undefined,
@@ -165,6 +196,13 @@ export function mapTicketRow(row: TicketRow): TicketRecord {
     plannedEnd: row.planned_end ?? undefined,
     implementationPlan: row.implementation_plan ?? undefined,
     backoutPlan: row.backout_plan ?? undefined,
+    problemId: row.problem_id ?? undefined,
+    workaround: row.workaround ?? undefined,
+    knownError: Boolean(row.known_error),
+    resolvedAt: row.resolved_at ?? undefined,
+    aiSummary: row.ai_summary ?? undefined,
+    aiSummaryAt: row.ai_summary_at ?? undefined,
+    relatedIncidents: [],
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     createdBy: row.created_by ?? undefined,

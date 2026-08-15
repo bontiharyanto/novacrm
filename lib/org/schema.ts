@@ -22,6 +22,8 @@ export const assignmentGroupSchema = z.object({
   tier: supportTierSchema.nullable().optional(),
   slug: z.preprocess(emptyToUndefined, z.string().max(80).optional()),
   isActive: z.boolean().optional().default(true),
+  olaResponseMinutes: z.number().int().min(5).max(10080).optional(),
+  olaResolveMinutes: z.number().int().min(15).max(43200).optional(),
 });
 
 export const assignmentGroupUpdateSchema = assignmentGroupSchema.partial();
@@ -67,6 +69,8 @@ export type AssignmentGroup = {
   kind: AssignmentGroupKind;
   tier?: SupportTier;
   isActive: boolean;
+  olaResponseMinutes: number;
+  olaResolveMinutes: number;
   memberCount: number;
   isMember?: boolean;
   members: AssignmentGroupMember[];

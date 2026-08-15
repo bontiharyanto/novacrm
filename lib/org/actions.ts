@@ -16,6 +16,10 @@ import { getSessionProfile } from '@/lib/auth/session';
 import { formatZodError } from '@/lib/validation/zod-error';
 import { canRole } from '@/lib/rbac/ability';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { defaultOlaMinutes } from '@/lib/ola/engine';
+
+const GROUP_SELECT =
+  'id, tenant_id, account_id, name, slug, kind, tier, is_active, ola_response_minutes, ola_resolve_minutes, created_at';
 
 function slugify(value: string) {
   return (
@@ -48,6 +52,8 @@ type GroupRow = {
   kind: AssignmentGroup['kind'];
   tier?: AssignmentGroup['tier'] | null;
   is_active: boolean;
+  ola_response_minutes?: number | null;
+  ola_resolve_minutes?: number | null;
   created_at: string;
 };
 
@@ -233,6 +239,8 @@ function mapGroup(
     kind: row.kind,
     tier: row.tier ?? undefined,
     isActive: row.is_active,
+    olaResponseMinutes: row.ola_response_minutes ?? defaultOlaMinutes(row.tier).response,
+    olaResolveMinutes: row.ola_resolve_minutes ?? defaultOlaMinutes(row.tier).resolve,
     memberCount: members.length,
     isMember: userId ? members.some((member) => member.userId === userId) : false,
     members,
@@ -249,7 +257,7 @@ export async function listAssignmentGroups(accountId?: string | null): Promise<A
   const supabase = await createSupabaseServerClient();
   let query = supabase
     .from('assignment_groups')
-    .select('id, tenant_id, account_id, name, slug, kind, tier, is_active, created_at')
+    .select(GROUP_SELECT)
     .eq('tenant_id', session.profile.tenantId)
     .order('name');
   if (scoped.accountId) {
@@ -269,7 +277,7 @@ export async function getAssignmentGroupById(groupId: string): Promise<Assignmen
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase
     .from('assignment_groups')
-    .select('id, tenant_id, account_id, name, slug, kind, tier, is_active, created_at')
+    .select(GROUP_SELECT)
     .eq('id', groupId)
     .eq('tenant_id', session.profile.tenantId)
     .maybeSingle();
@@ -298,9 +306,11 @@ export async function createAssignmentGroup(input: unknown) {
       kind: parsed.kind,
       tier: parsed.tier ?? null,
       is_active: parsed.isActive ?? true,
+      ola_response_minutes: parsed.olaResponseMinutes ?? defaultOlaMinutes(parsed.tier).response,
+      ola_resolve_minutes: parsed.olaResolveMinutes ?? defaultOlaMinutes(parsed.tier).resolve,
       created_by: session.userId,
     })
-    .select('id, tenant_id, account_id, name, slug, kind, tier, is_active, created_at')
+    .select(GROUP_SELECT)
     .single();
 
   if (error || !data) {
@@ -332,6 +342,8 @@ export async function updateAssignmentGroup(groupId: string, input: unknown) {
   if (parsed.kind !== undefined) patch.kind = parsed.kind;
   if (parsed.tier !== undefined) patch.tier = parsed.tier ?? null;
   if (parsed.isActive !== undefined) patch.is_active = parsed.isActive;
+  if (parsed.olaResponseMinutes !== undefined) patch.ola_response_minutes = parsed.olaResponseMinutes;
+  if (parsed.olaResolveMinutes !== undefined) patch.ola_resolve_minutes = parsed.olaResolveMinutes;
 
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase

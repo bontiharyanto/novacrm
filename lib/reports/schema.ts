@@ -11,6 +11,9 @@ export type ReportKpis = {
   emergencyChanges: number;
   warrantySoon: number;
   catalogPublished: number;
+  frtMinutes: number;
+  mttrMinutes: number;
+  backlogAging: number;
 };
 
 export type NamedCount = { id: string; label: string; value: number };
@@ -40,5 +43,6 @@ export type ReportSnapshot = {
   byPriority: NamedCount[];
   trend: TrendPoint[];
   assignees: NamedCount[];
+  byGroup: NamedCount[];
   aging: AgingRow[];
 };

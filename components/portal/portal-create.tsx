@@ -11,6 +11,7 @@ import { useI18n } from '@/components/layout/preferences-provider';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { KnowledgeHints } from '@/components/knowledge/knowledge-hints';
 import { TypeBadge } from '@/components/tickets/type-badge';
 import { ticketTypeMeta, type TicketType } from '@/lib/tickets/process';
 import { cn } from '@/lib/utils';
@@ -125,6 +126,7 @@ export function PortalCreate() {
             autoFocus
             className="h-11 text-base"
           />
+          <KnowledgeHints title={title} />
         </div>
         <div className="space-y-2">
           <Label htmlFor="description">Details</Label>

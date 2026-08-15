@@ -25,7 +25,7 @@ export async function getReportSnapshot(input?: {
 
   let ticketQuery = supabase
     .from('tickets')
-    .select('id, number, title, type, status, priority, due_date, sla_resolve_by, sla_paused_at, sla_resolve_minutes, created_at, updated_at, assignee_id, assignee_name, change_type')
+    .select('id, number, title, type, status, priority, due_date, sla_resolve_by, sla_paused_at, sla_resolve_minutes, created_at, updated_at, assignee_id, assignee_name, change_type, sla_responded_at, resolved_at, group_id')
     .eq('tenant_id', tenantId);
   let assetQuery = supabase.from('assets').select('warranty_expiry').eq('tenant_id', tenantId);
   if (scoped.accountId) {
@@ -43,5 +43,16 @@ export async function getReportSnapshot(input?: {
       .eq('is_active', true),
   ]);
 
-  return buildReportSnapshot(tickets ?? [], assets ?? [], catalogPublished ?? 0, period);
+  const groupIds = Array.from(
+    new Set((tickets ?? []).map((row) => row.group_id).filter((id): id is string => Boolean(id))),
+  );
+  const groupNames: Record<string, string> = {};
+  if (groupIds.length > 0) {
+    const { data: groups } = await supabase.from('assignment_groups').select('id, name').in('id', groupIds);
+    for (const group of groups ?? []) {
+      groupNames[group.id] = group.name;
+    }
+  }
+
+  return buildReportSnapshot(tickets ?? [], assets ?? [], catalogPublished ?? 0, period, groupNames);
 }

@@ -1,3 +1,4 @@
+
 # NovaCRM Trainer Guide
 
 **Document type:** facilitator runbook  
@@ -60,7 +61,8 @@ Portal  customer@novacrm.app / NovaCRM!2026
 | Asset `AST-1001` | Assets | Jakarta HQ → Lt. 3, Finance → Operations |
 | CMDB Bank | CMDB graph | WAN Indosat → firewall → core → Lt.2 AP, VLAN 50 |
 | Ticket *WiFi lantai 2* | Bank incidents | Vendor hold (SLA paused) |
-| Ticket *Backup gagal* | Internal | Already escalated to L2 |
+| Ticket *Backup gagal* | Internal | Problem RCA: workaround + Known error; linked from *AC ruang server panas* |
+| Knowledge *VPN disconnect* | `/knowledge` | Hint appears when creating a ticket titled with `VPN` |
 | SLA Gold INC P1 | `/sla` on Bank | 15m response / 4h resolve |
 | Catalog **Install software** | `/catalog` | Record producer pattern — walkthrough for a new item (Antivirus) is in [catalog-guidance.md](catalog-guidance.md) |
 

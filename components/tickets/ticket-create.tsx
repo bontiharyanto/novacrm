@@ -15,6 +15,7 @@ import { TypeBadge } from '@/components/tickets/type-badge';
 import { ProcessStrip } from '@/components/tickets/process-strip';
 import { CommentEditor } from '@/components/tickets/comment-editor';
 import { CatalogVariableFields } from '@/components/catalog/catalog-variable-fields';
+import { KnowledgeHints } from '@/components/knowledge/knowledge-hints';
 import type { CatalogItem } from '@/lib/catalog/schema';
 import { formatAnswers, missingRequired } from '@/lib/catalog/variables';
 import {
@@ -374,6 +375,9 @@ export function TicketCreate({
               className="mt-2 h-12 text-lg font-semibold"
             />
             <p className="mt-1.5 text-[11px] text-zinc-500">{t.tickets.shortDescriptionHint}</p>
+            <div className="mt-3">
+              <KnowledgeHints title={title} browseHref="/knowledge" />
+            </div>
             <p className="mb-2 mt-5 text-[11px] uppercase tracking-[0.16em] text-zinc-500">Details</p>
             <CommentEditor value={description} onChange={setDescription} minHeightClass="min-h-56" />
             {selectedCatalog ? (

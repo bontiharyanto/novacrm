@@ -11,6 +11,8 @@ import { mapTicketRow, textToDescription, withAccounts, withAssets, withGroups, 
 import { evaluateWorkflow } from '@/lib/workflows/actions';
 import { requireAccountId } from '@/lib/accounts/scope';
 import { applyTicketSlaChange, snapshotSla } from '@/lib/sla/engine';
+import { snapshotOla } from '@/lib/ola/engine';
+import { recordTicketAudit, recordTicketAuditDiff } from '@/lib/tickets/audit';
 import { defaultPendingReason, isPauseStatus } from '@/lib/tickets/pending';
 import { dispatchTicket, resolveInboundGroupId } from '@/lib/wfm/dispatch';
 import { enqueueWfmDispatch } from '@/lib/queue/wfm.queue';
@@ -52,6 +54,36 @@ async function loadTicket(client: SupabaseClient, ticketId: string, tenantId?: s
   }
 
   const [ticket] = await hydrateTicketAssets(client, [mapTicketRow(data)]);
+
+  if (ticket.problemId) {
+    const { data: problem } = await client
+      .from('tickets')
+      .select('id, number, title, workaround')
+      .eq('id', ticket.problemId)
+      .eq('tenant_id', ticket.tenantId)
+      .maybeSingle();
+    if (problem) {
+      ticket.problemNumber = problem.number ?? undefined;
+      ticket.problemTitle = problem.title;
+      ticket.problemWorkaround = problem.workaround ?? undefined;
+    }
+  }
+
+  if (ticket.type === 'problem') {
+    const { data: children } = await client
+      .from('tickets')
+      .select('id, number, title, status')
+      .eq('problem_id', ticket.id)
+      .eq('tenant_id', ticket.tenantId)
+      .order('created_at', { ascending: false });
+    ticket.relatedIncidents = (children ?? []).map((row) => ({
+      id: row.id,
+      number: row.number || row.id.slice(0, 8),
+      title: row.title,
+      status: row.status,
+    }));
+  }
+
   const comments = (data.ticket_comments ?? []) as Array<{
     id: string;
     author_id?: string | null;
@@ -165,6 +197,10 @@ export async function createTicket(input: unknown) {
     assigned: 'assignee_id' in assigneePatch && Boolean(assigneePatch.assignee_id),
     dueDateOverride: parsed.dueDate || undefined,
   });
+  const ola = await snapshotOla(supabase, {
+    tenantId: session.profile.tenantId,
+    groupId: parsed.groupId,
+  });
 
   const { data, error } = await supabase
     .from('tickets')
@@ -177,6 +213,7 @@ export async function createTicket(input: unknown) {
       status: parsed.status,
       priority: parsed.priority,
       ...sla,
+      ...ola,
       requester_id: requesterId,
       requester_name: safeNotificationText(parsed.requesterName, session.profile.fullName),
       requester_email: parsed.requesterEmail ?? session.profile.email,
@@ -203,6 +240,13 @@ export async function createTicket(input: unknown) {
   }
 
   const [ticket] = await hydrateTicketAssets(supabase, [mapTicketRow(data)]);
+  await recordTicketAudit(supabase, {
+    tenantId: session.profile.tenantId,
+    ticketId: ticket.id,
+    actorId: session.userId,
+    actorName: session.profile.fullName,
+    action: 'created',
+  });
   await afterTicketMutation('ticket.create', ticket);
   return { data: ticket, error: null };
 }
@@ -232,6 +276,7 @@ export async function createInboundTicket(tenantId: string, input: unknown) {
   });
 
   const groupId = parsed.groupId ?? (await resolveInboundGroupId(supabase, tenantId));
+  const ola = await snapshotOla(supabase, { tenantId, groupId });
 
   const { data, error } = await supabase
     .from('tickets')
@@ -244,6 +289,7 @@ export async function createInboundTicket(tenantId: string, input: unknown) {
       status: parsed.status,
       priority: parsed.priority,
       ...sla,
+      ...ola,
       requester_name: safeNotificationText(parsed.requesterName, 'Customer'),
       requester_email: parsed.requesterEmail,
       requester_phone: normalizePhone(parsed.requesterPhone),
@@ -260,6 +306,14 @@ export async function createInboundTicket(tenantId: string, input: unknown) {
   }
 
   const [ticket] = await hydrateTicketAssets(supabase, [mapTicketRow(data)]);
+  await recordTicketAudit(supabase, {
+    tenantId,
+    ticketId: ticket.id,
+    actorName: 'Virtual Agent',
+    action: 'created',
+    field: 'channel',
+    newValue: parsed.category ?? 'inbound',
+  });
   await afterTicketMutation('ticket.create', ticket);
   return { data: ticket, error: null };
 }
@@ -350,6 +404,31 @@ export async function updateTicket(ticketId: string, input: unknown) {
     },
   );
 
+  let problemId = parsed.problemId === undefined ? existing.data.problemId ?? null : parsed.problemId;
+  if (problemId) {
+    const { data: problem } = await supabase
+      .from('tickets')
+      .select('id, type')
+      .eq('id', problemId)
+      .eq('tenant_id', session.profile.tenantId)
+      .maybeSingle();
+    if (!problem || problem.type !== 'problem') {
+      return { data: null, error: 'Related record must be a problem ticket' };
+    }
+    if (problemId === ticketId) {
+      return { data: null, error: 'A problem cannot link to itself' };
+    }
+  }
+
+  const resolvedAt =
+    nextStatus === 'resolved' || nextStatus === 'closed'
+      ? existing.data.resolvedAt ?? new Date().toISOString()
+      : null;
+  const olaPatch =
+    nextGroupId !== previousGroup
+      ? await snapshotOla(supabase, { tenantId: session.profile.tenantId, groupId: nextGroupId })
+      : {};
+
   const { data, error } = await supabase
     .from('tickets')
     .update({
@@ -358,8 +437,13 @@ export async function updateTicket(ticketId: string, input: unknown) {
       priority: parsed.priority ?? existing.data.priority,
       asset_id: parsed.assetId === undefined ? existing.data.assetId ?? null : parsed.assetId,
       group_id: nextGroupId,
+      ...olaPatch,
       pending_reason: pendingReason,
       pending_note: pendingNote,
+      problem_id: problemId,
+      workaround: parsed.workaround === undefined ? existing.data.workaround ?? null : parsed.workaround,
+      known_error: parsed.knownError ?? existing.data.knownError ?? false,
+      resolved_at: resolvedAt,
       ...(escalating
         ? { assignee_id: null, assignee_name: null, assignee_chat_id: null }
         : assigneePatch),
@@ -414,6 +498,22 @@ export async function updateTicket(ticketId: string, input: unknown) {
           : `Change freeze${ticket.pendingNote ? ` (${ticket.pendingNote})` : ''}. SLA paused.`,
     );
   }
+
+  await recordTicketAuditDiff(supabase, {
+    tenantId: session.profile.tenantId,
+    ticketId,
+    actorId: session.userId,
+    actorName: session.profile.fullName,
+    changes: [
+      { field: 'status', oldValue: previousStatus, newValue: ticket.status },
+      { field: 'type', oldValue: existing.data.type, newValue: ticket.type },
+      { field: 'priority', oldValue: existing.data.priority, newValue: ticket.priority },
+      { field: 'assignee', oldValue: existing.data.assigneeName ?? previousAssignee, newValue: ticket.assigneeName ?? nextAssignee },
+      { field: 'group', oldValue: existing.data.groupName ?? previousGroup, newValue: ticket.groupName ?? nextGroupId },
+      { field: 'asset', oldValue: existing.data.assetId, newValue: ticket.assetId },
+      { field: 'problem', oldValue: existing.data.problemId, newValue: ticket.problemId },
+    ],
+  });
 
   await afterTicketMutation('ticket.status_change', hydrated, messages.join('. ') || undefined);
   return { data: hydrated, error: null };
@@ -479,6 +579,13 @@ export async function addTicketComment(ticketId: string, input: unknown) {
     return { data: null, error: reloaded.error };
   }
 
+  await recordTicketAudit(supabase, {
+    tenantId: session.profile.tenantId,
+    ticketId,
+    actorId: session.userId,
+    actorName: session.profile.fullName,
+    action: 'commented',
+  });
   await afterTicketMutation('ticket.comment_add', reloaded.data, parsed.comment);
   const comment = reloaded.data.comments.at(-1);
   return { data: comment ?? { id: ticketId, author: parsed.author, comment: parsed.comment, createdAt: new Date().toISOString() }, error: null };

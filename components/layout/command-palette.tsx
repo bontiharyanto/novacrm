@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Command } from 'cmdk';
-import { BarChart3, BookOpen, Building2, CalendarClock, Clock, LayoutDashboard, LayoutGrid, Lightbulb, Package, Palette, Scale, Settings, ShieldCheck, Sparkles, Ticket, Upload, UserCog, Users, Workflow } from 'lucide-react';
+import { BarChart3, BookMarked, BookOpen, Building2, CalendarClock, Clock, LayoutDashboard, LayoutGrid, Lightbulb, Package, Palette, Scale, Settings, ShieldCheck, Sparkles, Ticket, Upload, UserCog, Users, Workflow } from 'lucide-react';
 import { canRole, type AppRole } from '@/lib/rbac/ability';
 import { isTenantAdminRole } from '@/lib/rbac/roles';
 import { useI18n } from '@/components/layout/preferences-provider';
@@ -112,6 +112,11 @@ export function CommandPalette({ open, onOpenChange, role }: { open: boolean; on
               {canRole(role, 'create', 'Import') ? (
                 <Command.Item className="cmdk-item" onSelect={() => go('/import')}>
                   <Upload className="h-3.5 w-3.5" /> {t.nav.import}
+                </Command.Item>
+              ) : null}
+              {canRole(role, 'read', 'Knowledge') ? (
+                <Command.Item className="cmdk-item" onSelect={() => go('/knowledge')}>
+                  <BookMarked className="h-3.5 w-3.5" /> {t.nav.knowledge}
                 </Command.Item>
               ) : null}
               <Command.Item className="cmdk-item" onSelect={() => go('/catalog')}>

@@ -1,7 +1,8 @@
 'use server';
 
 import { cabDecisionInputSchema, changePlanSchema, type CabApproval } from '@/lib/cab/schema';
-import { nextStatusForDecision, submitStatusForChange } from '@/lib/cab/flow';
+import { changeReadyForCab, nextStatusForDecision, submitStatusForChange } from '@/lib/cab/flow';
+import { recordTicketAudit } from '@/lib/tickets/audit';
 import { getSessionProfile } from '@/lib/auth/session';
 import { canRole } from '@/lib/rbac/ability';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
@@ -99,6 +100,10 @@ export async function submitChangeToCab(ticketId: string) {
   if (!existing || existing.type !== 'change') {
     return { data: null, error: 'Change not found' };
   }
+  const ready = changeReadyForCab(existing);
+  if (!ready.ok) {
+    return { data: null, error: `Save risk and plans first: ${ready.missing.join(', ')}` };
+  }
   const status = submitStatusForChange(existing.changeType);
   const result = await updateTicket(ticketId, { status });
   if (result.error) return result;
@@ -115,6 +120,13 @@ export async function decideCab(ticketId: string, input: unknown) {
   const existing = await getTicketById(ticketId);
   if (!existing || existing.type !== 'change') {
     return { data: null, error: 'Change not found' };
+  }
+
+  if (parsed.decision === 'approved') {
+    const ready = changeReadyForCab(existing);
+    if (!ready.ok) {
+      return { data: null, error: `Cannot approve without ${ready.missing.join(', ')}` };
+    }
   }
 
   const supabase = await createSupabaseServerClient();
@@ -141,6 +153,16 @@ export async function decideCab(ticketId: string, input: unknown) {
     author_id: session.userId,
     created_by: session.userId,
     message: `CAB ${parsed.decision}${parsed.comment ? `: ${parsed.comment}` : ''}`,
+  });
+
+  await recordTicketAudit(supabase, {
+    tenantId: session.profile.tenantId,
+    ticketId,
+    actorId: session.userId,
+    actorName: session.profile.fullName,
+    action: 'cab',
+    field: 'decision',
+    newValue: parsed.decision,
   });
 
   const nextStatus = nextStatusForDecision(parsed.decision, existing.changeType);

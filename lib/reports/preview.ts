@@ -28,6 +28,7 @@ export function reportToCsv(report: ReportSnapshot) {
     ...countRows('status', report.byStatus),
     ...countRows('priority', report.byPriority),
     ...countRows('assignee', report.assignees),
+    ...countRows('group', report.byGroup),
     ...report.trend.map((row) => `trend,${row.day},Opened / closed,${row.opened}/${row.closed}`),
     ...report.aging.map(
       (row) =>
@@ -61,6 +62,7 @@ export function reportPreviewSheets(report: ReportSnapshot): PreviewSheet[] {
     countSheet('Status', report.byStatus),
     countSheet('Priority', report.byPriority),
     countSheet('Assignees', report.assignees),
+    countSheet('Groups', report.byGroup),
     {
       name: 'Trend',
       columns: ['Day', 'Opened', 'Closed'],

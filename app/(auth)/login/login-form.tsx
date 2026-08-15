@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { PreferenceControls } from '@/components/layout/preference-controls';
 import { useI18n } from '@/components/layout/preferences-provider';
+import { SsoButtons } from '@/components/auth/sso-buttons';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -83,9 +84,12 @@ export function LoginForm() {
                 </button>
               </div>
             </div>
-            {state?.error ? <p className="text-sm text-rose-400">{state.error}</p> : null}
+            {state?.error || searchParams.get('error') === 'sso' ? (
+              <p className="text-sm text-rose-400">{state?.error ?? t.login.ssoUnavailable}</p>
+            ) : null}
             <SubmitButton />
           </form>
+          <SsoButtons />
         </CardContent>
       </Card>
     </div>

@@ -14,6 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { TypeBadge } from '@/components/tickets/type-badge';
 import { ProcessStrip } from '@/components/tickets/process-strip';
 import { CHANGE_TYPES, RISK_LEVELS, type CabApproval, type ChangeType, type RiskLevel } from '@/lib/cab/schema';
+import { changeReadyForCab } from '@/lib/cab/flow';
 import { displayTicketNumber, stageLabel } from '@/lib/tickets/process';
 import { formatRelativeId } from '@/lib/utils/dates';
 import type { TicketRecord } from '@/lib/tickets/mappers';
@@ -100,6 +101,9 @@ export function CabRecord({ ticketId }: { ticketId: string }) {
   async function decide(decision: 'approved' | 'rejected' | 'deferred') {
     setIsSaving(true);
     setError('');
+    if (decision === 'approved') {
+      await savePlan();
+    }
     const response = await fetch(`/api/cab/${ticketId}/decision`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -115,6 +119,13 @@ export function CabRecord({ ticketId }: { ticketId: string }) {
   if (!ticket) {
     return <p className="p-6 text-sm text-zinc-500">Loading change...</p>;
   }
+
+  const ready = changeReadyForCab({
+    changeType,
+    riskLevel,
+    implementationPlan,
+    backoutPlan,
+  });
 
   return (
     <motion.div
@@ -207,9 +218,12 @@ export function CabRecord({ ticketId }: { ticketId: string }) {
               Save plan
             </Button>
             {ticket.status === 'open' ? (
-              <Button className="w-full" onClick={() => void submitToCab()} disabled={isSaving}>
+              <Button className="w-full" onClick={() => void submitToCab()} disabled={isSaving || !ready.ok}>
                 {changeType === 'standard' ? 'Schedule (pre-approved)' : 'Submit to CAB'}
               </Button>
+            ) : null}
+            {!ready.ok ? (
+              <p className="text-xs text-amber-400">Required before CAB: {ready.missing.join(', ')}</p>
             ) : null}
             <Link href={`/tickets/${ticket.id}`} className="block text-center text-xs text-blue-300 hover:text-blue-200">
               Open ticket record
@@ -222,7 +236,7 @@ export function CabRecord({ ticketId }: { ticketId: string }) {
             <CardContent className="space-y-3 p-4">
               <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Vote</p>
               <Textarea rows={3} placeholder="Comment" value={comment} onChange={(event) => setComment(event.target.value)} />
-              <Button className="w-full" onClick={() => void decide('approved')} disabled={isSaving}>
+              <Button className="w-full" onClick={() => void decide('approved')} disabled={isSaving || !ready.ok}>
                 Approve
               </Button>
               <Button className="w-full" variant="outline" onClick={() => void decide('deferred')} disabled={isSaving}>

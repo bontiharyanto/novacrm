@@ -6,6 +6,7 @@ import { Suspense, useEffect, useState, type ReactNode } from 'react';
 import {
   AlertTriangle,
   BarChart3,
+  BookMarked,
   BookOpen,
   Bug,
   Building2,
@@ -80,6 +81,7 @@ const configurationItems: NavItem[] = [
 
 const platformItems: NavItem[] = [
   { href: '/catalog', labelKey: 'catalog', icon: BookOpen, action: 'read', subject: 'Catalog' },
+  { href: '/knowledge', labelKey: 'knowledge', icon: BookMarked, action: 'read', subject: 'Knowledge' },
   { href: '/workflows', labelKey: 'automation', icon: Workflow, action: 'read', subject: 'Workflow' },
   { href: '/governance', labelKey: 'governance', icon: Scale, action: 'read', subject: 'Governance' },
 ];

@@ -11,7 +11,18 @@ export const kpiLabels: Record<keyof ReportKpis, string> = {
   emergencyChanges: 'Emergency changes',
   warrantySoon: 'Warranty risk',
   catalogPublished: 'Catalog live',
+  frtMinutes: 'FRT (min)',
+  mttrMinutes: 'MTTR (min)',
+  backlogAging: 'Backlog 7d+',
 };
+
+export function formatDurationMinutes(minutes: number) {
+  if (!minutes) return '—';
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  return rest ? `${hours}h ${rest}m` : `${hours}h`;
+}
 
 export const statusLabels: Record<string, string> = {
   open: 'New',

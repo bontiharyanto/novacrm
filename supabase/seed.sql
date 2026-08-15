@@ -827,6 +827,21 @@ update public.assignment_groups set tier = 'l1' where id in ('99999999-0001-0001
 update public.assignment_groups set tier = 'l2' where id in ('99999999-0001-0001-0001-000000000003', '99999999-0001-0001-0001-000000000005');
 update public.assignment_groups set tier = 'l3' where id = '99999999-0001-0001-0001-000000000006';
 
+update public.assignment_groups
+set
+  ola_response_minutes = case tier
+    when 'l1' then 30
+    when 'l2' then 60
+    when 'l3' then 120
+    else coalesce(ola_response_minutes, 45)
+  end,
+  ola_resolve_minutes = case tier
+    when 'l1' then 240
+    when 'l2' then 480
+    when 'l3' then 960
+    else coalesce(ola_resolve_minutes, 360)
+  end;
+
 update public.tickets
 set pending_reason = 'vendor', pending_note = 'ISP Indosat · case 8821'
 where title = 'WiFi lantai 2 putus' and status = 'hold';
@@ -922,5 +937,42 @@ set config = public.integrations.config || excluded.config
 where coalesce(public.integrations.config->>'apiKey', '') = '';
 
 -- Assistant threads are created at runtime per staff user. No demo chats.
+
+update public.tickets
+set
+  resolved_at = coalesce(resolved_at, created_at + interval '6 hours'),
+  sla_responded_at = coalesce(sla_responded_at, created_at + interval '18 minutes')
+where status in ('resolved', 'closed');
+
+update public.tickets
+set
+  workaround = 'Restore last good dump from /backups and rerun pg_dump with --no-sync. Page L3 if WAL gap > 15 minutes.',
+  known_error = true
+where title = 'Backup gagal semalam';
+
+update public.tickets
+set problem_id = (
+  select id from public.tickets
+  where title = 'Backup gagal semalam' and tenant_id = '11111111-1111-1111-1111-111111111111'
+  limit 1
+)
+where title = 'AC ruang server panas'
+  and tenant_id = '11111111-1111-1111-1111-111111111111';
+
+insert into public.knowledge_articles (tenant_id, title, body, category, is_published, created_by)
+select
+  '11111111-1111-1111-1111-111111111111',
+  'VPN disconnect from home — split tunnel check',
+  '1. Confirm the user is on the corporate profile, not personal Wi-Fi captive portal.' || E'\n' ||
+  '2. Flush DNS, retry with split-tunnel off.' || E'\n' ||
+  '3. If cert error, rotate via standard change Renew TLS / VPN cert.',
+  'network',
+  true,
+  '33333333-3333-3333-3333-333333333333'
+where not exists (
+  select 1 from public.knowledge_articles
+  where tenant_id = '11111111-1111-1111-1111-111111111111'
+    and title = 'VPN disconnect from home — split tunnel check'
+);
 
 

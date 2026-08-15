@@ -22,17 +22,32 @@ type TicketRow = {
   assignee_id?: string | null;
   assignee_name?: string | null;
   change_type?: string | null;
+  sla_responded_at?: string | null;
+  resolved_at?: string | null;
+  group_id?: string | null;
 };
 
 type AssetRow = {
   warranty_expiry?: string | null;
 };
 
+function minutesBetween(from: string, to: string) {
+  const delta = new Date(to).getTime() - new Date(from).getTime();
+  if (!Number.isFinite(delta) || delta < 0) return null;
+  return Math.round(delta / 60000);
+}
+
+function average(values: number[]) {
+  if (values.length === 0) return 0;
+  return Math.round(values.reduce((sum, value) => sum + value, 0) / values.length);
+}
+
 export function buildReportSnapshot(
   tickets: TicketRow[],
   assets: AssetRow[],
   catalogPublished: number,
   period: ReportPeriod,
+  groupNames: Record<string, string> = {},
 ): ReportSnapshot {
   const now = new Date();
   const since = period.start;
@@ -58,11 +73,19 @@ export function buildReportSnapshot(
   let emergencyChanges = 0;
   let open = 0;
   let unassigned = 0;
+  let backlogAging = 0;
+  const frtSamples: number[] = [];
+  const mttrSamples: number[] = [];
+  const groupMap = new Map<string, number>();
 
   for (const ticket of tickets) {
     if (openStatuses.has(ticket.status)) {
       open += 1;
       if (!ticket.assignee_id) unassigned += 1;
+      if (differenceInCalendarDays(now, new Date(ticket.created_at)) >= 7) backlogAging += 1;
+      if (ticket.group_id) {
+        groupMap.set(ticket.group_id, (groupMap.get(ticket.group_id) ?? 0) + 1);
+      }
     }
     const sla = getSlaLevel(ticket.sla_resolve_by ?? ticket.due_date, ticket.status, {
       slaResolveBy: ticket.sla_resolve_by ?? ticket.due_date,
@@ -84,6 +107,14 @@ export function buildReportSnapshot(
     byPriorityMap.set(ticket.priority, (byPriorityMap.get(ticket.priority) ?? 0) + 1);
     if (ticket.assignee_name) {
       assigneeMap.set(ticket.assignee_name, (assigneeMap.get(ticket.assignee_name) ?? 0) + 1);
+    }
+    if (ticket.sla_responded_at) {
+      const frt = minutesBetween(ticket.created_at, ticket.sla_responded_at);
+      if (frt != null) frtSamples.push(frt);
+    }
+    if ((ticket.status === 'resolved' || ticket.status === 'closed') && ticket.resolved_at) {
+      const mttr = minutesBetween(ticket.created_at, ticket.resolved_at);
+      if (mttr != null) mttrSamples.push(mttr);
     }
   }
 
@@ -154,12 +185,16 @@ export function buildReportSnapshot(
       emergencyChanges,
       warrantySoon,
       catalogPublished,
+      frtMinutes: average(frtSamples),
+      mttrMinutes: average(mttrSamples),
+      backlogAging,
     },
     byType: toCounts(byTypeMap, typeLabels),
     byStatus: toCounts(byStatusMap, statusLabels, statusOrder),
     byPriority: toCounts(byPriorityMap, priorityLabels, priorityOrder),
     trend: Array.from(trendMap.entries()).map(([day, value]) => ({ day, ...value })),
     assignees: toCounts(assigneeMap).slice(0, 8),
+    byGroup: toCounts(groupMap, groupNames).slice(0, 8),
     aging,
   };
 }
