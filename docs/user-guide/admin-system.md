@@ -26,7 +26,7 @@ Sidebar admin: **Overview**, **Service desk**, **Configuration**, **Platform**, 
 ## 2. Login dan ruang kerja
 
 1. Buka URL desk (lab: http://localhost:3000 atau http://localhost:3001).
-2. Email + password → **Sign in**. MFA aplikasi **belum** hidup (rancangan: [MFA](../MFA.md)).
+2. Email + password → **Sign in**. Atau tombol **Continue with Google / Microsoft / Okta** jika plugin identity aktif + provider di-enable di Supabase Auth. MFA TOTP = toggle di **Settings → Security**; lab tetap mati. Nyalakan setelah production. SAML ACS belum di-wire.
 3. Landasan: **Dashboard**.
 4. Switcher **Account** di bawah logo: Internal / Bank Nusantara / Garuda / **All**. Tiket, aset, CMDB mengikuti filter ini.
 
@@ -46,7 +46,7 @@ Kerjakan berurutan. Jangan buka portal customer sebelum langkah 3–6 selesai.
 | 1 | **Accounts** `/accounts` | Customer (Bank, Garuda, …) + Internal |
 | 2 | **Organization** `/org` | Unit + assignment group L1/L2/L3 |
 | 3 | **Users** `/users` | Login staf dan customer |
-| 4 | **SLA** `/sla` | Matriks type × priority per account |
+| 4 | **SLA** `/sla` | Matriks type × priority per account + UC vendor |
 | 5 | **Catalog** `/catalog` | Item Request / Incident / Standard change |
 | 6 | **Settings → Integrations** | AI, WA, Telegram, email |
 | 7 | **Settings → Notifications** | Channel aktif + uji kirim |
@@ -103,7 +103,7 @@ Password lab `NovaCRM!2026` hanya untuk tenant demo. Ganti di produksi setelah l
 
 ## 7. SLA
 
-`/sla` — pilih account (contoh Bank = Gold INC P1 **15 menit / 4 jam**).
+`/sla` — pilih account (contoh Bank = Gold INC P1 **15 menit / 4 jam**). Kartu **Underpinning contracts** untuk UC vendor/principal; ikat di `/org` → group.
 
 - Matriks: **jenis tiket × prioritas** + kalender kerja.
 - Tiket baru **menyalin** perjanjian. Edit matriks tidak mengubah tiket yang sudah ada.
@@ -138,7 +138,7 @@ Hanya **Published** yang muncul di combo tiket dan portal.
 | --- | --- |
 | Groq (atau AI lain) | Assistant + AI Insights. **Test connection** setelah paste key |
 | WhatsApp / Telegram / Email | Outbound + webhook inbound |
-| SSO (Entra / Google / Okta / SAML) | Menyimpan kredensial + tes. Login OIDC/SAML **belum** di-wire |
+| SSO (Entra / Google / Okta) | Simpan client ID + **Allowed email domains**. Tombol login OIDC di `/login`. SAML ACS belum |
 
 Jangan paste production key di kelas bersama.
 
@@ -169,7 +169,7 @@ Webhook inbound (header secret, bukan `?secret=`):
 | Alerts | `POST /api/webhooks/alerts` |
 | Generic | `POST /api/webhooks/generic` |
 
-Alert berulang dalam 24 jam meng-update tiket yang sama.
+Alert berulang dalam 24 jam meng-update tiket yang sama. Pesan WA / Telegram / email (bukan alert) bisa otomatis mengisi catalog item + variabel — lihat [catalog-guidance.md](catalog-guidance.md) §13.
 
 ---
 

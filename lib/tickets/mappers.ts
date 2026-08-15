@@ -48,6 +48,8 @@ export type TicketRecord = {
   olaResponseAt?: string;
   olaResolveBy?: string;
   olaStartedAt?: string;
+  ucId?: string;
+  ucName?: string;
   assetId?: string;
   assetName?: string;
   assetTag?: string;
@@ -123,6 +125,7 @@ type TicketRow = {
   ola_response_at?: string | null;
   ola_resolve_by?: string | null;
   ola_started_at?: string | null;
+  uc_id?: string | null;
   asset_id?: string | null;
   category?: string | null;
   catalog_item_id?: string | null;
@@ -185,6 +188,7 @@ export function mapTicketRow(row: TicketRow): TicketRecord {
     olaResponseAt: row.ola_response_at ?? undefined,
     olaResolveBy: row.ola_resolve_by ?? undefined,
     olaStartedAt: row.ola_started_at ?? undefined,
+    ucId: row.uc_id ?? undefined,
     assetId: row.asset_id ?? undefined,
     assetName: undefined,
     assetTag: undefined,
@@ -280,6 +284,18 @@ export function withGroups(
       groupPartyKind: partyKind,
       groupPartyName: group.party_name ?? undefined,
     };
+  });
+}
+
+export function withContracts(
+  tickets: TicketRecord[],
+  contracts: Array<{ id: string; name: string; contract_number?: string }>,
+): TicketRecord[] {
+  const byId = new Map(contracts.map((item) => [item.id, item]));
+  return tickets.map((ticket) => {
+    const contract = ticket.ucId ? byId.get(ticket.ucId) : undefined;
+    if (!contract) return ticket;
+    return { ...ticket, ucName: contract.name };
   });
 }
 

@@ -30,6 +30,7 @@ export function OrgGroupDetail({
   policy,
   skills = [],
   groups = [],
+  contracts = [],
 }: {
   group: AssignmentGroup;
   agents: Array<{ id: string; fullName: string }>;
@@ -37,6 +38,7 @@ export function OrgGroupDetail({
   policy: WfmDispatchPolicy | null;
   skills?: WfmSkill[];
   groups?: Array<{ id: string; name: string; kind: string }>;
+  contracts?: Array<{ id: string; name: string; partyKind: string; partyName: string; isActive: boolean }>;
 }) {
   const router = useRouter();
   const [name, setName] = useState(group.name);
@@ -47,6 +49,7 @@ export function OrgGroupDetail({
   const [olaResolve, setOlaResolve] = useState(String(group.olaResolveMinutes));
   const [partyKind, setPartyKind] = useState<GroupPartyKind>(group.partyKind);
   const [partyName, setPartyName] = useState(group.partyName ?? '');
+  const [ucId, setUcId] = useState(group.ucId ?? '');
   const [userId, setUserId] = useState('');
   const [role, setRole] = useState<GroupMemberRole>('member');
   const [message, setMessage] = useState('');
@@ -66,6 +69,7 @@ export function OrgGroupDetail({
       olaResolveMinutes: Number(olaResolve) || group.olaResolveMinutes,
       partyKind,
       partyName: partyKind === 'internal' ? '' : partyName.trim(),
+      ucId: partyKind === 'internal' ? null : ucId || null,
     });
     setMessage(result.error ?? 'Saved');
     router.refresh();
@@ -157,6 +161,27 @@ export function OrgGroupDetail({
                 placeholder={partyKind === 'principal' ? 'Indosat' : 'Fortinet'}
                 className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100"
               />
+            </div>
+          ) : null}
+          {partyKind !== 'internal' ? (
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label>Underpinning contract</Label>
+              <Select value={ucId} disabled={!canEdit} onChange={(event) => setUcId(event.target.value)}>
+                <option value="">Group minutes only (no UC)</option>
+                {contracts
+                  .filter((item) => item.partyKind === partyKind && item.isActive)
+                  .map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name} · {item.partyName}
+                    </option>
+                  ))}
+              </Select>
+              <p className="text-[11px] text-zinc-500">
+                Linked UC overrides OLA minutes by ticket type × priority.{' '}
+                <Link href="/sla" className="text-blue-300 hover:text-blue-200">
+                  Manage contracts
+                </Link>
+              </p>
             </div>
           ) : null}
           <div className="space-y-1.5">

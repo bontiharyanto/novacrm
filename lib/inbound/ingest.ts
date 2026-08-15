@@ -2,6 +2,7 @@ import { createHash } from 'crypto';
 import { createSupabaseAdminClient, hasServiceRole } from '@/lib/supabase/admin';
 import { createInboundTicket } from '@/lib/tickets/actions';
 import { classifyInbound } from '@/lib/inbound/classify';
+import { matchInboundCatalog } from '@/lib/inbound/catalog-match';
 import { evaluateWorkflow } from '@/lib/workflows/actions';
 import { displayTicketNumber } from '@/lib/tickets/process';
 import type { TicketPriority, TicketType } from '@/lib/tickets/schema';
@@ -125,28 +126,51 @@ export async function ingestInbound(input: IngestInput) {
     assetId = asset?.id;
   }
 
+  const catalog =
+    input.channel === 'alert'
+      ? null
+      : await matchInboundCatalog({ tenantId: input.tenantId, title, body });
+
   const classified =
     input.channel === 'alert'
       ? {
           type: input.type ?? 'incident',
           priority: input.priority ?? 'high',
           title,
+          note: undefined as string | undefined,
         }
-      : await classifyInbound({
-          tenantId: input.tenantId,
-          title,
-          body,
-          fallbackType: input.type ?? 'incident',
-          fallbackPriority: input.priority ?? 'medium',
-        });
+      : catalog
+        ? {
+            type: catalog.ticketType,
+            priority: catalog.priority,
+            title: catalog.name,
+            note: catalog.missing.length > 0 ? `Lengkapi: ${catalog.missing.join(', ')}` : catalog.name,
+          }
+        : await classifyInbound({
+            tenantId: input.tenantId,
+            title,
+            body,
+            fallbackType: input.type ?? 'incident',
+            fallbackPriority: input.priority ?? 'medium',
+          });
+
+  const description = catalog
+    ? [body, catalog.summary ? `Catalog answers\n${catalog.summary}` : '', classified.note ? `— VA: ${classified.note}` : '']
+        .filter(Boolean)
+        .join('\n\n')
+    : classified.note
+      ? `${body}\n\n— VA: ${classified.note}`
+      : body;
 
   const result = await createInboundTicket(input.tenantId, {
     tenantId: input.tenantId,
     title: classified.title,
-    description: classified.note ? `${body}\n\n— VA: ${classified.note}` : body,
+    description,
     type: classified.type,
     status: 'open',
     priority: classified.priority,
+    catalogItemId: catalog?.itemId,
+    catalogAnswers: catalog?.answers,
     requesterName: input.sender || input.channel,
     requesterEmail: input.senderEmail,
     requesterPhone: input.senderPhone,
@@ -184,7 +208,9 @@ export async function ingestInbound(input: IngestInput) {
       number: result.data.number,
       title: result.data.title,
       correlated: false,
-      message: `Ticket ${displayTicketNumber(result.data.number, result.data.id)} telah dibuat (${classified.type} · ${classified.priority})`,
+      message: catalog
+        ? `Ticket ${displayTicketNumber(result.data.number, result.data.id)} telah dibuat (${catalog.name}${catalog.missing.length ? `. Lengkapi: ${catalog.missing.join(', ')}` : ''})`
+        : `Ticket ${displayTicketNumber(result.data.number, result.data.id)} telah dibuat (${classified.type} · ${classified.priority})`,
     },
     error: null,
   };

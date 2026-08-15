@@ -1,35 +1,32 @@
-# MFA (prepared, not implemented)
+# MFA (TOTP) — toggle, off until production
 
-**Status:** design only. Do not build until the tenant is ready (IdP, recovery process, and a non-lab environment).  
-**Depends on:** email/password login today; optional SSO button if an identity plugin is active.
+**Status:** shipped behind a tenant toggle. Default **off**. Lab tenant `novacrm-demo` cannot turn it on.
 
-This is not a product feature yet. There is no enroll screen, no login challenge, and no tenant toggle.
+**UI:** Settings → **Security** (`/settings/security`). Palette `⌘K` → Security.
 
-## Why wait
+## When to flip it
 
-- Local Supabase + demo passwords (`NovaCRM!2026`) are for classroom use. Forcing TOTP now locks trainers out.
-- Recovery (lost phone, admin reset) is not designed.
-- SSO (Google / Entra) should decide MFA at the IdP first; app MFA is for password users.
+Do this **after** the app is on hosted / production Supabase:
 
-## Intended design (when we implement)
+1. Enable MFA (TOTP) on the hosted Auth project.
+2. Enroll one admin authenticator on `/settings/security` (optional while toggle is off).
+3. Admin flips **Require TOTP for password staff**.
+4. Next password login: staff with a factor see `/login/mfa`; staff without one are sent to enroll.
 
-1. **Provider:** Supabase Auth MFA (TOTP). No SMS in v1.
-2. **Enroll:** staff page later, likely `/settings/security`. Customer portal out of scope for v1.
-3. **Login:** after `signInWithPassword`, if AAL is `aal1` and a factor exists → `/login/mfa` challenge, then existing role redirect.
-4. **Policy:** optional `tenants.mfa_required` (superadmin). When true, staff without a factor are sent to enroll. Demo tenant stays `false`.
-5. **RBAC:** admin can see who enrolled; cannot read TOTP secrets. Superadmin can clear a factor after identity check.
-6. **SSO:** if the user signed in with OIDC, skip app TOTP (IdP already stepped up).
+Classroom / `NovaCRM!2026` stays password-only. Do not enable the toggle on the demo tenant.
 
-## Out of scope until asked
+## Behaviour
+
+| Case | Result |
+| --- | --- |
+| Toggle off | Password login unchanged. Staff may still enroll optionally. |
+| Toggle on + password | TOTP challenge or forced enroll |
+| Toggle on + Google / Microsoft / Okta | App TOTP skipped (IdP already stepped up) |
+| Portal customer | Out of scope |
+| Lost phone | Another admin: `resetUserMfa` (clear factors) after identity check |
+
+## Out of scope
 
 - SMS / email OTP
 - WebAuthn / passkeys
-- Forcing MFA on `customer@` portal
-- Implementing any of the routes above
-
-## Checklist before coding
-
-- [ ] Recovery runbook (who resets a locked admin)
-- [ ] Hosted Supabase Auth MFA enabled
-- [ ] Demo tenant explicitly excluded
-- [ ] Trainer guide updated so class logins stay password-only
+- Forcing MFA on the customer portal

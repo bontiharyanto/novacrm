@@ -15,12 +15,14 @@ export function OlaBadge({
   olaResponseAt,
   olaResolveMinutes,
   slaPausedAt,
+  ucName,
 }: {
   status?: string;
   olaResolveBy?: string;
   olaResponseAt?: string;
   olaResolveMinutes?: number;
   slaPausedAt?: string;
+  ucName?: string;
 }) {
   if (!olaResolveBy) {
     return <span className="text-xs text-zinc-500">No group OLA</span>;
@@ -36,7 +38,7 @@ export function OlaBadge({
 
   return (
     <span className="inline-flex flex-wrap items-center gap-1">
-      <Badge tone={toneMap[evaluation.overall]}>{getSlaLabel(evaluation.overall)}</Badge>
+      <Badge tone={toneMap[evaluation.overall]}>{ucName ? `UC ${getSlaLabel(evaluation.overall)}` : getSlaLabel(evaluation.overall)}</Badge>
       <span className="font-mono text-[10px] text-zinc-500">{getSlaCountdown(olaResolveBy, slaPausedAt)}</span>
     </span>
   );

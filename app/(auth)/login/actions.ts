@@ -27,10 +27,27 @@ export async function signInAction(_prev: SignInState, formData: FormData): Prom
     return { error: error.message };
   }
 
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', data.user.id).maybeSingle();
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role, tenant_id')
+    .eq('id', data.user.id)
+    .maybeSingle();
   const role = parseAppRole(profile?.role ?? data.user.user_metadata?.role);
   if (isCustomerRole(role)) {
     redirect(next && next.startsWith('/portal') ? next : '/portal');
+  }
+
+  if (profile?.tenant_id) {
+    const { data: tenant } = await supabase
+      .from('tenants')
+      .select('mfa_required, slug')
+      .eq('id', profile.tenant_id)
+      .maybeSingle();
+    if (tenant?.mfa_required && tenant.slug !== 'novacrm-demo') {
+      const factors = await supabase.auth.mfa.listFactors();
+      const enrolled = factors.data?.totp.some((item) => item.status === 'verified');
+      redirect(enrolled ? '/login/mfa' : '/settings/security?enroll=1');
+    }
   }
 
   cookies().set(ACCOUNT_COOKIE, ACCOUNT_ALL, {

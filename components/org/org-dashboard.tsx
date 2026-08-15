@@ -140,7 +140,9 @@ export function OrgDashboard({
                           : `${group.partyKind === 'vendor' ? 'Vendor' : 'Principal'}${group.partyName ? ` · ${group.partyName}` : ''}`}
                       </td>
                       <td className="px-3 py-2.5 font-mono text-xs text-zinc-500">
-                        {group.olaResponseMinutes}/{group.olaResolveMinutes}m
+                        {group.ucName
+                          ? `UC · ${group.ucName}`
+                          : `${group.olaResponseMinutes}/${group.olaResolveMinutes}m`}
                       </td>
                       <td className="px-3 py-2.5 font-mono text-xs text-zinc-500">{group.memberCount}</td>
                     </tr>

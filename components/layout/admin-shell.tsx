@@ -13,6 +13,7 @@ import {
   ClipboardList,
   Clock,
   GitBranch,
+  History,
   CalendarClock,
   LayoutDashboard,
   LayoutGrid,
@@ -57,6 +58,7 @@ const overviewItems: NavItem[] = [
   { href: '/insights', labelKey: 'insights', icon: Lightbulb, action: 'read', subject: 'Ticket' },
   { href: '/assistant', labelKey: 'assistant', icon: Sparkles, action: 'read', subject: 'Ticket' },
   { href: '/reports', labelKey: 'reports', icon: BarChart3, action: 'read', subject: 'Ticket' },
+  { href: '/audit', labelKey: 'audit', icon: History, action: 'read', subject: 'Ticket' },
   { href: '/wfm', labelKey: 'wfm', icon: CalendarClock, action: 'read', subject: 'Wfm' },
 ];
 
@@ -305,7 +307,8 @@ function SidebarFooter({
 }) {
   const { t } = useI18n();
   const appearanceActive = pathname === '/settings/appearance';
-  const integrationsActive = pathname.startsWith('/settings') && !appearanceActive;
+  const securityActive = pathname.startsWith('/settings/security');
+  const integrationsActive = pathname.startsWith('/settings') && !appearanceActive && !securityActive;
   const roleLabel = t.roles[role] ?? ROLE_LABEL[role] ?? role;
 
   return (
@@ -316,6 +319,13 @@ function SidebarFooter({
           label={t.nav.appearance}
           icon={Palette}
           active={appearanceActive}
+          onNavigate={onNavigate}
+        />
+        <NavLink
+          href="/settings/security"
+          label={t.nav.security}
+          icon={ShieldCheck}
+          active={securityActive}
           onNavigate={onNavigate}
         />
         {isTenantAdminRole(role) ? (

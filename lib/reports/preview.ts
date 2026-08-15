@@ -29,6 +29,7 @@ export function reportToCsv(report: ReportSnapshot) {
     ...countRows('priority', report.byPriority),
     ...countRows('assignee', report.assignees),
     ...countRows('group', report.byGroup),
+    ...countRows('hold', report.byHoldReason),
     ...report.trend.map((row) => `trend,${row.day},Opened / closed,${row.opened}/${row.closed}`),
     ...report.aging.map(
       (row) =>
@@ -63,6 +64,7 @@ export function reportPreviewSheets(report: ReportSnapshot): PreviewSheet[] {
     countSheet('Priority', report.byPriority),
     countSheet('Assignees', report.assignees),
     countSheet('Groups', report.byGroup),
+    countSheet('Hold', report.byHoldReason),
     {
       name: 'Trend',
       columns: ['Day', 'Opened', 'Closed'],

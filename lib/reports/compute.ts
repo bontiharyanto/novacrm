@@ -2,7 +2,7 @@ import { differenceInCalendarDays, eachDayOfInterval, endOfDay, format } from 'd
 import { getSlaLevel } from '@/lib/tickets/sla';
 import { getWarrantyLevel } from '@/lib/assets/depreciation';
 import { ticketTypeMeta } from '@/lib/tickets/process';
-import { priorityLabels, priorityOrder, statusLabels, statusOrder } from '@/lib/reports/labels';
+import { holdReasonLabels, holdReasonOrder, priorityLabels, priorityOrder, statusLabels, statusOrder } from '@/lib/reports/labels';
 import type { ReportPeriod } from '@/lib/reports/period';
 import type { NamedCount, ReportSnapshot } from '@/lib/reports/schema';
 
@@ -25,6 +25,7 @@ type TicketRow = {
   sla_responded_at?: string | null;
   resolved_at?: string | null;
   group_id?: string | null;
+  pending_reason?: string | null;
 };
 
 type AssetRow = {
@@ -77,6 +78,7 @@ export function buildReportSnapshot(
   const frtSamples: number[] = [];
   const mttrSamples: number[] = [];
   const groupMap = new Map<string, number>();
+  const holdMap = new Map<string, number>();
 
   for (const ticket of tickets) {
     if (openStatuses.has(ticket.status)) {
@@ -85,6 +87,9 @@ export function buildReportSnapshot(
       if (differenceInCalendarDays(now, new Date(ticket.created_at)) >= 7) backlogAging += 1;
       if (ticket.group_id) {
         groupMap.set(ticket.group_id, (groupMap.get(ticket.group_id) ?? 0) + 1);
+      }
+      if (ticket.pending_reason && (ticket.status === 'hold' || ticket.status === 'waiting')) {
+        holdMap.set(ticket.pending_reason, (holdMap.get(ticket.pending_reason) ?? 0) + 1);
       }
     }
     const sla = getSlaLevel(ticket.sla_resolve_by ?? ticket.due_date, ticket.status, {
@@ -195,6 +200,7 @@ export function buildReportSnapshot(
     trend: Array.from(trendMap.entries()).map(([day, value]) => ({ day, ...value })),
     assignees: toCounts(assigneeMap).slice(0, 8),
     byGroup: toCounts(groupMap, groupNames).slice(0, 8),
+    byHoldReason: toCounts(holdMap, holdReasonLabels, holdReasonOrder),
     aging,
   };
 }

@@ -294,7 +294,19 @@ Setiap item terikat `tenant_id`. Data demo hanya untuk tenant lab.
 
 ---
 
-## 13. Item seed (lab)
+## 13. Inbound WhatsApp / Telegram / email
+
+Pesan masuk (bukan alert) dicocokkan ke item **Published** bertipe Request atau Incident. Change dan Problem tidak di-auto-match.
+
+Contoh: `butuh VPN 90 hari, manager ana@bank.co.id` → tiket **VPN access** (`RITM`), `duration` = 90 days, `manager` terisi. Balasan: `Ticket RITM… telah dibuat (VPN access)`. Field wajib yang kosong disebut di balasan (`Lengkapi: Manager email`).
+
+Pencocokan memakai nama/slug/kata kunci (VPN, install, password, outage). Jika AI tenant aktif, jawaban variabel bisa dilengkapi dari teks. Alert monitoring tetap incident biasa — tidak memakai katalog.
+
+Agent melihat item + **Catalog answers** di detail tiket, sama seperti submit dari desk/portal.
+
+---
+
+## 14. Item seed (lab)
 
 Tenant demo sudah berisi item di atas (§7). Untuk latihan kelas, **salin pola Install software** — jangan menimpa item seed kecuali tenant terisolasi.
 
@@ -310,7 +322,7 @@ Password lab hanya untuk tenant demo. Jangan dipakai di produksi.
 
 ---
 
-## 14. Referensi cepat — Install Antivirus
+## 15. Referensi cepat — Install Antivirus
 
 Salin ke editor jika membuat item sekarang:
 

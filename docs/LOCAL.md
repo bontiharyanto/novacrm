@@ -99,7 +99,7 @@ WFM desk: [http://localhost:3000/wfm](http://localhost:3000/wfm) — occupancy, 
 14. Governance / UU PDP: [http://localhost:3000/governance](http://localhost:3000/governance) — RoPA, DSAR 30d, breach 72h, privacy notice. Customer: [portal/privacy](http://localhost:3000/portal/privacy)
 15. Switch **account** in the sidebar (Internal / Bank Nusantara / Garuda / **All**). Assets + CMDB + tickets are scoped. Manage at [Accounts](http://localhost:3000/accounts)
 16. Organization: [http://localhost:3000/org](http://localhost:3000/org) — Internal divisi/unit vs assignment groups. Tickets can queue to a group; filter **My groups**
-17. SLA: [http://localhost:3000/sla](http://localhost:3000/sla) — per-account matrix (type × priority) + calendar. Switch to Bank for Gold INC P1 15m/4h. Waiting/hold pauses the clock. New tickets snapshot the agreement.
+17. SLA: [http://localhost:3000/sla](http://localhost:3000/sla) — per-account matrix (type × priority) + calendar. Switch to Bank for Gold INC P1 15m/4h. Waiting/hold pauses the clock. New tickets snapshot the agreement. **Underpinning contracts** (UC) for Fortinet / Indosat live on the same page; link them on vendor groups at `/org`.
 18. Hold / escalate: open a ticket → **Hold** + reason `Pending vendor` (case number) pauses SLA. **Escalate L2 / L3** queues Internal `L2 Network` / `L3 Infra` and keeps the clock running. Demo: Bank *WiFi lantai 2* (vendor hold); Internal *Backup gagal* already on L2.
 19. Users: [http://localhost:3000/users](http://localhost:3000/users) — **New user** (admin) creates a login. **Access** = `customer` / `agent` / `team_lead` / `supervisor` / `manager` / `admin` / `superadmin`. **Level** = L1/L2/L3 from group membership.
 20. `http://localhost:3000/api/health` should show Redis `up`
@@ -107,7 +107,7 @@ WFM desk: [http://localhost:3000/wfm](http://localhost:3000/wfm) — occupancy, 
 22. AI Insights: [http://localhost:3000/insights](http://localhost:3000/insights) — four cards (queue pressure, SLA risk, workforce load, account health). Needs Groq (or another AI plugin) on **Integrations**.
 23. WFM: [http://localhost:3000/wfm](http://localhost:3000/wfm) — occupancy, roster, skills, on-call, forecast. Dispatch policy lives on each assignment group.
 24. Bulk import: [http://localhost:3000/import](http://localhost:3000/import) — download template → fill → preview → import (manager+).
-25. Integrations catalog: Settings → **Integrations**. Built-in slugs include AI, WhatsApp, Telegram, email, Gmail, Exchange, Slack, Teams, Jira, Salesforce, Entra / Google / Okta / SAML SSO, webhook. **Tambah plugin** adds a tenant card. This stores credentials and runs a connection test — it does not yet perform OIDC/SAML login redirects.
+25. Integrations catalog: Settings → **Integrations**. Built-in slugs include AI, WhatsApp, Telegram, email, Gmail, Exchange, Slack, Teams, Jira, Salesforce, Entra / Google / Okta / SAML SSO, webhook. **Tambah plugin** adds a tenant card. Google / Microsoft / Okta show login buttons on `/login` when `clientId` is set and the same provider is enabled in Supabase Auth. Optional `allowedDomains` (e.g. `novacrm.app`) JIT-provisions staff; invited emails copy memberships. SAML ACS is not implemented. MFA TOTP is a tenant toggle (Settings → Security), default off; lab cannot enable it. `/login?tenant=novacrm-demo` selects the tenant.
 
 ## Useful URLs
 
@@ -134,6 +134,9 @@ New migration on an existing local DB (do **not** `supabase db reset` — it wip
 docker exec -i supabase_db_novacrm psql -U postgres -d postgres < supabase/migrations/20250815130000_itsm_depth.sql
 docker exec -i supabase_db_novacrm psql -U postgres -d postgres < supabase/migrations/20250815140000_wave2_ops.sql
 docker exec -i supabase_db_novacrm psql -U postgres -d postgres < supabase/migrations/20250815150000_ola_parties.sql
+docker exec -i supabase_db_novacrm psql -U postgres -d postgres < supabase/migrations/20250815160000_underpinning_contracts.sql
+docker exec -i supabase_db_novacrm psql -U postgres -d postgres < supabase/migrations/20250815170000_sso_oidc_fields.sql
+docker exec -i supabase_db_novacrm psql -U postgres -d postgres < supabase/migrations/20250815180000_tenant_mfa.sql
 ```
 
 Then re-run only the new `UPDATE`/`INSERT` at the end of `supabase/seed.sql` if those rows are missing.

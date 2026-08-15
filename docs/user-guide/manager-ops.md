@@ -105,7 +105,8 @@ Isi: email, home unit, group, account membership untuk non-manager.
 
 ## 7. SLA, katalog, workflow
 
-- **SLA** `/sla` — sama seperti SPV; Anda men-set standar semua account, SPV menyesuaikan yang aktif.
+- **SLA** `/sla` — sama seperti SPV; Anda men-set standar semua account, SPV menyesuaikan yang aktif. **Underpinning contracts** di halaman yang sama: kontrak Fortinet/Indosat, lalu ikat di `/org` pada group vendor/principal.
+- **OLA vs UC** — group internal = menit OLA datar. Vendor/principal sebaiknya punya UC (matriks + masa kontrak + penalty). Escalate memakai target UC untuk type × priority tiket.
 - **Catalog** `/catalog` — item Request / Incident / Standard change. Field: [catalog-guidance.md](catalog-guidance.md).
 - **Automation** `/workflows` — template Standard / Normal / Complex. Trigger `ticket.create`, status, comment, inbound, alert. Condition Yes/No. Jangan arahkan production WA ke tenant lab.
 

@@ -54,6 +54,8 @@ type TicketItem = {
   olaResolveBy?: string;
   groupPartyKind?: 'internal' | 'vendor' | 'principal';
   groupPartyName?: string;
+  ucId?: string;
+  ucName?: string;
   requesterName: string;
   requesterEmail?: string;
   requesterPhone?: string;
@@ -480,9 +482,15 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
                     olaResponseAt={ticket.olaResponseAt}
                     olaResolveMinutes={ticket.olaResolveMinutes}
                     slaPausedAt={ticket.slaPausedAt}
+                    ucName={ticket.ucName}
                   />
                 </div>
-                {ticket.groupPartyKind && ticket.groupPartyKind !== 'internal' ? (
+                {ticket.ucName ? (
+                  <p className="text-xs text-amber-300">
+                    UC · {ticket.ucName}
+                    {ticket.groupPartyName ? ` · ${ticket.groupPartyName}` : ''}
+                  </p>
+                ) : ticket.groupPartyKind && ticket.groupPartyKind !== 'internal' ? (
                   <p className="text-xs text-amber-300">
                     {ticket.groupPartyKind === 'principal' ? 'Principal' : 'Vendor'}
                     {ticket.groupPartyName ? ` · ${ticket.groupPartyName}` : ''}
@@ -500,7 +508,7 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
                 </div>
               ) : null}
               <Link href="/sla" className="mt-1 inline-block text-xs text-blue-300 hover:text-blue-200">
-                Agreement
+                {ticket.ucId ? 'SLA + UC' : 'Agreement'}
               </Link>
             </div>
             <div>

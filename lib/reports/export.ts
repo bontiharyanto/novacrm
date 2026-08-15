@@ -75,6 +75,8 @@ export async function reportToXlsx(report: ReportSnapshot) {
   addCountSheet('Status', report.byStatus);
   addCountSheet('Priority', report.byPriority);
   addCountSheet('Assignees', report.assignees);
+  addCountSheet('Groups', report.byGroup);
+  addCountSheet('Hold', report.byHoldReason);
 
   const trend = workbook.addWorksheet('Trend');
   trend.columns = [

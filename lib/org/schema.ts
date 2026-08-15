@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { emptyToUndefined, optionalUuidSchema, uuidSchema } from '@/lib/validation/id';
+import { emptyToUndefined, nullableUuidSchema, optionalUuidSchema, uuidSchema } from '@/lib/validation/id';
 
 export const orgUnitTypeSchema = z.enum(['division', 'unit']);
 export const assignmentGroupKindSchema = z.enum(['assignment', 'cab', 'fulfillment', 'oncall']);
@@ -27,6 +27,7 @@ export const assignmentGroupSchema = z.object({
   olaResolveMinutes: z.number().int().min(15).max(43200).optional(),
   partyKind: groupPartyKindSchema.optional().default('internal'),
   partyName: z.preprocess(emptyToUndefined, z.string().max(120).optional()),
+  ucId: nullableUuidSchema,
 });
 
 export const assignmentGroupUpdateSchema = assignmentGroupSchema.partial();
@@ -98,6 +99,8 @@ export type AssignmentGroup = {
   olaResolveMinutes: number;
   partyKind: GroupPartyKind;
   partyName?: string;
+  ucId?: string;
+  ucName?: string;
   memberCount: number;
   isMember?: boolean;
   members: AssignmentGroupMember[];

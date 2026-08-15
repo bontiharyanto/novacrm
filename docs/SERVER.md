@@ -114,3 +114,6 @@ Apply in filename order (migrate.sh does this):
 - `20250815130000_itsm_depth.sql` (problem link, knowledge, resolved_at)
 - `20250815140000_wave2_ops.sql` (ticket audit, group OLA)
 - `20250815150000_ola_parties.sql` (vendor / principal on assignment groups)
+- `20250815160000_underpinning_contracts.sql` (formal UC + targets, group/ticket `uc_id`)
+- `20250815170000_sso_oidc_fields.sql` (SSO allowedDomains + defaultRole)
+- `20250815180000_tenant_mfa.sql` (tenant MFA toggle, default off)

@@ -288,7 +288,7 @@ Levels **L1 / L2 / L3** come from group membership, not from a free-text field o
 
 ### 6.3 SLA
 
-`/sla` — matrix **ticket type × priority** per account, plus calendar. New tickets **snapshot** the agreement (later matrix edits do not rewrite old tickets).
+`/sla` — matrix **ticket type × priority** per account, plus calendar. New tickets **snapshot** the agreement (later matrix edits do not rewrite old tickets). **Underpinning contracts** on the same page are vendor/principal UCs (Fortinet TAC, Indosat circuit). Link them on the assignment group at `/org`.
 
 **Waiting** and **hold** pause the clock. Escalation does not.
 
@@ -435,7 +435,7 @@ Customer: `/portal/privacy`.
 
 The page renders a **plugin catalog** (global + tenant-custom). Built-in kinds include AI, WhatsApp, Telegram, email, Gmail, Exchange, Slack, Teams, Jira, Salesforce, Entra / Google / Okta / SAML SSO, and webhook. **Tambah plugin** adds a tenant card immediately.
 
-For each card: paste configuration → **Save** → **Test connection**. Badge: `connected` / `failed` / `saved`. This stores credentials and tests HTTP/SAML metadata. It does **not** yet redirect staff through OIDC/SAML login.
+For each card: paste configuration → **Save** → **Test connection**. Badge: `connected` / `failed` / `saved`. Google / Microsoft / Okta also drive the login buttons on `/login` (enable the provider in Supabase Auth). SAML ACS and app MFA stay off.
 
 AI classroom default: **Groq (free)**, model `llama-3.1-8b-instant`. Key prefix `gsk_`. Endpoint must stay `https://api.groq.com/openai/v1` — do not use `gpt-4o-mini` on Groq.
 

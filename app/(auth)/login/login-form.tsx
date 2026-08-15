@@ -31,6 +31,17 @@ export function LoginForm() {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [state, formAction] = useFormState(signInAction, null as SignInState);
+  const tenantSlug = searchParams.get('tenant')?.trim() || '';
+  const nextPath = searchParams.get('next')?.trim() || '';
+  const ssoError = searchParams.get('error');
+  const ssoMessage =
+    ssoError === 'sso_email'
+      ? t.login.ssoEmail
+      : ssoError === 'sso_denied'
+        ? t.login.ssoDenied
+        : ssoError === 'sso'
+          ? t.login.ssoFailed
+          : '';
 
   return (
     <div className="w-full max-w-md space-y-4">
@@ -84,12 +95,12 @@ export function LoginForm() {
                 </button>
               </div>
             </div>
-            {state?.error || searchParams.get('error') === 'sso' ? (
-              <p className="text-sm text-rose-400">{state?.error ?? t.login.ssoUnavailable}</p>
+            {state?.error || ssoMessage ? (
+              <p className="text-sm text-rose-400">{state?.error ?? ssoMessage}</p>
             ) : null}
             <SubmitButton />
           </form>
-          <SsoButtons />
+          <SsoButtons tenantSlug={tenantSlug || undefined} nextPath={nextPath || undefined} />
         </CardContent>
       </Card>
     </div>

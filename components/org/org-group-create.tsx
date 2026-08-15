@@ -15,7 +15,11 @@ import type { AssignmentGroupKind, GroupPartyKind, SupportTier } from '@/lib/org
 import { toastError, toastSuccess } from '@/components/ui/toast';
 import { useI18n } from '@/components/layout/preferences-provider';
 
-export function OrgGroupCreate() {
+export function OrgGroupCreate({
+  contracts = [],
+}: {
+  contracts?: Array<{ id: string; name: string; partyKind: string; partyName: string; isActive: boolean }>;
+}) {
   const router = useRouter();
   const { t } = useI18n();
   const [name, setName] = useState('');
@@ -23,6 +27,7 @@ export function OrgGroupCreate() {
   const [tier, setTier] = useState<SupportTier | ''>('l1');
   const [partyKind, setPartyKind] = useState<GroupPartyKind>('internal');
   const [partyName, setPartyName] = useState('');
+  const [ucId, setUcId] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -36,6 +41,7 @@ export function OrgGroupCreate() {
       tier: tier || null,
       partyKind,
       partyName: partyKind === 'internal' ? undefined : partyName.trim(),
+      ucId: partyKind === 'internal' ? undefined : ucId || undefined,
     });
     if (result.error || !result.data?.id) {
       const message = result.error ?? t.common.createFailed;
@@ -104,6 +110,21 @@ export function OrgGroupCreate() {
                 placeholder={partyKind === 'principal' ? 'Indosat' : 'Fortinet'}
                 required
               />
+            </div>
+          ) : null}
+          {partyKind !== 'internal' ? (
+            <div className="space-y-1.5">
+              <Label>Underpinning contract</Label>
+              <Select value={ucId} onChange={(event) => setUcId(event.target.value)}>
+                <option value="">Group minutes only (no UC)</option>
+                {contracts
+                  .filter((item) => item.partyKind === partyKind && item.isActive)
+                  .map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name} · {item.partyName}
+                    </option>
+                  ))}
+              </Select>
             </div>
           ) : null}
           {error ? <p className="text-sm text-rose-400">{error}</p> : null}

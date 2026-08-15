@@ -19,7 +19,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { defaultOlaMinutes } from '@/lib/ola/engine';
 
 const GROUP_SELECT =
-  'id, tenant_id, account_id, name, slug, kind, tier, is_active, ola_response_minutes, ola_resolve_minutes, party_kind, party_name, created_at';
+  'id, tenant_id, account_id, name, slug, kind, tier, is_active, ola_response_minutes, ola_resolve_minutes, party_kind, party_name, uc_id, created_at';
 
 function slugify(value: string) {
   return (
@@ -56,6 +56,7 @@ type GroupRow = {
   ola_resolve_minutes?: number | null;
   party_kind?: AssignmentGroup['partyKind'] | null;
   party_name?: string | null;
+  uc_id?: string | null;
   created_at: string;
 };
 
@@ -245,6 +246,7 @@ function mapGroup(
     olaResolveMinutes: row.ola_resolve_minutes ?? defaultOlaMinutes(row.tier).resolve,
     partyKind: row.party_kind ?? 'internal',
     partyName: row.party_name ?? undefined,
+    ucId: row.uc_id ?? undefined,
     memberCount: members.length,
     isMember: userId ? members.some((member) => member.userId === userId) : false,
     members,
@@ -272,7 +274,7 @@ export async function listAssignmentGroups(accountId?: string | null): Promise<A
 
   if (error || !data) return [];
   const members = await loadGroupMembers(data.map((row) => row.id));
-  return data.map((row) => mapGroup(row as GroupRow, members.get(row.id) ?? [], session.userId));
+  return withUcNames(data.map((row) => mapGroup(row as GroupRow, members.get(row.id) ?? [], session.userId)));
 }
 
 export async function getAssignmentGroupById(groupId: string): Promise<AssignmentGroup | null> {
@@ -287,7 +289,17 @@ export async function getAssignmentGroupById(groupId: string): Promise<Assignmen
     .maybeSingle();
   if (!data) return null;
   const members = await loadGroupMembers([data.id]);
-  return mapGroup(data as GroupRow, members.get(data.id) ?? [], session.userId);
+  const [group] = await withUcNames([mapGroup(data as GroupRow, members.get(data.id) ?? [], session.userId)]);
+  return group ?? null;
+}
+
+async function withUcNames(groups: AssignmentGroup[]): Promise<AssignmentGroup[]> {
+  const ids = groups.map((group) => group.ucId).filter((id): id is string => Boolean(id));
+  if (ids.length === 0) return groups;
+  const supabase = await createSupabaseServerClient();
+  const { data } = await supabase.from('underpinning_contracts').select('id, name').in('id', ids);
+  const names = new Map((data ?? []).map((row) => [row.id, row.name as string]));
+  return groups.map((group) => (group.ucId ? { ...group, ucName: names.get(group.ucId) } : group));
 }
 
 export async function createAssignmentGroup(input: unknown) {
@@ -317,6 +329,7 @@ export async function createAssignmentGroup(input: unknown) {
       ola_resolve_minutes: parsed.olaResolveMinutes ?? defaultOlaMinutes(parsed.tier).resolve,
       party_kind: parsed.partyKind ?? 'internal',
       party_name: parsed.partyKind && parsed.partyKind !== 'internal' ? parsed.partyName?.trim() || null : null,
+      uc_id: parsed.partyKind && parsed.partyKind !== 'internal' ? parsed.ucId ?? null : null,
       created_by: session.userId,
     })
     .select(GROUP_SELECT)
@@ -360,6 +373,10 @@ export async function updateAssignmentGroup(groupId: string, input: unknown) {
     if (kind !== 'internal' && !patch.party_name) {
       return { data: null, error: 'Vendor / principal name is required' };
     }
+    if (kind === 'internal') patch.uc_id = null;
+  }
+  if (parsed.ucId !== undefined) {
+    patch.uc_id = parsed.partyKind === 'internal' ? null : parsed.ucId;
   }
 
   const supabase = await createSupabaseServerClient();

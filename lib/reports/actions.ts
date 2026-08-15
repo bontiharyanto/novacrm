@@ -25,7 +25,7 @@ export async function getReportSnapshot(input?: {
 
   let ticketQuery = supabase
     .from('tickets')
-    .select('id, number, title, type, status, priority, due_date, sla_resolve_by, sla_paused_at, sla_resolve_minutes, created_at, updated_at, assignee_id, assignee_name, change_type, sla_responded_at, resolved_at, group_id')
+    .select('id, number, title, type, status, priority, due_date, sla_resolve_by, sla_paused_at, sla_resolve_minutes, created_at, updated_at, assignee_id, assignee_name, change_type, sla_responded_at, resolved_at, group_id, pending_reason')
     .eq('tenant_id', tenantId);
   let assetQuery = supabase.from('assets').select('warranty_expiry').eq('tenant_id', tenantId);
   if (scoped.accountId) {

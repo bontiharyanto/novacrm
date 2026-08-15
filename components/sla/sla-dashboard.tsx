@@ -11,6 +11,8 @@ import { Select } from '@/components/ui/select';
 import { ensureSlaAgreement, updateSlaAgreement } from '@/lib/sla/actions';
 import { WEEKDAYS, type DayKey } from '@/lib/sla/calendar';
 import type { SlaAgreement, SlaHoliday, SlaTargetInput } from '@/lib/sla/schema';
+import type { UnderpinningContract } from '@/lib/uc/schema';
+import { UcPanel } from '@/components/sla/uc-panel';
 import { TICKET_TYPES, ticketTypeMeta } from '@/lib/tickets/process';
 import type { TicketPriority, TicketType } from '@/lib/tickets/schema';
 
@@ -38,10 +40,12 @@ function minutesLabel(value: number) {
 
 export function SlaDashboard({
   agreement,
+  contracts = [],
   canEdit,
   accountName,
 }: {
   agreement: SlaAgreement | null;
+  contracts?: UnderpinningContract[];
   canEdit: boolean;
   accountName?: string;
 }) {
@@ -132,6 +136,7 @@ export function SlaDashboard({
             <h1 className="text-2xl font-semibold text-zinc-50">SLA</h1>
             {accountName ? <p className="mt-1 text-sm text-zinc-500">{accountName}</p> : null}
           </div>
+          <UcPanel contracts={contracts} canEdit={canEdit} />
           <p className="rounded-xl border border-zinc-800 px-4 py-10 text-center text-sm text-zinc-500">
             No agreement on this account. Internal tickets use office hours; customers need a contract matrix.
           </p>
@@ -166,6 +171,7 @@ export function SlaDashboard({
           ) : null}
         </div>
         {message ? <p className="text-xs text-zinc-400">{message}</p> : null}
+        <UcPanel contracts={contracts} canEdit={canEdit} />
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">

@@ -49,6 +49,14 @@ export const formatLabels: Record<ReportExportFormat, string> = {
 export const statusOrder = ['open', 'in_progress', 'waiting', 'hold', 'resolved', 'closed'];
 export const priorityOrder = ['critical', 'high', 'medium', 'low'];
 
+export const holdReasonLabels: Record<string, string> = {
+  customer: 'Waiting on customer',
+  vendor: 'Pending vendor',
+  change_freeze: 'Change freeze',
+};
+
+export const holdReasonOrder = ['vendor', 'customer', 'change_freeze'];
+
 export function formatReportPeriod(report: ReportSnapshot) {
   const start = format(parseISO(report.periodStart), 'd MMM', { locale: localeId });
   const end = format(parseISO(report.periodEnd), 'd MMM yyyy', { locale: localeId });

@@ -6,6 +6,7 @@ import { homePathForRole, isAppRole, isCustomerRole, isTenantAdminRole, parseApp
 function isPublicPath(pathname: string) {
   return (
     pathname === '/login' ||
+    pathname === '/login/mfa' ||
     pathname === '/api/health' ||
     pathname === '/api/auth/sso' ||
     pathname.startsWith('/auth/callback') ||
@@ -27,14 +28,14 @@ async function roleFromProfile(
   userId: string,
   fallback?: string,
 ) {
-  const { data, error } = await supabase.from('profiles').select('role').eq('id', userId).maybeSingle();
+  const { data, error } = await supabase.from('profiles').select('role, tenant_id').eq('id', userId).maybeSingle();
   if (error) {
-    return fallback;
+    return { role: fallback, tenantId: undefined as string | undefined };
   }
   if (typeof data?.role === 'string' && isAppRole(data.role)) {
-    return data.role;
+    return { role: data.role, tenantId: data.tenant_id as string | undefined };
   }
-  return parseAppRole(undefined);
+  return { role: parseAppRole(undefined), tenantId: data?.tenant_id as string | undefined };
 }
 
 export async function updateSession(request: NextRequest) {
@@ -91,15 +92,45 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
-  const role = user
-    ? await roleFromProfile(supabase, user.id, roleFromMetadata(user))
-    : undefined;
+  const profile = user ? await roleFromProfile(supabase, user.id, roleFromMetadata(user)) : undefined;
+  const role = profile?.role;
 
   if (user && pathname === '/login') {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = homePathForRole(role);
     redirectUrl.search = '';
     return NextResponse.redirect(redirectUrl);
+  }
+
+  if (
+    user &&
+    role &&
+    !isCustomerRole(role) &&
+    profile?.tenantId &&
+    pathname !== '/login/mfa' &&
+    pathname !== '/settings/security' &&
+    !pathname.startsWith('/api/')
+  ) {
+    const ssoOnly = Boolean(user.identities?.length) && !user.identities?.some((item) => item.provider === 'email');
+    if (!ssoOnly) {
+      const { data: tenant } = await supabase
+        .from('tenants')
+        .select('mfa_required, slug')
+        .eq('id', profile.tenantId)
+        .maybeSingle();
+      if (tenant?.mfa_required && tenant.slug !== 'novacrm-demo') {
+        const aal = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+        if (aal.data?.currentLevel !== 'aal2') {
+          const factors = await supabase.auth.mfa.listFactors();
+          const redirectUrl = request.nextUrl.clone();
+          redirectUrl.pathname = factors.data?.totp.some((item) => item.status === 'verified')
+            ? '/login/mfa'
+            : '/settings/security';
+          redirectUrl.search = factors.data?.totp.some((item) => item.status === 'verified') ? '' : 'enroll=1';
+          return NextResponse.redirect(redirectUrl);
+        }
+      }
+    }
   }
 
   if (user && isCustomerRole(role) && pathname === '/select-account') {
@@ -121,7 +152,14 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
-  if (user && role && !isTenantAdminRole(role) && pathname.startsWith('/settings') && pathname !== '/settings/appearance') {
+  if (
+    user &&
+    role &&
+    !isTenantAdminRole(role) &&
+    pathname.startsWith('/settings') &&
+    pathname !== '/settings/appearance' &&
+    pathname !== '/settings/security'
+  ) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = '/dashboard';
     return NextResponse.redirect(redirectUrl);

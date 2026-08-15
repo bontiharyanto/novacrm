@@ -44,5 +44,6 @@ export type ReportSnapshot = {
   trend: TrendPoint[];
   assignees: NamedCount[];
   byGroup: NamedCount[];
+  byHoldReason: NamedCount[];
   aging: AgingRow[];
 };

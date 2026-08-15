@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Command } from 'cmdk';
-import { BarChart3, BookMarked, BookOpen, Building2, CalendarClock, Clock, LayoutDashboard, LayoutGrid, Lightbulb, Package, Palette, Scale, Settings, ShieldCheck, Sparkles, Ticket, Upload, UserCog, Users, Workflow } from 'lucide-react';
+import { BarChart3, BookMarked, BookOpen, Building2, CalendarClock, Clock, History, LayoutDashboard, LayoutGrid, Lightbulb, Package, Palette, Scale, Settings, ShieldCheck, Sparkles, Ticket, Upload, UserCog, Users, Workflow } from 'lucide-react';
 import { canRole, type AppRole } from '@/lib/rbac/ability';
 import { isTenantAdminRole } from '@/lib/rbac/roles';
 import { useI18n } from '@/components/layout/preferences-provider';
@@ -63,6 +63,9 @@ export function CommandPalette({ open, onOpenChange, role }: { open: boolean; on
               <Command.Item className="cmdk-item" onSelect={() => go('/reports')}>
                 <BarChart3 className="h-3.5 w-3.5" /> {t.nav.reports}
               </Command.Item>
+              <Command.Item className="cmdk-item" onSelect={() => go('/audit')}>
+                <History className="h-3.5 w-3.5" /> {t.nav.audit}
+              </Command.Item>
               <Command.Item className="cmdk-item" onSelect={() => go('/assistant')}>
                 <Sparkles className="h-3.5 w-3.5" /> {t.nav.assistant}
               </Command.Item>
@@ -95,6 +98,11 @@ export function CommandPalette({ open, onOpenChange, role }: { open: boolean; on
               {canRole(role, 'read', 'Sla') ? (
                 <Command.Item className="cmdk-item" onSelect={() => go('/sla')}>
                   <Clock className="h-3.5 w-3.5" /> {t.nav.sla}
+                </Command.Item>
+              ) : null}
+              {canRole(role, 'create', 'Sla') ? (
+                <Command.Item className="cmdk-item" onSelect={() => go('/sla/uc/new')}>
+                  <Clock className="h-3.5 w-3.5" /> Underpinning contract
                 </Command.Item>
               ) : null}
               <Command.Item className="cmdk-item" onSelect={() => go('/assets')}>
@@ -140,6 +148,9 @@ export function CommandPalette({ open, onOpenChange, role }: { open: boolean; on
               </Command.Item>
               <Command.Item className="cmdk-item" onSelect={() => go('/governance/requests')}>
                 <Scale className="h-3.5 w-3.5" /> {t.command.dsar}
+              </Command.Item>
+              <Command.Item className="cmdk-item" onSelect={() => go('/settings/security')}>
+                <ShieldCheck className="h-3.5 w-3.5" /> {t.nav.security}
               </Command.Item>
               <Command.Item className="cmdk-item" onSelect={() => go('/settings/appearance')}>
                 <Palette className="h-3.5 w-3.5" /> {t.nav.appearance}

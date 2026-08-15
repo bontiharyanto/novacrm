@@ -7,7 +7,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { canRole } from '@/lib/rbac/ability';
 import { normalizePhone, safeNotificationText } from '@/lib/notifications/helpers';
-import { mapTicketRow, textToDescription, withAccounts, withAssets, withGroups, type TicketRecord } from '@/lib/tickets/mappers';
+import { mapTicketRow, textToDescription, withAccounts, withAssets, withContracts, withGroups, type TicketRecord } from '@/lib/tickets/mappers';
 import { evaluateWorkflow } from '@/lib/workflows/actions';
 import { requireAccountId } from '@/lib/accounts/scope';
 import { applyTicketSlaChange, snapshotSla } from '@/lib/sla/engine';
@@ -34,12 +34,22 @@ async function hydrateTicketAssets(client: SupabaseClient, tickets: TicketRecord
         }>);
 
   const groupIds = withAssetRows.map((ticket) => ticket.groupId).filter((id): id is string => Boolean(id));
-  if (groupIds.length === 0) return withAssetRows;
-  const { data } = await client
-    .from('assignment_groups')
-    .select('id, name, kind, tier, party_kind, party_name')
-    .in('id', groupIds);
-  return withGroups(withAssetRows, data ?? []);
+  const grouped =
+    groupIds.length === 0
+      ? withAssetRows
+      : withGroups(
+          withAssetRows,
+          (
+            await client
+              .from('assignment_groups')
+              .select('id, name, kind, tier, party_kind, party_name')
+              .in('id', groupIds)
+          ).data ?? [],
+        );
+  const ucIds = grouped.map((ticket) => ticket.ucId).filter((id): id is string => Boolean(id));
+  if (ucIds.length === 0) return grouped;
+  const { data: contracts } = await client.from('underpinning_contracts').select('id, name, contract_number').in('id', ucIds);
+  return withContracts(grouped, contracts ?? []);
 }
 
 async function loadTicket(client: SupabaseClient, ticketId: string, tenantId?: string) {
@@ -203,6 +213,8 @@ export async function createTicket(input: unknown) {
   const ola = await snapshotOla(supabase, {
     tenantId: session.profile.tenantId,
     groupId: parsed.groupId,
+    type: parsed.type,
+    priority: parsed.priority,
   });
 
   const { data, error } = await supabase
@@ -279,7 +291,12 @@ export async function createInboundTicket(tenantId: string, input: unknown) {
   });
 
   const groupId = parsed.groupId ?? (await resolveInboundGroupId(supabase, tenantId));
-  const ola = await snapshotOla(supabase, { tenantId, groupId });
+  const ola = await snapshotOla(supabase, {
+    tenantId,
+    groupId,
+    type: parsed.type,
+    priority: parsed.priority,
+  });
 
   const { data, error } = await supabase
     .from('tickets')
@@ -300,6 +317,8 @@ export async function createInboundTicket(tenantId: string, input: unknown) {
       category: parsed.category ?? 'inbound',
       asset_id: parsed.assetId ?? null,
       group_id: groupId,
+      catalog_item_id: parsed.catalogItemId ?? null,
+      catalog_answers: parsed.catalogAnswers ?? {},
     })
     .select(TICKET_SELECT)
     .single();
@@ -314,8 +333,8 @@ export async function createInboundTicket(tenantId: string, input: unknown) {
     ticketId: ticket.id,
     actorName: 'Virtual Agent',
     action: 'created',
-    field: 'channel',
-    newValue: parsed.category ?? 'inbound',
+    field: parsed.catalogItemId ? 'catalog' : 'channel',
+    newValue: parsed.catalogItemId ?? parsed.category ?? 'inbound',
   });
   await afterTicketMutation('ticket.create', ticket);
   return { data: ticket, error: null };
@@ -429,7 +448,12 @@ export async function updateTicket(ticketId: string, input: unknown) {
       : null;
   const olaPatch =
     nextGroupId !== previousGroup
-      ? await snapshotOla(supabase, { tenantId: session.profile.tenantId, groupId: nextGroupId })
+      ? await snapshotOla(supabase, {
+          tenantId: session.profile.tenantId,
+          groupId: nextGroupId,
+          type: nextType,
+          priority: parsed.priority ?? existing.data.priority,
+        })
       : {};
 
   const { data, error } = await supabase

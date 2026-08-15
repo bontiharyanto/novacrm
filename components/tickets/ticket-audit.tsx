@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRealtimeTable } from '@/lib/supabase/realtime';
 import { formatRelativeId } from '@/lib/utils/dates';
@@ -24,7 +25,12 @@ export function TicketAudit({ ticketId }: { ticketId: string }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-sm text-zinc-400">Audit</CardTitle>
+        <CardTitle className="flex items-center justify-between text-sm text-zinc-400">
+          Audit
+          <Link href="/audit" className="text-[11px] font-normal text-blue-300 hover:text-blue-200">
+            All events
+          </Link>
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
         {events.length === 0 ? (

@@ -52,7 +52,9 @@ Setiap shift, urutan ini:
 4. **Requests** menumpuk — cek item katalog lengkap; assign fulfiller.
 5. **Changes** di **CAB Review** (`/cab`) — jangan biarkan window terlewat tanpa keputusan.
 6. **Problems** terbuka lama — isi panel **RCA** (workaround + Known error), tautkan incident. Jangan hanya komentar. Lab: *Backup gagal semalam*.
-7. **OLA** — sidebar **Organization** (`/org`) → buka group → field **OLA response / resolve** dan **Party**. Bukan di `/sla` (itu kontrak customer). Jam antrian group. Field **Party**: Internal / Vendor / Principal + nama (Fortinet, Indosat). Badge **OLA** di detail tiket. Default internal: L1 30m/4h, L2 60m/8h, L3 2h/16h. Lab: `L2 Vendor Fortinet` (4h/24h), `L3 Principal Indosat` (2h/8h).
+7. **OLA** — sidebar **Organization** (`/org`) → buka group → field **OLA response / resolve** dan **Party**. Jam antrian group internal. Bukan matriks customer.
+8. **UC** — `/sla` → **Underpinning contracts**. Kontrak vendor/principal (nomor, masa berlaku, penalty, matriks type × priority). Ikat ke group vendor di `/org`. Escalate ke group itu memakai jam UC, bukan menit datar group. Lab: `Fortinet TAC Gold` (`UC-FTNT-2026`) pada `L2 Vendor Fortinet`; `Indosat Circuit Principal` pada `L3 Principal Indosat`.
+9. **Audit** `/audit` — siapa mengubah status/group. **Reports** memuat hold/wait (vendor vs customer) dan scorecard group. Field **Party**: Internal / Vendor / Principal + nama (Fortinet, Indosat). Badge **OLA** / **UC** di detail tiket. Default internal: L1 30m/4h, L2 60m/8h, L3 2h/16h. Tanpa UC, group vendor tetap menit datar (Fortinet 4h/24h, Indosat 2h/8h).
 
 ### Assign
 
@@ -62,7 +64,7 @@ Setiap shift, urutan ini:
 
 ### Escalate
 
-**Escalate L2 / L3** mengantre ke group tier lebih tinggi. Pilih Internal (`L2 Network` / `L3 Infra`), **Vendor** (`L2 Vendor Fortinet`), atau **Principal** (`L3 Principal Indosat`). Jam SLA customer **tetap jalan**; jam **OLA** group itu mulai ulang.  
+**Escalate L2 / L3** mengantre ke group tier lebih tinggi. Pilih Internal (`L2 Network` / `L3 Infra`), **Vendor** (`L2 Vendor Fortinet`), atau **Principal** (`L3 Principal Indosat`). Jam SLA customer **tetap jalan**. Group internal mengulang jam **OLA**. Group yang terikat UC mengulang jam **UC** (type × priority), bukan menit datar.  
 Pakai Escalate kalau ada antrian yang mengerjakan. **Hold + Pending vendor** hanya jika tidak ada yang kerja (tunggu update case).
 
 ### Hold
@@ -90,7 +92,7 @@ Jangan approve change lab bersama kecuali trainer/tenant terisolasi.
 
 ## 5. Khusus SPV — SLA
 
-`/sla` — matriks **type × priority** per account + kalender.
+`/sla` — matriks **type × priority** per account + kalender. Kartu **Underpinning contracts** = UC vendor/principal (bukan SLA customer).
 
 - Bank lab: Gold INC P1 **15 menit / 4 jam**.
 - Edit berlaku untuk tiket **baru** saja (snapshot).

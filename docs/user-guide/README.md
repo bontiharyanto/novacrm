@@ -31,7 +31,7 @@ Item katalog: [Catalog & record producer](catalog-guidance.md). Matriks hak: [RB
 | [Local setup](../LOCAL.md) | Engineer: run the app on a laptop |
 | [Sysadmin Ops](../OPS.md) | Engineer: health and queues on `:3100` |
 | [Workers](../WORKERS.md) | Engineer: scale BullMQ workers |
-| [MFA](../MFA.md) | Engineer: TOTP design — **not implemented** |
+| [MFA](../MFA.md) | TOTP toggle — off until production |
 | [Deployment](../DEPLOYMENT.md) | Engineer: VPS / production |
 
 ## Demo logins

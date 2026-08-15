@@ -329,7 +329,7 @@ export function ReportsPage() {
                 </Card>
               </div>
 
-              <div className="grid gap-3 lg:grid-cols-3">
+              <div className="grid gap-3 lg:grid-cols-4">
                 <Card>
                   <CardContent className="p-4">
                     <p className="mb-3 text-[11px] uppercase tracking-[0.16em] text-zinc-500">Status</p>
@@ -340,6 +340,12 @@ export function ReportsPage() {
                   <CardContent className="p-4">
                     <p className="mb-3 text-[11px] uppercase tracking-[0.16em] text-zinc-500">Priority</p>
                     <DistributionList rows={report.byPriority} empty="No priority mix in range." />
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="p-4">
+                    <p className="mb-3 text-[11px] uppercase tracking-[0.16em] text-zinc-500">Hold / wait</p>
+                    <DistributionList rows={report.byHoldReason} empty="No paused tickets." />
                   </CardContent>
                 </Card>
                 <Card>

@@ -75,6 +75,8 @@ Chip KPI: In queue, New, Unassigned, SLA risk — kerjakan Unassigned dan SLA ri
 7. Opsional: aset/CI, group, assignee, requester.
 8. Save. Nomor muncul (`INC…` / `RITM…` / …).
 
+Tiket dari WhatsApp / Telegram / email bisa sudah terikat catalog item (VPN, install, password, outage) dengan jawaban di **Catalog answers**. Field yang belum lengkap ada di deskripsi / balasan channel.
+
 ## A.5 Kerjakan tiket (detail)
 
 Layout **70 / 30**: percakapan kiri, properti kanan. Process strip di atas = siklus hidup jenis itu.
@@ -91,7 +93,7 @@ Layout **70 / 30**: percakapan kiri, properti kanan. Process strip di atas = sik
 | **RCA** (Problem / Incident) | Problem: isi workaround + **Known error**, tautkan incident. Incident: pilih problem terkait. Lab: *Backup gagal semalam* ↔ *AC ruang server panas* |
 | **Summarize** | Ringkas 3 baris (butuh plugin AI). Simpan di tiket |
 | **Publish to knowledge** | Setelah **resolved** / **closed**. Artikel muncul di `/knowledge` |
-| **Audit** | Kartu di bawah Activity: siapa mengubah status / group / assignee |
+| **Audit** | Kartu di bawah Activity, atau halaman `/audit` untuk semua tiket |
 
 Status Incident: `open` → `in_progress` → `waiting` / `hold` → `resolved` → `closed`.  
 Request: Submitted → Fulfillment → Fulfilled → Closed.  

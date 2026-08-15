@@ -13,7 +13,8 @@ values (
 on conflict (id) do update set
   name = excluded.name,
   slug = excluded.slug,
-  support_email = excluded.support_email;
+  support_email = excluded.support_email,
+  mfa_required = false;
 
 do $$
 declare
@@ -144,6 +145,61 @@ set
   ola_response_minutes = excluded.ola_response_minutes,
   ola_resolve_minutes = excluded.ola_resolve_minutes,
   tier = excluded.tier;
+
+insert into public.underpinning_contracts (
+  id, tenant_id, name, contract_number, party_kind, party_name,
+  calendar_id, coverage, starts_on, ends_on, contact_email, service_scope, penalty_notes, is_active, created_by
+)
+values
+  (
+    'b2b2b2b2-0001-0001-0001-000000000001',
+    '11111111-1111-1111-1111-111111111111',
+    'Fortinet TAC Gold',
+    'UC-FTNT-2026',
+    'vendor',
+    'Fortinet',
+    'c1c1c1c1-0001-0001-0001-000000000001',
+    '24x7',
+    '2026-01-01',
+    '2026-12-31',
+    'tac@fortinet.example',
+    'Firewall / SD-WAN hardware and firmware TAC.',
+    'Missed P1 response: service credit 2% of monthly fee.',
+    true,
+    '22222222-2222-2222-2222-222222222222'
+  ),
+  (
+    'b2b2b2b2-0001-0001-0001-000000000002',
+    '11111111-1111-1111-1111-111111111111',
+    'Indosat Circuit Principal',
+    'UC-ISAT-2026',
+    'principal',
+    'Indosat',
+    'c1c1c1c1-0001-0001-0001-000000000001',
+    '24x7',
+    '2026-01-01',
+    '2026-12-31',
+    'noc@indosat.example',
+    'Last-mile and backbone circuits for Bank + Internal.',
+    'Availability below 99.5% in a month: 1-day credit.',
+    true,
+    '22222222-2222-2222-2222-222222222222'
+  )
+on conflict (id) do update
+set
+  name = excluded.name,
+  party_kind = excluded.party_kind,
+  party_name = excluded.party_name,
+  coverage = excluded.coverage,
+  is_active = excluded.is_active;
+
+update public.assignment_groups
+set uc_id = 'b2b2b2b2-0001-0001-0001-000000000001'
+where id = '99999999-0001-0001-0001-000000000007';
+
+update public.assignment_groups
+set uc_id = 'b2b2b2b2-0001-0001-0001-000000000002'
+where id = '99999999-0001-0001-0001-000000000008';
 
 insert into public.assignment_group_members (tenant_id, group_id, user_id, role, created_by)
 values
