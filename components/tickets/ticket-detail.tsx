@@ -594,9 +594,9 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
               </div>
             </div>
             <div>
-              <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">Assignment group</p>
+              <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">{t.tickets.assignmentGroup}</p>
               <Select className="mt-1" value={groupId} onChange={(event) => setGroupId(event.target.value)}>
-                <option value="">None</option>
+                <option value="">{t.tickets.none}</option>
                 {groups.map((group) => (
                   <option key={group.id} value={group.id}>
                     {formatGroupQueueLabel(group)}
@@ -610,13 +610,13 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
                 onClick={() => void patchTicket({ groupId: groupId || null })}
                 disabled={isSaving}
               >
-                Save group
+                {t.tickets.saveGroup}
               </Button>
             </div>
             <div>
-              <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">Configuration item</p>
+              <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">{t.tickets.configurationItem}</p>
               <Select className="mt-1" value={linkedAssetId} onChange={(event) => setLinkedAssetId(event.target.value)}>
-                <option value="">None</option>
+                <option value="">{t.tickets.none}</option>
                 {assets.map((asset) => (
                   <option key={asset.id} value={asset.id}>
                     {asset.assetTag} · {asset.name}
@@ -631,7 +631,7 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
                   onClick={() => void patchTicket({ assetId: linkedAssetId || null })}
                   disabled={isSaving}
                 >
-                  Save CI
+                  {t.tickets.saveCi}
                 </Button>
                 {ticket.assetId ? (
                   <Link href="/assets" className="text-xs text-blue-300 hover:text-blue-200">
@@ -641,12 +641,12 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
               </div>
             </div>
             <div>
-              <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">Category</p>
+              <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">{t.tickets.category}</p>
               <p className="mt-1 text-zinc-200">{ticket.category || '—'}</p>
             </div>
             {ticket.catalogAnswers && Object.keys(ticket.catalogAnswers).length > 0 ? (
               <div>
-                <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">Catalog answers</p>
+                <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">{t.tickets.catalogAnswers}</p>
                 <dl className="mt-1 space-y-1">
                   {Object.entries(ticket.catalogAnswers).map(([key, value]) => (
                     <div key={key} className="flex justify-between gap-3 text-xs">
@@ -659,7 +659,7 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
             ) : null}
             {ticket.dueDate ? (
               <div>
-                <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">Due</p>
+                <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">{t.tickets.due}</p>
                 <p className="mt-1 text-zinc-200">{new Date(ticket.dueDate).toLocaleString('id-ID')}</p>
               </div>
             ) : null}

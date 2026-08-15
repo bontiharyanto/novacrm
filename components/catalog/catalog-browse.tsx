@@ -33,8 +33,8 @@ export function CatalogBrowse() {
   return (
     <div className="mx-auto max-w-5xl space-y-6 p-6">
       <div>
-        <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Service catalog</p>
-        <h1 className="text-2xl font-semibold text-zinc-50">Request something</h1>
+        <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">{t.catalog.kicker}</p>
+        <h1 className="text-2xl font-semibold text-zinc-50">{t.catalog.requestSomething}</h1>
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -45,7 +45,7 @@ export function CatalogBrowse() {
             active === 'all' ? 'border-blue-500/40 bg-blue-500/15 text-blue-200' : 'border-zinc-800 text-zinc-400'
           }`}
         >
-          All
+          {t.catalog.all}
         </button>
         {categories.map((category) => (
           <button
@@ -84,7 +84,7 @@ export function CatalogBrowse() {
               </div>
             </Link>
           ))}
-          {filtered.length === 0 ? <p className="text-sm text-zinc-500">No items in this category.</p> : null}
+          {filtered.length === 0 ? <p className="text-sm text-zinc-500">{t.catalog.emptyCategory}</p> : null}
         </div>
       )}
     </div>

@@ -20,15 +20,6 @@ import type { TicketPriority, TicketType } from '@/lib/tickets/schema';
 
 const PRIORITIES: TicketPriority[] = ['critical', 'high', 'medium', 'low'];
 const DISPLAY_DAYS: DayKey[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
-const DAY_LABEL: Record<DayKey, string> = {
-  sun: 'Sunday',
-  mon: 'Monday',
-  tue: 'Tuesday',
-  wed: 'Wednesday',
-  thu: 'Thursday',
-  fri: 'Friday',
-  sat: 'Saturday',
-};
 
 function cellKey(type: TicketType, priority: TicketPriority) {
   return `${type}:${priority}`;
@@ -92,7 +83,7 @@ export function SlaDashboard({
     setSaving(true);
     const result = await ensureSlaAgreement();
     setSaving(false);
-    setMessage(result.error ?? 'Agreement created');
+    setMessage(result.error ?? t.sla.created);
     router.refresh();
   }
 
@@ -126,7 +117,7 @@ export function SlaDashboard({
       targets: payloadTargets,
     });
     setSaving(false);
-    setMessage(result.error ?? 'Saved');
+    setMessage(result.error ?? t.sla.saved);
     router.refresh();
   }
 
@@ -135,22 +126,22 @@ export function SlaDashboard({
       <div className="grid min-h-[calc(100vh-3.5rem)] lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-6 p-6">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Configuration</p>
-            <h1 className="text-2xl font-semibold text-zinc-50">SLA</h1>
+            <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">{t.sla.kicker}</p>
+            <h1 className="text-2xl font-semibold text-zinc-50">{t.nav.sla}</h1>
             {accountName ? <p className="mt-1 text-sm text-zinc-500">{accountName}</p> : null}
           </div>
           <UcPanel contracts={contracts} canEdit={canEdit} />
           <p className="rounded-xl border border-zinc-800 px-4 py-10 text-center text-sm text-zinc-500">
-            No agreement on this account. Internal tickets use office hours; customers need a contract matrix.
+            {t.sla.empty}
           </p>
           {canEdit ? (
             <Button onClick={() => void createAgreement()} disabled={saving}>
-              {saving ? 'Creating...' : 'Create SLA agreement'}
+              {saving ? t.sla.creating : t.sla.create}
             </Button>
           ) : null}
         </div>
         <aside className="border-l border-zinc-800 p-6 text-sm text-zinc-500">
-          Snapshot on ticket create. Later edits do not rewrite open tickets.
+          {t.sla.snapshotHint}
         </aside>
       </div>
     );
@@ -161,15 +152,15 @@ export function SlaDashboard({
       <div className="space-y-6 p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Configuration</p>
-            <h1 className="text-2xl font-semibold text-zinc-50">SLA</h1>
+            <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">{t.sla.kicker}</p>
+            <h1 className="text-2xl font-semibold text-zinc-50">{t.nav.sla}</h1>
             <p className="mt-1 text-sm text-zinc-500">
-              {accountName ?? 'Current account'} · {sample}
+              {accountName ?? t.sla.currentAccount} · {sample}
             </p>
           </div>
           {canEdit ? (
             <Button onClick={() => void save()} disabled={saving}>
-              {saving ? 'Saving...' : 'Save agreement'}
+              {saving ? t.sla.saving : t.sla.save}
             </Button>
           ) : null}
         </div>
@@ -178,18 +169,18 @@ export function SlaDashboard({
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
-            <Label htmlFor="sla-name">Agreement</Label>
+            <Label htmlFor="sla-name">{t.sla.agreement}</Label>
             <Input id="sla-name" value={name} disabled={!canEdit} onChange={(event) => setName(event.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label>Pause clock</Label>
+            <Label>{t.sla.pauseClock}</Label>
             <Select
               value={pauseOnWaiting ? 'yes' : 'no'}
               disabled={!canEdit}
               onChange={(event) => setPauseOnWaiting(event.target.value === 'yes')}
             >
-              <option value="yes">Pause on waiting / hold</option>
-              <option value="no">Keep running</option>
+              <option value="yes">{t.sla.pauseYes}</option>
+              <option value="no">{t.sla.pauseNo}</option>
             </Select>
           </div>
         </div>
@@ -198,10 +189,10 @@ export function SlaDashboard({
           <table className="w-full text-left text-sm">
             <thead className="border-b border-zinc-800 bg-zinc-950 text-[11px] uppercase tracking-[0.12em] text-zinc-500">
               <tr>
-                <th className="px-3 py-2 font-medium">Process</th>
+                <th className="px-3 py-2 font-medium">{t.sla.process}</th>
                 {PRIORITIES.map((priority) => (
                   <th key={priority} className="px-3 py-2 font-medium">
-                    {priority}
+                    {t.tickets.priority[priority]}
                   </th>
                 ))}
               </tr>
@@ -211,7 +202,7 @@ export function SlaDashboard({
                 <tr key={type} className="border-b border-zinc-800/80">
                   <td className="px-3 py-3">
                     <p className="text-sm text-zinc-50">{localizedType(t, type)}</p>
-                    <p className="text-[11px] text-zinc-500">Response / resolve (min)</p>
+                    <p className="text-[11px] text-zinc-500">{t.sla.responseResolve}</p>
                   </td>
                   {PRIORITIES.map((priority) => {
                     const key = cellKey(type, priority);
@@ -263,32 +254,32 @@ export function SlaDashboard({
       <aside className="space-y-4 border-l border-zinc-800 p-6 lg:sticky lg:top-20 lg:self-start">
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm text-zinc-400">Calendar</CardTitle>
+            <CardTitle className="text-sm text-zinc-400">{t.sla.calendar}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
             <div className="flex items-center gap-2">
               <Badge tone="info">{timezone}</Badge>
-              {is24x7 ? <Badge>24×7</Badge> : <Badge tone="success">Business hours</Badge>}
+              {is24x7 ? <Badge>24×7</Badge> : <Badge tone="success">{t.sla.businessHours}</Badge>}
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="cal-name">Name</Label>
+              <Label htmlFor="cal-name">{t.sla.name}</Label>
               <Input id="cal-name" value={calendarName} disabled={!canEdit} onChange={(event) => setCalendarName(event.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="tz">Timezone</Label>
+              <Label htmlFor="tz">{t.sla.timezone}</Label>
               <Input id="tz" value={timezone} disabled={!canEdit} onChange={(event) => setTimezone(event.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label>Coverage</Label>
+              <Label>{t.sla.coverage}</Label>
               <Select value={is24x7 ? '24' : 'bh'} disabled={!canEdit} onChange={(event) => setIs24x7(event.target.value === '24')}>
-                <option value="bh">Business hours</option>
+                <option value="bh">{t.sla.businessHours}</option>
                 <option value="24">24×7</option>
               </Select>
             </div>
             {!is24x7
               ? DISPLAY_DAYS.map((day) => (
                   <div key={day} className="grid grid-cols-[88px_1fr_1fr] items-center gap-2">
-                    <p className="text-xs text-zinc-400">{DAY_LABEL[day]}</p>
+                    <p className="text-xs text-zinc-400">{t.sla.days[day]}</p>
                     <Input
                       type="time"
                       disabled={!canEdit}
@@ -311,7 +302,7 @@ export function SlaDashboard({
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm text-zinc-400">Holidays</CardTitle>
+            <CardTitle className="text-sm text-zinc-400">{t.sla.holidays}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {holidays.map((holiday, index) => (
@@ -339,7 +330,7 @@ export function SlaDashboard({
                     className="text-xs text-zinc-500 hover:text-zinc-200"
                     onClick={() => setHolidays((current) => current.filter((_, i) => i !== index))}
                   >
-                    Remove
+                    {t.sla.remove}
                   </button>
                 ) : null}
               </div>
@@ -351,10 +342,10 @@ export function SlaDashboard({
                 className="w-full"
                 onClick={() => setHolidays((current) => [...current, { date: '', name: '' }])}
               >
-                Add holiday
+                {t.sla.addHoliday}
               </Button>
             ) : null}
-            <p className="text-[11px] text-zinc-600">Ticket create snapshots this policy. Waiting/hold pauses the clock.</p>
+            <p className="text-[11px] text-zinc-600">{t.sla.holidayHint}</p>
           </CardContent>
         </Card>
       </aside>

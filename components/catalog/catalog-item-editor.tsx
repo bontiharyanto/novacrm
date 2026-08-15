@@ -125,24 +125,24 @@ export function CatalogItemEditor({ itemId }: { itemId?: string }) {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <Link href="/catalog" className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-200">
-              <ArrowLeft className="h-3.5 w-3.5" /> Catalog
+              <ArrowLeft className="h-3.5 w-3.5" /> {t.nav.catalog}
             </Link>
             <input
               value={name}
               onChange={(event) => setName(event.target.value)}
-              placeholder="Item name"
+              placeholder={t.catalog.itemName}
               className="mt-1 block w-full max-w-xl bg-transparent text-xl font-semibold text-zinc-50 outline-none placeholder:text-zinc-600"
             />
           </div>
           <div className="flex items-center gap-2">
             <Button type="button" variant="ghost" onClick={() => setIsActive((value) => !value)}>
-              {isActive ? 'Published' : 'Draft'}
+              {isActive ? t.catalog.published : t.catalog.draft}
             </Button>
             <Button type="button" variant="ghost" onClick={() => router.push('/catalog')}>
-              Cancel
+              {t.common.cancel}
             </Button>
             <Button type="button" onClick={() => void save()} disabled={isSaving || name.trim().length < 1}>
-              {isSaving ? 'Saving...' : 'Save item'}
+              {isSaving ? t.common.loading : t.catalog.saveItem}
             </Button>
           </div>
         </div>
@@ -152,15 +152,15 @@ export function CatalogItemEditor({ itemId }: { itemId?: string }) {
       <div className="grid flex-1 gap-6 p-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="space-y-6">
           <div className="space-y-1.5">
-            <Label>Short description</Label>
+            <Label>{t.tickets.shortDescription}</Label>
             <Input value={shortDescription} onChange={(event) => setShortDescription(event.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label>Fulfillment notes</Label>
+            <Label>{t.catalog.fulfillmentNotes}</Label>
             <Textarea rows={5} value={description} onChange={(event) => setDescription(event.target.value)} />
           </div>
           <div>
-            <p className="mb-2 text-[11px] uppercase tracking-[0.16em] text-zinc-500">Item variables</p>
+            <p className="mb-2 text-[11px] uppercase tracking-[0.16em] text-zinc-500">{t.catalog.itemVariables}</p>
             <VariableBuilder variables={variables} onChange={setVariables} />
           </div>
         </div>
@@ -168,9 +168,9 @@ export function CatalogItemEditor({ itemId }: { itemId?: string }) {
         <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
           <Card>
             <CardContent className="space-y-3 p-4">
-              <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Record producer</p>
+              <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{t.catalog.recordProducer}</p>
               <div className="space-y-1.5">
-                <Label>Creates</Label>
+                <Label>{t.catalog.creates}</Label>
                 <Select value={ticketType} onChange={(event) => setTicketType(event.target.value as (typeof TICKET_TYPES)[number])}>
                   {TICKET_TYPES.map((type) => (
                     <option key={type} value={type}>
@@ -180,16 +180,16 @@ export function CatalogItemEditor({ itemId }: { itemId?: string }) {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label>Priority</Label>
+                <Label>{t.tickets.priorityTitle}</Label>
                 <Select value={priority} onChange={(event) => setPriority(event.target.value)}>
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                  <option value="critical">Critical</option>
+                  <option value="low">{t.tickets.priority.low}</option>
+                  <option value="medium">{t.tickets.priority.medium}</option>
+                  <option value="high">{t.tickets.priority.high}</option>
+                  <option value="critical">{t.tickets.priority.critical}</option>
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label>Icon</Label>
+                <Label>{t.catalog.icon}</Label>
                 <Select value={icon} onChange={(event) => setIcon(event.target.value)}>
                   {CATALOG_ICONS.map((item) => (
                     <option key={item.id} value={item.id}>

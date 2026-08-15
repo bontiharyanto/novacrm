@@ -12,13 +12,14 @@
 
 By the end of training, a participant can:
 
-1. Sign in with the correct role and switch **theme** / **language**.
+1. Sign in with the correct role and switch **theme** / **language** (`EN | ID` on the top bar). Default language is **ID**.
 2. Switch **account** (Internal / Bank Nusantara / Garuda) and explain why lists change.
 3. Create, assign, hold, and escalate a ticket; read the SLA badge.
 4. Record asset **move / transfer / replace** and open the related CI graph.
 5. Submit a catalog request as a customer and find it on the desk.
-6. (Admin only) Open **Integrations** and **Appearance**; know that API keys are never shown in class unless the lab environment is isolated.
-7. (Full day) Open **AI Insights** and **WFM** and explain they are read/dispatch tools, not ticket editors.
+6. After an agent **resolves** a ticket, open the CSAT link from Mailpit (or `/portal/{id}`) and submit a score.
+7. (Admin only) Open **Integrations** and **Appearance**; know that API keys are never shown in class unless the lab environment is isolated.
+8. (Full day) Open **AI Insights** and **WFM** and explain they are read/dispatch tools, not ticket editors. Superadmin: show tenant **accent** on `/tenants`.
 
 Out of scope for this class: VPS deploy, GitHub Actions, writing SQL migrations, the Ops console on `:3100` (engineer only).
 
@@ -64,7 +65,8 @@ Portal  customer@novacrm.app / NovaCRM!2026
 | Ticket *Backup gagal* | Internal | Problem RCA: workaround + Known error; linked from *AC ruang server panas* |
 | Knowledge *VPN disconnect* | `/knowledge` | Hint appears when creating a ticket titled with `VPN` |
 | SLA Gold INC P1 | `/sla` on Bank | 15m response / 4h resolve |
-| Catalog **Install software** | `/catalog` | Record producer pattern — walkthrough for a new item (Antivirus) is in [catalog-guidance.md](catalog-guidance.md) |
+| Catalog **Install software** | `/catalog` | Record producer — state badge is **Published** / **Draf**. Walkthrough for a new item (Antivirus) is in [catalog-guidance.md](catalog-guidance.md) |
+| CSAT after resolve | Mailpit → `/portal/{id}` | Email/WA say **Nilai perbaikannya** (ID) or **Rate the fix** (EN). Desk URL is wrong — must be portal |
 
 If a participant “cannot see the graph”, they are still on **Internal**. Switch account first.
 
@@ -81,7 +83,7 @@ If a participant “cannot see the graph”, they are still on **Internal**. Swi
 | 1:10–1:20 | Break | — |
 | 1:20–2:10 | Hold, escalate, comments, attach | Lab 4 |
 | 2:10–2:50 | Assets + CMDB (Bank Nusantara) | Labs 5–6 |
-| 2:50–3:20 | Customer portal | Lab 7 |
+| 2:50–3:20 | Customer portal + CSAT | Lab 7 |
 | 3:20–3:35 | Recap + quiz | — |
 
 ### Full day (6.5 hours)
@@ -95,16 +97,16 @@ Add after lunch:
 | 4:55–5:25 | Catalog + workflows (Standard template) | Lab 10 |
 | 5:25–5:50 | Reports, Assistant, AI Insights | Lab 11 |
 | 5:50–6:10 | WFM occupancy + roster (read-only unless isolated) | Lab 11b |
-| 6:10–6:30 | Admin: Integrations catalog (no live keys) | Lab 12 |
+| 6:10–6:30 | Admin: Integrations (no live keys). Superadmin: `/tenants` accent | Lab 12 |
 | 6:30 | Q&A, parking lot | — |
 
 ---
 
 ## 5. Facilitation notes
 
-**Language.** The UI can be **ID** or **EN**. Ask the room to pick one at the start (`EN | ID` on the top bar) so screenshots match. This pack uses **Indonesian narrative** and **English UI labels** in `code` (the default English chrome).
+**Language.** Default chrome is **ID** (`novacrm_locale`). Ask the room to pick **ID** or **EN** at the start (`EN | ID` on the top bar) so screenshots match. Role playbooks use Indonesian narrative. Desk labels to point at: **Tiket baru**, **Insiden**, **Grup assignment**, **Published** / **Draf**. Ticket *body* stays as typed. Assistant and AI Insights follow the same toggle — start a new chat after switching. Email/WA in Mailpit follow the locale of the browser that created or resolved the ticket (default ID).
 
-**Theme.** **Midnight** (dark) is default. **Daylight** is the light theme. Do not spend more than two minutes here.
+**Theme.** **Midnight** (dark) is default. **Daylight** is the light theme. Primary buttons and the process strip use the **tenant accent** (lab default blue). Superadmin changes it on `/tenants` — login page stays blue until sign-in. Do not spend more than two minutes here.
 
 **Keyboard.** `⌘K` / `Ctrl+K` command palette, `⌘N` / `Ctrl+N` new ticket. Show once; many agents will use it daily.
 
@@ -121,7 +123,8 @@ Participant can complete **without facilitator clicking**:
 1. Login as agent, switch to Bank Nusantara, open `AST-1001`.
 2. Create an incident, assign to self, add a comment.
 3. Login as customer, submit a catalog or freeform request, then find it as agent.
-4. (Full day / catalog owners) Open **Install software** on `/catalog` and, using [catalog-guidance.md](catalog-guidance.md), explain how they would add **Install Antivirus**.
+4. Resolve that ticket as agent, open Mailpit, click the CSAT / portal link, submit a score as customer.
+5. (Full day / catalog owners) Open **Install software** on `/catalog` and, using [catalog-guidance.md](catalog-guidance.md), explain how they would add **Install Antivirus**. State must be **Published** before the portal combo shows it.
 
 ---
 
@@ -137,5 +140,8 @@ Participant can complete **without facilitator clicking**:
 | Empty CMDB graph | Wrong account | Switch to **Bank Nusantara** |
 | Redis `down` on `/api/health` | Compose not up | `npm run local:up` or `local:deploy` |
 | Email “sent” but inbox empty | Looking at Gmail | Open Mailpit `127.0.0.1:54324` |
+| CSAT link opens `/tickets/...` | Old email / wrong env | Resolve again; the link must be `/portal/{id}` |
+| Email still English on an ID desk | Ticket was created while chrome was EN, or worker stale | Toggle **ID**, resolve again; restart `npm run worker` if needed |
+| Accent still blue after `/tenants` save | Login page, or cache | Sign in to that tenant’s desk/portal and refresh |
 
 Engineer runbooks: [LOCAL.md](../LOCAL.md).
