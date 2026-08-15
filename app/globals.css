@@ -65,14 +65,30 @@ html.light {
 
 html {
   color-scheme: inherit;
+  -webkit-text-size-adjust: 100%;
 }
 
 body {
   margin: 0;
-  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
   background: rgb(var(--zinc-950));
   color: rgb(var(--zinc-100));
   font-family: var(--font-sans), Inter, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+.pt-safe {
+  padding-top: max(0.5rem, env(safe-area-inset-top));
+}
+
+.pb-safe {
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
 }
 
 .font-mono,

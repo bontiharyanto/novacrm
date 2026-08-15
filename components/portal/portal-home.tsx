@@ -45,7 +45,7 @@ export function PortalHome() {
   }, []);
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 p-6">
+    <div className="mx-auto max-w-5xl space-y-6 p-4 pb-safe md:p-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">{t.brand.portal}</p>
@@ -89,7 +89,7 @@ export function PortalHome() {
               <Link
                 key={ticket.id}
                 href={`/portal/${ticket.id}`}
-                className="flex items-center justify-between gap-4 border-b border-zinc-800/80 px-4 py-3 transition-colors last:border-b-0 hover:bg-zinc-900/80"
+                className="flex flex-col gap-2 border-b border-zinc-800/80 px-4 py-3 transition-colors last:border-b-0 hover:bg-zinc-900/80 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
               >
                 <div className="min-w-0">
                   <p className="truncate font-medium text-zinc-50">{ticket.title}</p>

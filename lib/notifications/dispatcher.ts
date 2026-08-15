@@ -8,7 +8,7 @@ import { dictionaryFor, localizedStage, localizedType } from '@/lib/i18n/labels'
 import type { TicketStatus } from '@/lib/tickets/schema';
 
 export type TicketEventContext = {
-  event: 'ticket.create' | 'ticket.status_change' | 'ticket.comment_add';
+  event: 'ticket.create' | 'ticket.status_change' | 'ticket.comment_add' | 'ticket.assign';
   ticket: {
     id: string;
     number?: string;
@@ -82,4 +82,33 @@ export async function dispatchTicketNotification(context: TicketEventContext) {
   };
 
   return enqueueNotification(payload);
+}
+
+export async function notifyTicketAssigned(tenantId: string, ticketId: string) {
+  if (!hasServiceRole()) return { ok: false, error: 'Service role required' };
+  const supabase = createSupabaseAdminClient();
+  const { data } = await supabase
+    .from('tickets')
+    .select('id, number, type, title, status, requester_name, requester_email, requester_phone, assignee_id, assignee_name, assignee_chat_id, tenant_id')
+    .eq('id', ticketId)
+    .eq('tenant_id', tenantId)
+    .maybeSingle();
+  if (!data?.assignee_id) return { ok: true, skipped: true };
+  return dispatchTicketNotification({
+    event: 'ticket.assign',
+    ticket: {
+      id: data.id,
+      number: data.number ?? undefined,
+      type: data.type ?? undefined,
+      title: data.title,
+      status: data.status,
+      requesterName: data.requester_name ?? undefined,
+      requesterEmail: data.requester_email ?? undefined,
+      requesterPhone: data.requester_phone ?? undefined,
+      assigneeId: data.assignee_id,
+      assigneeName: data.assignee_name ?? undefined,
+      assigneeChatId: data.assignee_chat_id ?? undefined,
+      tenantId: data.tenant_id,
+    },
+  });
 }

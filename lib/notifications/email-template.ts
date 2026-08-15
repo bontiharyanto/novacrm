@@ -23,7 +23,7 @@ export function portalPermalink(ticketId: string) {
 }
 
 export function buildTicketEmailSubject(input: {
-  event: 'ticket.create' | 'ticket.status_change' | 'ticket.comment_add';
+  event: 'ticket.create' | 'ticket.status_change' | 'ticket.comment_add' | 'ticket.assign';
   number: string;
   title: string;
   status: string;
@@ -39,7 +39,9 @@ export function buildTicketEmailSubject(input: {
       ? copy.subjectCreated
       : input.event === 'ticket.comment_add'
         ? copy.subjectComment
-        : copy.subjectStatus;
+        : input.event === 'ticket.assign'
+          ? copy.subjectAssigned
+          : copy.subjectStatus;
   return renderTemplate(template, { number: input.number, title: input.title, status: statusLabel });
 }
 

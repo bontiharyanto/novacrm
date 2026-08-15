@@ -245,7 +245,7 @@ export function TicketCreate({
         </div>
       </header>
 
-      <div className="grid flex-1 gap-6 p-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="grid flex-1 gap-4 p-4 pb-24 md:p-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-6">
         <div className="space-y-6">
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
             {TICKET_TYPES.map((type) => {

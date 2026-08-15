@@ -36,7 +36,7 @@ import {
   X,
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
+import { signOutAction } from '@/lib/auth/actions';
 import { AskAiButton, AssistantWidget } from '@/components/assistant/assistant-widget';
 import { CommandPalette } from '@/components/layout/command-palette';
 import { AccountSwitcher } from '@/components/accounts/account-switcher';
@@ -72,10 +72,10 @@ const processItems: ProcessItem[] = [
 ];
 
 const configurationItems: NavItem[] = [
-  { href: '/accounts', labelKey: 'accounts', icon: Building2, action: 'read', subject: 'Account' },
-  { href: '/org', labelKey: 'organization', icon: Users, action: 'read', subject: 'Org' },
+  { href: '/accounts', labelKey: 'accounts', icon: Building2, action: 'update', subject: 'Account' },
+  { href: '/org', labelKey: 'organization', icon: Users, action: 'update', subject: 'Org' },
   { href: '/users', labelKey: 'users', icon: UserCog, action: 'read', subject: 'User' },
-  { href: '/sla', labelKey: 'sla', icon: Clock, action: 'read', subject: 'Sla' },
+  { href: '/sla', labelKey: 'sla', icon: Clock, action: 'update', subject: 'Sla' },
   { href: '/assets', labelKey: 'assets', icon: Package, action: 'read', subject: 'Asset' },
   { href: '/cmdb', labelKey: 'cmdb', icon: LayoutGrid, action: 'read', subject: 'Cmdb' },
   { href: '/import', labelKey: 'import', icon: Upload, action: 'create', subject: 'Import' },
@@ -83,10 +83,10 @@ const configurationItems: NavItem[] = [
 
 const platformItems: NavItem[] = [
   { href: '/tenants', labelKey: 'tenants', icon: Building, action: 'read', subject: 'Tenant' },
-  { href: '/catalog', labelKey: 'catalog', icon: BookOpen, action: 'read', subject: 'Catalog' },
+  { href: '/catalog', labelKey: 'catalog', icon: BookOpen, action: 'update', subject: 'Catalog' },
   { href: '/knowledge', labelKey: 'knowledge', icon: BookMarked, action: 'read', subject: 'Knowledge' },
   { href: '/workflows', labelKey: 'automation', icon: Workflow, action: 'read', subject: 'Workflow' },
-  { href: '/governance', labelKey: 'governance', icon: Scale, action: 'read', subject: 'Governance' },
+  { href: '/governance', labelKey: 'governance', icon: Scale, action: 'update', subject: 'Governance' },
 ];
 
 function isPathActive(pathname: string, href: string) {
@@ -124,7 +124,7 @@ function NavLink({
       onClick={onNavigate}
       aria-current={active ? 'page' : undefined}
       className={cn(
-        'group relative flex h-8 items-center gap-2.5 rounded-md px-2 text-[13px] leading-none transition-colors duration-200 ease-out',
+        'group relative flex h-10 items-center gap-2.5 rounded-md px-2 text-[13px] leading-none transition-colors duration-200 ease-out md:h-8',
         active
           ? 'bg-zinc-900 font-medium text-zinc-50'
           : 'text-zinc-400 hover:bg-zinc-900/70 hover:text-zinc-100',
@@ -304,7 +304,7 @@ function SidebarFooter({
   role: AppRole;
   pathname: string;
   onNavigate?: () => void;
-  onSignOut: () => void;
+  onSignOut: () => void | Promise<void>;
 }) {
   const { t } = useI18n();
   const appearanceActive = pathname === '/settings/appearance';
@@ -313,7 +313,7 @@ function SidebarFooter({
   const roleLabel = t.roles[role] ?? ROLE_LABEL[role] ?? role;
 
   return (
-    <div className="shrink-0 border-t border-zinc-800/80 px-2.5 py-2.5">
+    <div className="shrink-0 border-t border-zinc-800/80 px-2.5 py-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom))]">
       <nav className="mb-2 flex flex-col gap-px">
         <NavLink
           href="/settings/appearance"
@@ -347,14 +347,15 @@ function SidebarFooter({
           <p className="truncate text-[13px] leading-4 text-zinc-50">{fullName}</p>
           <p className="mt-0.5 truncate font-mono text-[10px] uppercase tracking-[0.08em] text-zinc-500">{roleLabel}</p>
         </div>
-        <button
-          type="button"
-          onClick={onSignOut}
-          className="rounded-md p-1.5 text-zinc-500 transition-colors duration-200 ease-out hover:bg-zinc-800 hover:text-zinc-50"
-          aria-label={t.common.signOut}
-        >
-          <LogOut className="h-3.5 w-3.5" />
-        </button>
+        <form action={onSignOut}>
+          <button
+            type="submit"
+            className="inline-flex h-9 items-center gap-1.5 rounded-md px-2 text-[12px] text-zinc-400 transition-colors duration-200 ease-out hover:bg-zinc-800 hover:text-zinc-50"
+          >
+            <LogOut className="h-3.5 w-3.5" />
+            {t.common.signOut}
+          </button>
+        </form>
       </div>
     </div>
   );
@@ -376,7 +377,7 @@ function SidebarPanel({
   activeAccountId?: string | null;
   pathname: string;
   onNavigate?: () => void;
-  onSignOut: () => void;
+  onSignOut: () => void | Promise<void>;
   onClose?: () => void;
 }) {
   return (
@@ -439,24 +440,17 @@ export function AgentShell({
     return () => window.removeEventListener('keydown', onKey);
   }, [router]);
 
-  async function handleSignOut() {
-    const supabase = createSupabaseBrowserClient();
-    await supabase.auth.signOut();
-    router.replace('/login');
-    router.refresh();
-  }
-
   const sidebarProps = {
     role,
     fullName,
     accounts,
     activeAccountId,
     pathname,
-    onSignOut: () => void handleSignOut(),
+    onSignOut: signOutAction,
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100">
+    <div className="min-h-dvh bg-zinc-950 text-zinc-100">
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 flex-col border-r border-zinc-800 bg-zinc-950 md:flex">
         <SidebarPanel {...sidebarProps} />
       </aside>
@@ -464,22 +458,22 @@ export function AgentShell({
       {mobileOpen ? (
         <div className="fixed inset-0 z-50 md:hidden">
           <button type="button" className="absolute inset-0 bg-black/60" aria-label={t.common.closeMenu} onClick={() => setMobileOpen(false)} />
-          <aside className="relative flex h-full w-60 flex-col border-r border-zinc-800 bg-zinc-950 shadow-2xl">
+          <aside className="relative flex h-full w-[min(16rem,85vw)] flex-col border-r border-zinc-800 bg-zinc-950 pt-safe shadow-2xl">
             <SidebarPanel {...sidebarProps} onNavigate={() => setMobileOpen(false)} onClose={() => setMobileOpen(false)} />
           </aside>
         </div>
       ) : null}
 
       <div className="md:pl-60">
-        <header className="sticky top-0 z-40 border-b border-zinc-800 bg-zinc-950/90 px-4 py-2.5 backdrop-blur md:px-6">
+        <header className="sticky top-0 z-40 border-b border-zinc-800 bg-zinc-950/90 px-4 py-2.5 pt-safe backdrop-blur md:px-6">
           <div className="flex items-center gap-2">
             <button
               type="button"
-              className="rounded-md border border-zinc-800 p-2 text-zinc-300 hover:bg-zinc-900 md:hidden"
+              className="touch-target inline-flex items-center justify-center rounded-md border border-zinc-800 text-zinc-300 hover:bg-zinc-900 md:hidden"
               onClick={() => setMobileOpen(true)}
               aria-label={t.common.openMenu}
             >
-              <Menu className="h-4 w-4" />
+              <Menu className="h-5 w-5" />
             </button>
             <button
               type="button"
@@ -509,12 +503,22 @@ export function AgentShell({
             })()}
             <Link
               href="/tickets/new"
-              className="hidden h-9 items-center justify-center gap-1.5 rounded-md border border-zinc-800 px-3 text-[13px] text-zinc-300 transition-colors hover:bg-zinc-900 hover:text-zinc-50 sm:inline-flex"
+              className="inline-flex h-9 w-9 items-center justify-center gap-1.5 rounded-md border border-zinc-800 text-[13px] text-zinc-300 transition-colors hover:bg-zinc-900 hover:text-zinc-50 sm:w-auto sm:px-3"
+              aria-label={t.common.newTicket}
             >
               <Plus className="h-3.5 w-3.5" />
-              {t.common.new}
+              <span className="hidden sm:inline">{t.common.new}</span>
               <kbd className="hidden font-mono text-[10px] text-zinc-600 lg:inline">⌘N</kbd>
             </Link>
+            <form action={signOutAction} className="md:hidden">
+              <button
+                type="submit"
+                className="touch-target inline-flex items-center justify-center rounded-md border border-zinc-800 text-zinc-300 hover:bg-zinc-900"
+                aria-label={t.common.signOut}
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
+            </form>
           </div>
         </header>
         <motion.main initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2, ease: 'easeOut' }}>

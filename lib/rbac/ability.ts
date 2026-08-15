@@ -158,3 +158,23 @@ export function defineAbilityFor(role: AppRole): AppAbility {
 export function canRole(role: AppRole, action: Actions, subject: Subjects) {
   return defineAbilityFor(role).can(action, subject);
 }
+
+/** Admin/config screens. `read` on these subjects is for desk work, not the module UI. */
+export const CONFIG_MODULES = {
+  accounts: { action: 'update', subject: 'Account' },
+  org: { action: 'update', subject: 'Org' },
+  users: { action: 'read', subject: 'User' },
+  sla: { action: 'update', subject: 'Sla' },
+  catalog: { action: 'update', subject: 'Catalog' },
+  governance: { action: 'update', subject: 'Governance' },
+  workflows: { action: 'read', subject: 'Workflow' },
+  import: { action: 'create', subject: 'Import' },
+  tenants: { action: 'read', subject: 'Tenant' },
+} as const;
+
+export type ConfigModule = keyof typeof CONFIG_MODULES;
+
+export function canAccessConfig(role: AppRole, module: ConfigModule) {
+  const rule = CONFIG_MODULES[module];
+  return canRole(role, rule.action, rule.subject);
+}

@@ -68,7 +68,7 @@ export function PortalCreate() {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
-      className="mx-auto max-w-3xl space-y-6 p-6"
+      className="mx-auto max-w-3xl space-y-6 p-4 pb-safe md:p-6"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>

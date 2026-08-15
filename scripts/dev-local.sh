@@ -11,6 +11,11 @@ fi
 
 docker compose up -d redis minio minio-init
 
+if docker compose -f docker-compose.local.yml ps --status running 2>/dev/null | grep -Eq 'app|worker|ops'; then
+  echo "Docker app/worker/ops is running and will starve Next.js. Stopping those containers."
+  docker compose -f docker-compose.local.yml stop app worker ops >/dev/null 2>&1 || true
+fi
+
 WORKER_PID=
 OPS_PID=
 DEV_PID=
@@ -34,9 +39,14 @@ fi
 npm run dev &
 DEV_PID=$!
 
+LAN_IP="$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || true)"
+
 echo
 echo "NovaCRM local is starting:"
 echo "  App     http://localhost:3000"
+if [ -n "$LAN_IP" ]; then
+  echo "  Phone   http://${LAN_IP}:3000  (same Wi-Fi as this Mac)"
+fi
 echo "  Ops     http://127.0.0.1:3100  (sysadmin)"
 echo "  MinIO   http://localhost:9001  (minioadmin / minioadmin)"
 echo "  Studio  http://127.0.0.1:54323  (if supabase start is running)"

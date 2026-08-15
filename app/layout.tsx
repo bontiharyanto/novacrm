@@ -1,6 +1,6 @@
 import localFont from 'next/font/local';
 import './globals.css';
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { RuntimePublicEnv } from '@/components/layout/runtime-public-env';
 import { PreferencesProvider } from '@/components/layout/preferences-provider';
 import { Toaster } from '@/components/ui/toast';
@@ -23,6 +23,16 @@ const jetbrains = localFont({
 export const metadata: Metadata = {
   title: 'NovaCRM',
   description: 'Enterprise ITSM and CRM platform',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+  themeColor: [
+    { media: '(prefers-color-scheme: dark)', color: '#09090b' },
+    { media: '(prefers-color-scheme: light)', color: '#f7f7f8' },
+  ],
 };
 
 export const dynamic = 'force-dynamic';

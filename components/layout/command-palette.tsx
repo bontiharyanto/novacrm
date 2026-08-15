@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Command } from 'cmdk';
 import { BarChart3, BookMarked, BookOpen, Building, Building2, CalendarClock, Clock, History, LayoutDashboard, LayoutGrid, Lightbulb, Package, Palette, Scale, Settings, ShieldCheck, Sparkles, Ticket, Upload, UserCog, Users, Workflow } from 'lucide-react';
-import { canRole, type AppRole } from '@/lib/rbac/ability';
+import { canAccessConfig, canRole, type AppRole } from '@/lib/rbac/ability';
 import { isTenantAdminRole } from '@/lib/rbac/roles';
 import { useI18n } from '@/components/layout/preferences-provider';
 
@@ -97,18 +97,22 @@ export function CommandPalette({ open, onOpenChange, role }: { open: boolean; on
                   <Building className="h-3.5 w-3.5" /> New tenant
                 </Command.Item>
               ) : null}
-              <Command.Item className="cmdk-item" onSelect={() => go('/accounts')}>
-                <Building2 className="h-3.5 w-3.5" /> {t.nav.accounts}
-              </Command.Item>
-              <Command.Item className="cmdk-item" onSelect={() => go('/org')}>
-                <Users className="h-3.5 w-3.5" /> {t.nav.organization}
-              </Command.Item>
-              {canRole(role, 'read', 'User') ? (
+              {canAccessConfig(role, 'accounts') ? (
+                <Command.Item className="cmdk-item" onSelect={() => go('/accounts')}>
+                  <Building2 className="h-3.5 w-3.5" /> {t.nav.accounts}
+                </Command.Item>
+              ) : null}
+              {canAccessConfig(role, 'org') ? (
+                <Command.Item className="cmdk-item" onSelect={() => go('/org')}>
+                  <Users className="h-3.5 w-3.5" /> {t.nav.organization}
+                </Command.Item>
+              ) : null}
+              {canAccessConfig(role, 'users') ? (
                 <Command.Item className="cmdk-item" onSelect={() => go('/users')}>
                   <UserCog className="h-3.5 w-3.5" /> {t.nav.users}
                 </Command.Item>
               ) : null}
-              {canRole(role, 'read', 'Sla') ? (
+              {canAccessConfig(role, 'sla') ? (
                 <Command.Item className="cmdk-item" onSelect={() => go('/sla')}>
                   <Clock className="h-3.5 w-3.5" /> {t.nav.sla}
                 </Command.Item>
@@ -140,12 +144,16 @@ export function CommandPalette({ open, onOpenChange, role }: { open: boolean; on
                   <BookMarked className="h-3.5 w-3.5" /> {t.nav.knowledge}
                 </Command.Item>
               ) : null}
-              <Command.Item className="cmdk-item" onSelect={() => go('/catalog')}>
-                <BookOpen className="h-3.5 w-3.5" /> {t.nav.catalog}
-              </Command.Item>
-              <Command.Item className="cmdk-item" onSelect={() => go('/catalog/new')}>
-                <BookOpen className="h-3.5 w-3.5" /> {t.command.newCatalog}
-              </Command.Item>
+              {canAccessConfig(role, 'catalog') ? (
+                <>
+                  <Command.Item className="cmdk-item" onSelect={() => go('/catalog')}>
+                    <BookOpen className="h-3.5 w-3.5" /> {t.nav.catalog}
+                  </Command.Item>
+                  <Command.Item className="cmdk-item" onSelect={() => go('/catalog/new')}>
+                    <BookOpen className="h-3.5 w-3.5" /> {t.command.newCatalog}
+                  </Command.Item>
+                </>
+              ) : null}
               {canRole(role, 'read', 'Workflow') ? (
                 <>
                   <Command.Item className="cmdk-item" onSelect={() => go('/workflows')}>
@@ -156,12 +164,16 @@ export function CommandPalette({ open, onOpenChange, role }: { open: boolean; on
                   </Command.Item>
                 </>
               ) : null}
-              <Command.Item className="cmdk-item" onSelect={() => go('/governance')}>
-                <Scale className="h-3.5 w-3.5" /> {t.nav.governance}
-              </Command.Item>
-              <Command.Item className="cmdk-item" onSelect={() => go('/governance/requests')}>
-                <Scale className="h-3.5 w-3.5" /> {t.command.dsar}
-              </Command.Item>
+              {canAccessConfig(role, 'governance') ? (
+                <>
+                  <Command.Item className="cmdk-item" onSelect={() => go('/governance')}>
+                    <Scale className="h-3.5 w-3.5" /> {t.nav.governance}
+                  </Command.Item>
+                  <Command.Item className="cmdk-item" onSelect={() => go('/governance/requests')}>
+                    <Scale className="h-3.5 w-3.5" /> {t.command.dsar}
+                  </Command.Item>
+                </>
+              ) : null}
               <Command.Item className="cmdk-item" onSelect={() => go('/settings/security')}>
                 <ShieldCheck className="h-3.5 w-3.5" /> {t.nav.security}
               </Command.Item>

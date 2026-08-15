@@ -151,6 +151,9 @@ export async function listTickets() {
   if (scoped.accountId) {
     query = query.eq('account_id', scoped.accountId);
   }
+  if (session.profile.role === 'agent') {
+    query = query.or(`assignee_id.eq.${session.userId},and(created_by.eq.${session.userId},assignee_id.is.null)`);
+  }
 
   const { data, error } = await query;
 
@@ -555,7 +558,13 @@ export async function updateTicket(ticketId: string, input: unknown) {
   });
 
   await maybeRecordUcCredit(supabase, hydrated, session.userId);
-  await afterTicketMutation('ticket.status_change', hydrated, messages.join('. ') || undefined);
+  const assigneeChanged = parsed.assigneeId !== undefined && nextAssignee !== previousAssignee;
+  const statusChanged = Boolean(parsed.status && parsed.status !== previousStatus);
+  await afterTicketMutation(
+    assigneeChanged && !statusChanged ? 'ticket.assign' : 'ticket.status_change',
+    hydrated,
+    messages.join('. ') || undefined,
+  );
   return { data: hydrated, error: null };
 }
 
@@ -632,11 +641,13 @@ export async function addTicketComment(ticketId: string, input: unknown) {
 }
 
 async function afterTicketMutation(
-  event: 'ticket.create' | 'ticket.status_change' | 'ticket.comment_add',
+  event: 'ticket.create' | 'ticket.status_change' | 'ticket.comment_add' | 'ticket.assign',
   ticket: TicketRecord,
   message?: string,
 ) {
-  await evaluateWorkflow(event, { ticketId: ticket.id, tenantId: ticket.tenantId, status: ticket.status }, ticket);
+  if (event !== 'ticket.assign') {
+    await evaluateWorkflow(event, { ticketId: ticket.id, tenantId: ticket.tenantId, status: ticket.status }, ticket);
+  }
   if (event === 'ticket.create' && !ticket.assigneeId) {
     await enqueueWfmDispatch({ tenantId: ticket.tenantId, ticketId: ticket.id });
   }

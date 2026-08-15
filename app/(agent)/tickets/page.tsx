@@ -15,7 +15,7 @@ export default async function TicketsPage() {
         </div>
       }
     >
-      <TicketDashboard currentUserId={session?.userId ?? ''} />
+      <TicketDashboard currentUserId={session?.userId ?? ''} role={session?.profile.role} />
     </Suspense>
   );
 }

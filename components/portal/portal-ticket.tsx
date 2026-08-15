@@ -82,7 +82,7 @@ export function PortalTicket({ ticketId, authorName }: { ticketId: string; autho
 
   if (!ticket) {
     return (
-      <div className="mx-auto grid max-w-5xl gap-6 p-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+      <div className="mx-auto grid max-w-5xl gap-4 p-4 pb-safe md:p-6 lg:grid-cols-[minmax(0,1fr)_280px] lg:gap-6">
         <Skeleton className="h-[420px] w-full" />
         <Skeleton className="h-[420px] w-full" />
       </div>
@@ -92,7 +92,7 @@ export function PortalTicket({ ticketId, authorName }: { ticketId: string; autho
   const type = isTicketType(ticket.type) ? ticket.type : 'incident';
 
   return (
-    <div className="mx-auto grid max-w-5xl gap-6 p-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+    <div className="mx-auto grid max-w-5xl gap-4 p-4 pb-safe md:p-6 lg:grid-cols-[minmax(0,1fr)_280px] lg:gap-6">
       <div className="space-y-5">
         <div>
           <Link href="/portal" className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-200">

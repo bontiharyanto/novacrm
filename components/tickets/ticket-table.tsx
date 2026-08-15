@@ -88,7 +88,54 @@ export function TicketTable({ tickets }: { tickets: TicketRow[] }) {
           className="w-full bg-transparent text-sm text-zinc-100 outline-none placeholder:text-zinc-600"
         />
       </div>
-      <div className="overflow-x-auto">
+      <div className="space-y-2 p-2 md:hidden">
+        {rows.length === 0 ? (
+          <p className="px-2 py-8 text-center text-sm text-zinc-500">No tickets match this filter.</p>
+        ) : (
+          rows.map((ticket) => (
+            <Link
+              key={ticket.id}
+              href={`/tickets/${ticket.id}`}
+              className="block rounded-lg border border-zinc-800 bg-zinc-950/70 p-3 transition-colors hover:border-zinc-700"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <span className="font-mono text-xs text-blue-300">
+                  {displayTicketNumber(ticket.number, ticket.id)}
+                </span>
+                <Badge tone={statusTone[ticket.status]}>{ticket.status.replace('_', ' ')}</Badge>
+              </div>
+              <p className="mt-1.5 text-sm font-medium text-zinc-50">{ticket.title}</p>
+              <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                <TypeBadge type={ticket.type ?? 'incident'} />
+                <Badge tone={priorityTone[ticket.priority]}>{ticket.priority}</Badge>
+                {ticket.accountCode || ticket.accountName ? (
+                  <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-zinc-500">
+                    {ticket.accountCode || ticket.accountName}
+                  </span>
+                ) : null}
+              </div>
+              <div className="mt-2 flex items-center justify-between text-[11px] text-zinc-500">
+                <span>{ticket.assigneeName || 'Unassigned'}</span>
+                <span>{formatRelativeId(ticket.createdAt)}</span>
+              </div>
+              <div className="mt-2 space-y-1">
+                <SlaBadge
+                  dueDate={ticket.dueDate}
+                  status={ticket.status}
+                  slaResponseAt={ticket.slaResponseAt}
+                  slaResolveBy={ticket.slaResolveBy}
+                  slaRespondedAt={ticket.slaRespondedAt}
+                  slaPausedAt={ticket.slaPausedAt}
+                  slaResponseMinutes={ticket.slaResponseMinutes}
+                  slaResolveMinutes={ticket.slaResolveMinutes}
+                />
+                <PendingBadge reason={ticket.pendingReason} note={ticket.pendingNote} />
+              </div>
+            </Link>
+          ))
+        )}
+      </div>
+      <div className="hidden overflow-x-auto md:block">
         <table className="w-full text-left text-sm">
           <thead className="border-b border-zinc-800 bg-zinc-950 text-[11px] uppercase tracking-[0.12em] text-zinc-500">
             <tr>

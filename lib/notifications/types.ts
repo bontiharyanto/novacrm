@@ -15,7 +15,8 @@ export type NotificationTemplateContext = Record<string, string | number | boole
 export type TicketNotificationEvent =
   | 'ticket.create'
   | 'ticket.status_change'
-  | 'ticket.comment_add';
+  | 'ticket.comment_add'
+  | 'ticket.assign';
 
 export type NotificationLogStatus = 'queued' | 'sent' | 'failed';
 

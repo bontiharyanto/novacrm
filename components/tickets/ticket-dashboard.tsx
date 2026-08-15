@@ -23,6 +23,9 @@ import type { TicketPriority, TicketStatus } from '@/lib/tickets/schema';
 import type { TicketPendingReason } from '@/lib/tickets/pending';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/components/layout/preferences-provider';
+import { toastSuccess } from '@/components/ui/toast';
+import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
+import type { AppRole } from '@/lib/rbac/roles';
 
 type TicketItem = {
   id: string;
@@ -92,15 +95,19 @@ function normalizeTicket(row: Partial<TicketItem> & { id: string; title: string 
   };
 }
 
-export function TicketDashboard({ currentUserId }: { currentUserId: string }) {
+export function TicketDashboard({ currentUserId, role }: { currentUserId: string; role?: AppRole }) {
   const { t } = useI18n();
   const router = useRouter();
   const searchParams = useSearchParams();
   const typeParam = searchParams.get('type');
   const queueParam = searchParams.get('queue');
   const activeType = isTicketType(typeParam) ? typeParam : 'all';
-  const activeQueue: QueueFilter =
-    queueParam === 'mine' || queueParam === 'unassigned' || queueParam === 'queue' ? queueParam : 'all';
+  const agentOnly = role === 'agent';
+  const activeQueue: QueueFilter = agentOnly
+    ? 'mine'
+    : queueParam === 'mine' || queueParam === 'unassigned' || queueParam === 'queue'
+      ? queueParam
+      : 'all';
 
   const [tickets, setTickets] = useState<TicketItem[]>([]);
   const [myGroupIds, setMyGroupIds] = useState<string[]>([]);
@@ -128,6 +135,34 @@ export function TicketDashboard({ currentUserId }: { currentUserId: string }) {
 
   useRealtimeTable('tickets', loadTickets);
   useRealtimeTable('ticket_comments', loadTickets);
+
+  useEffect(() => {
+    if (!currentUserId) return;
+    let client: ReturnType<typeof createSupabaseBrowserClient> | null = null;
+    try {
+      client = createSupabaseBrowserClient();
+    } catch {
+      return;
+    }
+    const channel = client
+      .channel(`assign-alert:${currentUserId}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'tickets' },
+        (payload) => {
+          const row = (payload.new ?? {}) as { assignee_id?: string; number?: string; id?: string };
+          const previous = (payload.old ?? {}) as { assignee_id?: string };
+          if (row.assignee_id !== currentUserId || previous.assignee_id === currentUserId) return;
+          toastSuccess(
+            t.tickets.assignedToYou.replace('{{number}}', row.number || row.id?.slice(0, 8) || 'Ticket'),
+          );
+        },
+      )
+      .subscribe();
+    return () => {
+      if (client) void client.removeChannel(channel);
+    };
+  }, [currentUserId, t.tickets.assignedToYou]);
 
   function setFilter(next: { type?: string; queue?: string }) {
     const params = new URLSearchParams(searchParams.toString());
@@ -173,33 +208,38 @@ export function TicketDashboard({ currentUserId }: { currentUserId: string }) {
   const queueCount = tickets.filter((ticket) => ticket.groupId && myGroupIds.includes(ticket.groupId)).length;
 
   return (
-    <div className="space-y-5 p-6">
+    <div className="space-y-5 p-4 pb-24 md:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">{t.tickets.kicker}</p>
           <h1 className="text-2xl font-semibold text-zinc-50">
             {activeType === 'all' ? t.tickets.title : t.tickets.typePlural[activeType]}
           </h1>
+          {agentOnly ? <p className="mt-1 text-sm text-zinc-500">{t.tickets.agentScopeHint}</p> : null}
         </div>
         <div className="flex items-center gap-2">
           <div className="flex rounded-md border border-zinc-800 p-0.5">
             <Button size="sm" variant={view === 'table' ? 'default' : 'ghost'} onClick={() => setView('table')}>
-              <List className="h-3.5 w-3.5" /> {t.tickets.list}
+              <List className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">{t.tickets.list}</span>
             </Button>
             <Button size="sm" variant={view === 'board' ? 'default' : 'ghost'} onClick={() => setView('board')}>
-              <LayoutGrid className="h-3.5 w-3.5" /> {t.tickets.board}
+              <LayoutGrid className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">{t.tickets.board}</span>
             </Button>
           </div>
           <Link
             href={newTicketHref}
             className="nova-accent-btn inline-flex items-center justify-center gap-2 rounded-md px-2.5 py-1.5 text-xs font-medium text-white transition-all duration-200 ease-out hover:-translate-y-0.5"
           >
-            <Plus className="h-3.5 w-3.5" /> {t.common.newTicket}
+            <Plus className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">{t.common.newTicket}</span>
           </Link>
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-1.5">
+      <div className="-mx-4 overflow-x-auto px-4 md:mx-0 md:overflow-visible md:px-0">
+      <div className="flex w-max gap-1.5 md:w-auto md:flex-wrap">
         <button
           type="button"
           onClick={() => setFilter({ type: '' })}
@@ -231,8 +271,11 @@ export function TicketDashboard({ currentUserId }: { currentUserId: string }) {
           </button>
         ))}
       </div>
+      </div>
 
-      <div className="flex flex-wrap gap-1.5">
+      {agentOnly ? null : (
+      <div className="-mx-4 overflow-x-auto px-4 md:mx-0 md:overflow-visible md:px-0">
+      <div className="flex w-max gap-1.5 md:w-auto md:flex-wrap">
         {queueFilters.map((queue) => (
           <button
             key={queue.id}
@@ -264,6 +307,8 @@ export function TicketDashboard({ currentUserId }: { currentUserId: string }) {
           </button>
         ))}
       </div>
+      </div>
+      )}
 
       {activeType !== 'all' ? (
         <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-3">

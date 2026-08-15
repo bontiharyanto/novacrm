@@ -22,10 +22,11 @@ export function AskAiButton({ onClick }: { onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="hidden h-9 shrink-0 items-center gap-1.5 rounded-md border border-[color:color-mix(in_srgb,var(--accent)_45%,transparent)] px-2.5 text-[13px] text-zinc-200 transition-colors hover:bg-zinc-900 sm:inline-flex"
+      className="inline-flex h-9 w-9 shrink-0 items-center justify-center gap-1.5 rounded-md border border-[color:color-mix(in_srgb,var(--accent)_45%,transparent)] text-[13px] text-zinc-200 transition-colors hover:bg-zinc-900 sm:w-auto sm:px-2.5"
+      aria-label={t.nav.askAi}
     >
       <Sparkles className="h-3.5 w-3.5 nova-accent-icon" />
-      {t.nav.askAi}
+      <span className="hidden sm:inline">{t.nav.askAi}</span>
     </button>
   );
 }
@@ -128,14 +129,14 @@ export function AssistantWidget({
         <button
           type="button"
           onClick={() => onOpenChange(true)}
-          className="nova-accent-btn fixed bottom-5 right-5 z-[60] flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg md:bottom-6 md:right-6"
+          className="nova-accent-btn fixed bottom-[max(1.25rem,env(safe-area-inset-bottom))] right-[max(1.25rem,env(safe-area-inset-right))] z-[60] flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg md:bottom-6 md:right-6"
           aria-label={t.nav.askAi}
         >
           <Sparkles className="h-5 w-5" />
         </button>
       )}
       {open ? (
-        <div className="fixed bottom-4 right-4 z-[60] flex h-[min(640px,calc(100dvh-5.5rem))] w-[min(400px,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950 shadow-2xl md:bottom-6 md:right-6">
+        <div className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-[60] flex h-[min(85dvh,640px)] w-auto flex-col overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950 shadow-2xl sm:inset-x-auto sm:right-4 sm:h-[min(640px,calc(100dvh-5.5rem))] sm:w-[min(400px,calc(100vw-2rem))] md:bottom-6 md:right-6">
           <header className="flex h-12 shrink-0 items-center gap-2 border-b border-zinc-800 px-3">
             <button
               type="button"

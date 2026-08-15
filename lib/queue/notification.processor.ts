@@ -29,8 +29,11 @@ async function loadActiveChannels(tenantId: string): Promise<NotificationChannel
 }
 
 function emailRecipients(payload: NotificationJobPayload) {
-  const emails = [payload.requesterEmail, payload.assigneeEmail].filter((value): value is string => Boolean(value));
-  return emails.filter((email, index) => emails.indexOf(email) === index);
+  const emails =
+    payload.event === 'ticket.assign'
+      ? [payload.assigneeEmail]
+      : [payload.requesterEmail, payload.assigneeEmail];
+  return emails.filter((value, index): value is string => Boolean(value) && emails.indexOf(value) === index);
 }
 
 export async function processNotificationJob(payload: NotificationJobPayload) {

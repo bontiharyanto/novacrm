@@ -304,7 +304,7 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
 
   if (!ticket) {
     return (
-      <div className="grid gap-6 p-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="grid gap-4 p-4 pb-24 md:p-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-6">
         <Skeleton className="h-[480px] w-full" />
         <Skeleton className="h-[480px] w-full" />
       </div>
@@ -314,7 +314,7 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
   const type = isTicketType(ticket.type) ? ticket.type : 'incident';
 
   return (
-    <div className="grid gap-6 p-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+    <div className="grid gap-4 p-4 pb-24 md:p-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:gap-6">
       <div className="space-y-5">
         <div>
           <Link href="/tickets" className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-200">

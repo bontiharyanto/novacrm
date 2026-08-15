@@ -15,7 +15,7 @@ export function renderTemplate(template: string, context: NotificationTemplateCo
 }
 
 export function getTicketTemplates(
-  event: 'ticket.create' | 'ticket.status_change' | 'ticket.comment_add',
+  event: 'ticket.create' | 'ticket.status_change' | 'ticket.comment_add' | 'ticket.assign',
   locale?: Locale,
 ) {
   const t = notificationCopy(locale);
@@ -31,6 +31,10 @@ export function getTicketTemplates(
     'ticket.comment_add': {
       subject: t.subjectComment,
       body: `${t.hello} ${t.commentAdded}`,
+    },
+    'ticket.assign': {
+      subject: t.subjectAssigned,
+      body: `${t.hello} ${t.assigned}`,
     },
   };
 
