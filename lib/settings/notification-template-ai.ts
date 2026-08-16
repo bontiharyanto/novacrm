@@ -126,10 +126,10 @@ export async function suggestNotificationTemplates(locale: string, current: Stor
     record && record.templates && typeof record.templates === 'object' && !Array.isArray(record.templates)
       ? record.templates
       : null;
-  const { summary, templates: _ignored, ...flatTemplates } = record ?? {};
+  const { summary, templates, ...flatTemplates } = record ?? {};
   const parsed = suggestionSchema.safeParse({
     summary,
-    templates: nestedTemplates ?? flatTemplates,
+    templates: nestedTemplates ?? templates ?? flatTemplates,
   });
   if (!parsed.success) {
     return { data: null, error: 'AI tidak mengembalikan template yang valid. Coba lagi.' };

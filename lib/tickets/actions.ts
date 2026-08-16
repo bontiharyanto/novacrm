@@ -462,7 +462,7 @@ export async function updateTicket(ticketId: string, input: unknown) {
     },
   );
 
-  let problemId = parsed.problemId === undefined ? existing.data.problemId ?? null : parsed.problemId;
+  const problemId = parsed.problemId === undefined ? existing.data.problemId ?? null : parsed.problemId;
   if (problemId) {
     const { data: problem } = await supabase
       .from('tickets')

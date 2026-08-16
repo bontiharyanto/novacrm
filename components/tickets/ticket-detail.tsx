@@ -23,7 +23,6 @@ import {
   defaultPendingReason,
   isPauseStatus,
   pendingReasonLabel,
-  supportTierLabel,
   type TicketPendingReason,
 } from '@/lib/tickets/pending';
 import type { TicketPriority, TicketStatus } from '@/lib/tickets/schema';
