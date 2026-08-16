@@ -15,7 +15,7 @@ export default async function OrgGroupDetailPage({ params }: { params: { id: str
   const group = await getAssignmentGroupById(params.id);
   if (!group) notFound();
   const [agents, policy, skills, groups, contracts] = await Promise.all([
-    listAssignableAgents(),
+    listAssignableAgents(undefined, group.accountId),
     getDispatchPolicy(params.id),
     listSkills(),
     listAssignmentGroups(),

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { ArrowUp, CalendarClock, ClipboardList, History, Maximize2, Menu, ShieldCheck, Sparkles, X } from 'lucide-react';
+import { AlertCircle, ArrowUp, BookOpen, CalendarClock, ClipboardList, History, Maximize2, Menu, ShieldCheck, Sparkles, X } from 'lucide-react';
 import { AssistantMarkdown } from '@/components/assistant/assistant-markdown';
 import { NovaMark } from '@/components/brand/nova-mark';
 import { useI18n } from '@/components/layout/preferences-provider';
@@ -10,10 +10,16 @@ import type { AssistantMessage, AssistantThreadSummary } from '@/lib/assistant/s
 import { formatRelativeId } from '@/lib/utils/dates';
 import { cn } from '@/lib/utils';
 
-const FEATURES = [
+const DESK_FEATURES = [
   { key: 'desk' as const, icon: ClipboardList, promptKey: 'triage' as const },
   { key: 'sla' as const, icon: ShieldCheck, promptKey: 'sla' as const },
   { key: 'review' as const, icon: CalendarClock, promptKey: 'aging' as const },
+];
+
+const PORTAL_FEATURES = [
+  { key: 'tickets' as const, icon: ClipboardList, promptKey: 'tickets' as const },
+  { key: 'waiting' as const, icon: AlertCircle, promptKey: 'waiting' as const },
+  { key: 'catalog' as const, icon: BookOpen, promptKey: 'catalog' as const },
 ];
 
 export function AskAiButton({ onClick }: { onClick: () => void }) {
@@ -35,11 +41,13 @@ export function AssistantWidget({
   open,
   onOpenChange,
   hidden,
+  variant = 'desk',
 }: {
   firstName?: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   hidden?: boolean;
+  variant?: 'desk' | 'portal';
 }) {
   const { t, locale } = useI18n();
   const [view, setView] = useState<'home' | 'chat' | 'history'>('home');
@@ -108,6 +116,9 @@ export function AssistantWidget({
     }
     const reply = payload.data.content as string;
     const savedId = (payload.data.threadId as string | null) ?? threadId;
+    if (payload.data.intake) {
+      setView('chat');
+    }
     const withReply = [...next, { role: 'assistant' as const, content: reply }];
     setMessages(withReply);
     if (savedId) {
@@ -150,14 +161,16 @@ export function AssistantWidget({
               <NovaMark size={22} />
               <p className="truncate text-[13px] font-medium text-zinc-100">Nova Agent</p>
             </div>
-            <a
-              href="/assistant"
-              className="rounded-md p-1.5 text-zinc-400 hover:bg-zinc-900 hover:text-zinc-50"
-              aria-label={t.assistant.expand}
-              onClick={() => onOpenChange(false)}
-            >
-              <Maximize2 className="h-3.5 w-3.5" />
-            </a>
+            {variant === 'desk' ? (
+              <a
+                href="/assistant"
+                className="rounded-md p-1.5 text-zinc-400 hover:bg-zinc-900 hover:text-zinc-50"
+                aria-label={t.assistant.expand}
+                onClick={() => onOpenChange(false)}
+              >
+                <Maximize2 className="h-3.5 w-3.5" />
+              </a>
+            ) : null}
             <button
               type="button"
               onClick={() => onOpenChange(false)}
@@ -202,20 +215,29 @@ export function AssistantWidget({
                 <div className="flex flex-col items-center text-center">
                   <NovaMark size={56} />
                   <h2 className="mt-5 text-xl font-semibold tracking-tight text-zinc-50">{t.assistant.meet}</h2>
-                  <p className="mt-2 text-sm leading-6 text-zinc-500">{t.assistant.meetBody}</p>
+                  <p className="mt-2 text-sm leading-6 text-zinc-500">
+                    {variant === 'portal' ? t.assistant.meetBodyPortal : t.assistant.meetBody}
+                  </p>
                 </div>
                 <p className="mt-7 text-[11px] font-medium uppercase tracking-[0.14em] text-zinc-600">
                   {t.assistant.featuresTitle}
                 </p>
                 <ul className="mt-3 space-y-2.5">
-                  {FEATURES.map((feature) => {
+                  {(variant === 'portal' ? PORTAL_FEATURES : DESK_FEATURES).map((feature) => {
                     const Icon = feature.icon;
-                    const copy = t.assistant.features[feature.key];
+                    const copy =
+                      variant === 'portal' && feature.key in t.assistant.featuresPortal
+                        ? t.assistant.featuresPortal[feature.key as keyof typeof t.assistant.featuresPortal]
+                        : t.assistant.features[feature.key as keyof typeof t.assistant.features];
+                    const prompt =
+                      variant === 'portal' && feature.promptKey in t.assistant.promptsPortal
+                        ? t.assistant.promptsPortal[feature.promptKey as keyof typeof t.assistant.promptsPortal]
+                        : t.assistant.prompts[feature.promptKey as keyof typeof t.assistant.prompts];
                     return (
                       <li key={feature.key}>
                         <button
                           type="button"
-                          onClick={() => void send(t.assistant.prompts[feature.promptKey])}
+                          onClick={() => void send(prompt)}
                           className="flex w-full items-start gap-3 rounded-xl border border-zinc-800 bg-zinc-900/40 px-3 py-2.5 text-left hover:border-zinc-700"
                         >
                           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[color:color-mix(in_srgb,var(--accent)_18%,transparent)]">
@@ -280,7 +302,7 @@ export function AssistantWidget({
                       void send();
                     }
                   }}
-                  placeholder={t.assistant.placeholder}
+                  placeholder={variant === 'portal' ? t.assistant.placeholderPortal : t.assistant.placeholder}
                   className="max-h-24 min-h-[40px] flex-1 resize-none bg-transparent py-2 text-[13px] text-zinc-100 outline-none placeholder:text-zinc-500"
                 />
                 <button

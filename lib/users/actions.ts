@@ -9,6 +9,7 @@ import { createUserSchema, highestSupportLevel, userAccessSchema, type Directory
 import type { AssignmentGroup, AssignmentGroupKind } from '@/lib/org/schema';
 import { createSupabaseAdminClient, hasServiceRole } from '@/lib/supabase/admin';
 import { formatZodError } from '@/lib/validation/zod-error';
+import { requireAccountId } from '@/lib/accounts/scope';
 
 type ProfileRow = {
   id: string;
@@ -107,11 +108,43 @@ export async function listDirectoryUsers(): Promise<DirectoryUser[]> {
   const session = await getSessionProfile();
   if (!session || !canRole(session.profile.role, 'read', 'User')) return [];
 
+  const scoped = await requireAccountId(session);
+  const accountIds = scoped.accountId
+    ? [scoped.accountId]
+    : scoped.scope.accounts.map((account) => account.id);
+  if (accountIds.length === 0) return [];
+
   const supabase = await createSupabaseServerClient();
+  const [{ data: members }, { data: groups }] = await Promise.all([
+    supabase
+      .from('account_members')
+      .select('user_id')
+      .eq('tenant_id', session.profile.tenantId)
+      .in('account_id', accountIds),
+    supabase.from('assignment_groups').select('id').eq('tenant_id', session.profile.tenantId).in('account_id', accountIds),
+  ]);
+  const groupIds = (groups ?? []).map((row) => row.id);
+  const { data: groupMembers } =
+    groupIds.length > 0
+      ? await supabase
+          .from('assignment_group_members')
+          .select('user_id')
+          .eq('tenant_id', session.profile.tenantId)
+          .in('group_id', groupIds)
+      : { data: [] };
+  const userIds = Array.from(
+    new Set([
+      ...(members ?? []).map((row) => row.user_id as string),
+      ...(groupMembers ?? []).map((row) => row.user_id as string),
+    ]),
+  );
+  if (userIds.length === 0) return [];
+
   const { data, error } = await supabase
     .from('profiles')
     .select('id, full_name, email, phone, role, org_unit_id')
     .eq('tenant_id', session.profile.tenantId)
+    .in('id', userIds)
     .order('full_name', { ascending: true });
 
   if (error || !data) return [];
@@ -141,11 +174,18 @@ export async function getDirectoryUser(userId: string): Promise<DirectoryUser | 
 export async function listDirectoryGroups(): Promise<AssignmentGroup[]> {
   const session = await getSessionProfile();
   if (!session || !canRole(session.profile.role, 'read', 'User')) return [];
+  const scoped = await requireAccountId(session);
+  const accountIds = scoped.accountId
+    ? [scoped.accountId]
+    : scoped.scope.accounts.map((account) => account.id);
+  if (accountIds.length === 0) return [];
+
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from('assignment_groups')
     .select('id, tenant_id, account_id, name, slug, kind, tier, is_active, created_at')
     .eq('tenant_id', session.profile.tenantId)
+    .in('account_id', accountIds)
     .eq('is_active', true)
     .order('name');
   if (error || !data) return [];

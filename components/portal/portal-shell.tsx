@@ -1,12 +1,14 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BookOpen, LogOut, Plus, Scale, Ticket } from 'lucide-react';
+import { BookOpen, Home, LogOut, Plus, Scale } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { signOutAction } from '@/lib/auth/actions';
 import { PreferenceControls } from '@/components/layout/preference-controls';
 import { NotificationBell } from '@/components/layout/notification-bell';
+import { AskAiButton, AssistantWidget } from '@/components/assistant/assistant-widget';
 import { useI18n } from '@/components/layout/preferences-provider';
 import { NovaMark } from '@/components/brand/nova-mark';
 import { cn } from '@/lib/utils';
@@ -14,6 +16,7 @@ import { cn } from '@/lib/utils';
 export function PortalShell({ children, fullName }: { children: React.ReactNode; fullName: string }) {
   const pathname = usePathname();
   const { t } = useI18n();
+  const [agentOpen, setAgentOpen] = useState(false);
 
 
   return (
@@ -29,6 +32,7 @@ export function PortalShell({ children, fullName }: { children: React.ReactNode;
               </div>
             </div>
             <NotificationBell homeHref="/portal" />
+            <AskAiButton onClick={() => setAgentOpen(true)} />
             <PreferenceControls compact />
           </div>
           <div className="-mx-4 flex items-center gap-2 overflow-x-auto px-4 pb-0.5 sm:mx-0 sm:flex-wrap sm:justify-end sm:overflow-visible sm:px-0">
@@ -45,7 +49,7 @@ export function PortalShell({ children, fullName }: { children: React.ReactNode;
                   : 'text-zinc-400 hover:bg-zinc-900 hover:text-zinc-50',
               )}
             >
-              <Ticket className="h-3.5 w-3.5" /> {t.portal.myTickets}
+              <Home className="h-3.5 w-3.5" /> {t.portal.home}
             </Link>
             <Link
               href="/portal/catalog"
@@ -98,6 +102,12 @@ export function PortalShell({ children, fullName }: { children: React.ReactNode;
       >
         {children}
       </motion.main>
+      <AssistantWidget
+        firstName={fullName.split(' ')[0] || fullName}
+        open={agentOpen}
+        onOpenChange={setAgentOpen}
+        variant="portal"
+      />
     </div>
   );
 }

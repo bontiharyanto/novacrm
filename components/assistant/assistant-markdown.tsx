@@ -12,8 +12,16 @@ function normalizeAssistantMarkdown(text: string): string {
 }
 
 function renderInline(text: string): ReactNode[] {
-  const tokens = text.split(/(\*\*[^*]+?\*\*|`[^`]+`)/g).filter(Boolean);
+  const tokens = text.split(/(\*\*[^*]+?\*\*|`[^`]+`|\[[^\]]+\]\([^)]+\))/g).filter(Boolean);
   return tokens.map((token, index) => {
+    const link = token.match(/^\[([^\]]+)\]\((\/portal\/[A-Za-z0-9-]+)\)$/);
+    if (link) {
+      return (
+        <a key={index} href={link[2]} className="underline decoration-zinc-600 underline-offset-2 hover:text-zinc-50">
+          {link[1]}
+        </a>
+      );
+    }
     if (token.startsWith('**') && token.endsWith('**') && token.length > 4) {
       return (
         <strong key={index} className="font-semibold text-zinc-50">

@@ -17,6 +17,7 @@ import { snapshotOla } from '@/lib/ola/engine';
 import { recordTicketAudit, recordTicketAuditDiff } from '@/lib/tickets/audit';
 import { defaultPendingReason, isPauseStatus } from '@/lib/tickets/pending';
 import { dispatchTicket, resolveAccountL1GroupId, resolveInboundGroupId } from '@/lib/wfm/dispatch';
+import { listAssignableAgents } from '@/lib/profiles/actions';
 import { enqueueWfmDispatch } from '@/lib/queue/wfm.queue';
 import { maybeRecordUcCredit } from '@/lib/uc/credits';
 import type { SupabaseClient } from '@supabase/supabase-js';
@@ -217,11 +218,17 @@ export async function createTicket(input: unknown) {
 
   const supabase = await createSupabaseServerClient();
   const requesterId = session.profile.role === 'customer' ? session.userId : parsed.requesterId ?? null;
-  const assigneePatch = await resolveAssignee(supabase, session.profile.tenantId, parsed.assigneeId ?? undefined);
   const scoped = await requireAccountId(session, parsed.accountId);
   if (!scoped.accountId) {
     return { data: null, error: scoped.error ?? 'Select the customer account for this ticket' };
   }
+  if (parsed.assigneeId) {
+    const allowed = await listAssignableAgents(parsed.groupId, scoped.accountId);
+    if (!allowed.some((agent) => agent.id === parsed.assigneeId)) {
+      return { data: null, error: 'Assignee is not a member of this account' };
+    }
+  }
+  const assigneePatch = await resolveAssignee(supabase, session.profile.tenantId, parsed.assigneeId ?? undefined);
 
   const sla = await snapshotSla(supabase, {
     tenantId: session.profile.tenantId,
@@ -418,6 +425,13 @@ export async function updateTicket(ticketId: string, input: unknown) {
   const existing = await loadTicket(supabase, ticketId, session.profile.tenantId);
   if (!existing.data) {
     return { data: null, error: existing.error ?? 'Ticket not found' };
+  }
+
+  if (parsed.assigneeId) {
+    const allowed = await listAssignableAgents(parsed.groupId ?? existing.data.groupId, existing.data.accountId);
+    if (!allowed.some((agent) => agent.id === parsed.assigneeId)) {
+      return { data: null, error: 'Assignee is not a member of this account' };
+    }
   }
 
   const assigneePatch = await resolveAssignee(supabase, session.profile.tenantId, parsed.assigneeId);
@@ -685,6 +699,7 @@ async function afterTicketMutation(
       assigneeId: ticket.assigneeId,
       requesterId: ticket.requesterId,
       groupId: ticket.groupId,
+      accountId: ticket.accountId,
     },
     message,
   });

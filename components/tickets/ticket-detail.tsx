@@ -205,12 +205,18 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
   }, [ticket?.accountId]);
 
   useEffect(() => {
-    const query = groupId ? `?groupId=${groupId}` : '';
-    void fetch(`/api/agents${query}`)
+    const accountId = ticket?.accountId;
+    if (!accountId) {
+      setAgents([]);
+      return;
+    }
+    const params = new URLSearchParams({ accountId });
+    if (groupId) params.set('groupId', groupId);
+    void fetch(`/api/agents?${params.toString()}`)
       .then((response) => response.json())
       .then((payload) => setAgents(payload.data ?? []))
       .catch(() => setAgents([]));
-  }, [groupId]);
+  }, [groupId, ticket?.accountId]);
 
   useRealtimeTable('tickets', loadTicket);
   useRealtimeTable('ticket_comments', loadTicket);
@@ -549,6 +555,9 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
               <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">{t.tickets.assignee}</p>
               <Select className="mt-1" value={assigneeId} onChange={(event) => setAssigneeId(event.target.value)}>
                 <option value="">{t.tickets.unassigned}</option>
+                {ticket.assigneeId && !agents.some((agent) => agent.id === ticket.assigneeId) ? (
+                  <option value={ticket.assigneeId}>{ticket.assigneeName ?? ticket.assigneeId}</option>
+                ) : null}
                 {agents.map((agent) => (
                   <option key={agent.id} value={agent.id}>
                     {agent.fullName}

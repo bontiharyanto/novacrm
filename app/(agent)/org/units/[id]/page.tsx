@@ -12,7 +12,7 @@ export default async function OrgUnitDetailPage({ params }: { params: { id: stri
   }
   const unit = await getOrgUnitById(params.id);
   if (!unit) notFound();
-  const [units, agents] = await Promise.all([listOrgUnits(), listAssignableAgents()]);
+  const [units, agents] = await Promise.all([listOrgUnits(), listAssignableAgents(undefined, unit.accountId)]);
 
   return (
     <OrgUnitDetail

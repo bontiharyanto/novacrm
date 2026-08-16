@@ -101,10 +101,6 @@ export function TicketCreate({
     (ticketType === 'change' && changeType === 'standard');
 
   useEffect(() => {
-    void fetch('/api/agents')
-      .then((response) => response.json())
-      .then((payload) => setAgents(payload.data ?? []))
-      .catch(() => setAgents([]));
     void fetch('/api/catalog')
       .then((response) => response.json())
       .then((payload) => setCatalogItems(payload.data ?? []))
@@ -115,8 +111,10 @@ export function TicketCreate({
     if (!accountId) {
       setAssets([]);
       setGroups([]);
+      setAgents([]);
       setAssetId('');
       setGroupId('');
+      setAssigneeId('');
       return;
     }
     const query = `?accountId=${encodeURIComponent(accountId)}`;
@@ -130,7 +128,21 @@ export function TicketCreate({
       .catch(() => setGroups([]));
     setAssetId('');
     setGroupId('');
+    setAssigneeId('');
   }, [accountId]);
+
+  useEffect(() => {
+    if (!accountId) {
+      setAgents([]);
+      return;
+    }
+    const params = new URLSearchParams({ accountId });
+    if (groupId) params.set('groupId', groupId);
+    void fetch(`/api/agents?${params.toString()}`)
+      .then((response) => response.json())
+      .then((payload) => setAgents(payload.data ?? []))
+      .catch(() => setAgents([]));
+  }, [accountId, groupId]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();

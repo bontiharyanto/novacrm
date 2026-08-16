@@ -142,9 +142,40 @@ async function groupMemberIds(tenantId: string, groupId: string) {
   return (data ?? []).map((row) => row.user_id as string);
 }
 
-export async function staffIdsAtLeast(tenantId: string, minRole: AppRole) {
+export async function staffIdsAtLeast(tenantId: string, minRole: AppRole, accountId?: string) {
   const supabase = inboxWriter() ?? (await createSupabaseServerClient());
-  const { data } = await supabase.from('profiles').select('id, role').eq('tenant_id', tenantId);
+  let userIds: string[] | null = null;
+  if (accountId) {
+    const [{ data: members }, { data: groups }] = await Promise.all([
+      supabase
+        .from('account_members')
+        .select('user_id')
+        .eq('tenant_id', tenantId)
+        .eq('account_id', accountId)
+        .neq('role', 'portal'),
+      supabase.from('assignment_groups').select('id').eq('tenant_id', tenantId).eq('account_id', accountId),
+    ]);
+    const groupIds = (groups ?? []).map((row) => row.id as string);
+    const { data: groupMembers } =
+      groupIds.length > 0
+        ? await supabase
+            .from('assignment_group_members')
+            .select('user_id')
+            .eq('tenant_id', tenantId)
+            .in('group_id', groupIds)
+        : { data: [] };
+    userIds = Array.from(
+      new Set([
+        ...(members ?? []).map((row) => row.user_id as string),
+        ...(groupMembers ?? []).map((row) => row.user_id as string),
+      ]),
+    );
+    if (userIds.length === 0) return [];
+  }
+
+  let query = supabase.from('profiles').select('id, role').eq('tenant_id', tenantId);
+  if (userIds) query = query.in('id', userIds);
+  const { data } = await query;
   const min = ROLE_RANK[minRole];
   return (data ?? [])
     .filter((row) => ROLE_RANK[parseAppRole(row.role)] >= min)
@@ -163,6 +194,7 @@ export async function notifyTicketInbox(input: {
     assigneeId?: string;
     requesterId?: string;
     groupId?: string;
+    accountId?: string;
   };
   message?: string;
 }) {
@@ -186,7 +218,10 @@ export async function notifyTicketInbox(input: {
       const queueIds = input.ticket.groupId
         ? await groupMemberIds(input.tenantId, input.ticket.groupId)
         : [];
-      const watchers = queueIds.length > 0 ? queueIds : await staffIdsAtLeast(input.tenantId, 'team_lead');
+      const watchers =
+        queueIds.length > 0
+          ? queueIds
+          : await staffIdsAtLeast(input.tenantId, 'team_lead', input.ticket.accountId);
       for (const userId of watchers) {
         staffDrafts.push({
           userId,
