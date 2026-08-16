@@ -10,7 +10,8 @@ import type { AssignmentGroup, AssignmentGroupKind } from '@/lib/org/schema';
 import { createSupabaseAdminClient, hasServiceRole } from '@/lib/supabase/admin';
 import { formatZodError } from '@/lib/validation/zod-error';
 import { requireAccountId } from '@/lib/accounts/scope';
-import { getPasswordPolicy, passwordStatus } from '@/lib/auth/password-policy';
+import { getPasswordPolicy } from '@/lib/auth/password-actions';
+import { passwordStatus } from '@/lib/auth/password-policy';
 
 type ProfileRow = {
   id: string;

@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { addGroupMember, removeGroupMember } from '@/lib/org/actions';
 import { resetUserMfa } from '@/lib/auth/mfa';
-import { resetUserPassword } from '@/lib/auth/password-policy';
+import { resetUserPassword } from '@/lib/auth/password-actions';
 import { updateUserAccess } from '@/lib/users/actions';
 import { Input } from '@/components/ui/input';
 import { formatDateLong } from '@/lib/utils/dates';

@@ -7,7 +7,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getSessionProfile } from '@/lib/auth/session';
 import { getPreferences } from '@/lib/preferences/server';
 import { getDictionary } from '@/lib/i18n';
-import { markPasswordChanged } from '@/lib/auth/password-policy';
+import { markPasswordChanged } from '@/lib/auth/password-actions';
 
 export async function signOutAction() {
   const supabase = await createSupabaseServerClient();

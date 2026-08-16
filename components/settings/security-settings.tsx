@@ -15,7 +15,8 @@ import {
   type MfaPolicy,
 } from '@/lib/auth/mfa';
 import { saveOwnTelegramChatId, saveOwnWhatsAppPhone } from '@/lib/settings/telegram-link';
-import { savePasswordPolicy, type PasswordPolicy } from '@/lib/auth/password-policy';
+import { savePasswordPolicy } from '@/lib/auth/password-actions';
+import type { PasswordPolicy } from '@/lib/auth/password-policy';
 import { ChangePasswordForm } from '@/components/auth/change-password-form';
 import { useI18n } from '@/components/layout/preferences-provider';
 

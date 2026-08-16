@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import { getSessionProfile } from '@/lib/auth/session';
 import { isStaffRole, isTenantAdminRole } from '@/lib/rbac/roles';
 import { getMfaPolicy, listOwnMfaFactors } from '@/lib/auth/mfa';
-import { getOwnPasswordStatus } from '@/lib/auth/password-policy';
+import { getOwnPasswordStatus } from '@/lib/auth/password-actions';
 import { SecuritySettings } from '@/components/settings/security-settings';
 
 export default async function SecurityPage({ searchParams }: { searchParams?: { enroll?: string; expired?: string } }) {
