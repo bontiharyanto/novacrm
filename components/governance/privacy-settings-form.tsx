@@ -95,12 +95,34 @@ export function PrivacySettingsForm() {
         <div>
           <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Controller · DPO · notice</p>
           <h1 className="text-2xl font-semibold text-zinc-50">Privacy notice</h1>
+          <p className="mt-1.5 text-sm text-zinc-500">
+            Portal Privacy, consent checkboxes, and the public notice stay off until you enable them here.
+          </p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge tone={isPublished ? 'success' : 'warning'}>{isPublished ? 'Published' : 'Draft'}</Badge>
+          <Badge tone={isPublished ? 'success' : 'warning'}>{isPublished ? 'Enabled on portal' : 'Disabled'}</Badge>
           <GovernanceNav />
         </div>
       </div>
+
+      <Card>
+        <CardContent className="flex flex-wrap items-center justify-between gap-3 p-5">
+          <div>
+            <p className="text-sm font-medium text-zinc-100">Portal privacy module</p>
+            <p className="mt-1 text-xs leading-5 text-zinc-500">
+              Off for now. Turn on to show Privacy in the customer portal and require consent on intake forms.
+            </p>
+          </div>
+          <Button
+            type="button"
+            variant={isPublished ? 'outline' : 'default'}
+            disabled={saving}
+            onClick={() => void save(!isPublished)}
+          >
+            {isPublished ? 'Disable on portal' : 'Enable on portal'}
+          </Button>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-4 lg:grid-cols-12">
         <Card className="lg:col-span-8">
@@ -119,12 +141,8 @@ export function PrivacySettingsForm() {
               <Button type="button" variant="outline" disabled={saving} onClick={() => void save()}>
                 {saving ? 'Saving...' : 'Save draft'}
               </Button>
-              <Button
-                type="button"
-                disabled={saving}
-                onClick={() => void save(true)}
-              >
-                Publish to portal
+              <Button type="button" disabled={saving} onClick={() => void save(true)}>
+                Save and enable
               </Button>
             </div>
           </CardContent>
@@ -176,7 +194,7 @@ export function PrivacySettingsForm() {
             </label>
             <label className="flex items-center gap-2 text-sm text-zinc-300">
               <input type="checkbox" checked={isPublished} onChange={(event) => setIsPublished(event.target.checked)} />
-              Published on portal
+              Enable Privacy on portal
             </label>
           </CardContent>
         </Card>

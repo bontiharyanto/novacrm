@@ -63,6 +63,7 @@ export function AssistantWidget({
   const [suggestions, setSuggestions] = useState<PortalTicketSuggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(variant === 'portal');
   const [proposal, setProposal] = useState<{ type: string; title: string; description: string } | null>(null);
+  const [detailTemplate, setDetailTemplate] = useState('');
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -94,6 +95,7 @@ export function AssistantWidget({
     setInput('');
     setShowSuggestions(variant === 'portal');
     setProposal(null);
+    setDetailTemplate('');
     sessionStorage.removeItem('novacrm_assistant_thread_portal');
     sessionStorage.removeItem('novacrm_assistant_thread_desk');
   }
@@ -144,6 +146,9 @@ export function AssistantWidget({
     const savedId = (payload.data.threadId as string | null) ?? threadId;
     setShowSuggestions(variant === 'portal' && Boolean(payload.data.intake) && !payload.data.proposal);
     setProposal(payload.data.proposal ?? null);
+    const template = typeof payload.data.detailTemplate === 'string' ? payload.data.detailTemplate : '';
+    setDetailTemplate(template);
+    if (template) setInput(template);
     if (payload.data.ticketId) {
       emitTicketsChanged();
       setProposal(null);
@@ -348,6 +353,15 @@ export function AssistantWidget({
               </button>
             ) : view === 'chat' ? (
               <div className="space-y-2">
+                {variant === 'portal' && detailTemplate && !proposal && !busy ? (
+                  <button
+                    type="button"
+                    onClick={() => setInput(detailTemplate)}
+                    className="flex h-9 w-full items-center justify-center rounded-lg border border-zinc-800 text-[13px] text-zinc-300 transition-colors hover:border-zinc-600 hover:text-zinc-50"
+                  >
+                    {t.assistant.fillTemplate}
+                  </button>
+                ) : null}
                 {variant === 'portal' && proposal && !busy ? (
                   <button
                     type="button"
@@ -373,7 +387,7 @@ export function AssistantWidget({
               >
                 <textarea
                   value={input}
-                  rows={1}
+                  rows={Math.min(6, Math.max(1, input.split('\n').length))}
                   onChange={(event) => setInput(event.target.value)}
                   onKeyDown={(event) => {
                     if (event.key === 'Enter' && !event.shiftKey) {

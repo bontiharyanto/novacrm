@@ -11,7 +11,10 @@ import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { addGroupMember, removeGroupMember } from '@/lib/org/actions';
 import { resetUserMfa } from '@/lib/auth/mfa';
+import { resetUserPassword } from '@/lib/auth/password-policy';
 import { updateUserAccess } from '@/lib/users/actions';
+import { Input } from '@/components/ui/input';
+import { formatDateLong } from '@/lib/utils/dates';
 import type { DirectoryUser } from '@/lib/users/schema';
 import { RoleSelect } from '@/components/users/role-select';
 import type { AppRole } from '@/lib/rbac/ability';
@@ -37,6 +40,7 @@ export function UserDetail({
   groups,
   canEdit,
   canResetMfa,
+  canResetPassword,
   actorRole,
 }: {
   user: DirectoryUser;
@@ -44,16 +48,19 @@ export function UserDetail({
   groups: AssignmentGroup[];
   canEdit: boolean;
   canResetMfa?: boolean;
+  canResetPassword?: boolean;
   actorRole: AppRole;
 }) {
   const router = useRouter();
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [role, setRole] = useState<AppRole>(user.role);
   const [orgUnitId, setOrgUnitId] = useState(user.orgUnitId ?? '');
   const [groupId, setGroupId] = useState('');
   const [message, setMessage] = useState('');
   const [confirmReset, setConfirmReset] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const [tempPassword, setTempPassword] = useState('');
+  const [resettingPassword, setResettingPassword] = useState(false);
   const available = groups.filter((group) => !user.groups.some((item) => item.groupId === group.id));
 
   async function save() {
@@ -81,6 +88,13 @@ export function UserDetail({
             {user.supportLevel ? <Badge tone="warning">{supportTierLabel[user.supportLevel]}</Badge> : null}
           </div>
           <p className="mt-1 text-sm text-zinc-500">{user.email ?? 'No email'}</p>
+          <p className="mt-2 text-xs text-zinc-500">
+            {t.passwordPolicy.status}:{' '}
+            <span className={user.passwordExpired ? 'text-amber-300' : 'text-zinc-300'}>
+              {user.passwordExpired ? t.passwordPolicy.due : t.passwordPolicy.ok}
+            </span>
+            {user.passwordChangedAt ? ` · ${t.passwordPolicy.lastChanged} ${formatDateLong(user.passwordChangedAt, locale)}` : ''}
+          </p>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -178,6 +192,46 @@ export function UserDetail({
             )}
           </CardContent>
         </Card>
+        {canResetPassword ? (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm text-zinc-400">{t.passwordPolicy.reset}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-xs leading-5 text-zinc-500">{t.passwordPolicy.resetHint}</p>
+              <Input
+                type="password"
+                autoComplete="new-password"
+                value={tempPassword}
+                onChange={(event) => setTempPassword(event.target.value)}
+                placeholder={t.portal.newPassword}
+              />
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                disabled={resettingPassword || tempPassword.trim().length < 8}
+                onClick={() => {
+                  setResettingPassword(true);
+                  void resetUserPassword(user.id, tempPassword).then((result) => {
+                    setResettingPassword(false);
+                    if (result.error) {
+                      setMessage(result.error);
+                      toastError(result.error);
+                      return;
+                    }
+                    setTempPassword('');
+                    setMessage(t.passwordPolicy.resetDone);
+                    toastSuccess(t.passwordPolicy.resetDone);
+                    router.refresh();
+                  });
+                }}
+              >
+                {t.passwordPolicy.reset}
+              </Button>
+            </CardContent>
+          </Card>
+        ) : null}
         {canResetMfa ? (
           <Card>
             <CardHeader>

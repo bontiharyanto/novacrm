@@ -4,6 +4,7 @@ import type { Locale } from '@/lib/preferences';
 import { isTicketType, stageLabel, ticketTypeMeta, type TicketType } from '@/lib/tickets/process';
 import type { TicketStatus } from '@/lib/tickets/schema';
 import type { AppRole } from '@/lib/rbac/roles';
+import type { DsarStatus, DsarType } from '@/lib/governance/schema';
 
 export function localizedType(t: Dictionary, type: string | null | undefined) {
   if (isTicketType(type)) return t.tickets.type[type];
@@ -34,4 +35,16 @@ export function localizedRoleHint(t: Dictionary, role: AppRole) {
 
 export function dictionaryFor(locale: Locale) {
   return getDictionary(locale);
+}
+
+export function localizedDsarType(t: Dictionary, type: string) {
+  return t.portal.dsarType[type as DsarType] ?? type;
+}
+
+export function localizedDsarHint(t: Dictionary, type: string) {
+  return t.portal.dsarTypeHint[type as DsarType] ?? type;
+}
+
+export function localizedDsarStatus(t: Dictionary, status: string) {
+  return t.portal.dsarStatus[status as DsarStatus] ?? status.replace('_', ' ');
 }

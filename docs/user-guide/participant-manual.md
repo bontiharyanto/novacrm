@@ -33,7 +33,7 @@ Every record is isolated by **tenant**. On this demo tenant you also switch **ac
 
 | Role | Typical job | Home |
 | --- | --- | --- |
-| `customer` | Request service, track tickets, privacy | `/portal` |
+| `customer` | Request service, track tickets, privacy (if enabled) | `/portal` |
 | `agent` | Work tickets, assets, CMDB | `/dashboard` |
 | `team_lead` | Assign, escalate, read users and WFM | `/dashboard` |
 | `supervisor` | SLA, WFM roster, catalog | `/dashboard` |
@@ -342,7 +342,7 @@ Login as `customer@novacrm.app`.
 | **My tickets** | Track existing work |
 | **Catalog** | Structured request (record producer) |
 | **New request** | Freeform ticket |
-| **Privacy** | Privacy notice and DSAR |
+| **Privacy** | Privacy notice and DSAR (only after admin **Enable on portal**) |
 
 ## Lab 7 — Portal round-trip
 
@@ -416,15 +416,17 @@ Never paste API keys into chat or slides.
 | RoPA | Record of processing activities |
 | DSAR | Data subject request — **30 days** |
 | Breach | Notify clock **72 hours** from discovery |
-| Privacy notice | Shown on portal **Privacy** |
+| Privacy notice | Off on the portal until admin **Enable on portal** |
 
-Customer: `/portal/privacy`.
+Customer: `/portal/privacy` only when enabled. Public `/privacy` follows the same switch.
+
+Password rotation: portal and desk passwords expire every **30 days**. Expired users can only change the password. Admin resets at `/users/[id]`. Policy: Settings → Security.
 
 ## Lab 11 — Governance (full day)
 
 1. Open **Governance**.
 2. Open DSAR queue — note due dates.
-3. As customer, open **Privacy** (do not file a real DSAR against production data).
+3. As admin, optionally **Enable on portal**, then as customer open **Privacy** (do not file a real DSAR against production data).
 
 ## Lab 11b — Insights and WFM (full day)
 

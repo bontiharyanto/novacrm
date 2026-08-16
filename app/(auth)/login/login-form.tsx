@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useFormState, useFormStatus } from 'react-dom';
 import { useSearchParams } from 'next/navigation';
 import { Eye, EyeOff } from 'lucide-react';
@@ -13,6 +14,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { PreferenceControls } from '@/components/layout/preference-controls';
 import { useI18n } from '@/components/layout/preferences-provider';
 import { SsoButtons } from '@/components/auth/sso-buttons';
+import { usePublicPrivacyEnabled } from '@/components/portal/privacy-module';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -26,6 +28,7 @@ function SubmitButton() {
 
 export function LoginForm() {
   const { t } = useI18n();
+  const { enabled: privacyEnabled } = usePublicPrivacyEnabled();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -103,6 +106,14 @@ export function LoginForm() {
             <SubmitButton />
           </form>
           <SsoButtons tenantSlug={tenantSlug || undefined} nextPath={nextPath || undefined} />
+          {privacyEnabled ? (
+            <p className="text-center text-[12px] leading-5 text-zinc-500">
+              {t.pdp.loginAck}{' '}
+              <Link href="/privacy" className="nova-accent-text underline-offset-2 hover:underline">
+                {t.pdp.readNotice}
+              </Link>
+            </p>
+          ) : null}
         </CardContent>
       </Card>
     </div>

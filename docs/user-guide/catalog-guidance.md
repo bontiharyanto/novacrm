@@ -195,6 +195,8 @@ Pasang antivirus korporat ke perangkat user
 
 Uji portal: login `customer@novacrm.app` → **Catalog** → kartu **Install Antivirus** → submit. Agent melihat tiket yang sama di **Requests**.
 
+Ask AI di portal memakai **template yang sama** (lokasi / terdampak / kontak) untuk semua saran katalog di chat. Kartu `/portal/catalog/{id}` tetap form variabel item itu.
+
 ---
 
 ## 7. Bedanya dengan item yang sudah ada

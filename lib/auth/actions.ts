@@ -7,6 +7,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getSessionProfile } from '@/lib/auth/session';
 import { getPreferences } from '@/lib/preferences/server';
 import { getDictionary } from '@/lib/i18n';
+import { markPasswordChanged } from '@/lib/auth/password-policy';
 
 export async function signOutAction() {
   const supabase = await createSupabaseServerClient();
@@ -49,5 +50,6 @@ export async function changeOwnPassword(currentPassword: string, nextPassword: s
   if (error) {
     return { data: null, error: error.message };
   }
+  await markPasswordChanged(session.userId);
   return { data: { ok: true }, error: null };
 }

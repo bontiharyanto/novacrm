@@ -3,6 +3,7 @@ export const en = {
     name: 'NovaCRM',
     operations: 'Operations',
     portal: 'Portal',
+    copyright: 'Copyright by @RoughTechnolgy',
   },
   nav: {
     overview: 'Overview',
@@ -86,6 +87,23 @@ export const en = {
     ssoEmail: 'The identity provider did not return an email. Ask the IdP admin to release the email claim.',
     ssoDenied: 'That email domain is not allowed for this tenant. Use a work account or email login.',
     tenantPaused: 'This tenant is paused or archived. Ask the platform owner to resume it.',
+    passwordExpired: 'Your password expired. Sign in, then change it to continue.',
+  },
+  passwordPolicy: {
+    title: 'Password rotation',
+    hint: 'Passwords expire every 30 days for portal and operations logins. An admin can reset a locked account.',
+    expired: 'This password is older than 30 days. Change it to open the portal or operations desk.',
+    daysLeft: '{{n}} days left before this password expires.',
+    enable: 'Require password change every',
+    days: 'days',
+    save: 'Save password policy',
+    reset: 'Reset password',
+    resetHint: 'Set a temporary password. The 30-day clock starts again. Tell the user out of band.',
+    resetDone: 'Password reset. Share the new password with the user.',
+    lastChanged: 'Last changed',
+    status: 'Password',
+    ok: 'Valid',
+    due: 'Expired',
   },
   accountPick: {
     title: 'Filter desk',
@@ -160,14 +178,50 @@ export const en = {
     status: 'Status',
     privacyKicker: 'UU PDP',
     privacyNotice: 'Privacy notice',
-    privacyUnpublished: 'The controller has not published a privacy notice yet.',
+    privacyNoticeTitle: 'NovaCRM privacy notice',
+    privacyNoticeBody:
+      'NovaCRM processes personal data to deliver ITSM services: tickets, assets, catalog, and notifications.\n\nThe primary legal bases are the service contract and UU PDP (Law 27/2022).\n\nIf you keep using this portal for 30 days without submitting an objection, that continued use is treated as agreement to this notice. You can still object at any time.\n\nYou can request access, correction, erasure, restriction, portability, or objection from the Privacy portal. We respond to rights requests within 30 days. That response SLA is separate from the 30-day deemed-agreement rule.\n\nData breaches are reported to the authority within 72 hours when required.\n\nContact the DPO using the details on this page.',
+    privacyUnpublished: 'The controller has not published a custom notice. The standard notice above still applies.',
+    privacyControllerText: 'Controller text',
+    privacyControllerTextHint: 'Published by the controller in its original language.',
+    consentKicker: 'Deemed agreement',
+    consentPending:
+      'Continued use of this portal for 30 days without an objection is treated as agreement to the privacy notice. Day {{day}} of 30 · {{remaining}} days left.',
+    consentDeemed:
+      'You are treated as having agreed to the privacy notice on {{date}} because the portal continued to be used without an objection. You can still submit an objection.',
+    consentReadMore: 'Read the privacy notice',
     controller: 'Controller',
     dpo: 'Data protection officer',
     myRequests: 'My requests',
     noRequests: 'You have not submitted a rights request.',
     submitRights: 'Submit a rights request',
-    rightsHint: 'Access, correct, or erase personal data held in this workspace. Response SLA is 30 days.',
+    rightsHint:
+      'Access, correct, erase, or object to personal data in this workspace. Rights-request SLA is 30 days — separate from the 30-day deemed-agreement rule.',
     right: 'Right',
+    dsarType: {
+      access: 'Access',
+      rectification: 'Rectification',
+      erasure: 'Erasure',
+      restriction: 'Restriction',
+      portability: 'Portability',
+      objection: 'Objection',
+    },
+    dsarTypeHint: {
+      access: 'Copy of personal data',
+      rectification: 'Correct inaccurate data',
+      erasure: 'Delete when no longer needed',
+      restriction: 'Limit processing',
+      portability: 'Export in a machine-readable form',
+      objection: 'Object to processing',
+    },
+    dsarStatus: {
+      received: 'Received',
+      verifying: 'Verifying',
+      in_progress: 'In progress',
+      waiting: 'Waiting',
+      completed: 'Completed',
+      rejected: 'Rejected',
+    },
     subject: 'Subject',
     emailOnFile: 'Email on file',
     noAdditionalDetail: 'No additional detail.',
@@ -548,6 +602,8 @@ export const en = {
     suggestOther: 'Not in the list? Fill the Catalog form (location, impact, contact). Do not type “not in the list”.',
     intakeAsk: 'Pick a suggestion, or fill the Catalog form. Ask AI will ask for location, impact, and contact before review.',
     intakeDetails: 'The ticket cannot be reviewed yet. Answer these first:',
+    intakeTemplateHint: 'Copy the template, fill in after each colon, then send.',
+    fillTemplate: 'Fill template',
     proposal: 'Recommendation: **{{type}}** — {{title}}',
     proposalEstate: 'Related assets / CIs on your account:',
     proposalNoEstate:
@@ -785,6 +841,48 @@ export const en = {
       admin: 'Tenant settings',
       superadmin: 'Platform',
     },
+  },
+  pdp: {
+    noticeTitle: 'Privacy notice',
+    noticeUpdated: 'Last updated: August 2026',
+    noticeIntro:
+      '{{controller}} (“we”) is committed to protecting your privacy. This notice explains how we collect, use, process, and protect personal data when you use NovaCRM ITSM services, in accordance with Law No. 27 of 2022 on Personal Data Protection (UU PDP).',
+    dataTitle: '1. Personal data we collect',
+    dataBody:
+      'Through NovaCRM we may collect:\n• Identity: full name, display name, or organisation name.\n• Contact: email, phone / WhatsApp, and office or site address.\n• Service data: tickets, comments, catalog requests, assets or CIs linked to you, and notification history.\n• Account data: role, account membership, and sign-in activity needed to operate the portal.',
+    purposeTitle: '2. Purpose of processing',
+    purposeBody:
+      'We process personal data only for specific, lawful purposes:\n• Provide, manage, and improve the ITSM services you request.\n• Follow up tickets, customer support, and account administration.\n• Send operational notifications (status, comments, SLA).\n• Send marketing or product offers only if you give a separate opt-in.\n• Meet legal and regulatory duties in Indonesia.',
+    basisTitle: '3. Legal bases',
+    basisBody:
+      'We process data on these bases under UU PDP:\n• Consent: you give explicit consent for a stated purpose.\n• Contract: processing is required to deliver the service you agreed.\n• Legal obligation: including incident reporting where required.\n• Legitimate interest: internal customer-relationship management that does not override your rights.\nContinued use of the portal for 30 days without an objection is treated as agreement to this notice. You may still object at any time. Rights-request SLA is a separate 30-day clock.',
+    rightsTitle: '4. Your rights as a data subject',
+    rightsBody:
+      'Under UU PDP you may request:\n• Access: a copy of personal data we hold.\n• Rectification: correction of inaccurate data.\n• Erasure: deletion or destruction, unless an active contract, open ticket, or legal retention still applies.\n• Restriction and portability.\n• Withdrawal of consent or objection to processing, including marketing, at any time.\nSubmit requests from the Privacy portal. We respond within 30 days.',
+    securityTitle: '5. Security and retention',
+    securityBody:
+      'We apply technical and organisational controls to protect data from unauthorised access, change, or disclosure. Data is kept only as long as needed for the collection purpose or as required by law. Personal-data breaches are reported to the authority within 72 hours when required.',
+    cookiesTitle: '6. Cookies and local preferences',
+    cookiesBody:
+      'NovaCRM uses necessary cookies only: theme (`novacrm_theme`), language (`novacrm_locale`), first privacy-notice date (`novacrm_privacy_seen`), and a one-time welcome flag. These cookies operate the UI on stateless web replicas. They are not used for advertising analytics.',
+    processorsTitle: '7. Processors and third parties',
+    processorsBody:
+      'We may share data with processors acting on our instructions: email (Resend / Postmark), WhatsApp (Fonnte / Whacenter / Wabot), Telegram Bot API, object storage (MinIO / S3), and hosting. We do not sell personal data. Cross-border transfer is allowed only if the controller enables it and a lawful basis exists.',
+    contactTitle: '8. Contact the DPO',
+    contactBody:
+      'To exercise your rights, ask a question, or report a privacy issue, contact the Data Protection Officer:\n• Name: {{dpoName}}\n• Email: {{dpoEmail}}\n• Phone / WhatsApp: {{dpoPhone}}\n• Office: {{address}}',
+    consentClause:
+      'I consent to {{controller}} processing my personal data (identity, contact, and service history) to provide ITSM services, follow up requests, and meet UU PDP duties. I may withdraw this consent at any time through Privacy.',
+    captureClause:
+      'By submitting this form I agree that my name, email, phone / WhatsApp, and request details are collected for service delivery, follow-up, and ticket records. Data is not used for marketing unless I give a separate opt-in.',
+    erasureClause:
+      'I request erasure or destruction of my personal data under UU PDP. I understand deletion may be delayed if an active contract, open ticket, or legal retention still applies. This request will be reviewed within 30 days.',
+    withdrawClause:
+      'I withdraw my previous consent to processing and/or object to further processing of my personal data. Operational notices required to close open tickets may continue until those tickets are completed.',
+    consentRequired: 'Confirm the privacy statement to continue.',
+    loginAck: 'By signing in you acknowledge processing of account data under the Privacy notice.',
+    readNotice: 'Privacy notice',
+    confirmConsent: 'I have read and agree',
   },
 };
 

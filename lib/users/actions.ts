@@ -10,12 +10,14 @@ import type { AssignmentGroup, AssignmentGroupKind } from '@/lib/org/schema';
 import { createSupabaseAdminClient, hasServiceRole } from '@/lib/supabase/admin';
 import { formatZodError } from '@/lib/validation/zod-error';
 import { requireAccountId } from '@/lib/accounts/scope';
+import { getPasswordPolicy, passwordStatus } from '@/lib/auth/password-policy';
 
 type ProfileRow = {
   id: string;
   full_name: string;
   email?: string | null;
   phone?: string | null;
+  password_changed_at?: string | null;
   role: DirectoryUser['role'];
   org_unit_id?: string | null;
 };
@@ -25,14 +27,19 @@ function mapUsers(
   units: Map<string, string>,
   groupsByUser: Map<string, DirectoryUser['groups']>,
   accountsByUser: Map<string, DirectoryUser['accounts']>,
+  policy?: { enabled: boolean; maxAgeDays: number },
 ): DirectoryUser[] {
   return profiles.map((row) => {
     const groups = groupsByUser.get(row.id) ?? [];
+    const status = policy ? passwordStatus(row.password_changed_at, policy) : undefined;
     return {
       id: row.id,
       fullName: row.full_name,
       email: row.email ?? undefined,
       phone: row.phone ?? undefined,
+      passwordChangedAt: row.password_changed_at ?? undefined,
+      passwordExpired: status?.expired,
+      passwordDaysLeft: status?.daysLeft,
       role: row.role,
       orgUnitId: row.org_unit_id ?? undefined,
       orgUnitName: row.org_unit_id ? units.get(row.org_unit_id) : undefined,
@@ -142,7 +149,7 @@ export async function listDirectoryUsers(): Promise<DirectoryUser[]> {
 
   const { data, error } = await supabase
     .from('profiles')
-    .select('id, full_name, email, phone, role, org_unit_id')
+    .select('id, full_name, email, phone, role, org_unit_id, password_changed_at')
     .eq('tenant_id', session.profile.tenantId)
     .in('id', userIds)
     .order('full_name', { ascending: true });
@@ -152,7 +159,8 @@ export async function listDirectoryUsers(): Promise<DirectoryUser[]> {
     session.profile.tenantId,
     data.map((row) => row.id),
   );
-  return mapUsers(data as ProfileRow[], maps.unitMap, maps.groupsByUser, maps.accountsByUser);
+  const policy = await getPasswordPolicy(session.profile.tenantId);
+  return mapUsers(data as ProfileRow[], maps.unitMap, maps.groupsByUser, maps.accountsByUser, policy);
 }
 
 export async function getDirectoryUser(userId: string): Promise<DirectoryUser | null> {
@@ -162,13 +170,14 @@ export async function getDirectoryUser(userId: string): Promise<DirectoryUser | 
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase
     .from('profiles')
-    .select('id, full_name, email, phone, role, org_unit_id')
+    .select('id, full_name, email, phone, role, org_unit_id, password_changed_at')
     .eq('tenant_id', session.profile.tenantId)
     .eq('id', userId)
     .maybeSingle();
   if (!data) return null;
   const maps = await loadDirectoryMaps(session.profile.tenantId, [data.id]);
-  return mapUsers([data as ProfileRow], maps.unitMap, maps.groupsByUser, maps.accountsByUser)[0] ?? null;
+  const policy = await getPasswordPolicy(session.profile.tenantId);
+  return mapUsers([data as ProfileRow], maps.unitMap, maps.groupsByUser, maps.accountsByUser, policy)[0] ?? null;
 }
 
 export async function listDirectoryGroups(): Promise<AssignmentGroup[]> {

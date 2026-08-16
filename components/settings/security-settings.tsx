@@ -15,6 +15,9 @@ import {
   type MfaPolicy,
 } from '@/lib/auth/mfa';
 import { saveOwnTelegramChatId, saveOwnWhatsAppPhone } from '@/lib/settings/telegram-link';
+import { savePasswordPolicy, type PasswordPolicy } from '@/lib/auth/password-policy';
+import { ChangePasswordForm } from '@/components/auth/change-password-form';
+import { useI18n } from '@/components/layout/preferences-provider';
 
 type Factor = { id: string; status?: string; friendly_name?: string };
 
@@ -23,6 +26,9 @@ export function SecuritySettings({
   factors,
   canToggle,
   forceEnroll,
+  forcePassword,
+  passwordPolicy,
+  passwordDaysLeft,
   telegramChatId: initialTelegramChatId = '',
   whatsappPhone: initialWhatsAppPhone = '',
 }: {
@@ -30,10 +36,14 @@ export function SecuritySettings({
   factors: Factor[];
   canToggle: boolean;
   forceEnroll?: boolean;
+  forcePassword?: boolean;
+  passwordPolicy?: PasswordPolicy;
+  passwordDaysLeft?: number;
   telegramChatId?: string;
   whatsappPhone?: string;
 }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [required, setRequired] = useState(policy.required);
   const [message, setMessage] = useState('');
   const [saving, setSaving] = useState(false);
@@ -41,6 +51,8 @@ export function SecuritySettings({
   const [code, setCode] = useState('');
   const [telegramChatId, setTelegramChatId] = useState(initialTelegramChatId);
   const [whatsappPhone, setWhatsappPhone] = useState(initialWhatsAppPhone);
+  const [rotationEnabled, setRotationEnabled] = useState(passwordPolicy?.enabled ?? true);
+  const [maxAgeDays, setMaxAgeDays] = useState(String(passwordPolicy?.maxAgeDays ?? 30));
 
   async function saveToggle() {
     setSaving(true);
@@ -97,6 +109,60 @@ export function SecuritySettings({
           </p>
         ) : null}
         {message ? <p className="text-sm text-zinc-400">{message}</p> : null}
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">{t.portal.changePassword}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {!forcePassword && passwordDaysLeft != null ? (
+              <p className="text-xs text-zinc-500">{t.passwordPolicy.daysLeft.replace('{{n}}', String(passwordDaysLeft))}</p>
+            ) : null}
+            <ChangePasswordForm forced={forcePassword} afterHref={forcePassword ? '/dashboard' : undefined} />
+          </CardContent>
+        </Card>
+
+        {canToggle ? (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">{t.passwordPolicy.title}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-xs leading-5 text-zinc-500">{t.passwordPolicy.hint}</p>
+              <label className="flex items-center gap-2 text-sm text-zinc-200">
+                <input type="checkbox" checked={rotationEnabled} onChange={(event) => setRotationEnabled(event.target.checked)} />
+                {t.passwordPolicy.enable}
+              </label>
+              <div className="flex items-center gap-2">
+                <Input
+                  className="w-24"
+                  inputMode="numeric"
+                  value={maxAgeDays}
+                  onChange={(event) => setMaxAgeDays(event.target.value)}
+                />
+                <span className="text-sm text-zinc-500">{t.passwordPolicy.days}</span>
+              </div>
+              <Button
+                type="button"
+                disabled={saving}
+                onClick={() => {
+                  void (async () => {
+                    setSaving(true);
+                    const result = await savePasswordPolicy({
+                      enabled: rotationEnabled,
+                      maxAgeDays: Number(maxAgeDays),
+                    });
+                    setSaving(false);
+                    setMessage(result.error ?? t.common.saved);
+                    if (!result.error) router.refresh();
+                  })();
+                }}
+              >
+                {t.passwordPolicy.save}
+              </Button>
+            </CardContent>
+          </Card>
+        ) : null}
 
         {canToggle ? (
           <Card>

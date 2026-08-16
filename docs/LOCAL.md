@@ -90,18 +90,18 @@ WFM desk: [http://localhost:3000/wfm](http://localhost:3000/wfm) — occupancy, 
 6. CMDB: Graph view is **per account**. Switch to **Bank Nusantara** for WAN Indosat → FW → core → Lt.2 AP (`10.20.50.0/24` VLAN 50). Sidebar lists IP segments. New CI: site + network role + CIDR/VLAN/gateway. **Add card** di sidebar untuk tipe CI baru (mis. CCTV). Open a CI to add more segments or see impact.
 7. Attach a file (MinIO console: [http://localhost:9001](http://localhost:9001))
 8. Settings → **Appearance** for **Midnight / Daylight** theme and **EN / ID**. **Integrations**: AI defaults to **Groq (free)**. Create a key at [console.groq.com](https://console.groq.com/keys), paste, **Test connection**. Then click **Tanya AI** on the top bar (or [Assistant](http://localhost:3000/assistant)). Email test inbox: [Mailpit](http://127.0.0.1:54324)
-9. Sign out, login as **customer** → [portal](http://localhost:3000/portal): **Catalog** to submit a record producer, or **New request** for a freeform ticket, then track `/portal/{id}`
+9. Sign out, login as **customer** → [portal](http://localhost:3000/portal). After login the logo splash shows **Copyright by @RoughTechnolgy**. **Catalog** submits a record producer, or **New request** / Ask AI for a freeform ticket (Ask AI asks location, impact, contact — fill the template, then confirm). Track `/portal/{id}`. **Privacy** is off until admin enables it (Governance → Privacy notice → **Enable on portal**). Public notice: `/privacy` only when enabled.
 10. Automation: [Workflows](http://localhost:3000/workflows) → **New flow** → pick **Standard / Normal / Complex**. Canvas supports condition (Yes/No) nodes. Ticket create/status/comment, **machine alert**, and **inbound message** can run BullMQ actions (assign, email, WhatsApp, Telegram, status, asset). Check **Recent runs** on the flow.
     - Auto-create ticket: `POST /api/webhooks/whatsapp` (secret `local-whatsapp-secret`), `/api/webhooks/telegram`, `/api/webhooks/email`, `/api/webhooks/alerts` (Prometheus/Grafana JSON), `/api/webhooks/generic`. Repeat alerts within 24h update the same ticket.
 11. Catalog (agent): [http://localhost:3000/catalog](http://localhost:3000/catalog) — items, variable sets, record producer type. Field-by-field guide: [docs/user-guide/catalog-guidance.md](user-guide/catalog-guidance.md)
 12. CAB: [http://localhost:3000/cab](http://localhost:3000/cab) — review queue, calendar, approve/reject/defer on the change record
 13. Dashboard KPIs + aging; Reports 7/30/90 or custom dates; preview then CSV / Excel / PDF. Vendor / UC queue compares Fortinet vs Indosat (open, OLA/UC breach, avg queue, service credit). CSAT average from portal ratings after resolve. Customer email/WhatsApp after resolve links to `/portal/{id}` (Rate this ticket); staff email still opens `/tickets/{id}`.
-14. Governance / UU PDP: [http://localhost:3000/governance](http://localhost:3000/governance) — RoPA, DSAR 30d, breach 72h, privacy notice. Customer: [portal/privacy](http://localhost:3000/portal/privacy)
+14. Governance / UU PDP: [http://localhost:3000/governance](http://localhost:3000/governance) — RoPA, DSAR 30d, breach 72h, privacy notice. Portal Privacy, consent checkboxes, and `/privacy` stay **off** until **Enable on portal**. Then customer: [portal/privacy](http://localhost:3000/portal/privacy).
 15. Switch **account** in the sidebar (Internal / Bank Nusantara / Garuda / **All**). Assets + CMDB + tickets are scoped. Manage at [Accounts](http://localhost:3000/accounts)
 16. Organization: [http://localhost:3000/org](http://localhost:3000/org) — Internal divisi/unit vs assignment groups. Tickets can queue to a group; filter **My groups**
 17. SLA: [http://localhost:3000/sla](http://localhost:3000/sla) — per-account matrix (type × priority) + calendar. Switch to Bank for Gold INC P1 15m/4h. Waiting/hold pauses the clock. New tickets snapshot the agreement. **Underpinning contracts** (UC) for Fortinet / Indosat live on the same page; link them on vendor groups at `/org`.
 18. Hold / escalate: open a ticket → **Hold** + reason `Pending vendor` (case number) pauses SLA. **Escalate L2 / L3** queues Internal `L2 Network` / `L3 Infra` and keeps the clock running. Demo: Bank *WiFi lantai 2* (vendor hold); Internal *Backup gagal* already on L2.
-19. Users: [http://localhost:3000/users](http://localhost:3000/users) — **New user** (admin) creates a login. **Access** = `customer` / `agent` / `team_lead` / `supervisor` / `manager` / `admin` / `superadmin`. **Level** = L1/L2/L3 from group membership. Admin can **Reset authenticator** on a staff profile after an identity check. Superadmin: [Tenants](http://localhost:3000/tenants) creates a client workspace + first admin (Internal account, Service Desk L1, office-hours SLA). Pause/archive blocks login. Lab tenant cannot be paused.
+19. Users: [http://localhost:3000/users](http://localhost:3000/users) — **New user** (admin) creates a login. **Access** = `customer` / `agent` / `team_lead` / `supervisor` / `manager` / `admin` / `superadmin`. **Level** = L1/L2/L3 from group membership. Admin can **Reset authenticator** and **Reset password** on a profile after an identity check. Password rotation (portal + desk) is **30 days**; expired users can only open the change-password page. Policy: Settings → **Security**. Superadmin: [Tenants](http://localhost:3000/tenants) creates a client workspace + first admin (Internal account, Service Desk L1, office-hours SLA). Pause/archive blocks login. Lab tenant cannot be paused.
 20. `http://localhost:3000/api/health` should show Redis `up`
 21. Sysadmin Ops: [http://127.0.0.1:3100](http://127.0.0.1:3100) — service health, BullMQ queues (`notifications`, `workflows`, `wfm`), retry failed jobs. Independent of the desk. Details: [OPS.md](OPS.md). Scale workers: [WORKERS.md](WORKERS.md). Optional: `OPS_TOKEN` + header `x-ops-token`.
 22. AI Insights: [http://localhost:3000/insights](http://localhost:3000/insights) — four cards (queue pressure, SLA risk, workforce load, account health). Needs Groq (or another AI plugin) on **Integrations**.
@@ -128,6 +128,8 @@ npm run local:stop
 
 That stops local Supabase, Redis, and MinIO.
 
+After a laptop restart, Docker Desktop and `localhost:3000` are down. Start Docker, wait until it is ready, then `npx supabase start` (do **not** `db reset`) and `npm run local:dev`.
+
 New migration on an existing local DB (do **not** `supabase db reset` — it wipes lab data):
 
 ```bash
@@ -139,6 +141,7 @@ docker exec -i supabase_db_novacrm psql -U postgres -d postgres < supabase/migra
 docker exec -i supabase_db_novacrm psql -U postgres -d postgres < supabase/migrations/20250815180000_tenant_mfa.sql
 docker exec -i supabase_db_novacrm psql -U postgres -d postgres < supabase/migrations/20250815190000_csat_uc_credits.sql
 docker exec -i supabase_db_novacrm psql -U postgres -d postgres < supabase/migrations/20250815200000_tenant_platform.sql
+docker exec -i supabase_db_novacrm psql -U postgres -d postgres < supabase/migrations/20250816110000_password_rotation.sql
 ```
 
 Then re-run only the new `UPDATE`/`INSERT` at the end of `supabase/seed.sql` if those rows are missing.

@@ -175,7 +175,14 @@ const SYMPTOM_RE = new RegExp(
 
 const LOCATION_RE = new RegExp(
   [
-    'lokasi\\s*:',
+    '\\blokasi\\b',
+    'nama perangkat',
+    'nama alat',
+    'device name',
+    '\\bperangkat\\b',
+    '\\bdevice\\b',
+    '\\bkamera\\b',
+    '\\bcam\\b',
     'lantai',
     'lt\\.?\\s*\\d',
     'floor',
@@ -201,6 +208,26 @@ const LOCATION_RE = new RegExp(
     'jakarta',
     'surabaya',
     'bandung',
+    'medan',
+    'semarang',
+    'yogyakarta',
+    'jogja',
+    'denpasar',
+    'bali',
+    'makassar',
+    'palembang',
+    'balikpapan',
+    'manado',
+    'malang',
+    'bogor',
+    'depok',
+    'tangerang',
+    'bekasi',
+    'batam',
+    'padang',
+    'pekanbaru',
+    'banjarmasin',
+    'pontianak',
     'datacenter',
     'data center',
     '\\bdc\\b',
@@ -216,8 +243,9 @@ const LOCATION_RE = new RegExp(
 
 const IMPACT_RE = new RegExp(
   [
-    'terdampak\\s*:',
+    '\\bterdampak\\b',
     'affected',
+    '\\bimpact\\b',
     'pengguna',
     'user\\b',
     'users',
@@ -247,12 +275,83 @@ const IMPACT_RE = new RegExp(
     'cs\\b',
     'area',
     'cabang',
+    'pelindo',
+    'perusahaan',
+    'organisasi',
+    'tenant',
   ].join('|'),
   'i',
 );
 
 const CONTACT_RE =
-  /(kontak\s*:|hubungi|wa\b|whatsapp|telepon|telp|hp\b|ext\.?|08\d{7,}|\+62\d{7,}|62\d{8,}|[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,})/i;
+  /(kontak|hubungi|dihubungi|wa\b|whatsapp|telepon|telp|hp\b|ext\.?|08\d{7,}|\+62\d{7,}|62\d{8,}|[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,})/i;
+
+const NEXT_FIELD = String.raw`(?=\s+(?:lokasi|terdampak|kontak|masalah|nomor|email|siapa|location|affected|contact|device)\b|$)`;
+
+export const DETAIL_FIELD_LABELS: Record<'en' | 'id', Record<DetailField, string>> = {
+  id: {
+    symptom: 'Apa masalahnya',
+    location: 'Lokasi / nama perangkat',
+    impact: 'Siapa yang terdampak',
+    contact: 'Nomor atau email yang bisa dihubungi',
+  },
+  en: {
+    symptom: 'What is wrong',
+    location: 'Location / device name',
+    impact: 'Who is affected',
+    contact: 'Phone or email to contact',
+  },
+};
+
+export function buildDetailTemplate(missing: DetailField[], locale: 'en' | 'id' = 'id') {
+  return missing.map((field) => `${DETAIL_FIELD_LABELS[locale][field]}: `).join('\n');
+}
+
+function labeledValue(text: string, labels: string) {
+  const match = text.match(new RegExp(`(?:${labels})[^\\n:]{0,48}:[ \\t]*([^\\n]*)${NEXT_FIELD}`, 'i'));
+  return match?.[1]?.replace(/[|/,-]+$/g, '').trim() ?? '';
+}
+
+function hasLabelColon(text: string, labels: string) {
+  return new RegExp(`(?:${labels})[^\\n:]{0,48}:`, 'i').test(text);
+}
+
+function leftoverAfter(text: string, noise: RegExp) {
+  return text
+    .replace(noise, ' ')
+    .replace(/\b(siapa|yang|nomor|atau|email|bisa|dihubungi|what|who|phone|contact)\b/gi, ' ')
+    .replace(/[:/|,-]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+export function hasLocation(text: string) {
+  const labels = 'lokasi|nama perangkat|nama alat|location|device name|perangkat';
+  if (hasLabelColon(text, labels)) return labeledValue(text, labels).length >= 2;
+  if (LOCATION_RE.test(text) && leftoverAfter(text, /lokasi|nama|perangkat|alat|device|di/gi).length >= 2) return true;
+  return LOCATION_RE.test(text) && !/^\s*(lokasi|nama perangkat|device)\s*$/i.test(text);
+}
+
+export function hasImpact(text: string) {
+  const labels = 'terdampak|siapa yang terdampak|affected|impact';
+  if (hasLabelColon(text, labels)) return labeledValue(text, labels).length >= 2;
+  return IMPACT_RE.test(text);
+}
+
+export function hasContact(text: string) {
+  const labels = 'kontak|nomor|email|hubungi|dihubungi|contact|phone|whatsapp|wa';
+  if (hasLabelColon(text, labels)) return labeledValue(text, labels).length >= 3;
+  return CONTACT_RE.test(text);
+}
+
+export function isDetailFollowUp(text: string) {
+  return (
+    /\b(lokasi|terdampak|kontak|nama perangkat|device|email|nomor|affected|contact|location)\b/i.test(text) ||
+    hasLocation(text) ||
+    hasImpact(text) ||
+    hasContact(text)
+  );
+}
 
 export function hasSymptom(text: string) {
   return SYMPTOM_RE.test(text);
@@ -267,9 +366,9 @@ export function inspectDetails(text: string): TicketDetails {
   return {
     title: titleLine.slice(0, 200),
     symptom: hasSymptom(text),
-    location: LOCATION_RE.test(text),
-    impact: IMPACT_RE.test(text),
-    contact: CONTACT_RE.test(text),
+    location: hasLocation(text),
+    impact: hasImpact(text),
+    contact: hasContact(text),
   };
 }
 

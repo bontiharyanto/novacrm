@@ -4,6 +4,7 @@ import { PortalShell } from '@/components/portal/portal-shell';
 import { getTenantConfig } from '@/lib/tenants/config';
 import { accentCss } from '@/lib/tenants/accent';
 import { AccentProvider } from '@/components/layout/accent-provider';
+import { getPrivacySettings } from '@/lib/governance/actions';
 
 export default async function PortalLayout({ children }: { children: React.ReactNode }) {
   const session = await getSessionProfile();
@@ -15,11 +16,16 @@ export default async function PortalLayout({ children }: { children: React.React
   }
 
   const tenant = await getTenantConfig();
+  const privacy = await getPrivacySettings();
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: accentCss(tenant?.accentColor) }} />
       <AccentProvider color={tenant?.accentColor} />
-      <PortalShell fullName={session.profile.fullName} userId={session.userId}>
+      <PortalShell
+        fullName={session.profile.fullName}
+        userId={session.userId}
+        privacyEnabled={Boolean(privacy?.isPublished)}
+      >
         {children}
       </PortalShell>
     </>

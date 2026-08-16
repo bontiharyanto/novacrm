@@ -921,10 +921,10 @@ insert into public.privacy_settings (
   'NovaCRM Demo Tenant',
   'Jakarta HQ, Indonesia',
   'Pemberitahuan privasi NovaCRM',
-  E'NovaCRM memproses data pribadi untuk layanan ITSM: tiket, aset, katalog, dan notifikasi.\n\nDasar pemrosesan utama adalah kontrak layanan dan kewajiban hukum UU PDP (UU 27/2022).\n\nAnda dapat mengajukan hak akses, perbaikan, penghapusan, pembatasan, portabilitas, atau keberatan melalui portal Privacy. Kami merespons dalam 30 hari.\n\nInsiden kebocoran data dilaporkan ke otoritas dalam 72 jam bila diwajibkan.\n\nHubungi DPO di dpo@novacrm.app.',
+  E'PEMBERITAHUAN PRIVASI (PRIVACY NOTICE)\nNovaCRM\nTerakhir diperbarui: Agustus 2026\n\nNovaCRM ("Kami") berkomitmen melindungi privasi Anda sesuai UU 27/2022 tentang Pelindungan Data Pribadi.\n\n1. Data yang dikumpulkan: identitas, kontak, tiket/interaksi, aset/CI terkait, dan data akun.\n2. Tujuan: layanan ITSM, tindak lanjut tiket, notifikasi operasional, kewajiban hukum. Pemasaran hanya dengan opt-in terpisah.\n3. Dasar hukum: persetujuan, kontrak, kewajiban hukum, dan kepentingan yang sah. Penggunaan portal 30 hari tanpa keberatan dianggap persetujuan; SLA respons hak adalah 30 hari terpisah.\n4. Hak subjek data: akses, koreksi, penghapusan, pembatasan, portabilitas, dan penarikan persetujuan melalui portal Privasi.\n5. Keamanan dan retensi sesuai tujuan pengumpulan atau retensi hukum. Kebocoran dilaporkan dalam 72 jam bila diwajibkan.\n6. Cookie yang diperlukan: tema, bahasa, tanggal pemberitahuan, dan welcome.\n7. Prosesor: email, WhatsApp, Telegram, MinIO/S3, hosting. Data tidak dijual.\n8. DPO: dpo@novacrm.app',
   'contract',
   false,
-  true,
+  false,
   '22222222-2222-2222-2222-222222222222'
 )
 on conflict (tenant_id) do update set

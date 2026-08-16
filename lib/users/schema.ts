@@ -24,6 +24,9 @@ export type DirectoryUser = {
   fullName: string;
   email?: string;
   phone?: string;
+  passwordChangedAt?: string;
+  passwordExpired?: boolean;
+  passwordDaysLeft?: number;
   role: AppRole;
   orgUnitId?: string;
   orgUnitName?: string;

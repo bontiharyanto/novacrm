@@ -25,6 +25,18 @@ Classroom / `NovaCRM!2026` stays password-only. Do not enable the toggle on the 
 | Portal customer | Out of scope |
 | Lost phone | Another admin opens `/users/[id]` → **Reset authenticator** (identity check first) |
 
+## Password rotation (portal + operations)
+
+Separate from MFA. Default **on**, **30 days**. Settings → **Security** → Password rotation.
+
+| Case | Result |
+| --- | --- |
+| Password older than the policy | Login works; only `/portal/account` or `/settings/security` is allowed until they change it |
+| Admin reset | `/users/[id]` → **Reset password** — temporary password, 30-day clock restarts |
+| SSO-only login | Skipped |
+
+Lab clocks start when the migration is applied (`password_changed_at = now()`), so `NovaCRM!2026` stays usable for 30 days from that date.
+
 ## Out of scope
 
 - SMS / email OTP

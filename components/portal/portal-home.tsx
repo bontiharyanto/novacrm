@@ -9,6 +9,8 @@ import { TypeBadge } from '@/components/tickets/type-badge';
 import { Badge } from '@/components/ui/badge';
 import { formatRelativeId } from '@/lib/utils/dates';
 import { useI18n } from '@/components/layout/preferences-provider';
+import { PortalConsentBanner } from '@/components/portal/portal-consent-banner';
+import { usePrivacyEnabled } from '@/components/portal/privacy-module';
 import { localizedStage } from '@/lib/i18n/labels';
 import { displayTicketNumber, isTicketType } from '@/lib/tickets/process';
 import { useRealtimeTable } from '@/lib/supabase/realtime';
@@ -52,6 +54,7 @@ function greetingKey(hour: number) {
 
 export function PortalHome({ firstName }: { firstName: string }) {
   const { t, locale } = useI18n();
+  const privacyEnabled = usePrivacyEnabled();
   const [tickets, setTickets] = useState<TicketItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterKey>('all');
@@ -126,6 +129,8 @@ export function PortalHome({ firstName }: { firstName: string }) {
           {t.portal.reportIncident}
         </Link>
       </div>
+
+      {privacyEnabled ? <PortalConsentBanner variant="home" /> : null}
 
       {loading ? (
         <div className="grid gap-3 md:grid-cols-3">

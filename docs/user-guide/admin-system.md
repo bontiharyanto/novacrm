@@ -26,7 +26,7 @@ Sidebar admin: **Overview**, **Service desk**, **Configuration**, **Platform**, 
 ## 2. Login dan ruang kerja
 
 1. Buka URL desk (lab: http://localhost:3000 atau http://localhost:3001).
-2. Email + password → **Sign in**. Atau tombol **Continue with Google / Microsoft / Okta / SAML** jika plugin identity aktif. OIDC butuh provider di Supabase Auth. SAML butuh SSO URL + cert IdP; ACS `/api/auth/saml/acs`. MFA TOTP = toggle di **Settings → Security**; lab tetap mati. Nyalakan setelah production. Admin mereset authenticator di `/users/[id]` setelah cek identitas.
+2. Email + password → **Sign in**. Atau tombol **Continue with Google / Microsoft / Okta / SAML** jika plugin identity aktif. OIDC butuh provider di Supabase Auth. SAML butuh SSO URL + cert IdP; ACS `/api/auth/saml/acs`. MFA TOTP = toggle di **Settings → Security**; lab tetap mati. Nyalakan setelah production. Kata sandi portal dan desk wajib diganti setiap **30 hari** (Settings → Security → Password rotation). Jika kedaluwarsa, user hanya bisa ganti password. Admin mereset authenticator atau password di `/users/[id]` setelah cek identitas. SSO tidak ikut rotasi.
 3. Landasan: **Dashboard**.
 4. Switcher **Account** di bawah logo: Internal / Bank Nusantara / Garuda / **All**. Tiket, aset, CMDB mengikuti filter ini.
 
@@ -194,7 +194,7 @@ Alert berulang dalam 24 jam meng-update tiket yang sama. Pesan WA / Telegram / e
 | RoPA | Inventaris pemrosesan |
 | DSAR | 30 hari |
 | Breach | 72 jam |
-| Privacy notice | Portal customer `/portal/privacy` |
+| Privacy notice | Default **mati** di portal. Nyalakan: Privacy notice → **Enable on portal**. Baru muncul tab Privasi, consent form, dan `/privacy` |
 
 ---
 

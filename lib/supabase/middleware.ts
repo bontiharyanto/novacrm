@@ -2,11 +2,14 @@ import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import { getServerSupabaseConfig, isSupabaseConfigured } from '@/lib/config/env';
 import { homePathForRole, isAppRole, isCustomerRole, isTenantAdminRole, parseAppRole } from '@/lib/rbac/roles';
+import { DEFAULT_PASSWORD_MAX_AGE_DAYS, isPasswordExpired } from '@/lib/auth/password-policy';
 
 function isPublicPath(pathname: string) {
   return (
     pathname === '/login' ||
     pathname === '/login/mfa' ||
+    pathname === '/privacy' ||
+    pathname === '/api/governance/public' ||
     pathname === '/api/health' ||
     pathname === '/api/auth/sso' ||
     pathname.startsWith('/api/auth/saml') ||
@@ -29,14 +32,35 @@ async function roleFromProfile(
   userId: string,
   fallback?: string,
 ) {
-  const { data, error } = await supabase.from('profiles').select('role, tenant_id').eq('id', userId).maybeSingle();
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('role, tenant_id, password_changed_at')
+    .eq('id', userId)
+    .maybeSingle();
   if (error) {
-    return { role: fallback, tenantId: undefined as string | undefined };
+    return { role: fallback, tenantId: undefined as string | undefined, passwordChangedAt: undefined as string | undefined };
   }
   if (typeof data?.role === 'string' && isAppRole(data.role)) {
-    return { role: data.role, tenantId: data.tenant_id as string | undefined };
+    return {
+      role: data.role,
+      tenantId: data.tenant_id as string | undefined,
+      passwordChangedAt: (data.password_changed_at as string | undefined) ?? undefined,
+    };
   }
-  return { role: parseAppRole(undefined), tenantId: data?.tenant_id as string | undefined };
+  return {
+    role: parseAppRole(undefined),
+    tenantId: data?.tenant_id as string | undefined,
+    passwordChangedAt: (data.password_changed_at as string | undefined) ?? undefined,
+  };
+}
+
+function isPasswordChangePath(pathname: string) {
+  return pathname === '/portal/account' || pathname === '/settings/security';
+}
+
+function isSsoOnlyUser(user: { identities?: Array<{ provider: string }>; user_metadata?: Record<string, unknown> }) {
+  const viaSaml = user.user_metadata?.auth_via === 'saml';
+  return viaSaml || (Boolean(user.identities?.length) && !user.identities?.some((item) => item.provider === 'email'));
 }
 
 export async function updateSession(request: NextRequest) {
@@ -116,6 +140,27 @@ export async function updateSession(request: NextRequest) {
     redirectUrl.pathname = homePathForRole(role);
     redirectUrl.search = '';
     return NextResponse.redirect(redirectUrl);
+  }
+
+  if (user && profile?.tenantId && !isSsoOnlyUser(user) && !isPublicPath(pathname)) {
+    const { data: tenantPolicy } = await supabase
+      .from('tenants')
+      .select('password_rotation_enabled, password_max_age_days')
+      .eq('id', profile.tenantId)
+      .maybeSingle();
+    const expired = isPasswordExpired(profile.passwordChangedAt, {
+      enabled: tenantPolicy?.password_rotation_enabled !== false,
+      maxAgeDays: Number(tenantPolicy?.password_max_age_days ?? DEFAULT_PASSWORD_MAX_AGE_DAYS),
+    });
+    if (expired && !isPasswordChangePath(pathname)) {
+      if (pathname.startsWith('/api/')) {
+        return NextResponse.json({ data: null, error: 'Password expired' }, { status: 403 });
+      }
+      const redirectUrl = request.nextUrl.clone();
+      redirectUrl.pathname = isCustomerRole(role) ? '/portal/account' : '/settings/security';
+      redirectUrl.search = 'expired=1';
+      return NextResponse.redirect(redirectUrl);
+    }
   }
 
   if (

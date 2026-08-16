@@ -153,15 +153,16 @@ Customer **tidak** melihat desk, aset, CMDB, atau Settings. Hanya portal sendiri
 ## B.1 Masuk
 
 1. Buka URL yang sama, login `customer@…`.
-2. Landasan `/portal`.
-3. **Sign out** di header portal.
+2. Splash logo (copyright @RoughTechnolgy), lalu landasan `/portal`.
+3. Kata sandi wajib diganti setiap 30 hari. Jika kedaluwarsa, hanya halaman ganti password yang terbuka — minta admin reset jika lupa.
+4. **Sign out** di header portal.
 
 | Menu | Fungsi |
 | --- | --- |
 | **My tickets** | Lacak tiket Anda |
 | **Catalog** | Permintaan terstruktur (record producer) |
 | **New request** | Tiket bebas (bukan dari katalog) |
-| **Privacy** | Notice + DSAR (hak akses data) |
+| **Privacy** | Notice + DSAR — hanya jika admin sudah **Enable on portal** |
 
 ## B.2 Ajukan dari katalog (disarankan)
 
@@ -190,11 +191,15 @@ Buka tiket di **My tickets** / `/portal/{id}`.
 - Setelah **resolved** / **closed**, isi **CSAT** (1–5) di halaman tiket. Email / WhatsApp ke customer memakai tautan `/portal/{id}` (tombol **Rate this ticket**), bukan desk `/tickets/{id}`.
 - Jangan buka tiket duplikat untuk isu yang sama; balas yang sudah ada.
 
-## B.5 Privasi (UU PDP)
+## B.5 Ask AI (portal)
 
-**Privacy** — baca notice. Ajukan DSAR jika perlu salinan / hapus data. Target lab: 30 hari.
+**Tanya AI** mereview dulu, lalu Anda konfirmasi. Berlaku untuk semua saran katalog di chat. Jika lokasi / terdampak / kontak kurang, template muncul di kotak tulis — isi setelah titik dua, kirim. Halaman kartu katalog (`/portal/catalog/{id}`) tetap form item itu sendiri.
 
-## B.6 Checklist customer
+## B.6 Privasi (UU PDP)
+
+Tab **Privacy** hanya ada jika admin sudah Enable on portal. Notice mengikuti `EN | ID`. Dua aturan 30 hari: persetujuan diam vs SLA respons DSAR. Ajukan hak (akses / hapus / keberatan) dari portal Privasi.
+
+## B.7 Checklist customer
 
 - [ ] Pakai **Catalog** jika itemnya ada
 - [ ] Satu isu = satu tiket

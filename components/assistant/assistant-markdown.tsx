@@ -52,6 +52,25 @@ function toBlocks(text: string): ReactNode[] {
       continue;
     }
 
+    if (/^\s*```/.test(line)) {
+      const fence: string[] = [];
+      index += 1;
+      while (index < lines.length && !/^\s*```/.test(lines[index] ?? '')) {
+        fence.push(lines[index] ?? '');
+        index += 1;
+      }
+      if (index < lines.length) index += 1;
+      blocks.push(
+        <pre
+          key={`pre-${index}-${blocks.length}`}
+          className="overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 font-mono text-[12px] leading-5 text-zinc-200"
+        >
+          {fence.join('\n')}
+        </pre>,
+      );
+      continue;
+    }
+
     const bullet = line.match(/^\s*[-*]\s+(.*)$/);
     if (bullet) {
       const items: string[] = [];

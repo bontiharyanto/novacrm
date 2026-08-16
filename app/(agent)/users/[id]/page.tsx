@@ -24,6 +24,7 @@ export default async function UserDetailPage({ params }: { params: { id: string 
       groups={groups}
       canEdit={canRole(session.profile.role, 'update', 'User')}
       canResetMfa={isTenantAdminRole(session.profile.role) && isStaffRole(user.role)}
+      canResetPassword={isTenantAdminRole(session.profile.role)}
       actorRole={session.profile.role}
     />
   );

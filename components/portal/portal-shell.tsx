@@ -12,6 +12,8 @@ import { AskAiButton, AssistantWidget } from '@/components/assistant/assistant-w
 import { useI18n } from '@/components/layout/preferences-provider';
 import { NovaMark } from '@/components/brand/nova-mark';
 import { PortalWelcome } from '@/components/portal/portal-welcome';
+import { PrivacyModuleProvider, usePrivacyEnabled } from '@/components/portal/privacy-module';
+import { useMarkPrivacySeen } from '@/components/portal/portal-consent-banner';
 import { cn } from '@/lib/utils';
 
 function isHomePath(pathname: string) {
@@ -36,6 +38,26 @@ export function PortalShell({
   children,
   fullName,
   userId,
+  privacyEnabled = false,
+}: {
+  children: React.ReactNode;
+  fullName: string;
+  userId?: string;
+  privacyEnabled?: boolean;
+}) {
+  return (
+    <PrivacyModuleProvider enabled={privacyEnabled}>
+      <PortalShellInner fullName={fullName} userId={userId}>
+        {children}
+      </PortalShellInner>
+    </PrivacyModuleProvider>
+  );
+}
+
+function PortalShellInner({
+  children,
+  fullName,
+  userId,
 }: {
   children: React.ReactNode;
   fullName: string;
@@ -43,13 +65,17 @@ export function PortalShell({
 }) {
   const pathname = usePathname();
   const { t } = useI18n();
+  const privacyEnabled = usePrivacyEnabled();
   const [agentOpen, setAgentOpen] = useState(false);
   const firstName = fullName.trim().split(/\s+/)[0] || fullName;
+  useMarkPrivacySeen(privacyEnabled);
 
   const tabs = [
     { href: '/portal', label: t.portal.home, icon: Home, active: isHomePath(pathname) },
     { href: '/portal/catalog', label: t.portal.catalog, icon: BookOpen, active: pathname.startsWith('/portal/catalog') },
-    { href: '/portal/privacy', label: t.portal.privacy, icon: Scale, active: pathname.startsWith('/portal/privacy') },
+    ...(privacyEnabled
+      ? [{ href: '/portal/privacy', label: t.portal.privacy, icon: Scale, active: pathname.startsWith('/portal/privacy') }]
+      : []),
   ];
 
   return (

@@ -5,6 +5,7 @@ export const id: Dictionary = {
     name: 'NovaCRM',
     operations: 'Operasi',
     portal: 'Portal',
+    copyright: 'Copyright by @RoughTechnolgy',
   },
   nav: {
     overview: 'Ringkasan',
@@ -88,6 +89,23 @@ export const id: Dictionary = {
     ssoEmail: 'IdP tidak mengirim email. Minta admin IdP melepas klaim email.',
     ssoDenied: 'Domain email ini tidak diizinkan untuk tenant ini. Pakai akun kerja atau login email.',
     tenantPaused: 'Tenant ini dijeda atau diarsipkan. Minta pemilik platform untuk mengaktifkannya lagi.',
+    passwordExpired: 'Kata sandi kedaluwarsa. Masuk, lalu ganti untuk melanjutkan.',
+  },
+  passwordPolicy: {
+    title: 'Rotasi kata sandi',
+    hint: 'Kata sandi kedaluwarsa setiap 30 hari untuk portal dan operasi. Admin dapat mereset akun yang terkunci.',
+    expired: 'Kata sandi ini berusia lebih dari 30 hari. Ganti dulu untuk membuka portal atau desk operasi.',
+    daysLeft: '{{n}} hari lagi sebelum kata sandi ini kedaluwarsa.',
+    enable: 'Wajib ganti kata sandi setiap',
+    days: 'hari',
+    save: 'Simpan kebijakan kata sandi',
+    reset: 'Reset kata sandi',
+    resetHint: 'Setel kata sandi sementara. Hitungan 30 hari dimulai lagi. Beritahu pengguna di luar sistem.',
+    resetDone: 'Kata sandi direset. Bagikan kata sandi baru ke pengguna.',
+    lastChanged: 'Terakhir diganti',
+    status: 'Kata sandi',
+    ok: 'Berlaku',
+    due: 'Kedaluwarsa',
   },
   accountPick: {
     title: 'Filter desk',
@@ -162,14 +180,50 @@ export const id: Dictionary = {
     status: 'Status',
     privacyKicker: 'UU PDP',
     privacyNotice: 'Pemberitahuan privasi',
-    privacyUnpublished: 'Pengendali data belum menerbitkan pemberitahuan privasi.',
+    privacyNoticeTitle: 'Pemberitahuan privasi NovaCRM',
+    privacyNoticeBody:
+      'NovaCRM memproses data pribadi untuk layanan ITSM: tiket, aset, katalog, dan notifikasi.\n\nDasar pemrosesan utama adalah kontrak layanan dan kewajiban hukum UU PDP (UU 27/2022).\n\nJika Anda terus menggunakan portal selama 30 hari tanpa mengajukan keberatan, penggunaan itu dianggap sebagai persetujuan terhadap pemberitahuan ini. Anda tetap dapat mengajukan keberatan kapan saja.\n\nAnda dapat mengajukan hak akses, perbaikan, penghapusan, pembatasan, portabilitas, atau keberatan melalui portal Privasi. Permintaan hak direspons dalam 30 hari. SLA respons itu terpisah dari aturan persetujuan diam 30 hari.\n\nInsiden kebocoran data dilaporkan ke otoritas dalam 72 jam bila diwajibkan.\n\nHubungi DPO melalui kontak di halaman ini.',
+    privacyUnpublished: 'Pengendali belum menerbitkan teks khusus. Pemberitahuan standar di atas tetap berlaku.',
+    privacyControllerText: 'Teks pengendali',
+    privacyControllerTextHint: 'Diterbitkan pengendali dalam bahasa aslinya.',
+    consentKicker: 'Persetujuan diam',
+    consentPending:
+      'Penggunaan portal selama 30 hari tanpa keberatan dianggap persetujuan terhadap pemberitahuan privasi. Hari ke {{day}} dari 30 · {{remaining}} hari tersisa.',
+    consentDeemed:
+      'Anda dianggap menyetujui pemberitahuan privasi pada {{date}} karena portal tetap digunakan tanpa keberatan. Hak keberatan tetap dapat diajukan.',
+    consentReadMore: 'Baca pemberitahuan privasi',
     controller: 'Pengendali',
     dpo: 'Petugas pelindungan data',
     myRequests: 'Permintaan saya',
     noRequests: 'Anda belum mengajukan permintaan hak.',
     submitRights: 'Ajukan permintaan hak',
-    rightsHint: 'Akses, perbaiki, atau hapus data pribadi di workspace ini. SLA respons 30 hari.',
+    rightsHint:
+      'Akses, perbaiki, hapus, atau keberatan atas data pribadi di workspace ini. SLA respons permintaan hak adalah 30 hari — terpisah dari aturan persetujuan diam 30 hari.',
     right: 'Hak',
+    dsarType: {
+      access: 'Akses',
+      rectification: 'Perbaikan',
+      erasure: 'Penghapusan',
+      restriction: 'Pembatasan',
+      portability: 'Portabilitas',
+      objection: 'Keberatan',
+    },
+    dsarTypeHint: {
+      access: 'Salinan data pribadi',
+      rectification: 'Perbaiki data yang tidak akurat',
+      erasure: 'Hapus jika tidak lagi diperlukan',
+      restriction: 'Batasi pemrosesan',
+      portability: 'Ekspor dalam format yang dapat dibaca mesin',
+      objection: 'Keberatan atas pemrosesan',
+    },
+    dsarStatus: {
+      received: 'Diterima',
+      verifying: 'Verifikasi',
+      in_progress: 'Diproses',
+      waiting: 'Menunggu',
+      completed: 'Selesai',
+      rejected: 'Ditolak',
+    },
     subject: 'Subjek',
     emailOnFile: 'Email terdaftar',
     noAdditionalDetail: 'Tidak ada detail tambahan.',
@@ -551,6 +605,8 @@ export const id: Dictionary = {
     suggestOther: 'Tidak ada di daftar? Isi form di Katalog (lokasi, terdampak, kontak). Jangan ketik “tidak ada di list”.',
     intakeAsk: 'Pilih saran, atau isi form Katalog. Ask AI akan minta lokasi, terdampak, dan kontak sebelum review.',
     intakeDetails: 'Belum bisa mereview tiket. Jawab dulu pertanyaan ini:',
+    intakeTemplateHint: 'Salin template, isi setelah titik dua, lalu kirim.',
+    fillTemplate: 'Isi template',
     proposal: 'Rekomendasi: **{{type}}** — {{title}}',
     proposalEstate: 'Terkait aset / CI akun Anda:',
     proposalNoEstate:
@@ -788,5 +844,47 @@ export const id: Dictionary = {
       admin: 'Pengaturan tenant',
       superadmin: 'Platform',
     },
+  },
+  pdp: {
+    noticeTitle: 'Pemberitahuan privasi',
+    noticeUpdated: 'Terakhir diperbarui: Agustus 2026',
+    noticeIntro:
+      '{{controller}} (“Kami”) berkomitmen melindungi dan menghormati privasi Anda. Pemberitahuan ini menjelaskan bagaimana kami mengumpulkan, menggunakan, memproses, dan melindungi data pribadi saat Anda memakai layanan ITSM NovaCRM, sesuai Undang-Undang Nomor 27 Tahun 2022 tentang Pelindungan Data Pribadi (UU PDP).',
+    dataTitle: '1. Data pribadi yang kami kumpulkan',
+    dataBody:
+      'Melalui NovaCRM kami dapat mengumpulkan:\n• Identitas: nama lengkap, nama tampilan, atau nama organisasi.\n• Kontak: email, nomor telepon / WhatsApp, dan alamat kantor atau lokasi.\n• Data layanan: tiket, komentar, permintaan katalog, aset atau CI yang terkait, dan riwayat notifikasi.\n• Data akun: peran, keanggotaan account, dan aktivitas masuk yang diperlukan untuk mengoperasikan portal.',
+    purposeTitle: '2. Tujuan pemrosesan data pribadi',
+    purposeBody:
+      'Kami memproses data pribadi hanya untuk tujuan yang sah dan spesifik:\n• Menyediakan, mengelola, dan meningkatkan layanan ITSM yang Anda minta.\n• Melakukan tindak lanjut tiket, dukungan pelanggan, dan administrasi akun.\n• Mengirim notifikasi operasional (status, komentar, SLA).\n• Mengirim informasi promosi atau penawaran produk hanya jika Anda memberi persetujuan terpisah / opt-in.\n• Mematuhi kewajiban hukum dan regulasi di Republik Indonesia.',
+    basisTitle: '3. Dasar hukum pemrosesan data',
+    basisBody:
+      'Kami memproses data berdasarkan UU PDP:\n• Persetujuan: Anda memberi persetujuan sah secara eksplisit untuk tujuan tertentu.\n• Pemenuhan kontrak: pemrosesan diperlukan untuk layanan yang Anda sepakati.\n• Kewajiban hukum: termasuk pelaporan insiden bila diwajibkan.\n• Kepentingan yang sah: manajemen hubungan pelanggan internal tanpa merugikan hak privasi Anda.\nPenggunaan portal selama 30 hari tanpa keberatan dianggap persetujuan terhadap pemberitahuan ini. Anda tetap dapat keberatan kapan saja. SLA respons permintaan hak adalah hitungan 30 hari yang terpisah.',
+    rightsTitle: '4. Hak-hak Anda sebagai subjek data',
+    rightsBody:
+      'Berdasarkan UU PDP Anda berhak mengajukan:\n• Hak akses: salinan data pribadi yang kami simpan.\n• Hak koreksi: pembetulan data yang tidak akurat.\n• Hak penghapusan: pemusnahan data, kecuali masih ada kontrak aktif, tiket terbuka, atau retensi hukum.\n• Hak pembatasan dan portabilitas.\n• Hak penarikan persetujuan atau keberatan atas pemrosesan, termasuk pemasaran, kapan saja.\nAjukan melalui portal Privasi. Kami merespons dalam 30 hari.',
+    securityTitle: '5. Keamanan dan retensi data',
+    securityBody:
+      'Kami menerapkan kontrol teknis dan organisasional untuk melindungi data dari akses, pengubahan, atau pengungkapan yang tidak sah. Data disimpan selama diperlukan untuk tujuan pengumpulannya atau sesuai retensi hukum. Insiden kebocoran data dilaporkan ke otoritas dalam 72 jam bila diwajibkan.',
+    cookiesTitle: '6. Cookie dan preferensi lokal',
+    cookiesBody:
+      'NovaCRM memakai cookie yang diperlukan saja: tema (`novacrm_theme`), bahasa (`novacrm_locale`), tanggal pertama melihat pemberitahuan (`novacrm_privacy_seen`), dan flag selamat datang sekali. Cookie ini mengoperasikan UI pada replica web yang stateless. Tidak dipakai untuk analitik iklan.',
+    processorsTitle: '7. Prosesor dan pihak ketiga',
+    processorsBody:
+      'Kami dapat membagikan data kepada prosesor atas instruksi kami: email (Resend / Postmark), WhatsApp (Fonnte / Whacenter / Wabot), Telegram Bot API, penyimpanan objek (MinIO / S3), dan hosting. Kami tidak menjual data pribadi. Transfer lintas batas hanya jika pengendali mengizinkannya dan ada dasar hukum.',
+    contactTitle: '8. Hubungi DPO',
+    contactBody:
+      'Untuk menggunakan hak subjek data, bertanya, atau melaporkan kendala privasi, hubungi Petugas Pelindungan Data (DPO):\n• Nama: {{dpoName}}\n• Email: {{dpoEmail}}\n• Telepon / WhatsApp: {{dpoPhone}}\n• Alamat kantor: {{address}}',
+    consentClause:
+      'Saya memberikan persetujuan kepada {{controller}} untuk memproses data pribadi saya (identitas, kontak, dan riwayat layanan) guna menyediakan layanan ITSM, menindaklanjuti permintaan, dan memenuhi kewajiban UU PDP. Persetujuan ini dapat ditarik kapan saja melalui Privasi.',
+    captureClause:
+      'Dengan mengirim formulir ini, saya menyetujui pengumpulan nama, email, nomor telepon / WhatsApp, dan detail permintaan untuk layanan, komunikasi tindak lanjut, dan pencatatan tiket. Data tidak dipakai untuk pemasaran kecuali saya memberi persetujuan terpisah.',
+    erasureClause:
+      'Saya meminta penghapusan atau pemusnahan data pribadi saya sesuai UU PDP. Saya memahami penghapusan dapat ditunda jika masih ada kontrak aktif, tiket terbuka, atau retensi hukum. Permintaan ini ditinjau dalam 30 hari.',
+    withdrawClause:
+      'Saya menarik persetujuan pemrosesan yang sebelumnya diberikan dan/atau keberatan atas pemrosesan lanjutan data pribadi saya. Notifikasi operasional untuk menutup tiket yang masih terbuka dapat berlanjut sampai tiket itu selesai.',
+    consentRequired: 'Centang pernyataan privasi untuk melanjutkan.',
+    loginAck: 'Dengan masuk, Anda mengakui pemrosesan data akun sesuai Pemberitahuan privasi.',
+    readNotice: 'Pemberitahuan privasi',
+    confirmConsent: 'Saya telah membaca dan menyetujui',
   },
 };

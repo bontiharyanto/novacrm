@@ -7,8 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRealtimeTable } from '@/lib/supabase/realtime';
 import { useI18n } from '@/components/layout/preferences-provider';
-import { DSAR_TYPES, type DataSubjectRequest } from '@/lib/governance/schema';
+import { type DataSubjectRequest } from '@/lib/governance/schema';
 import { getDsarSla, slaCountdown, slaLabel, slaTone } from '@/lib/governance/flow';
+import { localizedDsarStatus, localizedDsarType } from '@/lib/i18n/labels';
 import { formatRelativeId } from '@/lib/utils/dates';
 
 export function PortalPrivacyDetail({ requestId }: { requestId: string }) {
@@ -46,7 +47,7 @@ export function PortalPrivacyDetail({ requestId }: { requestId: string }) {
         </Link>
         <p className="mt-3 font-mono text-[12px] text-zinc-600">{row.number}</p>
         <h1 className="mt-1 text-[28px] font-semibold tracking-tight text-zinc-50">
-          {DSAR_TYPES.find((item) => item.id === row.requestType)?.label}
+          {localizedDsarType(t, row.requestType)}
         </h1>
       </div>
 
@@ -64,7 +65,7 @@ export function PortalPrivacyDetail({ requestId }: { requestId: string }) {
         </section>
         <aside className="space-y-3 nova-surface rounded-xl border p-5 lg:col-span-4">
           <Badge tone={slaTone(sla)}>{slaLabel(sla, 'dsar')}</Badge>
-          <p className="text-sm capitalize text-zinc-300">{row.status.replace('_', ' ')}</p>
+          <p className="text-sm text-zinc-300">{localizedDsarStatus(t, row.status)}</p>
           <p className="text-xs text-zinc-500">
             {t.portal.opened.replace('{{time}}', formatRelativeId(row.createdAt, locale))}
           </p>

@@ -7,8 +7,11 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRealtimeTable } from '@/lib/supabase/realtime';
 import { useI18n } from '@/components/layout/preferences-provider';
-import { DSAR_TYPES, type DataSubjectRequest, type PrivacySettings } from '@/lib/governance/schema';
+import { PortalConsentBanner } from '@/components/portal/portal-consent-banner';
+import { PrivacyNoticeArticle } from '@/components/governance/privacy-notice-article';
+import { type DataSubjectRequest, type PrivacySettings } from '@/lib/governance/schema';
 import { getDsarSla, slaTone } from '@/lib/governance/flow';
+import { localizedDsarStatus, localizedDsarType } from '@/lib/i18n/labels';
 import { formatRelativeId } from '@/lib/utils/dates';
 
 export function PortalPrivacy() {
@@ -57,22 +60,25 @@ export function PortalPrivacy() {
         </Link>
       </div>
 
+      <PortalConsentBanner variant="privacy" />
+
       <div className="grid gap-3 lg:grid-cols-12">
         <section className="overflow-hidden nova-surface rounded-xl border p-5 lg:col-span-8">
           <div className="flex items-center gap-2">
             <Scale className="h-4 w-4 nova-accent-icon" />
             <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{t.portal.privacyNotice}</p>
           </div>
-          {settings?.isPublished ? (
-            <>
-              <h2 className="mt-3 text-lg font-semibold tracking-tight text-zinc-50">
-                {settings.noticeTitle || t.portal.privacyNotice}
-              </h2>
-              <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-zinc-400">{settings.noticeBody}</p>
-            </>
-          ) : (
-            <p className="py-8 text-sm text-zinc-500">{t.portal.privacyUnpublished}</p>
-          )}
+          <div className="mt-4">
+            <PrivacyNoticeArticle
+              contact={{
+                controllerName: settings?.controllerName,
+                controllerAddress: settings?.controllerAddress,
+                dpoName: settings?.dpoName,
+                dpoEmail: settings?.dpoEmail,
+                dpoPhone: settings?.dpoPhone,
+              }}
+            />
+          </div>
         </section>
         <section className="overflow-hidden nova-surface rounded-xl border p-5 lg:col-span-4">
           <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{t.portal.controller}</p>
@@ -101,14 +107,12 @@ export function PortalPrivacy() {
                 className="flex items-center justify-between gap-3 border-b border-zinc-800/70 px-5 py-3.5 last:border-b-0 transition-colors hover:bg-zinc-900/80"
               >
                 <div>
-                  <p className="text-sm font-medium text-zinc-50">
-                    {DSAR_TYPES.find((item) => item.id === row.requestType)?.label}
-                  </p>
+                  <p className="text-sm font-medium text-zinc-50">{localizedDsarType(t, row.requestType)}</p>
                   <p className="mt-0.5 font-mono text-[11px] text-zinc-600">
                     {row.number} · {formatRelativeId(row.createdAt, locale)}
                   </p>
                 </div>
-                <Badge tone={slaTone(sla)}>{row.status}</Badge>
+                <Badge tone={slaTone(sla)}>{localizedDsarStatus(t, row.status)}</Badge>
               </Link>
             );
           })

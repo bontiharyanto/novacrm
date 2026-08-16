@@ -13,14 +13,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { TypeBadge } from '@/components/tickets/type-badge';
 import type { CatalogItem } from '@/lib/catalog/schema';
 import { useI18n } from '@/components/layout/preferences-provider';
+import { PdpConsentField } from '@/components/shared/pdp-consent-field';
+import { usePrivacyEnabled } from '@/components/portal/privacy-module';
 
 export function RecordProducer({ itemId }: { itemId: string }) {
   const router = useRouter();
   const { t } = useI18n();
+  const privacyEnabled = usePrivacyEnabled();
   const [item, setItem] = useState<CatalogItem | null>(null);
   const [answers, setAnswers] = useState<Record<string, string | boolean>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [consented, setConsented] = useState(false);
 
   useEffect(() => {
     void fetch(`/api/catalog/${itemId}`)
@@ -38,7 +42,10 @@ export function RecordProducer({ itemId }: { itemId: string }) {
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!item) return;
+    if (!item || (privacyEnabled && !consented)) {
+      if (privacyEnabled && !consented) setError(t.pdp.consentRequired);
+      return;
+    }
     setIsSubmitting(true);
     setError('');
     const response = await fetch(`/api/catalog/${item.id}/request`, {
@@ -84,7 +91,7 @@ export function RecordProducer({ itemId }: { itemId: string }) {
           <Button type="button" variant="ghost" onClick={() => router.push('/portal/catalog')}>
             {t.common.cancel}
           </Button>
-          <Button type="submit" disabled={isSubmitting}>
+          <Button type="submit" disabled={isSubmitting || (privacyEnabled && !consented)}>
             {isSubmitting ? t.portal.submitting : t.portal.submitRequest}
           </Button>
         </div>
@@ -142,6 +149,14 @@ export function RecordProducer({ itemId }: { itemId: string }) {
             </div>
           ))
         )}
+        {privacyEnabled ? (
+          <PdpConsentField
+            variant="process"
+            checked={consented}
+            onChange={setConsented}
+            privacyHref="/portal/privacy"
+          />
+        ) : null}
       </div>
     </motion.form>
   );

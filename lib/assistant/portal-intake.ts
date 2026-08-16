@@ -1,5 +1,5 @@
 import type { AssistantMessage } from '@/lib/assistant/schema';
-import { hasCompleteDetails, hasSymptom } from '@/lib/assistant/portal-details';
+import { hasCompleteDetails, hasSymptom, isDetailFollowUp } from '@/lib/assistant/portal-details';
 
 const CREATE_INTENT =
   /\b(buatkan|tolong buat(kan)?|please create|create a ticket|open a ticket|buka tiket|buat tiket|submit (a )?(ticket|request))\b/i;
@@ -115,7 +115,8 @@ export function collectIssueContext(messages: AssistantMessage[]) {
 
   for (const text of users) {
     if (skipContext(text)) continue;
-    if (!looksLikeIssue(text) && !/masalah\s*:|lokasi\s*:|terdampak\s*:|kontak\s*:/i.test(text)) {
+    const followUp = Boolean(title) && isDetailFollowUp(text);
+    if (!looksLikeIssue(text) && !isDetailFollowUp(text) && !followUp) {
       continue;
     }
     if (!title) {

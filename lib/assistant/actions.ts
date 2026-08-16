@@ -7,7 +7,7 @@ import { isCustomerRole } from '@/lib/rbac/roles';
 import { createTicket, listTickets } from '@/lib/tickets/actions';
 import { displayTicketNumber } from '@/lib/tickets/process';
 import { lastProposedIssue, looksLikeIssue, resolvePortalIntake } from '@/lib/assistant/portal-intake';
-import { hasCompleteDetails, missingDetails } from '@/lib/assistant/portal-details';
+import { buildDetailTemplate, DETAIL_FIELD_LABELS, hasCompleteDetails, missingDetails } from '@/lib/assistant/portal-details';
 import { listPortalEstate, relatedEstate } from '@/lib/assistant/portal-estate';
 import { listPortalTicketSuggestions } from '@/lib/assistant/portal-suggestions';
 import { upsertAssistantThread } from '@/lib/assistant/store';
@@ -181,16 +181,12 @@ export async function runAssistant(
     }
     if (intake?.kind === 'details') {
       const missing = missingDetails(intake.description);
-      const labels: Record<string, string> = {
-        symptom: locale === 'id' ? 'Apa masalahnya' : 'What is wrong',
-        location: locale === 'id' ? 'Lokasi / nama perangkat' : 'Location / device name',
-        impact: locale === 'id' ? 'Siapa yang terdampak' : 'Who is affected',
-        contact: locale === 'id' ? 'Nomor atau email yang bisa dihubungi' : 'Phone or email to contact',
-      };
-      const list = missing.map((field) => `* ${labels[field]}`).join('\n');
-      const content = `${copy.assistant.intakeDetails}\n\n${list}`;
+      const fields = missing.length ? missing : (['location', 'impact', 'contact'] as const);
+      const template = buildDetailTemplate([...fields], locale);
+      const list = fields.map((field) => `* ${DETAIL_FIELD_LABELS[locale][field]}`).join('\n');
+      const content = `${copy.assistant.intakeDetails}\n\n${list}\n\n${copy.assistant.intakeTemplateHint}\n\n\`\`\`\n${template}\n\`\`\``;
       const saved = await persist([...messages, { role: 'assistant', content }]);
-      return { data: { content, threadId: saved.data?.id ?? null, intake: true }, error: null };
+      return { data: { content, threadId: saved.data?.id ?? null, intake: true, detailTemplate: template }, error: null };
     }
     if (intake?.kind === 'propose') {
       const estate = await listPortalEstate();

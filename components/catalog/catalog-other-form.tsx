@@ -14,6 +14,8 @@ import type { AssistantMessage } from '@/lib/assistant/schema';
 import { formatIssueFromForm, SYMPTOM_CHIPS } from '@/lib/assistant/portal-details';
 import { emitTicketsChanged } from '@/lib/tickets/events';
 import { cn } from '@/lib/utils';
+import { PdpConsentField } from '@/components/shared/pdp-consent-field';
+import { usePrivacyEnabled } from '@/components/portal/privacy-module';
 
 type Proposal = { type: string; title: string; description: string };
 
@@ -26,6 +28,7 @@ export function CatalogOtherForm({
 }) {
   const router = useRouter();
   const { t } = useI18n();
+  const privacyEnabled = usePrivacyEnabled();
   const [title, setTitle] = useState('');
   const [location, setLocation] = useState('');
   const [impact, setImpact] = useState('');
@@ -37,13 +40,14 @@ export function CatalogOtherForm({
   const [ticketId, setTicketId] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [consented, setConsented] = useState(false);
 
   const complete =
     title.trim().length >= 8 &&
     location.trim().length >= 3 &&
     impact.trim().length >= 2 &&
     contact.trim().length >= 8;
-  const canReview = complete && !busy && !ticketId;
+  const canReview = complete && (!privacyEnabled || consented) && !busy && !ticketId;
 
   async function callAssistant(next: AssistantMessage[]) {
     setBusy(true);
@@ -197,6 +201,14 @@ export function CatalogOtherForm({
               rows={compact ? 4 : 6}
             />
           </div>
+          {privacyEnabled ? (
+            <PdpConsentField
+              variant="capture"
+              checked={consented}
+              onChange={setConsented}
+              privacyHref="/portal/privacy"
+            />
+          ) : null}
           {error ? <p className="text-sm text-rose-400">{error}</p> : null}
           <Button type="submit" disabled={!canReview}>
             {busy ? t.catalog.reviewing : t.catalog.reviewWithAi}

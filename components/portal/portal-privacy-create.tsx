@@ -12,6 +12,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { DSAR_TYPES, type DsarType } from '@/lib/governance/schema';
 import { toastError, toastSuccess } from '@/components/ui/toast';
 import { useI18n } from '@/components/layout/preferences-provider';
+import { localizedDsarHint, localizedDsarType } from '@/lib/i18n/labels';
+import { PdpConsentField } from '@/components/shared/pdp-consent-field';
 
 export function PortalPrivacyCreate({ fullName, email }: { fullName: string; email?: string }) {
   const router = useRouter();
@@ -20,8 +22,14 @@ export function PortalPrivacyCreate({ fullName, email }: { fullName: string; ema
   const [description, setDescription] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [consented, setConsented] = useState(false);
+  const rightsClause = requestType === 'erasure' ? 'erasure' : requestType === 'objection' ? 'withdraw' : null;
 
   async function submit() {
+    if (rightsClause && !consented) {
+      setError(t.pdp.consentRequired);
+      return;
+    }
     setSaving(true);
     setError('');
     const response = await fetch('/api/governance/requests', {
@@ -65,10 +73,19 @@ export function PortalPrivacyCreate({ fullName, email }: { fullName: string; ema
         <section className="space-y-4 nova-surface rounded-xl border p-5 lg:col-span-8">
           <div>
             <Label htmlFor="type">{t.portal.right}</Label>
-            <Select id="type" className="mt-1.5" value={requestType} onChange={(event) => setRequestType(event.target.value as DsarType)}>
+            <Select
+              id="type"
+              className="mt-1.5"
+              value={requestType}
+              onChange={(event) => {
+                setRequestType(event.target.value as DsarType);
+                setConsented(false);
+                setError('');
+              }}
+            >
               {DSAR_TYPES.map((item) => (
                 <option key={item.id} value={item.id}>
-                  {item.label}
+                  {localizedDsarType(t, item.id)}
                 </option>
               ))}
             </Select>
@@ -83,8 +100,16 @@ export function PortalPrivacyCreate({ fullName, email }: { fullName: string; ema
               onChange={(event) => setDescription(event.target.value)}
             />
           </div>
+          {rightsClause ? (
+            <PdpConsentField
+              variant={rightsClause}
+              checked={consented}
+              onChange={setConsented}
+              privacyHref="/portal/privacy"
+            />
+          ) : null}
           {error ? <p className="text-sm text-rose-400">{error}</p> : null}
-          <Button type="button" onClick={() => void submit()} disabled={saving}>
+          <Button type="button" onClick={() => void submit()} disabled={saving || (Boolean(rightsClause) && !consented)}>
             {saving ? t.portal.submitting : t.portal.submitRequest}
           </Button>
         </section>
@@ -92,7 +117,7 @@ export function PortalPrivacyCreate({ fullName, email }: { fullName: string; ema
           <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{t.portal.subject}</p>
           <p className="mt-2 text-sm text-zinc-50">{fullName}</p>
           <p className="mt-1 text-xs text-zinc-500">{email ?? t.portal.emailOnFile}</p>
-          <p className="mt-4 text-sm leading-6 text-zinc-500">{DSAR_TYPES.find((item) => item.id === requestType)?.hint}</p>
+          <p className="mt-4 text-sm leading-6 text-zinc-500">{localizedDsarHint(t, requestType)}</p>
         </aside>
       </div>
     </motion.div>
