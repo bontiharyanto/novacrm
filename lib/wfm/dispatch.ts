@@ -56,6 +56,26 @@ export async function resolveAccountL1GroupId(
   return resolveInboundGroupId(client, tenantId);
 }
 
+export async function resolveSameAccountL1GroupId(
+  client: SupabaseClient,
+  tenantId: string,
+  accountId?: string | null,
+) {
+  if (!accountId) return null;
+  const { data } = await client
+    .from('assignment_groups')
+    .select('id')
+    .eq('tenant_id', tenantId)
+    .eq('account_id', accountId)
+    .eq('kind', 'assignment')
+    .eq('is_active', true)
+    .eq('tier', 'l1')
+    .order('name')
+    .limit(1)
+    .maybeSingle();
+  return data?.id ?? null;
+}
+
 export async function resolveInboundGroupId(client: SupabaseClient, tenantId: string) {
   const { data: account } = await client
     .from('accounts')

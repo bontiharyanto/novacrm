@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { CatalogIcon } from '@/components/catalog/catalog-icon';
+import { CatalogOtherForm } from '@/components/catalog/catalog-other-form';
+import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { CatalogCategory, CatalogItem } from '@/lib/catalog/schema';
 import { useI18n } from '@/components/layout/preferences-provider';
@@ -13,6 +15,7 @@ export function CatalogBrowse() {
   const [items, setItems] = useState<CatalogItem[]>([]);
   const [categories, setCategories] = useState<CatalogCategory[]>([]);
   const [active, setActive] = useState('all');
+  const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -25,24 +28,37 @@ export function CatalogBrowse() {
       .finally(() => setLoading(false));
   }, []);
 
-  const filtered = useMemo(
-    () => (active === 'all' ? items : items.filter((item) => item.categoryId === active)),
-    [active, items],
-  );
+  const filtered = useMemo(() => {
+    const hay = query.trim().toLowerCase();
+    return items.filter((item) => {
+      if (active !== 'all' && item.categoryId !== active) return false;
+      if (!hay) return true;
+      return [item.name, item.shortDescription, item.categoryName, item.slug]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(hay));
+    });
+  }, [active, items, query]);
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 p-6">
+    <div className="mx-auto max-w-6xl space-y-6 p-4 pb-safe md:p-8">
       <div>
-        <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">{t.catalog.kicker}</p>
-        <h1 className="text-2xl font-semibold text-zinc-50">{t.catalog.requestSomething}</h1>
+        <h1 className="text-[28px] font-semibold tracking-tight text-zinc-50">{t.catalog.requestSomething}</h1>
+        <p className="mt-1.5 text-sm text-zinc-500">{t.catalog.kicker}</p>
       </div>
+
+      <Input
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+        placeholder={t.catalog.search}
+        className="h-10 max-w-md"
+      />
 
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
           onClick={() => setActive('all')}
-          className={`rounded-full border px-3 py-1 text-xs ${
-            active === 'all' ? 'border-blue-500/40 bg-blue-500/15 text-blue-200' : 'border-zinc-800 text-zinc-400'
+          className={`rounded-md border px-2.5 py-1 text-[12px] transition-colors ${
+            active === 'all' ? 'nova-accent-chip' : 'border-zinc-800 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300'
           }`}
         >
           {t.catalog.all}
@@ -52,8 +68,8 @@ export function CatalogBrowse() {
             key={category.id}
             type="button"
             onClick={() => setActive(category.id)}
-            className={`rounded-full border px-3 py-1 text-xs ${
-              active === category.id ? 'border-blue-500/40 bg-blue-500/15 text-blue-200' : 'border-zinc-800 text-zinc-400'
+            className={`rounded-md border px-2.5 py-1 text-[12px] transition-colors ${
+              active === category.id ? 'nova-accent-chip' : 'border-zinc-800 text-zinc-500 hover:border-zinc-700 hover:text-zinc-300'
             }`}
           >
             {category.name}
@@ -69,10 +85,10 @@ export function CatalogBrowse() {
             <Link
               key={item.id}
               href={`/portal/catalog/${item.id}`}
-              className="rounded-xl border border-zinc-800 bg-zinc-900 p-4 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-zinc-700"
+              className="nova-surface rounded-xl border p-4 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-zinc-500"
             >
               <div className="flex items-start gap-3">
-                <span className="mt-0.5 rounded-md border border-zinc-800 bg-zinc-950 p-2 text-blue-300">
+                <span className="mt-0.5 rounded-md border border-zinc-800 bg-zinc-950 p-2 nova-accent-icon">
                   <CatalogIcon id={item.icon} />
                 </span>
                 <div>
@@ -84,9 +100,13 @@ export function CatalogBrowse() {
               </div>
             </Link>
           ))}
-          {filtered.length === 0 ? <p className="text-sm text-zinc-500">{t.catalog.emptyCategory}</p> : null}
+          {filtered.length === 0 ? (
+            <p className="col-span-full py-6 text-center text-sm text-zinc-500">{t.catalog.emptyCategory}</p>
+          ) : null}
         </div>
       )}
+
+      <CatalogOtherForm compact />
     </div>
   );
 }

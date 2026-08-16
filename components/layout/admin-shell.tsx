@@ -421,12 +421,14 @@ export function AgentShell({
   children,
   role,
   fullName,
+  userId,
   accounts,
   activeAccountId,
 }: {
   children: ReactNode;
   role: AppRole;
   fullName: string;
+  userId?: string;
   accounts: AccountRecord[];
   activeAccountId?: string | null;
 }) {
@@ -503,7 +505,7 @@ export function AgentShell({
               <kbd className="ml-auto hidden font-mono text-[10px] text-zinc-600 sm:inline">⌘K</kbd>
             </button>
             <PreferenceControls compact />
-            <NotificationBell />
+            <NotificationBell userId={userId} />
             {onAssistant ? null : <AskAiButton onClick={() => setAgentOpen(true)} />}
             {(() => {
               const active = accounts.find((account) => account.id === activeAccountId);

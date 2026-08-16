@@ -19,7 +19,9 @@ export default async function PortalLayout({ children }: { children: React.React
     <>
       <style dangerouslySetInnerHTML={{ __html: accentCss(tenant?.accentColor) }} />
       <AccentProvider color={tenant?.accentColor} />
-      <PortalShell fullName={session.profile.fullName}>{children}</PortalShell>
+      <PortalShell fullName={session.profile.fullName} userId={session.userId}>
+        {children}
+      </PortalShell>
     </>
   );
 }

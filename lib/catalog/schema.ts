@@ -96,4 +96,7 @@ export const CATALOG_ICONS = [
   { id: 'app', label: 'Software' },
   { id: 'wifi', label: 'Network' },
   { id: 'alert', label: 'Incident' },
+  { id: 'database', label: 'Database' },
+  { id: 'server', label: 'Datacenter' },
+  { id: 'cctv', label: 'CCTV' },
 ] as const;

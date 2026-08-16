@@ -22,21 +22,22 @@ export function ProcessStrip({
   return (
     <ol className="flex flex-wrap gap-1">
       {stages.map((stage, index) => {
-        const active = Boolean(onSelect) && stage.status === status;
-        const done = Boolean(onSelect) && index < currentIndex;
+        const current = stage.status === status;
+        const done = index < currentIndex;
+        const interactive = Boolean(onSelect);
         return (
           <li key={stage.status}>
             <button
               type="button"
-              disabled={!onSelect}
+              disabled={!interactive}
               onClick={() => onSelect?.(stage.status)}
               className={cn(
                 'rounded-full border px-2.5 py-1 text-[11px] font-medium tracking-wide transition-all duration-200 ease-out',
-                active && 'nova-accent-chip',
-                done && !active && 'border-zinc-700 bg-zinc-800 text-zinc-300',
-                !active && !done && 'border-zinc-800 bg-zinc-950 text-zinc-500',
-                onSelect && 'hover:-translate-y-0.5 hover:border-zinc-600',
-                !onSelect && 'cursor-default',
+                current && 'nova-accent-chip',
+                done && !current && 'border-zinc-700 bg-zinc-800 text-zinc-300',
+                !current && !done && 'border-zinc-800 bg-zinc-950 text-zinc-500',
+                interactive && 'hover:-translate-y-0.5 hover:border-zinc-600',
+                !interactive && 'cursor-default',
               )}
             >
               {localizedStage(t, type, stage.status)}

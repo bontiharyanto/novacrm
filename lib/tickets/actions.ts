@@ -16,7 +16,12 @@ import { applyTicketSlaChange, snapshotSla } from '@/lib/sla/engine';
 import { snapshotOla } from '@/lib/ola/engine';
 import { recordTicketAudit, recordTicketAuditDiff } from '@/lib/tickets/audit';
 import { defaultPendingReason, isPauseStatus } from '@/lib/tickets/pending';
-import { dispatchTicket, resolveAccountL1GroupId, resolveInboundGroupId } from '@/lib/wfm/dispatch';
+import {
+  dispatchTicket,
+  resolveAccountL1GroupId,
+  resolveInboundGroupId,
+  resolveSameAccountL1GroupId,
+} from '@/lib/wfm/dispatch';
 import { listAssignableAgents } from '@/lib/profiles/actions';
 import { enqueueWfmDispatch } from '@/lib/queue/wfm.queue';
 import { maybeRecordUcCredit } from '@/lib/uc/credits';
@@ -241,8 +246,9 @@ export async function createTicket(input: unknown) {
   });
   const isCustomer = isCustomerRole(session.profile.role);
   const groupClient = hasServiceRole() ? createSupabaseAdminClient() : supabase;
-  const resolvedGroupId =
-    parsed.groupId ?? (await resolveAccountL1GroupId(groupClient, session.profile.tenantId, scoped.accountId));
+  const resolvedGroupId = isCustomer
+    ? await resolveSameAccountL1GroupId(groupClient, session.profile.tenantId, scoped.accountId)
+    : parsed.groupId ?? (await resolveAccountL1GroupId(groupClient, session.profile.tenantId, scoped.accountId));
   const groupId = isCustomer ? null : resolvedGroupId;
   const ola = await snapshotOla(isCustomer ? groupClient : supabase, {
     tenantId: session.profile.tenantId,
@@ -700,6 +706,9 @@ async function afterTicketMutation(
       requesterId: ticket.requesterId,
       groupId: ticket.groupId,
       accountId: ticket.accountId,
+      accountName: ticket.accountName,
+      accountCode: ticket.accountCode,
+      priority: ticket.priority,
     },
     message,
   });

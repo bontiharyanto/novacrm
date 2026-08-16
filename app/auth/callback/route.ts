@@ -61,9 +61,9 @@ export async function GET(request: NextRequest) {
   }
 
   const dest = isCustomerRole(role)
-    ? next && next.startsWith('/portal')
+    ? next && next.startsWith('/portal') && next !== '/portal'
       ? next
-      : '/portal'
+      : '/portal?welcome=1'
     : next && !next.startsWith('/portal')
       ? next
       : homePathForRole(role);

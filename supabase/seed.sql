@@ -78,7 +78,13 @@ values
   ('11111111-1111-1111-1111-111111111111', '55555555-0001-0001-0001-000000000002', '33333333-3333-3333-3333-333333333333', 'member', '22222222-2222-2222-2222-222222222222'),
   ('11111111-1111-1111-1111-111111111111', '55555555-0001-0001-0001-000000000002', '44444444-4444-4444-4444-444444444444', 'portal', '22222222-2222-2222-2222-222222222222'),
   ('11111111-1111-1111-1111-111111111111', '55555555-0001-0001-0001-000000000003', '22222222-2222-2222-2222-222222222222', 'owner', '22222222-2222-2222-2222-222222222222'),
-  ('11111111-1111-1111-1111-111111111111', '55555555-0001-0001-0001-000000000003', '33333333-3333-3333-3333-333333333333', 'member', '22222222-2222-2222-2222-222222222222')
+  ('11111111-1111-1111-1111-111111111111', '55555555-0001-0001-0001-000000000003', '33333333-3333-3333-3333-333333333333', 'member', '22222222-2222-2222-2222-222222222222'),
+  ('11111111-1111-1111-1111-111111111111', '55555555-0001-0001-0001-000000000001', '22222222-2222-2222-2222-222222222224', 'member', '22222222-2222-2222-2222-222222222222'),
+  ('11111111-1111-1111-1111-111111111111', '55555555-0001-0001-0001-000000000002', '22222222-2222-2222-2222-222222222224', 'member', '22222222-2222-2222-2222-222222222222'),
+  ('11111111-1111-1111-1111-111111111111', '55555555-0001-0001-0001-000000000003', '22222222-2222-2222-2222-222222222224', 'member', '22222222-2222-2222-2222-222222222222'),
+  ('11111111-1111-1111-1111-111111111111', '55555555-0001-0001-0001-000000000001', '22222222-2222-2222-2222-222222222223', 'member', '22222222-2222-2222-2222-222222222222'),
+  ('11111111-1111-1111-1111-111111111111', '55555555-0001-0001-0001-000000000002', '22222222-2222-2222-2222-222222222223', 'member', '22222222-2222-2222-2222-222222222222'),
+  ('11111111-1111-1111-1111-111111111111', '55555555-0001-0001-0001-000000000003', '22222222-2222-2222-2222-222222222223', 'member', '22222222-2222-2222-2222-222222222222')
 on conflict (account_id, user_id) do nothing;
 
 insert into public.org_units (id, tenant_id, account_id, parent_id, type, name, slug, manager_id, created_by)
@@ -103,6 +109,7 @@ values
   ('99999999-0001-0001-0001-000000000002', '11111111-1111-1111-1111-111111111111', '55555555-0001-0001-0001-000000000001', 'CAB Infra', 'cab-infra', 'cab', true, '22222222-2222-2222-2222-222222222222'),
   ('99999999-0001-0001-0001-000000000003', '11111111-1111-1111-1111-111111111111', '55555555-0001-0001-0001-000000000001', 'Network On-call', 'network-oncall', 'oncall', true, '22222222-2222-2222-2222-222222222222'),
   ('99999999-0001-0001-0001-000000000004', '11111111-1111-1111-1111-111111111111', '55555555-0001-0001-0001-000000000002', 'Bank L1', 'bank-l1', 'assignment', true, '22222222-2222-2222-2222-222222222222'),
+  ('99999999-0001-0001-0001-000000000009', '11111111-1111-1111-1111-111111111111', '55555555-0001-0001-0001-000000000003', 'Garuda L1', 'garuda-l1', 'assignment', true, '22222222-2222-2222-2222-222222222222'),
   ('99999999-0001-0001-0001-000000000005', '11111111-1111-1111-1111-111111111111', '55555555-0001-0001-0001-000000000001', 'L2 Network', 'l2-network', 'assignment', true, '22222222-2222-2222-2222-222222222222'),
   ('99999999-0001-0001-0001-000000000006', '11111111-1111-1111-1111-111111111111', '55555555-0001-0001-0001-000000000001', 'L3 Infra', 'l3-infra', 'assignment', true, '22222222-2222-2222-2222-222222222222')
 on conflict (id) do nothing;
@@ -217,7 +224,15 @@ values
   ('11111111-1111-1111-1111-111111111111', '99999999-0001-0001-0001-000000000005', '22222222-2222-2222-2222-222222222222', 'member', '22222222-2222-2222-2222-222222222222'),
   ('11111111-1111-1111-1111-111111111111', '99999999-0001-0001-0001-000000000006', '22222222-2222-2222-2222-222222222222', 'lead', '22222222-2222-2222-2222-222222222222'),
   ('11111111-1111-1111-1111-111111111111', '99999999-0001-0001-0001-000000000007', '22222222-2222-2222-2222-222222222222', 'lead', '22222222-2222-2222-2222-222222222222'),
-  ('11111111-1111-1111-1111-111111111111', '99999999-0001-0001-0001-000000000008', '22222222-2222-2222-2222-222222222222', 'lead', '22222222-2222-2222-2222-222222222222')
+  ('11111111-1111-1111-1111-111111111111', '99999999-0001-0001-0001-000000000008', '22222222-2222-2222-2222-222222222222', 'lead', '22222222-2222-2222-2222-222222222222'),
+  ('11111111-1111-1111-1111-111111111111', '99999999-0001-0001-0001-000000000001', '22222222-2222-2222-2222-222222222224', 'lead', '22222222-2222-2222-2222-222222222222'),
+  ('11111111-1111-1111-1111-111111111111', '99999999-0001-0001-0001-000000000004', '22222222-2222-2222-2222-222222222224', 'lead', '22222222-2222-2222-2222-222222222222'),
+  ('11111111-1111-1111-1111-111111111111', '99999999-0001-0001-0001-000000000009', '22222222-2222-2222-2222-222222222224', 'lead', '22222222-2222-2222-2222-222222222222'),
+  ('11111111-1111-1111-1111-111111111111', '99999999-0001-0001-0001-000000000001', '22222222-2222-2222-2222-222222222223', 'lead', '22222222-2222-2222-2222-222222222222'),
+  ('11111111-1111-1111-1111-111111111111', '99999999-0001-0001-0001-000000000004', '22222222-2222-2222-2222-222222222223', 'lead', '22222222-2222-2222-2222-222222222222'),
+  ('11111111-1111-1111-1111-111111111111', '99999999-0001-0001-0001-000000000009', '22222222-2222-2222-2222-222222222223', 'lead', '22222222-2222-2222-2222-222222222222'),
+  ('11111111-1111-1111-1111-111111111111', '99999999-0001-0001-0001-000000000009', '33333333-3333-3333-3333-333333333334', 'member', '22222222-2222-2222-2222-222222222222'),
+  ('11111111-1111-1111-1111-111111111111', '99999999-0001-0001-0001-000000000009', '33333333-3333-3333-3333-333333333333', 'member', '22222222-2222-2222-2222-222222222222')
 on conflict (group_id, user_id) do nothing;
 
 insert into public.assets (id, tenant_id, account_id, name, asset_tag, type, brand, model, status, location, assigned_to, created_by)
@@ -231,7 +246,9 @@ values
   ('aaaaaaaa-0001-0001-0001-000000000007', '11111111-1111-1111-1111-111111111111', '55555555-0001-0001-0001-000000000002', 'Printer Marketing', 'AST-4001', 'printer', 'HP', 'LaserJet MFP', 'in_repair', 'Lt. 3', 'Marketing', null),
   ('aaaaaaaa-0001-0001-0001-000000000008', '11111111-1111-1111-1111-111111111111', '55555555-0001-0001-0001-000000000003', 'Printer Warehouse', 'AST-4002', 'printer', 'Epson', 'L6490', 'active', 'Gudang', 'Warehouse', null),
   ('aaaaaaaa-0001-0001-0001-000000000009', '11111111-1111-1111-1111-111111111111', '55555555-0001-0001-0001-000000000002', 'Mobile Field 01', 'AST-5001', 'mobile', 'Samsung', 'A55', 'active', 'Field', 'Sales', null),
-  ('aaaaaaaa-0001-0001-0001-000000000010', '11111111-1111-1111-1111-111111111111', '55555555-0001-0001-0001-000000000003', 'Mobile Field 02', 'AST-5002', 'mobile', 'Samsung', 'A55', 'lost', 'Field', 'Sales', null)
+  ('aaaaaaaa-0001-0001-0001-000000000010', '11111111-1111-1111-1111-111111111111', '55555555-0001-0001-0001-000000000003', 'Mobile Field 02', 'AST-5002', 'mobile', 'Samsung', 'A55', 'lost', 'Field', 'Sales', null),
+  ('aaaaaaaa-0001-0001-0001-000000000019', '11111111-1111-1111-1111-111111111111', '55555555-0001-0001-0001-000000000002', 'Bank App Server HQ', 'AST-3301', 'server', 'Dell', 'PowerEdge R650', 'active', 'Jakarta HQ', 'Apps', '22222222-2222-2222-2222-222222222222'),
+  ('aaaaaaaa-0001-0001-0001-000000000020', '11111111-1111-1111-1111-111111111111', '55555555-0001-0001-0001-000000000002', 'Bank DB Server HQ', 'AST-3302', 'server', 'Dell', 'PowerEdge R750', 'active', 'Jakarta HQ', 'Database', '22222222-2222-2222-2222-222222222222')
 on conflict (id) do nothing;
 
 update public.assets set
@@ -329,7 +346,9 @@ values
   ('bbbbbbbb-0001-0001-0001-000000000019', '11111111-1111-1111-1111-111111111111', '55555555-0001-0001-0001-000000000003', null, 'garuda-wan-xl', 'network', '{"role":"wan","site":"Gudang","circuit":"XL 50M"}', '[]', '22222222-2222-2222-2222-222222222222'),
   ('bbbbbbbb-0001-0001-0001-000000000020', '11111111-1111-1111-1111-111111111111', '55555555-0001-0001-0001-000000000003', 'aaaaaaaa-0001-0001-0001-000000000016', 'garuda-fw', 'network', '{"role":"edge","site":"Gudang"}', '[]', '22222222-2222-2222-2222-222222222222'),
   ('bbbbbbbb-0001-0001-0001-000000000021', '11111111-1111-1111-1111-111111111111', '55555555-0001-0001-0001-000000000003', 'aaaaaaaa-0001-0001-0001-000000000017', 'garuda-sw-wh', 'network', '{"role":"access","site":"Gudang"}', '[]', '22222222-2222-2222-2222-222222222222'),
-  ('bbbbbbbb-0001-0001-0001-000000000022', '11111111-1111-1111-1111-111111111111', '55555555-0001-0001-0001-000000000003', 'aaaaaaaa-0001-0001-0001-000000000018', 'garuda-ap-wh', 'network', '{"role":"ap","site":"Gudang","ssid":"GL-WH"}', '[]', '22222222-2222-2222-2222-222222222222')
+  ('bbbbbbbb-0001-0001-0001-000000000022', '11111111-1111-1111-1111-111111111111', '55555555-0001-0001-0001-000000000003', 'aaaaaaaa-0001-0001-0001-000000000018', 'garuda-ap-wh', 'network', '{"role":"ap","site":"Gudang","ssid":"GL-WH"}', '[]', '22222222-2222-2222-2222-222222222222'),
+  ('bbbbbbbb-0001-0001-0001-000000000023', '11111111-1111-1111-1111-111111111111', '55555555-0001-0001-0001-000000000002', 'aaaaaaaa-0001-0001-0001-000000000019', 'bank-core-app', 'application', '{"role":"core-banking","site":"Jakarta HQ"}', '[]', '22222222-2222-2222-2222-222222222222'),
+  ('bbbbbbbb-0001-0001-0001-000000000024', '11111111-1111-1111-1111-111111111111', '55555555-0001-0001-0001-000000000002', 'aaaaaaaa-0001-0001-0001-000000000020', 'bank-core-db', 'database', '{"engine":"postgres","site":"Jakarta HQ"}', '[]', '22222222-2222-2222-2222-222222222222')
 on conflict (id) do nothing;
 
 update public.cmdb_items set relations = '[{"targetId":"bbbbbbbb-0001-0001-0001-000000000014","type":"connects"}]'::jsonb where id = 'bbbbbbbb-0001-0001-0001-000000000013';
@@ -484,7 +503,11 @@ values
   ('cccccccc-0001-0001-0001-000000000002', '11111111-1111-1111-1111-111111111111', 'Access', 'access', 'Accounts and connectivity', 2, true),
   ('cccccccc-0001-0001-0001-000000000003', '11111111-1111-1111-1111-111111111111', 'Software', 'software', 'Applications and licenses', 3, true),
   ('cccccccc-0001-0001-0001-000000000004', '11111111-1111-1111-1111-111111111111', 'Incidents', 'incidents', 'Service disruption', 4, true),
-  ('cccccccc-0001-0001-0001-000000000005', '11111111-1111-1111-1111-111111111111', 'Standard change', 'standard-change', 'Pre-approved low-risk changes', 5, true)
+  ('cccccccc-0001-0001-0001-000000000005', '11111111-1111-1111-1111-111111111111', 'Standard change', 'standard-change', 'Pre-approved low-risk changes', 5, true),
+  ('cccccccc-0001-0001-0001-000000000006', '11111111-1111-1111-1111-111111111111', 'Network', 'network', 'LAN, WAN, VPN, and connectivity', 6, true),
+  ('cccccccc-0001-0001-0001-000000000007', '11111111-1111-1111-1111-111111111111', 'Database', 'database', 'Database availability and access', 7, true),
+  ('cccccccc-0001-0001-0001-000000000008', '11111111-1111-1111-1111-111111111111', 'Datacenter', 'datacenter', 'Power, cooling, rack, and hall facilities', 8, true),
+  ('cccccccc-0001-0001-0001-000000000009', '11111111-1111-1111-1111-111111111111', 'CCTV', 'cctv', 'Cameras, NVR/DVR, and footage requests', 9, true)
 on conflict (id) do nothing;
 
 insert into public.catalog_variable_sets (id, tenant_id, name, description, variables)
@@ -629,6 +652,216 @@ values
     'change',
     'medium',
     '[{"key":"hostname","label":"Hostname","type":"text","required":true},{"key":"expiry","label":"Current expiry","type":"text","required":false}]'::jsonb,
+    true
+  ),
+  (
+    'eeeeeeee-0001-0001-0001-000000000009',
+    '11111111-1111-1111-1111-111111111111',
+    'cccccccc-0001-0001-0001-000000000006',
+    null,
+    'LAN / switch down',
+    'lan-switch-down',
+    'Access or core switch is unreachable',
+    'Incident for LAN port, VLAN, or switch outage on a customer CI.',
+    'wifi',
+    'incident',
+    'high',
+    '[{"key":"location","label":"Floor / site","type":"text","required":true},{"key":"symptom","label":"What failed","type":"textarea","required":true}]'::jsonb,
+    true
+  ),
+  (
+    'eeeeeeee-0001-0001-0001-000000000010',
+    '11111111-1111-1111-1111-111111111111',
+    'cccccccc-0001-0001-0001-000000000006',
+    null,
+    'WAN / internet down',
+    'wan-internet-down',
+    'Site circuit or internet link is down',
+    'Incident for WAN circuit, ISP, or edge firewall path.',
+    'wifi',
+    'incident',
+    'critical',
+    '[{"key":"site","label":"Site","type":"text","required":true},{"key":"provider","label":"ISP / circuit","type":"text","required":false}]'::jsonb,
+    true
+  ),
+  (
+    'eeeeeeee-0001-0001-0001-000000000011',
+    '11111111-1111-1111-1111-111111111111',
+    'cccccccc-0001-0001-0001-000000000006',
+    null,
+    'VPN cannot connect',
+    'vpn-cannot-connect',
+    'Remote users cannot reach the corporate VPN',
+    'Incident for VPN gateway or client connect failure.',
+    'wifi',
+    'incident',
+    'high',
+    '[{"key":"user_count","label":"Who is affected","type":"text","required":true}]'::jsonb,
+    true
+  ),
+  (
+    'eeeeeeee-0001-0001-0001-000000000012',
+    '11111111-1111-1111-1111-111111111111',
+    'cccccccc-0001-0001-0001-000000000003',
+    null,
+    'Business application error',
+    'app-error',
+    'Published application is slow or returning errors',
+    'Incident against an application or tech service in CMDB.',
+    'app',
+    'incident',
+    'high',
+    '[{"key":"application","label":"Application / CI","type":"text","required":true},{"key":"error","label":"Error or behaviour","type":"textarea","required":true}]'::jsonb,
+    true
+  ),
+  (
+    'eeeeeeee-0001-0001-0001-000000000013',
+    '11111111-1111-1111-1111-111111111111',
+    'cccccccc-0001-0001-0001-000000000003',
+    null,
+    'Install approved software',
+    'install-approved-software',
+    'Request a packaged application on an endpoint',
+    'Request after license and CMDB application check.',
+    'app',
+    'request',
+    'medium',
+    '[{"key":"application","label":"Application","type":"text","required":true}]'::jsonb,
+    true
+  ),
+  (
+    'eeeeeeee-0001-0001-0001-000000000014',
+    '11111111-1111-1111-1111-111111111111',
+    'cccccccc-0001-0001-0001-000000000007',
+    null,
+    'Database unavailable',
+    'database-unavailable',
+    'Database or listener is down or rejecting connections',
+    'Incident for a database CI or DB server asset.',
+    'database',
+    'incident',
+    'critical',
+    '[{"key":"database","label":"Database / CI","type":"text","required":true},{"key":"error","label":"Error message","type":"textarea","required":false}]'::jsonb,
+    true
+  ),
+  (
+    'eeeeeeee-0001-0001-0001-000000000015',
+    '11111111-1111-1111-1111-111111111111',
+    'cccccccc-0001-0001-0001-000000000007',
+    null,
+    'Database access request',
+    'database-access',
+    'Read or write access to an existing database',
+    'Request scoped to a database CI the account owns.',
+    'key',
+    'request',
+    'medium',
+    '[{"key":"database","label":"Database / CI","type":"text","required":true},{"key":"access","label":"Access needed","type":"select","required":true,"options":["Read","Read/write","Owner"]}]'::jsonb,
+    true
+  ),
+  (
+    'eeeeeeee-0001-0001-0001-000000000016',
+    '11111111-1111-1111-1111-111111111111',
+    'cccccccc-0001-0001-0001-000000000008',
+    null,
+    'Datacenter facility issue',
+    'dc-facility-issue',
+    'Power, cooling, or hall access problem',
+    'Incident for DC facility impacting hosted servers or storage.',
+    'server',
+    'incident',
+    'high',
+    '[{"key":"hall","label":"Hall / rack","type":"text","required":true},{"key":"symptom","label":"Symptom","type":"textarea","required":true}]'::jsonb,
+    true
+  ),
+  (
+    'eeeeeeee-0001-0001-0001-000000000017',
+    '11111111-1111-1111-1111-111111111111',
+    'cccccccc-0001-0001-0001-000000000008',
+    null,
+    'Server / rack access',
+    'dc-rack-access',
+    'Escort or hands-on access to a racked server',
+    'Request against a server asset in the customer datacenter.',
+    'server',
+    'request',
+    'medium',
+    '[{"key":"server","label":"Server / asset tag","type":"text","required":true},{"key":"window","label":"Preferred window","type":"text","required":false}]'::jsonb,
+    true
+  ),
+  (
+    'eeeeeeee-0001-0001-0001-000000000018',
+    '11111111-1111-1111-1111-111111111111',
+    'cccccccc-0001-0001-0001-000000000009',
+    null,
+    'CCTV camera offline',
+    'cctv-camera-offline',
+    'Camera is down, black, or not recording',
+    'Incident for a camera CI or CCTV asset. Ticket can still be opened if the camera is not yet in CMDB.',
+    'cctv',
+    'incident',
+    'high',
+    '[{"key":"location","label":"Location / camera name","type":"text","required":true},{"key":"symptom","label":"What failed","type":"textarea","required":true}]'::jsonb,
+    true
+  ),
+  (
+    'eeeeeeee-0001-0001-0001-000000000019',
+    '11111111-1111-1111-1111-111111111111',
+    'cccccccc-0001-0001-0001-000000000009',
+    null,
+    'CCTV image quality',
+    'cctv-image-quality',
+    'Blur, night vision, or wrong angle',
+    'Incident for picture quality on an existing or unlisted camera.',
+    'cctv',
+    'incident',
+    'medium',
+    '[{"key":"location","label":"Location / camera name","type":"text","required":true},{"key":"symptom","label":"Quality issue","type":"textarea","required":true}]'::jsonb,
+    true
+  ),
+  (
+    'eeeeeeee-0001-0001-0001-000000000020',
+    '11111111-1111-1111-1111-111111111111',
+    'cccccccc-0001-0001-0001-000000000009',
+    null,
+    'NVR / recorder down',
+    'cctv-nvr-down',
+    'NVR, DVR, or VMS cannot record or play back',
+    'Incident against a recorder CI. Open even if the NVR is not in the account estate.',
+    'cctv',
+    'incident',
+    'critical',
+    '[{"key":"recorder","label":"NVR / site","type":"text","required":true},{"key":"symptom","label":"Symptom","type":"textarea","required":true}]'::jsonb,
+    true
+  ),
+  (
+    'eeeeeeee-0001-0001-0001-000000000021',
+    '11111111-1111-1111-1111-111111111111',
+    'cccccccc-0001-0001-0001-000000000009',
+    null,
+    'Request CCTV footage',
+    'cctv-footage-request',
+    'Export playback for a time window',
+    'Request scoped to a camera or site. Desk verifies policy before export.',
+    'cctv',
+    'request',
+    'medium',
+    '[{"key":"location","label":"Camera / site","type":"text","required":true},{"key":"window","label":"Date and time window","type":"text","required":true},{"key":"reason","label":"Business reason","type":"textarea","required":true}]'::jsonb,
+    true
+  ),
+  (
+    'eeeeeeee-0001-0001-0001-000000000022',
+    '11111111-1111-1111-1111-111111111111',
+    'cccccccc-0001-0001-0001-000000000009',
+    null,
+    'Install new CCTV',
+    'cctv-install',
+    'Add a camera that is not yet in the estate',
+    'Request to survey, install, and register a new CCTV asset and CI.',
+    'cctv',
+    'request',
+    'medium',
+    '[{"key":"location","label":"Proposed location","type":"text","required":true},{"key":"reason","label":"Why it is needed","type":"textarea","required":true}]'::jsonb,
     true
   )
 on conflict (id) do nothing;
@@ -930,7 +1163,7 @@ where a.account_id = t.account_id
   and a.is_active
   and t.sla_agreement_id is null;
 
-update public.assignment_groups set tier = 'l1' where id in ('99999999-0001-0001-0001-000000000001', '99999999-0001-0001-0001-000000000004');
+update public.assignment_groups set tier = 'l1' where id in ('99999999-0001-0001-0001-000000000001', '99999999-0001-0001-0001-000000000004', '99999999-0001-0001-0001-000000000009');
 update public.assignment_groups set tier = 'l2' where id in ('99999999-0001-0001-0001-000000000003', '99999999-0001-0001-0001-000000000005');
 update public.assignment_groups set tier = 'l3' where id = '99999999-0001-0001-0001-000000000006';
 
@@ -1029,7 +1262,8 @@ values
   ('ffffffff-0001-0001-0001-000000000002', '11111111-1111-1111-1111-111111111111', 'server', 'Server', 20, true, '22222222-2222-2222-2222-222222222222'),
   ('ffffffff-0001-0001-0001-000000000003', '11111111-1111-1111-1111-111111111111', 'network', 'Network', 30, true, '22222222-2222-2222-2222-222222222222'),
   ('ffffffff-0001-0001-0001-000000000004', '11111111-1111-1111-1111-111111111111', 'printer', 'Printer', 40, true, '22222222-2222-2222-2222-222222222222'),
-  ('ffffffff-0001-0001-0001-000000000005', '11111111-1111-1111-1111-111111111111', 'mobile', 'Mobile', 50, true, '22222222-2222-2222-2222-222222222222')
+  ('ffffffff-0001-0001-0001-000000000005', '11111111-1111-1111-1111-111111111111', 'mobile', 'Mobile', 50, true, '22222222-2222-2222-2222-222222222222'),
+  ('ffffffff-0001-0001-0001-000000000006', '11111111-1111-1111-1111-111111111111', 'cctv', 'CCTV', 60, true, '22222222-2222-2222-2222-222222222222')
 on conflict (tenant_id, slug) do nothing;
 
 insert into public.integrations (tenant_id, kind, config, is_active, created_by)

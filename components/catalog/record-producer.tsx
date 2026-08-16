@@ -56,7 +56,7 @@ export function RecordProducer({ itemId }: { itemId: string }) {
   }
 
   if (!item) {
-    return <p className="p-6 text-sm text-zinc-500">Loading catalog item...</p>;
+    return <p className="mx-auto max-w-3xl p-4 text-sm text-zinc-500 md:p-8">{t.common.loading}</p>;
   }
 
   return (
@@ -65,15 +65,15 @@ export function RecordProducer({ itemId }: { itemId: string }) {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
-      className="mx-auto max-w-3xl space-y-6 p-6"
+      className="mx-auto max-w-3xl space-y-6 p-4 pb-safe md:p-8"
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <Link href="/portal/catalog" className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-200">
             <ArrowLeft className="h-3.5 w-3.5" /> {t.portal.catalog}
           </Link>
-          <div className="mt-2 flex items-center gap-2">
-            <h1 className="text-2xl font-semibold text-zinc-50">{item.name}</h1>
+          <div className="mt-3 flex items-center gap-2">
+            <h1 className="text-[28px] font-semibold tracking-tight text-zinc-50">{item.name}</h1>
             <TypeBadge type={item.ticketType} />
           </div>
           <p className="mt-1 text-sm text-zinc-500">
@@ -91,7 +91,7 @@ export function RecordProducer({ itemId }: { itemId: string }) {
       </div>
       {error ? <p className="text-sm text-rose-400">{error}</p> : null}
 
-      <div className="space-y-4 rounded-xl border border-zinc-800 bg-zinc-900 p-5">
+      <div className="nova-surface space-y-4 rounded-xl border p-5">
         {item.mergedVariables.length === 0 ? (
           <p className="text-sm text-zinc-400">
             {t.tickets.type[item.ticketType]}

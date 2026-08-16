@@ -1,13 +1,16 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { AlertCircle, ArrowUp, BookOpen, CalendarClock, ClipboardList, History, Maximize2, Menu, ShieldCheck, Sparkles, X } from 'lucide-react';
 import { AssistantMarkdown } from '@/components/assistant/assistant-markdown';
 import { NovaMark } from '@/components/brand/nova-mark';
 import { useI18n } from '@/components/layout/preferences-provider';
 import { listAssistantThreadSummaries, loadAssistantThread } from '@/lib/assistant/threads';
 import type { AssistantMessage, AssistantThreadSummary } from '@/lib/assistant/schema';
+import type { PortalTicketSuggestion } from '@/lib/assistant/portal-suggestions';
 import { formatRelativeId } from '@/lib/utils/dates';
+import { emitTicketsChanged } from '@/lib/tickets/events';
 import { cn } from '@/lib/utils';
 
 const DESK_FEATURES = [
@@ -57,11 +60,24 @@ export function AssistantWidget({
   const [input, setInput] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [suggestions, setSuggestions] = useState<PortalTicketSuggestion[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(variant === 'portal');
+  const [proposal, setProposal] = useState<{ type: string; title: string; description: string } | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, busy, view]);
+
+  useEffect(() => {
+    if (variant !== 'portal' || !open) return;
+    void fetch(`/api/assistant/suggestions?locale=${locale}`)
+      .then((response) => response.json())
+      .then((payload) => {
+        if (Array.isArray(payload.data)) setSuggestions(payload.data);
+      })
+      .catch(() => undefined);
+  }, [variant, open, locale]);
 
   if (hidden) return null;
 
@@ -76,6 +92,15 @@ export function AssistantWidget({
     setMessages([]);
     setError('');
     setInput('');
+    setShowSuggestions(variant === 'portal');
+    setProposal(null);
+    sessionStorage.removeItem('novacrm_assistant_thread_portal');
+    sessionStorage.removeItem('novacrm_assistant_thread_desk');
+  }
+
+  function closeWidget() {
+    resetHome();
+    onOpenChange(false);
   }
 
   async function openHistory() {
@@ -92,6 +117,7 @@ export function AssistantWidget({
     setThreadId(result.data.id);
     setMessages(result.data.messages);
     setView('chat');
+    setShowSuggestions(false);
   }
 
   async function send(text?: string) {
@@ -106,7 +132,7 @@ export function AssistantWidget({
     const response = await fetch('/api/assistant', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messages: next, threadId, locale }),
+      body: JSON.stringify({ messages: next, threadId: variant === 'portal' ? null : threadId, locale }),
     });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok || payload.error) {
@@ -116,8 +142,11 @@ export function AssistantWidget({
     }
     const reply = payload.data.content as string;
     const savedId = (payload.data.threadId as string | null) ?? threadId;
-    if (payload.data.intake) {
-      setView('chat');
+    setShowSuggestions(variant === 'portal' && Boolean(payload.data.intake) && !payload.data.proposal);
+    setProposal(payload.data.proposal ?? null);
+    if (payload.data.ticketId) {
+      emitTicketsChanged();
+      setProposal(null);
     }
     const withReply = [...next, { role: 'assistant' as const, content: reply }];
     setMessages(withReply);
@@ -147,8 +176,16 @@ export function AssistantWidget({
         </button>
       )}
       {open ? (
-        <div className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-[60] flex h-[min(85dvh,640px)] w-auto flex-col overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950 shadow-2xl sm:inset-x-auto sm:right-4 sm:h-[min(640px,calc(100dvh-5.5rem))] sm:w-[min(400px,calc(100vw-2rem))] md:bottom-6 md:right-6">
+        <div
+          className={cn(
+            'z-[60] flex flex-col overflow-hidden border-zinc-800 bg-zinc-950',
+            variant === 'portal'
+              ? 'fixed inset-y-0 right-0 h-dvh w-full border-l sm:w-[400px]'
+              : 'fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] h-[min(85dvh,640px)] w-auto rounded-2xl border shadow-2xl sm:inset-x-auto sm:right-4 sm:h-[min(640px,calc(100dvh-5.5rem))] sm:w-[min(400px,calc(100vw-2rem))] md:bottom-6 md:right-6',
+          )}
+        >
           <header className="flex h-12 shrink-0 items-center gap-2 border-b border-zinc-800 px-3">
+            {variant === 'desk' ? (
             <button
               type="button"
               onClick={() => void (view === 'history' ? setView(messages.length ? 'chat' : 'home') : openHistory())}
@@ -157,6 +194,9 @@ export function AssistantWidget({
             >
               {view === 'history' ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
             </button>
+            ) : (
+              <span className="w-8" />
+            )}
             <div className="flex min-w-0 flex-1 items-center justify-center gap-2">
               <NovaMark size={22} />
               <p className="truncate text-[13px] font-medium text-zinc-100">Nova Agent</p>
@@ -173,7 +213,7 @@ export function AssistantWidget({
             ) : null}
             <button
               type="button"
-              onClick={() => onOpenChange(false)}
+              onClick={closeWidget}
               className="rounded-md p-1.5 text-zinc-400 hover:bg-zinc-900 hover:text-zinc-50"
               aria-label={t.assistant.close}
             >
@@ -237,7 +277,14 @@ export function AssistantWidget({
                       <li key={feature.key}>
                         <button
                           type="button"
-                          onClick={() => void send(prompt)}
+                          onClick={() => {
+                            if (variant === 'portal' && feature.key === 'catalog') {
+                              setView('chat');
+                              setShowSuggestions(true);
+                              return;
+                            }
+                            void send(prompt);
+                          }}
                           className="flex w-full items-start gap-3 rounded-xl border border-zinc-800 bg-zinc-900/40 px-3 py-2.5 text-left hover:border-zinc-700"
                         >
                           <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[color:color-mix(in_srgb,var(--accent)_18%,transparent)]">
@@ -254,7 +301,19 @@ export function AssistantWidget({
                 </ul>
               </div>
             ) : (
-              <div className="nova-scroll flex-1 space-y-2.5 overflow-y-auto px-3 py-3">
+              <div className="nova-scroll flex min-h-0 flex-1 flex-col space-y-2.5 overflow-y-auto px-3 py-3">
+                {messages.length === 0 && variant === 'portal' && suggestions.length > 0 ? (
+                  <div className="flex h-full flex-col justify-end pb-1">
+                    <p className="text-[13px] font-medium text-zinc-200">{t.assistant.suggestTitle}</p>
+                    <p className="mt-0.5 text-[12px] text-zinc-500">{t.assistant.suggestHint}</p>
+                    <SuggestionChips
+                      items={suggestions}
+                      disabled={busy}
+                      onPick={(prompt) => void send(prompt)}
+                    />
+                    <p className="mt-3 text-[12px] leading-5 text-zinc-500">{t.assistant.suggestOther}</p>
+                  </div>
+                ) : null}
                 {messages.map((item, index) => (
                   <div
                     key={`${item.role}-${index}`}
@@ -279,12 +338,32 @@ export function AssistantWidget({
             {view === 'home' ? (
               <button
                 type="button"
-                onClick={() => setView('chat')}
+                onClick={() => {
+                  setView('chat');
+                  setShowSuggestions(variant === 'portal');
+                }}
                 className="nova-accent-btn flex h-10 w-full items-center justify-center rounded-lg text-[13px] font-medium text-white"
               >
                 {t.assistant.startChat}
               </button>
             ) : view === 'chat' ? (
+              <div className="space-y-2">
+                {variant === 'portal' && proposal && !busy ? (
+                  <button
+                    type="button"
+                    onClick={() => void send(t.assistant.confirmTicket)}
+                    className="nova-accent-btn flex h-10 w-full items-center justify-center rounded-lg text-[13px] font-medium text-white"
+                  >
+                    {t.assistant.confirmTicket}
+                  </button>
+                ) : null}
+                {variant === 'portal' && showSuggestions && messages.length > 0 && suggestions.length > 0 ? (
+                  <SuggestionChips
+                    items={suggestions}
+                    disabled={busy}
+                    onPick={(prompt) => void send(prompt)}
+                  />
+                ) : null}
               <form
                 className="flex items-end gap-2 rounded-xl border border-zinc-800 bg-zinc-900 px-2.5 py-1.5"
                 onSubmit={(event) => {
@@ -314,6 +393,7 @@ export function AssistantWidget({
                   <ArrowUp className="h-3.5 w-3.5" />
                 </button>
               </form>
+              </div>
             ) : (
               <button
                 type="button"
@@ -328,5 +408,41 @@ export function AssistantWidget({
         </div>
       ) : null}
     </>
+  );
+}
+
+function SuggestionChips({
+  items,
+  disabled,
+  onPick,
+}: {
+  items: PortalTicketSuggestion[];
+  disabled?: boolean;
+  onPick: (prompt: string) => void;
+}) {
+  return (
+    <div className="mt-3 flex flex-wrap gap-1.5">
+      {items.map((item) =>
+        item.href ? (
+          <Link
+            key={item.id}
+            href={item.href}
+            className="rounded-full border border-zinc-800 bg-zinc-900 px-2.5 py-1 text-[12px] text-zinc-300 transition-colors hover:border-zinc-600 hover:text-zinc-50"
+          >
+            {item.label}
+          </Link>
+        ) : (
+          <button
+            key={item.id}
+            type="button"
+            disabled={disabled}
+            onClick={() => onPick(item.prompt)}
+            className="rounded-full border border-zinc-800 bg-zinc-900 px-2.5 py-1 text-[12px] text-zinc-300 transition-colors hover:border-zinc-600 hover:text-zinc-50 disabled:opacity-40"
+          >
+            {item.label}
+          </button>
+        ),
+      )}
+    </div>
   );
 }

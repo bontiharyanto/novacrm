@@ -43,7 +43,14 @@ export async function signInAction(_prev: SignInState, formData: FormData): Prom
 
   const role = parseAppRole(profile?.role ?? data.user.user_metadata?.role);
   if (isCustomerRole(role)) {
-    redirect(next && next.startsWith('/portal') ? next : '/portal');
+    cookies().set('novacrm_portal_welcome', '1', {
+      path: '/',
+      sameSite: 'lax',
+      httpOnly: false,
+      maxAge: 20,
+    });
+    const dest = next && next.startsWith('/portal') && next !== '/portal' ? next : '/portal?welcome=1';
+    redirect(dest);
   }
 
   if (profile?.tenant_id) {

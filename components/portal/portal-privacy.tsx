@@ -4,14 +4,15 @@ import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Plus, Scale } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRealtimeTable } from '@/lib/supabase/realtime';
+import { useI18n } from '@/components/layout/preferences-provider';
 import { DSAR_TYPES, type DataSubjectRequest, type PrivacySettings } from '@/lib/governance/schema';
 import { getDsarSla, slaTone } from '@/lib/governance/flow';
 import { formatRelativeId } from '@/lib/utils/dates';
 
 export function PortalPrivacy() {
+  const { t, locale } = useI18n();
   const [settings, setSettings] = useState<PrivacySettings | null>(null);
   const [requests, setRequests] = useState<DataSubjectRequest[]>([]);
   const [loading, setLoading] = useState(true);
@@ -34,7 +35,7 @@ export function PortalPrivacy() {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-5xl space-y-4 p-6">
+      <div className="mx-auto max-w-6xl space-y-4 p-4 pb-safe md:p-8">
         <Skeleton className="h-10 w-64" />
         <Skeleton className="h-48 w-full rounded-xl" />
       </div>
@@ -42,79 +43,77 @@ export function PortalPrivacy() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-5 p-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+    <div className="mx-auto max-w-6xl space-y-8 p-4 pb-safe md:p-8">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">UU PDP</p>
-          <h1 className="text-2xl font-semibold text-zinc-50">Privacy</h1>
+          <h1 className="text-[28px] font-semibold tracking-tight text-zinc-50">{t.portal.privacy}</h1>
+          <p className="mt-1.5 text-sm text-zinc-500">{t.portal.privacyKicker}</p>
         </div>
         <Link
           href="/portal/privacy/new"
-          className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1.5 text-xs font-medium text-white transition-all duration-200 ease-out hover:-translate-y-0.5 hover:bg-blue-500"
+          className="nova-accent-btn inline-flex h-8 items-center gap-1.5 rounded-md px-2.5 text-[12px] font-medium text-white transition-all duration-200 ease-out hover:-translate-y-px"
         >
-          <Plus className="h-3.5 w-3.5" /> Submit a rights request
+          <Plus className="h-3.5 w-3.5" /> {t.portal.submitRights}
         </Link>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-12">
-        <Card className="lg:col-span-8">
-          <CardContent className="space-y-3 p-5">
-            <div className="flex items-center gap-2">
-              <Scale className="h-4 w-4 text-blue-400" />
-              <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Privacy notice</p>
-            </div>
-            {settings?.isPublished ? (
-              <>
-                <h2 className="text-lg font-semibold text-zinc-50">{settings.noticeTitle || 'Privacy notice'}</h2>
-                <p className="whitespace-pre-wrap text-sm leading-6 text-zinc-300">{settings.noticeBody}</p>
-              </>
-            ) : (
-              <p className="py-8 text-sm text-zinc-500">The controller has not published a privacy notice yet.</p>
-            )}
-          </CardContent>
-        </Card>
-        <Card className="lg:col-span-4">
-          <CardContent className="space-y-3 p-5">
-            <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Controller</p>
-            <p className="text-sm text-zinc-50">{settings?.controllerName ?? '—'}</p>
-            <p className="text-xs text-zinc-500">{settings?.controllerAddress}</p>
-            <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Data protection officer</p>
-            <p className="text-sm text-zinc-50">{settings?.dpoName ?? '—'}</p>
-            <p className="text-xs text-zinc-500">{settings?.dpoEmail}</p>
-            <p className="text-xs text-zinc-500">{settings?.dpoPhone}</p>
-          </CardContent>
-        </Card>
+      <div className="grid gap-3 lg:grid-cols-12">
+        <section className="overflow-hidden nova-surface rounded-xl border p-5 lg:col-span-8">
+          <div className="flex items-center gap-2">
+            <Scale className="h-4 w-4 nova-accent-icon" />
+            <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{t.portal.privacyNotice}</p>
+          </div>
+          {settings?.isPublished ? (
+            <>
+              <h2 className="mt-3 text-lg font-semibold tracking-tight text-zinc-50">
+                {settings.noticeTitle || t.portal.privacyNotice}
+              </h2>
+              <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-zinc-400">{settings.noticeBody}</p>
+            </>
+          ) : (
+            <p className="py-8 text-sm text-zinc-500">{t.portal.privacyUnpublished}</p>
+          )}
+        </section>
+        <section className="overflow-hidden nova-surface rounded-xl border p-5 lg:col-span-4">
+          <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{t.portal.controller}</p>
+          <p className="mt-2 text-sm text-zinc-50">{settings?.controllerName ?? '—'}</p>
+          <p className="mt-1 text-xs text-zinc-500">{settings?.controllerAddress}</p>
+          <p className="mt-4 text-[11px] uppercase tracking-[0.16em] text-zinc-500">{t.portal.dpo}</p>
+          <p className="mt-2 text-sm text-zinc-50">{settings?.dpoName ?? '—'}</p>
+          <p className="mt-1 text-xs text-zinc-500">{settings?.dpoEmail}</p>
+          <p className="text-xs text-zinc-500">{settings?.dpoPhone}</p>
+        </section>
       </div>
 
-      <Card>
-        <CardContent className="p-5">
-          <p className="mb-3 text-[11px] uppercase tracking-[0.16em] text-zinc-500">My requests</p>
-          {requests.length === 0 ? (
-            <p className="text-sm text-zinc-500">You have not submitted a rights request.</p>
-          ) : (
-            <div className="overflow-hidden rounded-lg border border-zinc-800">
-              {requests.map((row) => {
-                const sla = getDsarSla(row.dueDate, row.status);
-                return (
-                  <Link
-                    key={row.id}
-                    href={`/portal/privacy/${row.id}`}
-                    className="flex items-center justify-between gap-3 border-b border-zinc-800/80 px-3 py-2 last:border-b-0 hover:bg-zinc-900/80"
-                  >
-                    <div>
-                      <p className="text-sm text-zinc-50">{DSAR_TYPES.find((item) => item.id === row.requestType)?.label}</p>
-                      <p className="font-mono text-[11px] text-zinc-500">
-                        {row.number} · {formatRelativeId(row.createdAt)}
-                      </p>
-                    </div>
-                    <Badge tone={slaTone(sla)}>{row.status}</Badge>
-                  </Link>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <section className="overflow-hidden nova-surface rounded-xl border">
+        <div className="border-b border-zinc-800 px-5 py-3">
+          <p className="text-[13px] font-medium text-zinc-200">{t.portal.myRequests}</p>
+        </div>
+        {requests.length === 0 ? (
+          <p className="px-5 py-10 text-sm text-zinc-500">{t.portal.noRequests}</p>
+        ) : (
+          requests.map((row) => {
+            const sla = getDsarSla(row.dueDate, row.status);
+            return (
+              <Link
+                key={row.id}
+                href={`/portal/privacy/${row.id}`}
+                className="flex items-center justify-between gap-3 border-b border-zinc-800/70 px-5 py-3.5 last:border-b-0 transition-colors hover:bg-zinc-900/80"
+              >
+                <div>
+                  <p className="text-sm font-medium text-zinc-50">
+                    {DSAR_TYPES.find((item) => item.id === row.requestType)?.label}
+                  </p>
+                  <p className="mt-0.5 font-mono text-[11px] text-zinc-600">
+                    {row.number} · {formatRelativeId(row.createdAt, locale)}
+                  </p>
+                </div>
+                <Badge tone={slaTone(sla)}>{row.status}</Badge>
+              </Link>
+            );
+          })
+        )}
+      </section>
     </div>
   );
 }

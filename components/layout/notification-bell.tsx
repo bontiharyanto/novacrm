@@ -9,7 +9,7 @@ import type { InboxItem } from '@/lib/notifications/inbox';
 import { formatRelativeId } from '@/lib/utils/dates';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 
-export function NotificationBell({ homeHref = '/tickets' }: { homeHref?: string }) {
+export function NotificationBell({ homeHref = '/tickets', userId }: { homeHref?: string; userId?: string }) {
   const { t, locale } = useI18n();
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<InboxItem[]>([]);
@@ -43,15 +43,24 @@ export function NotificationBell({ homeHref = '/tickets' }: { homeHref?: string 
       return;
     }
     const channel = client
-      .channel('realtime:in_app_notifications')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'in_app_notifications' }, () => {
-        void load();
-      })
+      .channel(`realtime:in_app_notifications:${userId || 'me'}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'in_app_notifications',
+          ...(userId ? { filter: `user_id=eq.${userId}` } : {}),
+        },
+        () => {
+          void load();
+        },
+      )
       .subscribe();
     return () => {
       void client?.removeChannel(channel);
     };
-  }, [load]);
+  }, [load, userId]);
 
   useEffect(() => {
     if (!open) return;

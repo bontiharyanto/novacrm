@@ -34,6 +34,7 @@ export default async function AgentLayout({ children }: { children: React.ReactN
       <AgentShell
         role={session.profile.role}
         fullName={session.profile.fullName}
+        userId={session.userId}
         accounts={scope.accounts}
         activeAccountId={scope.account?.id ?? (scope.accounts.length > 0 ? ACCOUNT_ALL : null)}
       >

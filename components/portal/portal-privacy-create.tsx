@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent } from '@/components/ui/card';
 import { DSAR_TYPES, type DsarType } from '@/lib/governance/schema';
 import { toastError, toastSuccess } from '@/components/ui/toast';
 import { useI18n } from '@/components/layout/preferences-provider';
@@ -52,53 +51,49 @@ export function PortalPrivacyCreate({ fullName, email }: { fullName: string; ema
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
-      className="mx-auto max-w-5xl space-y-5 p-6"
+      className="mx-auto max-w-3xl space-y-6 p-4 pb-safe md:p-8"
     >
       <div>
         <Link href="/portal/privacy" className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-200">
-          <ArrowLeft className="h-3.5 w-3.5" /> Privacy
+          <ArrowLeft className="h-3.5 w-3.5" /> {t.portal.privacy}
         </Link>
-        <h1 className="mt-1 text-2xl font-semibold text-zinc-50">Submit a rights request</h1>
-        <p className="mt-1 text-sm text-zinc-500">Access, correct, or erase personal data held in NovaCRM. Response SLA is 30 days.</p>
+        <h1 className="mt-3 text-[28px] font-semibold tracking-tight text-zinc-50">{t.portal.submitRights}</h1>
+        <p className="mt-1.5 text-sm text-zinc-500">{t.portal.rightsHint}</p>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-12">
-        <Card className="lg:col-span-8">
-          <CardContent className="space-y-4 p-5">
-            <div>
-              <Label htmlFor="type">Right</Label>
-              <Select id="type" className="mt-1.5" value={requestType} onChange={(event) => setRequestType(event.target.value as DsarType)}>
-                {DSAR_TYPES.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.label}
-                  </option>
-                ))}
-              </Select>
-            </div>
-            <div>
-              <Label htmlFor="desc">Detail</Label>
-              <Textarea
-                id="desc"
-                className="mt-1.5 min-h-40"
-                placeholder="Describe the data or correction you need."
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
-              />
-            </div>
-            {error ? <p className="text-sm text-rose-400">{error}</p> : null}
-            <Button type="button" onClick={() => void submit()} disabled={saving}>
-              {saving ? 'Submitting...' : 'Submit request'}
-            </Button>
-          </CardContent>
-        </Card>
-        <Card className="lg:col-span-4">
-          <CardContent className="space-y-3 p-5">
-            <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Subject</p>
-            <p className="text-sm text-zinc-50">{fullName}</p>
-            <p className="text-xs text-zinc-500">{email ?? 'Email on file'}</p>
-            <p className="text-sm text-zinc-500">{DSAR_TYPES.find((item) => item.id === requestType)?.hint}</p>
-          </CardContent>
-        </Card>
+      <div className="grid gap-3 lg:grid-cols-12">
+        <section className="space-y-4 nova-surface rounded-xl border p-5 lg:col-span-8">
+          <div>
+            <Label htmlFor="type">{t.portal.right}</Label>
+            <Select id="type" className="mt-1.5" value={requestType} onChange={(event) => setRequestType(event.target.value as DsarType)}>
+              {DSAR_TYPES.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.label}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div>
+            <Label htmlFor="desc">{t.portal.details}</Label>
+            <Textarea
+              id="desc"
+              className="mt-1.5 min-h-40"
+              placeholder={t.portal.detailsPlaceholder}
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+            />
+          </div>
+          {error ? <p className="text-sm text-rose-400">{error}</p> : null}
+          <Button type="button" onClick={() => void submit()} disabled={saving}>
+            {saving ? t.portal.submitting : t.portal.submitRequest}
+          </Button>
+        </section>
+        <aside className="nova-surface rounded-xl border p-5 lg:col-span-4">
+          <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{t.portal.subject}</p>
+          <p className="mt-2 text-sm text-zinc-50">{fullName}</p>
+          <p className="mt-1 text-xs text-zinc-500">{email ?? t.portal.emailOnFile}</p>
+          <p className="mt-4 text-sm leading-6 text-zinc-500">{DSAR_TYPES.find((item) => item.id === requestType)?.hint}</p>
+        </aside>
       </div>
     </motion.div>
   );

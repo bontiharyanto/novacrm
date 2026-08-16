@@ -1,7 +1,7 @@
 import { getSessionProfile } from '@/lib/auth/session';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { createSupabaseAdminClient, hasServiceRole } from '@/lib/supabase/admin';
-import { parseAppRole, ROLE_RANK, type AppRole } from '@/lib/rbac/roles';
+import { isCustomerRole, isStaffRole, parseAppRole, ROLE_RANK, type AppRole } from '@/lib/rbac/roles';
 
 export const INBOX_KINDS = ['assign', 'comment', 'status', 'rca', 'ticket'] as const;
 export type InboxKind = (typeof INBOX_KINDS)[number];
@@ -142,6 +142,71 @@ async function groupMemberIds(tenantId: string, groupId: string) {
   return (data ?? []).map((row) => row.user_id as string);
 }
 
+async function profileRoles(tenantId: string, userIds: string[]) {
+  const unique = Array.from(new Set(userIds.filter(Boolean)));
+  const roles = new Map<string, AppRole>();
+  if (unique.length === 0) return roles;
+  const supabase = inboxWriter() ?? (await createSupabaseServerClient());
+  const { data } = await supabase.from('profiles').select('id, role').eq('tenant_id', tenantId).in('id', unique);
+  for (const row of data ?? []) {
+    roles.set(row.id as string, parseAppRole(row.role));
+  }
+  return roles;
+}
+
+function hrefForRole(role: AppRole | undefined, ticketId: string) {
+  return isCustomerRole(role) ? `/portal/${ticketId}` : `/tickets/${ticketId}`;
+}
+
+async function accountStaffIds(tenantId: string, accountId: string) {
+  const supabase = inboxWriter() ?? (await createSupabaseServerClient());
+  const [{ data: members }, { data: groups }] = await Promise.all([
+    supabase
+      .from('account_members')
+      .select('user_id')
+      .eq('tenant_id', tenantId)
+      .eq('account_id', accountId)
+      .neq('role', 'portal'),
+    supabase.from('assignment_groups').select('id').eq('tenant_id', tenantId).eq('account_id', accountId),
+  ]);
+  const groupIds = (groups ?? []).map((row) => row.id as string);
+  const { data: groupMembers } =
+    groupIds.length > 0
+      ? await supabase
+          .from('assignment_group_members')
+          .select('user_id')
+          .eq('tenant_id', tenantId)
+          .in('group_id', groupIds)
+      : { data: [] };
+  return Array.from(
+    new Set([
+      ...(members ?? []).map((row) => row.user_id as string),
+      ...(groupMembers ?? []).map((row) => row.user_id as string),
+    ]),
+  );
+}
+
+async function supervisionWatcherIds(
+  tenantId: string,
+  options: { groupId?: string; accountId?: string; priority?: string },
+) {
+  const raw = new Set<string>();
+  if (options.groupId) {
+    for (const id of await groupMemberIds(tenantId, options.groupId)) raw.add(id);
+  }
+  if (options.accountId) {
+    for (const id of await accountStaffIds(tenantId, options.accountId)) raw.add(id);
+  }
+  const roles = await profileRoles(tenantId, Array.from(raw));
+  const critical = options.priority === 'critical';
+  return Array.from(raw).filter((id) => {
+    const role = roles.get(id);
+    if (role === 'team_lead') return true;
+    if (role === 'supervisor') return critical;
+    return false;
+  });
+}
+
 export async function staffIdsAtLeast(tenantId: string, minRole: AppRole, accountId?: string) {
   const supabase = inboxWriter() ?? (await createSupabaseServerClient());
   let userIds: string[] | null = null;
@@ -195,40 +260,64 @@ export async function notifyTicketInbox(input: {
     requesterId?: string;
     groupId?: string;
     accountId?: string;
+    accountName?: string;
+    accountCode?: string;
+    priority?: string;
   };
   message?: string;
 }) {
   const number = input.ticket.number || input.ticket.id.slice(0, 8);
-  const deskHref = `/tickets/${input.ticket.id}`;
-  const portalHref = `/portal/${input.ticket.id}`;
+  const accountLabel = input.ticket.accountCode || input.ticket.accountName || '';
+  const priorityLabel = input.ticket.priority ? input.ticket.priority : '';
   const staffDrafts: InboxDraft[] = [];
   const requesterDrafts: InboxDraft[] = [];
+  const roles = await profileRoles(input.tenantId, [
+    input.ticket.assigneeId ?? '',
+    input.ticket.requesterId ?? '',
+  ]);
 
   if (input.event === 'ticket.create') {
-    if (input.ticket.assigneeId) {
+    if (input.ticket.assigneeId && isStaffRole(roles.get(input.ticket.assigneeId))) {
       staffDrafts.push({
         userId: input.ticket.assigneeId,
         kind: 'ticket',
-        title: `${number} opened`,
+        title: `${number} assigned to you`,
         body: input.ticket.title,
-        href: deskHref,
+        href: hrefForRole(roles.get(input.ticket.assigneeId), input.ticket.id),
         ticketId: input.ticket.id,
       });
-    } else {
-      const queueIds = input.ticket.groupId
-        ? await groupMemberIds(input.tenantId, input.ticket.groupId)
-        : [];
-      const watchers =
-        queueIds.length > 0
-          ? queueIds
-          : await staffIdsAtLeast(input.tenantId, 'team_lead', input.ticket.accountId);
-      for (const userId of watchers) {
+    } else if (!input.ticket.assigneeId) {
+      const queue = input.ticket.groupId ? await groupMemberIds(input.tenantId, input.ticket.groupId) : [];
+      const queueRoles = await profileRoles(input.tenantId, queue);
+      for (const userId of queue) {
+        const role = queueRoles.get(userId);
+        if (!isStaffRole(role) || ROLE_RANK[role] >= ROLE_RANK.team_lead) continue;
         staffDrafts.push({
           userId,
           kind: 'ticket',
           title: `${number} in queue`,
           body: input.ticket.title,
-          href: deskHref,
+          href: `/tickets/${input.ticket.id}`,
+          ticketId: input.ticket.id,
+        });
+      }
+    }
+    const requesterIsCustomer = isCustomerRole(roles.get(input.ticket.requesterId ?? ''));
+    if (requesterIsCustomer || !input.ticket.assigneeId) {
+      const watchers = await supervisionWatcherIds(input.tenantId, {
+        groupId: input.ticket.groupId,
+        accountId: input.ticket.accountId,
+        priority: input.ticket.priority,
+      });
+      const watchTitle = [number, 'baru', accountLabel, priorityLabel].filter(Boolean).join(' · ');
+      for (const userId of watchers) {
+        if (userId === input.ticket.assigneeId) continue;
+        staffDrafts.push({
+          userId,
+          kind: 'ticket',
+          title: watchTitle,
+          body: input.ticket.title,
+          href: `/tickets/${input.ticket.id}`,
           ticketId: input.ticket.id,
         });
       }
@@ -239,36 +328,57 @@ export async function notifyTicketInbox(input: {
         kind: 'ticket',
         title: `${number} received`,
         body: input.ticket.title,
-        href: portalHref,
+        href: hrefForRole(roles.get(input.ticket.requesterId), input.ticket.id),
         ticketId: input.ticket.id,
       });
     }
-  } else if (input.ticket.assigneeId) {
-    if (input.event === 'ticket.assign') {
-      staffDrafts.push({
-        userId: input.ticket.assigneeId,
-        kind: 'assign',
-        title: `${number} assigned to you`,
-        body: input.ticket.title,
-        href: deskHref,
-        ticketId: input.ticket.id,
-      });
-    } else if (input.event === 'ticket.comment_add') {
-      staffDrafts.push({
-        userId: input.ticket.assigneeId,
-        kind: 'comment',
-        title: `Comment on ${number}`,
-        body: (input.message || input.ticket.title).replace(/<[^>]+>/g, ' ').slice(0, 180),
-        href: deskHref,
-        ticketId: input.ticket.id,
-      });
-    } else if (input.event === 'ticket.status_change') {
-      staffDrafts.push({
-        userId: input.ticket.assigneeId,
-        kind: 'status',
-        title: `${number} → ${input.ticket.status.replace('_', ' ')}`,
-        body: input.ticket.title,
-        href: deskHref,
+  } else {
+    if (input.ticket.assigneeId && isStaffRole(roles.get(input.ticket.assigneeId))) {
+      if (input.event === 'ticket.assign') {
+        staffDrafts.push({
+          userId: input.ticket.assigneeId,
+          kind: 'assign',
+          title: `${number} assigned to you`,
+          body: input.ticket.title,
+          href: hrefForRole(roles.get(input.ticket.assigneeId), input.ticket.id),
+          ticketId: input.ticket.id,
+        });
+      } else if (input.event === 'ticket.comment_add') {
+        staffDrafts.push({
+          userId: input.ticket.assigneeId,
+          kind: 'comment',
+          title: `Comment on ${number}`,
+          body: (input.message || input.ticket.title).replace(/<[^>]+>/g, ' ').slice(0, 180),
+          href: hrefForRole(roles.get(input.ticket.assigneeId), input.ticket.id),
+          ticketId: input.ticket.id,
+        });
+      } else if (input.event === 'ticket.status_change') {
+        staffDrafts.push({
+          userId: input.ticket.assigneeId,
+          kind: 'status',
+          title: `${number} → ${input.ticket.status.replace('_', ' ')}`,
+          body: input.ticket.title,
+          href: hrefForRole(roles.get(input.ticket.assigneeId), input.ticket.id),
+          ticketId: input.ticket.id,
+        });
+      }
+    }
+    if (
+      input.ticket.requesterId &&
+      (input.event === 'ticket.comment_add' || input.event === 'ticket.status_change')
+    ) {
+      requesterDrafts.push({
+        userId: input.ticket.requesterId,
+        kind: input.event === 'ticket.comment_add' ? 'comment' : 'status',
+        title:
+          input.event === 'ticket.comment_add'
+            ? `Comment on ${number}`
+            : `${number} → ${input.ticket.status.replace('_', ' ')}`,
+        body:
+          input.event === 'ticket.comment_add'
+            ? (input.message || input.ticket.title).replace(/<[^>]+>/g, ' ').slice(0, 180)
+            : input.ticket.title,
+        href: hrefForRole(roles.get(input.ticket.requesterId), input.ticket.id),
         ticketId: input.ticket.id,
       });
     }
@@ -280,7 +390,7 @@ export async function notifyTicketInbox(input: {
       tenantId: input.tenantId,
       actorId: input.actorId,
       items: requesterDrafts,
-      includeActor: true,
+      includeActor: input.event === 'ticket.create',
     });
   }
 }

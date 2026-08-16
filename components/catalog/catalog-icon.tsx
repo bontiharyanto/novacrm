@@ -2,7 +2,7 @@
 
 import { CATALOG_ICONS } from '@/lib/catalog/schema';
 import type { CatalogVariable } from '@/lib/catalog/schema';
-import { AlertTriangle, ClipboardList, KeyRound, Laptop, LayoutGrid, Wifi } from 'lucide-react';
+import { AlertTriangle, Cctv, ClipboardList, Database, KeyRound, Laptop, LayoutGrid, Server, Wifi } from 'lucide-react';
 
 const ICONS = {
   clipboard: ClipboardList,
@@ -11,6 +11,9 @@ const ICONS = {
   app: LayoutGrid,
   wifi: Wifi,
   alert: AlertTriangle,
+  database: Database,
+  server: Server,
+  cctv: Cctv,
 };
 
 export function CatalogIcon({ id, className = 'h-4 w-4' }: { id?: string; className?: string }) {

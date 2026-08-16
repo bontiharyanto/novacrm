@@ -6,16 +6,26 @@ import { canRole } from '@/lib/rbac/ability';
 import { isCustomerRole } from '@/lib/rbac/roles';
 import { createTicket, listTickets } from '@/lib/tickets/actions';
 import { displayTicketNumber } from '@/lib/tickets/process';
-import { resolvePortalIntake } from '@/lib/assistant/portal-intake';
+import { lastProposedIssue, looksLikeIssue, resolvePortalIntake } from '@/lib/assistant/portal-intake';
+import { hasCompleteDetails, missingDetails } from '@/lib/assistant/portal-details';
+import { listPortalEstate, relatedEstate } from '@/lib/assistant/portal-estate';
+import { listPortalTicketSuggestions } from '@/lib/assistant/portal-suggestions';
 import { upsertAssistantThread } from '@/lib/assistant/store';
 import type { AssistantMessage } from '@/lib/assistant/schema';
+import { getDictionary } from '@/lib/i18n';
 
 type PortalPlan = {
-  action: 'reply' | 'create_ticket' | 'ask';
+  action: 'reply' | 'propose_ticket' | 'ask';
   type: 'incident' | 'request';
   title: string;
   description: string;
   message: string;
+};
+
+type TicketProposal = {
+  type: 'incident' | 'request';
+  title: string;
+  description: string;
 };
 
 function parsePortalPlan(raw: string): PortalPlan | null {
@@ -24,7 +34,12 @@ function parsePortalPlan(raw: string): PortalPlan | null {
   if (!jsonSlice) return null;
   try {
     const parsed = JSON.parse(jsonSlice) as Record<string, unknown>;
-    const action = parsed.action === 'create_ticket' || parsed.action === 'ask' ? parsed.action : 'reply';
+    const action =
+      parsed.action === 'propose_ticket' || parsed.action === 'create_ticket'
+        ? 'propose_ticket'
+        : parsed.action === 'ask'
+          ? 'ask'
+          : 'reply';
     return {
       action,
       type: parsed.type === 'request' ? 'request' : 'incident',
@@ -61,18 +76,38 @@ Bold metric names like **SLA Breached**. Never put several bullets on one line.`
 function portalSystemPrompt(locale: 'en' | 'id') {
   return `You are NovaCRM portal assistant for a logged-in customer.
 ${languageLine(locale)}
-You can create a ticket for them. The server assigns the real ticket number after create.
-Use only the caller's own tickets in the snapshot. Never mention other requesters, agent queues, assignment groups, or desk-wide SLA.
+You recommend a ticket first. The server creates it only after the customer confirms.
+Use only the caller's own tickets and estate (assets/CMDB) in the snapshot. Never mention other requesters, agent queues, assignment groups, or desk-wide SLA.
 Never invent ticket numbers. Never create problem or change tickets. Never reveal secrets.
+Never propose a ticket from a language request, greeting, thanks, a question, a catalog request, or “not in the list”.
 
 Return JSON only:
-{"action":"reply"|"create_ticket"|"ask","type":"incident"|"request","title":"","description":"","message":""}
+{"action":"reply"|"propose_ticket"|"ask","type":"incident"|"request","title":"","description":"","message":""}
 
 Rules:
-- create_ticket when they want a ticket and title is a specific issue (3+ characters), e.g. "VPN tidak connect".
-- ask when they say "buat tiket" / "create a ticket" but give no issue — ask what is broken or what they need.
+- Never propose_ticket until they gave: what failed, location, who is affected, and a contact number or email.
+- Never propose from “not in the list”, greetings, language, catalog questions, or “not those CIs”.
+- If the issue is named but details are missing, action=ask and list the missing fields. Do not offer to create the ticket yet.
+- If they ask about the catalog, reply with the catalog names from the snapshot.
 - incident = unplanned interruption. request = access or service request.
-- message is always the customer-facing reply. Do not put a ticket number in message.`;
+- Prefer estate CIs whose name matches the issue. Do not list unrelated CIs.
+- If nothing in the estate matches and details are complete, still propose. Say they can create it without a linked asset/CI.
+- message is always the customer-facing reply. Do not say the ticket is already created.`;
+}
+
+function formatProposal(
+  locale: 'en' | 'id',
+  proposal: TicketProposal,
+  related: { name: string; type: string }[],
+) {
+  const copy = getDictionary(locale);
+  const typeLabel = proposal.type === 'incident' ? 'Incident' : 'Request';
+  const estate = related.length
+    ? `\n\n${copy.assistant.proposalEstate}\n${related.map((item) => `* ${item.name} (${item.type})`).join('\n')}`
+    : `\n\n${copy.assistant.proposalNoEstate}`;
+  return `${copy.assistant.proposal
+    .replace('{{type}}', typeLabel)
+    .replace('{{title}}', proposal.title)}${estate}\n\n${copy.assistant.proposalConfirm}`;
 }
 
 export async function runAssistant(
@@ -96,44 +131,103 @@ export async function runAssistant(
     };
   }
 
+  const copy = getDictionary(locale);
   const portal = isCustomerRole(session.profile.role);
+
+  async function persist(nextMessages: AssistantMessage[]) {
+    if (portal) return { data: { id: null as string | null } };
+    return upsertAssistantThread({ id: threadId, messages: nextMessages });
+  }
+
   if (portal) {
     const intake = resolvePortalIntake(messages);
-    if (intake?.kind === 'create') {
+    if (intake?.kind === 'confirm') {
+      const proposed = lastProposedIssue(messages.slice(0, -1));
+      if (!proposed) {
+        const content = copy.assistant.intakeNeedIssue;
+        const saved = await persist([...messages, { role: 'assistant', content }]);
+        return { data: { content, threadId: saved.data?.id ?? null, intake: true }, error: null };
+      }
+      const estate = await listPortalEstate();
+      const related = relatedEstate(proposed.title, estate);
+      const note = related.length
+        ? ''
+        : locale === 'id'
+          ? '\n\n[Ask AI] Tidak ada aset/CI yang cocok di akun pelanggan. Desk menindaklanjuti tanpa tautan CMDB.'
+          : '\n\n[Ask AI] No matching asset/CI on the requester account. Desk will follow up without a CMDB link.';
       const created = await createTicket({
-        title: intake.title,
-        description: intake.description || intake.title,
-        type: intake.type,
+        title: proposed.title,
+        description: `${proposed.description || proposed.title}${note}`,
+        type: proposed.type,
         status: 'open',
-        priority: intake.type === 'incident' ? 'high' : 'medium',
+        priority: proposed.type === 'incident' ? 'high' : 'medium',
         requesterName: session.profile.fullName,
       });
       const content = created.data
-        ? locale === 'id'
-          ? `Tiket **${displayTicketNumber(created.data.number, created.data.id)}** sudah dibuat. [Buka tiket](/portal/${created.data.id})`
-          : `Ticket **${displayTicketNumber(created.data.number, created.data.id)}** is created. [Open ticket](/portal/${created.data.id})`
-        : created.error ??
-          (locale === 'id' ? 'Tiket belum bisa dibuat. Coba lagi atau gunakan Permintaan baru.' : 'The ticket could not be created.');
-      const saved = await upsertAssistantThread({
-        id: threadId,
-        messages: [...messages, { role: 'assistant', content }],
-      });
-      return { data: { content, threadId: saved.data?.id ?? threadId ?? null, intake: false }, error: null };
+        ? copy.assistant.ticketCreated
+            .replace('{{number}}', displayTicketNumber(created.data.number, created.data.id))
+            .replace('{{url}}', `/portal/${created.data.id}`)
+        : created.error ?? copy.assistant.ticketCreateFailed;
+      const saved = await persist([...messages, { role: 'assistant', content }]);
+      return {
+        data: {
+          content,
+          threadId: saved.data?.id ?? null,
+          intake: false,
+          ticketId: created.data?.id ?? null,
+        },
+        error: null,
+      };
+    }
+    if (intake?.kind === 'details') {
+      const missing = missingDetails(intake.description);
+      const labels: Record<string, string> = {
+        symptom: locale === 'id' ? 'Apa masalahnya' : 'What is wrong',
+        location: locale === 'id' ? 'Lokasi / nama perangkat' : 'Location / device name',
+        impact: locale === 'id' ? 'Siapa yang terdampak' : 'Who is affected',
+        contact: locale === 'id' ? 'Nomor atau email yang bisa dihubungi' : 'Phone or email to contact',
+      };
+      const list = missing.map((field) => `* ${labels[field]}`).join('\n');
+      const content = `${copy.assistant.intakeDetails}\n\n${list}`;
+      const saved = await persist([...messages, { role: 'assistant', content }]);
+      return { data: { content, threadId: saved.data?.id ?? null, intake: true }, error: null };
+    }
+    if (intake?.kind === 'propose') {
+      const estate = await listPortalEstate();
+      const related = relatedEstate(intake.title, estate);
+      const proposal: TicketProposal = {
+        type: intake.type,
+        title: intake.title,
+        description: intake.description || intake.title,
+      };
+      const content = formatProposal(locale, proposal, related);
+      const saved = await persist([...messages, { role: 'assistant', content }]);
+      return {
+        data: { content, threadId: saved.data?.id ?? null, intake: true, proposal },
+        error: null,
+      };
+    }
+    if (intake?.kind === 'catalog') {
+      const items = await listPortalTicketSuggestions(locale);
+      const list = items.map((item) => `* ${item.label}`).join('\n') || '—';
+      const content = `${copy.assistant.catalogList}\n\n${list}`;
+      const saved = await persist([...messages, { role: 'assistant', content }]);
+      return { data: { content, threadId: saved.data?.id ?? null, intake: true }, error: null };
     }
     if (intake?.kind === 'ask') {
+      const content = copy.assistant.intakeAsk;
+      const saved = await persist([...messages, { role: 'assistant', content }]);
+      return { data: { content, threadId: saved.data?.id ?? null, intake: true }, error: null };
+    }
+    if (intake?.kind === 'meta') {
       const content =
-        locale === 'id'
-          ? intake.type === 'request'
-            ? 'Siap. Tulis judul request-nya, contoh: reset password email.'
-            : 'Siap. Tulis singkat gangguan-nya, contoh: VPN tidak connect dari kantor.'
-          : intake.type === 'request'
-            ? 'Ready. Send a short request title, for example: reset email password.'
-            : 'Ready. Describe the incident, for example: VPN cannot connect from the office.';
-      const saved = await upsertAssistantThread({
-        id: threadId,
-        messages: [...messages, { role: 'assistant', content }],
-      });
-      return { data: { content, threadId: saved.data?.id ?? threadId ?? null, intake: true }, error: null };
+        intake.topic === 'language'
+          ? copy.assistant.intakeLanguage
+          : intake.topic === 'need_issue'
+            ? copy.assistant.intakeNotInList
+            : copy.assistant.intakeNeedIssue;
+      const saved = await persist([...messages, { role: 'assistant', content }]);
+      return { data: { content, threadId: saved.data?.id ?? null, intake: true }, error: null };
     }
   }
 
@@ -145,6 +239,12 @@ export async function runAssistant(
           type: row.type,
           status: row.status,
           updatedAt: row.updatedAt,
+        })),
+        catalog: (await listPortalTicketSuggestions(locale)).map((item) => item.label),
+        estate: (await listPortalEstate()).items.map((item) => ({
+          name: item.name,
+          type: item.type,
+          domain: item.domain,
         })),
       }
     : await (async () => {
@@ -184,43 +284,28 @@ export async function runAssistant(
   }
 
   let content = result.content;
+  let proposal: TicketProposal | undefined;
   if (portal) {
     const plan = parsePortalPlan(result.content);
-    if (plan?.action === 'create_ticket' && plan.title.length >= 3) {
-      const created = await createTicket({
+    if (plan?.action === 'propose_ticket' && looksLikeIssue(plan.title) && hasCompleteDetails(plan.description || plan.title)) {
+      const estate = await listPortalEstate();
+      const related = relatedEstate(plan.title, estate);
+      proposal = {
+        type: plan.type,
         title: plan.title,
         description: plan.description || plan.title,
-        type: plan.type,
-        status: 'open',
-        priority: plan.type === 'incident' ? 'high' : 'medium',
-        requesterName: session.profile.fullName,
-      });
-      if (created.error || !created.data) {
-        content =
-          plan.message ||
-          (locale === 'id' ? 'Tiket belum bisa dibuat. Coba lagi atau gunakan Permintaan baru.' : 'The ticket could not be created. Try again or use New request.');
-        if (created.error) {
-          content = `${content}\n\n${created.error}`;
-        }
-      } else {
-        const number = displayTicketNumber(created.data.number, created.data.id);
-        const createdLine =
-          locale === 'id'
-            ? `Tiket **${number}** sudah dibuat. [Buka tiket](/portal/${created.data.id})`
-            : `Ticket **${number}** is created. [Open ticket](/portal/${created.data.id})`;
-        content = [plan.message, createdLine].filter(Boolean).join('\n\n');
-      }
+      };
+      content = formatProposal(locale, proposal, related);
+    } else if (plan?.action === 'propose_ticket') {
+      content = plan.message || copy.assistant.intakeDetails;
     } else if (plan?.message) {
       content = plan.message;
     }
   }
-  const saved = await upsertAssistantThread({
-    id: threadId,
-    messages: [...messages, { role: 'assistant', content }],
-  });
+  const saved = await persist([...messages, { role: 'assistant', content }]);
 
   return {
-    data: { content, threadId: saved.data?.id ?? threadId ?? null, intake: false },
+    data: { content, threadId: saved.data?.id ?? null, intake: Boolean(proposal), proposal, ticketId: null },
     error: null,
   };
 }
