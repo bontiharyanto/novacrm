@@ -18,6 +18,14 @@ export type CsatResponse = {
   createdAt: string;
 };
 
+export type PendingCsatTicket = {
+  id: string;
+  number?: string;
+  title: string;
+  status: 'resolved' | 'closed';
+  updatedAt: string;
+};
+
 export const CSAT_LABELS: Record<CsatScore, string> = {
   1: 'Poor',
   2: 'Fair',

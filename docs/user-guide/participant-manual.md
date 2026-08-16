@@ -344,14 +344,17 @@ Login as `customer@novacrm.app`.
 | **New request** | Freeform ticket |
 | **Privacy** | Privacy notice and DSAR (only after admin **Enable on portal**) |
 
+After the desk **resolves** or **closes** a ticket, **CSAT is required** (score 1–5, comment optional). The portal locks catalog, new request, Ask AI, and home until every unrated ticket is scored. The change-password page stays available. Email / WhatsApp after resolve must open `/portal/{id}`, not the desk.
+
 ## Lab 7 — Portal round-trip
 
 1. Sign out. Login as **customer**.
 2. **Catalog** — submit one item **or** **New request** with title `Portal lab — access card`.
 3. Sign out. Login as **agent**.
 4. Find the new request on **Requests** / **All tickets**.
+5. **Resolve** the ticket. Sign in as customer again — the portal opens the CSAT form and blocks catalog until you submit a score.
 
-**Pass:** the customer ticket is visible on the desk with the same title.
+**Pass:** the customer ticket is visible on the desk with the same title, and the customer cannot use catalog until CSAT is submitted.
 
 ---
 

@@ -15,6 +15,7 @@ import { PortalWelcome } from '@/components/portal/portal-welcome';
 import { PrivacyModuleProvider, usePrivacyEnabled } from '@/components/portal/privacy-module';
 import { useMarkPrivacySeen } from '@/components/portal/portal-consent-banner';
 import { cn } from '@/lib/utils';
+import type { PendingCsatTicket } from '@/lib/csat/schema';
 
 function isHomePath(pathname: string) {
   return (
@@ -39,15 +40,17 @@ export function PortalShell({
   fullName,
   userId,
   privacyEnabled = false,
+  pendingCsat = [],
 }: {
   children: React.ReactNode;
   fullName: string;
   userId?: string;
   privacyEnabled?: boolean;
+  pendingCsat?: PendingCsatTicket[];
 }) {
   return (
     <PrivacyModuleProvider enabled={privacyEnabled}>
-      <PortalShellInner fullName={fullName} userId={userId}>
+      <PortalShellInner fullName={fullName} userId={userId} pendingCsat={pendingCsat}>
         {children}
       </PortalShellInner>
     </PrivacyModuleProvider>
@@ -58,10 +61,12 @@ function PortalShellInner({
   children,
   fullName,
   userId,
+  pendingCsat,
 }: {
   children: React.ReactNode;
   fullName: string;
   userId?: string;
+  pendingCsat: PendingCsatTicket[];
 }) {
   const pathname = usePathname();
   const { t } = useI18n();
@@ -70,10 +75,15 @@ function PortalShellInner({
   const firstName = fullName.trim().split(/\s+/)[0] || fullName;
   useMarkPrivacySeen(privacyEnabled);
 
+  const csatLocked = pendingCsat.length > 0;
+  const rateHref = csatLocked ? `/portal/${pendingCsat[0].id}?rate=1` : '/portal';
+
   const tabs = [
-    { href: '/portal', label: t.portal.home, icon: Home, active: isHomePath(pathname) },
-    { href: '/portal/catalog', label: t.portal.catalog, icon: BookOpen, active: pathname.startsWith('/portal/catalog') },
-    ...(privacyEnabled
+    { href: rateHref, label: t.portal.home, icon: Home, active: isHomePath(pathname) },
+    ...(!csatLocked
+      ? [{ href: '/portal/catalog', label: t.portal.catalog, icon: BookOpen, active: pathname.startsWith('/portal/catalog') }]
+      : []),
+    ...(privacyEnabled && !csatLocked
       ? [{ href: '/portal/privacy', label: t.portal.privacy, icon: Scale, active: pathname.startsWith('/portal/privacy') }]
       : []),
   ];
@@ -89,7 +99,7 @@ function PortalShellInner({
       <header className="sticky top-0 z-20 border-b border-zinc-800 bg-zinc-950/90 pt-safe backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl flex-col gap-1 px-4 md:h-14 md:flex-row md:items-center md:gap-6 md:px-6">
           <div className="flex h-12 items-center justify-between gap-3 md:h-auto md:flex-1">
-            <Link href="/portal" className="flex min-w-0 items-center gap-2.5">
+            <Link href={rateHref} className="flex min-w-0 items-center gap-2.5">
               <NovaMark size={26} />
               <span className="min-w-0">
                 <span className="block truncate text-[13px] font-medium tracking-tight text-zinc-50">{firstName}</span>
@@ -99,8 +109,8 @@ function PortalShellInner({
               </span>
             </Link>
             <div className="flex items-center gap-1.5">
-              <NotificationBell homeHref="/portal" userId={userId} />
-              <AskAiButton onClick={() => setAgentOpen(true)} />
+              <NotificationBell homeHref={rateHref} userId={userId} />
+              {!csatLocked ? <AskAiButton onClick={() => setAgentOpen(true)} /> : null}
               <PreferenceControls compact />
               <Link
                 href="/portal/account"
@@ -119,13 +129,15 @@ function PortalShellInner({
                   <LogOut className="h-3.5 w-3.5" />
                 </button>
               </form>
-              <Link
-                href="/portal/new"
-                className="nova-accent-btn inline-flex h-8 items-center gap-1 rounded-md px-2.5 text-[12px] font-medium text-white transition-all duration-200 ease-out hover:-translate-y-px"
-              >
-                <Plus className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">{t.portal.newRequest}</span>
-              </Link>
+              {!csatLocked ? (
+                <Link
+                  href="/portal/new"
+                  className="nova-accent-btn inline-flex h-8 items-center gap-1 rounded-md px-2.5 text-[12px] font-medium text-white transition-all duration-200 ease-out hover:-translate-y-px"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  <span className="hidden sm:inline">{t.portal.newRequest}</span>
+                </Link>
+              ) : null}
             </div>
           </div>
           <nav className="-mx-4 flex items-center gap-0.5 overflow-x-auto border-t border-zinc-800/60 px-2 md:mx-0 md:border-0 md:px-0">
@@ -160,12 +172,14 @@ function PortalShellInner({
       >
         {children}
       </motion.main>
-      <AssistantWidget
-        firstName={firstName}
-        open={agentOpen}
-        onOpenChange={setAgentOpen}
-        variant="portal"
-      />
+      {!csatLocked ? (
+        <AssistantWidget
+          firstName={firstName}
+          open={agentOpen}
+          onOpenChange={setAgentOpen}
+          variant="portal"
+        />
+      ) : null}
     </div>
   );
 }

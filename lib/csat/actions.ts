@@ -4,7 +4,7 @@ import { getSessionProfile } from '@/lib/auth/session';
 import { isCustomerRole, isStaffRole } from '@/lib/rbac/roles';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { formatZodError } from '@/lib/validation/zod-error';
-import { submitCsatSchema, type CsatResponse } from '@/lib/csat/schema';
+import { submitCsatSchema, type CsatResponse, type PendingCsatTicket } from '@/lib/csat/schema';
 
 function mapCsat(row: {
   ticket_id: string;
@@ -74,6 +74,42 @@ export async function submitTicketCsat(input: unknown) {
     return { data: null, error: error.message };
   }
   return { data: mapCsat(data), error: null };
+}
+
+export async function listPendingCsatTickets(): Promise<PendingCsatTicket[]> {
+  const session = await getSessionProfile();
+  if (!session || !isCustomerRole(session.profile.role)) return [];
+
+  const supabase = await createSupabaseServerClient();
+  const { data: tickets } = await supabase
+    .from('tickets')
+    .select('id, number, title, status, updated_at')
+    .eq('tenant_id', session.profile.tenantId)
+    .eq('requester_id', session.userId)
+    .in('status', ['resolved', 'closed'])
+    .order('updated_at', { ascending: true });
+
+  if (!tickets?.length) return [];
+
+  const { data: ratings } = await supabase
+    .from('ticket_csat')
+    .select('ticket_id')
+    .eq('tenant_id', session.profile.tenantId)
+    .in(
+      'ticket_id',
+      tickets.map((row) => row.id),
+    );
+
+  const rated = new Set((ratings ?? []).map((row) => row.ticket_id));
+  return tickets
+    .filter((row) => !rated.has(row.id))
+    .map((row) => ({
+      id: row.id,
+      number: row.number ?? undefined,
+      title: row.title,
+      status: row.status as PendingCsatTicket['status'],
+      updatedAt: row.updated_at,
+    }));
 }
 
 export async function listCsatForReports() {

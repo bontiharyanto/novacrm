@@ -43,7 +43,17 @@ const statusTone: Record<TicketStatus, 'info' | 'warning' | 'success' | 'neutral
   closed: 'neutral',
 };
 
-export function PortalTicket({ ticketId, authorName }: { ticketId: string; authorName: string }) {
+export function PortalTicket({
+  ticketId,
+  authorName,
+  csatRemaining = 0,
+  nextCsatId,
+}: {
+  ticketId: string;
+  authorName: string;
+  csatRemaining?: number;
+  nextCsatId?: string;
+}) {
   const { t, locale } = useI18n();
   const [ticket, setTicket] = useState<TicketItem | null>(null);
   const [comment, setComment] = useState('');
@@ -89,15 +99,42 @@ export function PortalTicket({ ticketId, authorName }: { ticketId: string; autho
   }
 
   const type = isTicketType(ticket.type) ? ticket.type : 'incident';
+  const csatRequired =
+    (ticket.status === 'resolved' || ticket.status === 'closed') && !ticket.csatScore;
+
+  const survey = (
+    <CsatSurvey
+      ticketId={ticket.id}
+      status={ticket.status}
+      canSubmit
+      required={csatRequired}
+      remaining={csatRemaining}
+      nextTicketId={nextCsatId}
+      initial={
+        ticket.csatScore
+          ? ({
+              ticketId: ticket.id,
+              score: ticket.csatScore as CsatResponse['score'],
+              comment: ticket.csatComment,
+              createdAt: ticket.createdAt,
+            } satisfies CsatResponse)
+          : null
+      }
+    />
+  );
 
   return (
     <div className="mx-auto grid max-w-6xl gap-6 p-4 pb-safe md:p-8 lg:grid-cols-[minmax(0,1fr)_280px] lg:gap-8">
       <div className="space-y-6">
         <div>
-          <Link href="/portal" className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-200">
-            <ArrowLeft className="h-3.5 w-3.5" /> {t.portal.myTickets}
-          </Link>
-          <p className="mt-3 font-mono text-[12px] text-zinc-600">{displayTicketNumber(ticket.number, ticket.id)}</p>
+          {!csatRequired ? (
+            <Link href="/portal" className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-200">
+              <ArrowLeft className="h-3.5 w-3.5" /> {t.portal.myTickets}
+            </Link>
+          ) : null}
+          <p className={csatRequired ? 'font-mono text-[12px] text-zinc-600' : 'mt-3 font-mono text-[12px] text-zinc-600'}>
+            {displayTicketNumber(ticket.number, ticket.id)}
+          </p>
           <div className="mt-1 flex flex-wrap items-center gap-2">
             <h1 className="text-[28px] font-semibold tracking-tight text-zinc-50">{ticket.title}</h1>
           </div>
@@ -106,6 +143,8 @@ export function PortalTicket({ ticketId, authorName }: { ticketId: string; autho
             <Badge tone={statusTone[ticket.status]}>{localizedStage(t, type, ticket.status)}</Badge>
           </div>
         </div>
+
+        {csatRequired ? survey : null}
 
         <section className="nova-surface overflow-hidden rounded-xl border p-4">
           <p className="mb-3 text-[11px] uppercase tracking-[0.16em] text-zinc-500">{t.tickets.process}</p>
@@ -119,21 +158,7 @@ export function PortalTicket({ ticketId, authorName }: { ticketId: string; autho
           </div>
         </section>
 
-        <CsatSurvey
-          ticketId={ticket.id}
-          status={ticket.status}
-          canSubmit
-          initial={
-            ticket.csatScore
-              ? ({
-                  ticketId: ticket.id,
-                  score: ticket.csatScore as CsatResponse['score'],
-                  comment: ticket.csatComment,
-                  createdAt: ticket.createdAt,
-                } satisfies CsatResponse)
-              : null
-          }
-        />
+        {!csatRequired ? survey : null}
 
         <section className="nova-surface overflow-hidden rounded-xl border">
           <div className="border-b border-zinc-800 px-5 py-3">

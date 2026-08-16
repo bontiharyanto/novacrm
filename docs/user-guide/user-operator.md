@@ -188,7 +188,7 @@ Buka tiket di **My tickets** / `/portal/{id}`.
 
 - Baca status dan komentar agent.
 - Tambah komentar jika diminta info.
-- Setelah **resolved** / **closed**, isi **CSAT** (1–5) di halaman tiket. Email / WhatsApp ke customer memakai tautan `/portal/{id}` (tombol **Rate this ticket**), bukan desk `/tickets/{id}`.
+- Setelah **resolved** / **closed**, **CSAT wajib** (1–5). Portal mengunci katalog, permintaan baru, dan Ask AI sampai semua tiket selesai dinilai. Email / WhatsApp memakai tautan `/portal/{id}`, bukan desk `/tickets/{id}`.
 - Jangan buka tiket duplikat untuk isu yang sama; balas yang sudah ada.
 
 ## B.5 Ask AI (portal)
@@ -203,7 +203,7 @@ Tab **Privacy** hanya ada jika admin sudah Enable on portal. Notice mengikuti `E
 
 - [ ] Pakai **Catalog** jika itemnya ada
 - [ ] Satu isu = satu tiket
-- [ ] Rate tiket resolved (CSAT)
+- [ ] Rate tiket resolved/closed (CSAT wajib — portal terkunci sampai dinilai)
 - [ ] Lengkapi field wajib
 - [ ] Pantau **My tickets**, bukan email saja
 - [ ] Tidak mengirim kredensial di form

@@ -17,7 +17,7 @@ By the end of training, a participant can:
 3. Create, assign, hold, and escalate a ticket; read the SLA badge.
 4. Record asset **move / transfer / replace** and open the related CI graph.
 5. Submit a catalog request as a customer and find it on the desk.
-6. After an agent **resolves** a ticket, open the CSAT link from Mailpit (or `/portal/{id}`) and submit a score.
+6. After an agent **resolves** a ticket, the customer portal **requires** CSAT (locks catalog / new request / Ask AI). Open Mailpit or `/portal/{id}` and submit a 1–5 score.
 7. (Admin only) Open **Integrations** and **Appearance**; know that API keys are never shown in class unless the lab environment is isolated.
 8. (Full day) Open **AI Insights** and **WFM** and explain they are read/dispatch tools, not ticket editors. Superadmin: show tenant **accent** on `/tenants`.
 
@@ -66,7 +66,7 @@ Portal  customer@novacrm.app / NovaCRM!2026
 | Knowledge *VPN disconnect* | `/knowledge` | Hint appears when creating a ticket titled with `VPN` |
 | SLA Gold INC P1 | `/sla` on Bank | 15m response / 4h resolve |
 | Catalog **Install software** | `/catalog` | Record producer — state badge is **Published** / **Draf**. Walkthrough for a new item (Antivirus) is in [catalog-guidance.md](catalog-guidance.md) |
-| CSAT after resolve | Mailpit → `/portal/{id}` | Email/WA say **Nilai perbaikannya** (ID) or **Rate the fix** (EN). Desk URL is wrong — must be portal |
+| CSAT after resolve | Mailpit → `/portal/{id}` | Required: portal locks catalog / new request until rated. Email/WA say **Nilai perbaikannya** (ID) or **Rate the fix** (EN). Desk URL is wrong — must be portal |
 
 If a participant “cannot see the graph”, they are still on **Internal**. Switch account first.
 
@@ -127,7 +127,7 @@ Participant can complete **without facilitator clicking**:
 1. Login as agent, switch to Bank Nusantara, open `AST-1001`.
 2. Create an incident, assign to self, add a comment.
 3. Login as customer, submit a catalog or freeform request, then find it as agent.
-4. Resolve that ticket as agent, open Mailpit, click the CSAT / portal link, submit a score as customer.
+4. Resolve that ticket as agent. As customer, the portal must block catalog until CSAT is submitted (Mailpit link or `/portal/{id}`).
 5. (Full day / catalog owners) Open **Install software** on `/catalog` and, using [catalog-guidance.md](catalog-guidance.md), explain how they would add **Install Antivirus**. State must be **Published** before the portal combo shows it.
 
 ---
@@ -148,6 +148,7 @@ Participant can complete **without facilitator clicking**:
 | Redis `down` on `/api/health` | Compose not up | `npm run local:up` or `local:deploy` |
 | Email “sent” but inbox empty | Looking at Gmail | Open Mailpit `127.0.0.1:54324` |
 | CSAT link opens `/tickets/...` | Old email / wrong env | Resolve again; the link must be `/portal/{id}` |
+| Customer can still open catalog after resolve | Unrated CSAT gate not applied | Confirm ticket is resolved/closed and has no `ticket_csat` row; refresh `/portal` |
 | Email still English on an ID desk | Ticket was created while chrome was EN, or worker stale | Toggle **ID**, resolve again; restart `npm run worker` if needed |
 | Accent still blue after `/tenants` save | Login page, or cache | Sign in to that tenant’s desk/portal and refresh |
 
