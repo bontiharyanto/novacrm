@@ -37,12 +37,20 @@ export function TenantsDashboard({ tenants }: { tenants: TenantRecord[] }) {
             <h1 className="text-2xl font-semibold text-zinc-50">Tenants</h1>
             <p className="mt-1 text-sm text-zinc-500">One tenant per client. Data stays isolated by tenant_id.</p>
           </div>
-          <Link
-            href="/tenants/new"
-            className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-2.5 py-1.5 text-xs font-medium text-white transition-all duration-200 ease-out hover:-translate-y-0.5 hover:bg-blue-500"
-          >
-            <Plus className="h-3.5 w-3.5" /> New tenant
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              href="/tenants/audit"
+              className="inline-flex items-center gap-1.5 rounded-md border border-zinc-800 px-2.5 py-1.5 text-xs text-zinc-200 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-zinc-700"
+            >
+              Isolation audit
+            </Link>
+            <Link
+              href="/tenants/new"
+              className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-2.5 py-1.5 text-xs font-medium text-white transition-all duration-200 ease-out hover:-translate-y-0.5 hover:bg-blue-500"
+            >
+              <Plus className="h-3.5 w-3.5" /> New tenant
+            </Link>
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-2">

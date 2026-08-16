@@ -61,6 +61,25 @@ export const TENANT_TIMEZONES = [
   'UTC',
 ] as const;
 
+export type TenantAuditSeverity = 'fail' | 'warn' | 'pass';
+
+export type TenantAuditFinding = {
+  severity: TenantAuditSeverity;
+  checkId: string;
+  objectName: string;
+  detail: string;
+  rowCount: number;
+};
+
+export type TenantAuditResult = {
+  ranAt: string;
+  fail: number;
+  warn: number;
+  pass: number;
+  ok: boolean;
+  findings: TenantAuditFinding[];
+};
+
 export const TENANT_STATUS_LABEL: Record<TenantStatus, string> = {
   active: 'Active',
   paused: 'Paused',

@@ -8,6 +8,9 @@ import { createSupabaseAdminClient, hasServiceRole } from '@/lib/supabase/admin'
 import {
   createTenantSchema,
   updateTenantSchema,
+  type TenantAuditFinding,
+  type TenantAuditResult,
+  type TenantAuditSeverity,
   type TenantRecord,
   type TenantStatus,
 } from '@/lib/tenants/schema';
@@ -387,4 +390,50 @@ export async function updateTenant(tenantId: string, input: unknown) {
 
 export async function setTenantStatus(tenantId: string, status: TenantStatus) {
   return updateTenant(tenantId, { status });
+}
+
+export async function runTenantIsolationAudit() {
+  const gate = await requirePlatformAdmin('read');
+  if (gate.error || !gate.session) {
+    return { data: null, error: gate.error ?? 'Unauthorized' };
+  }
+
+  const admin = createSupabaseAdminClient();
+  const { data, error } = await admin.rpc('audit_tenant_isolation');
+  if (error) {
+    return { data: null, error: error.message };
+  }
+
+  const rank: Record<TenantAuditSeverity, number> = { fail: 0, warn: 1, pass: 2 };
+  const findings: TenantAuditFinding[] = ((data ?? []) as Array<{
+    severity: string;
+    check_id: string;
+    object_name: string;
+    detail: string;
+    row_count: number | string | null;
+  }>).map((row) => {
+    const severity: TenantAuditSeverity =
+      row.severity === 'fail' || row.severity === 'warn' ? row.severity : 'pass';
+    return {
+      severity,
+      checkId: row.check_id,
+      objectName: row.object_name,
+      detail: row.detail,
+      rowCount: Number(row.row_count ?? 0),
+    };
+  });
+
+  const fail = findings.filter((item) => item.severity === 'fail').length;
+  const warn = findings.filter((item) => item.severity === 'warn').length;
+  const pass = findings.filter((item) => item.severity === 'pass').length;
+  const result: TenantAuditResult = {
+    ranAt: new Date().toISOString(),
+    fail,
+    warn,
+    pass,
+    ok: fail === 0,
+    findings: findings.sort((a, b) => rank[a.severity] - rank[b.severity] || a.objectName.localeCompare(b.objectName)),
+  };
+
+  return { data: result, error: null };
 }
