@@ -457,10 +457,13 @@ export const id: Dictionary = {
     search: 'Cari layanan…',
     notInList: 'Tidak ada di daftar katalog',
     notInListHint:
-      'Isi semua pertanyaan di bawah. Ask AI mereview dulu. Tombol setujui muncul hanya setelah form lengkap.',
+      'Isi semua pertanyaan, lalu kirim permintaan. Review Ask AI opsional — tiket tetap bisa dibuat tanpa AI.',
     reviewWithAi: 'Minta review Ask AI',
     reviewing: 'Ask AI mereview…',
     editIssue: 'Ubah isian',
+    itemMissing: 'Item katalog tidak ditemukan atau belum dipublikasikan.',
+    emptyPublishHint:
+      'Belum ada layanan aktif. Kirim permintaan di formulir bawah, atau minta admin menerbitkan item di menu Katalog.',
     fieldSymptom: 'Apa masalahnya',
     fieldSymptomHint: 'Ketuk gejala di atas, atau ketik sendiri — contoh: CCTV gudang tidak merekam',
     fieldLocation: 'Lokasi / perangkat',

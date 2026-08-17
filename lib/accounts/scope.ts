@@ -54,7 +54,8 @@ export async function getAccountScope(session?: AppSession | null): Promise<Acco
   const all = await listAccessibleAccounts(current);
   const accounts = all.filter((item) => item.status === 'active');
   if (current.profile.role === 'customer') {
-    return { session: current, accounts, account: accounts[0] ?? null, viewingAll: false };
+    const preferred = accounts.find((item) => item.type === 'customer') ?? accounts[0] ?? null;
+    return { session: current, accounts, account: preferred, viewingAll: false };
   }
 
   const cookieId = cookies().get(ACCOUNT_COOKIE)?.value;

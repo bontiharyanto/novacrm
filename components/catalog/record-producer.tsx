@@ -25,19 +25,26 @@ export function RecordProducer({ itemId }: { itemId: string }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [consented, setConsented] = useState(false);
+  const [loadState, setLoadState] = useState<'loading' | 'ready' | 'missing'>('loading');
 
   useEffect(() => {
     void fetch(`/api/catalog/${itemId}`)
       .then((response) => response.json())
       .then((payload) => {
         const next = payload.data as CatalogItem | null;
+        if (!next?.id) {
+          setLoadState('missing');
+          return;
+        }
         setItem(next);
         const initial: Record<string, string | boolean> = {};
-        for (const variable of next?.mergedVariables ?? []) {
+        for (const variable of next.mergedVariables ?? []) {
           initial[variable.key] = variable.type === 'checkbox' ? false : '';
         }
         setAnswers(initial);
-      });
+        setLoadState('ready');
+      })
+      .catch(() => setLoadState('missing'));
   }, [itemId]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -62,8 +69,19 @@ export function RecordProducer({ itemId }: { itemId: string }) {
     router.push(`/portal/${payload.data.id}`);
   }
 
-  if (!item) {
+  if (loadState === 'loading') {
     return <p className="mx-auto max-w-3xl p-4 text-sm text-zinc-500 md:p-8">{t.common.loading}</p>;
+  }
+
+  if (loadState === 'missing' || !item) {
+    return (
+      <div className="mx-auto max-w-3xl space-y-4 p-4 md:p-8">
+        <p className="text-sm text-zinc-400">{t.catalog.itemMissing}</p>
+        <Link href="/portal/catalog" className="text-sm text-blue-300 hover:text-blue-200">
+          {t.portal.catalog}
+        </Link>
+      </div>
+    );
   }
 
   return (
@@ -157,6 +175,14 @@ export function RecordProducer({ itemId }: { itemId: string }) {
             privacyHref="/portal/privacy"
           />
         ) : null}
+      </div>
+      <div className="sticky bottom-0 z-10 -mx-4 flex gap-2 border-t border-zinc-800 bg-zinc-950/95 px-4 py-3 pb-safe backdrop-blur md:static md:mx-0 md:border-0 md:bg-transparent md:px-0 md:py-0">
+        <Button type="button" variant="ghost" className="md:hidden" onClick={() => router.push('/portal/catalog')}>
+          {t.common.cancel}
+        </Button>
+        <Button type="submit" className="flex-1 md:hidden" disabled={isSubmitting || (privacyEnabled && !consented)}>
+          {isSubmitting ? t.portal.submitting : t.portal.submitRequest}
+        </Button>
       </div>
     </motion.form>
   );

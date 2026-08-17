@@ -101,7 +101,9 @@ export function CatalogBrowse() {
             </Link>
           ))}
           {filtered.length === 0 ? (
-            <p className="col-span-full py-6 text-center text-sm text-zinc-500">{t.catalog.emptyCategory}</p>
+            <p className="col-span-full py-6 text-center text-sm text-zinc-500">
+              {items.length === 0 ? t.catalog.emptyPublishHint : t.catalog.emptyCategory}
+            </p>
           ) : null}
         </div>
       )}

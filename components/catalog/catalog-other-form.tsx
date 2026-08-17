@@ -47,7 +47,37 @@ export function CatalogOtherForm({
     location.trim().length >= 3 &&
     impact.trim().length >= 2 &&
     contact.trim().length >= 8;
-  const canReview = complete && (!privacyEnabled || consented) && !busy && !ticketId;
+  const canSubmit = complete && (!privacyEnabled || consented) && !busy && !ticketId;
+
+  async function submitTicket() {
+    if (!canSubmit) return;
+    setBusy(true);
+    setError('');
+    const issue = formatIssueFromForm({ title, location, impact, contact, details });
+    const response = await fetch('/api/tickets', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title: title.trim().slice(0, 200),
+        description: issue,
+        type: 'incident',
+        status: 'open',
+        priority: 'medium',
+        requesterPhone: contact.trim(),
+      }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || !payload.data?.id) {
+      const message = payload.error ?? t.portal.submitFailed;
+      setError(message);
+      toastError(message);
+      setBusy(false);
+      return;
+    }
+    emitTicketsChanged();
+    toastSuccess(t.tickets.created);
+    router.push(`/portal/${payload.data.id}`);
+  }
 
   async function callAssistant(next: AssistantMessage[]) {
     setBusy(true);
@@ -79,9 +109,13 @@ export function CatalogOtherForm({
     setBusy(false);
   }
 
-  async function handleReview(event: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!canReview) return;
+    await submitTicket();
+  }
+
+  async function startReview() {
+    if (!canSubmit) return;
     const issue = formatIssueFromForm({ title, location, impact, contact, details });
     await callAssistant([{ role: 'user', content: issue }]);
   }
@@ -130,7 +164,7 @@ export function CatalogOtherForm({
           </div>
         </div>
       ) : (
-        <form onSubmit={handleReview} className="mt-5 space-y-4">
+        <form onSubmit={handleSubmit} className="mt-5 space-y-4">
           <div className="space-y-2">
             <Label htmlFor="catalog-other-title">{t.catalog.fieldSymptom}</Label>
             <div className="flex flex-wrap gap-1.5">
@@ -210,9 +244,14 @@ export function CatalogOtherForm({
             />
           ) : null}
           {error ? <p className="text-sm text-rose-400">{error}</p> : null}
-          <Button type="submit" disabled={!canReview}>
-            {busy ? t.catalog.reviewing : t.catalog.reviewWithAi}
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button type="submit" disabled={!canSubmit}>
+              {busy ? t.portal.submitting : t.portal.submitRequest}
+            </Button>
+            <Button type="button" variant="ghost" disabled={!canSubmit} onClick={() => void startReview()}>
+              {busy ? t.catalog.reviewing : t.catalog.reviewWithAi}
+            </Button>
+          </div>
         </form>
       )}
     </div>
