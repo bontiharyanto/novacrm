@@ -28,10 +28,17 @@ export type HubIntegrations = {
 };
 
 export const DEFAULT_AI_BASE_URL = 'https://api.groq.com/openai/v1';
-export const DEFAULT_AI_MODEL = 'llama-3.1-8b-instant';
+export const DEFAULT_AI_MODEL = 'openai/gpt-oss-20b';
 export const DEFAULT_EMAIL_FROM = 'NovaCRM <no-reply@novacrm.app>';
 
-export const GROQ_MODELS = ['llama-3.1-8b-instant', 'openai/gpt-oss-20b', 'llama-3.3-70b-versatile'] as const;
+export const GROQ_MODELS = ['openai/gpt-oss-20b', 'openai/gpt-oss-120b', 'qwen/qwen3.6-27b'] as const;
+
+const GROQ_MODEL_ALIASES: Record<string, (typeof GROQ_MODELS)[number]> = {
+  'llama-3.1-8b-instant': 'openai/gpt-oss-20b',
+  'llama-3.3-70b-versatile': 'openai/gpt-oss-120b',
+  'llama3-8b-8192': 'openai/gpt-oss-20b',
+  'llama3-70b-8192': 'openai/gpt-oss-120b',
+};
 
 export const AI_PROVIDERS: Array<{
   id: string;
@@ -45,7 +52,7 @@ export const AI_PROVIDERS: Array<{
   {
     id: 'groq',
     label: 'Groq (free)',
-    hint: 'No credit card. Llama 3.1 8B Instant.',
+    hint: 'No credit card. Default GPT OSS 20B (Llama 3.1 Instant was retired).',
     baseUrl: 'https://api.groq.com/openai/v1',
     model: DEFAULT_AI_MODEL,
     keyPlaceholder: 'gsk_...',
@@ -99,8 +106,9 @@ export function resolveAiSettings(input: { apiKey?: string; baseUrl?: string; mo
       : undefined;
   const provider = fromKey ?? matchAiProvider(input.baseUrl);
   let model = (input.model ?? '').trim() || provider.model;
-  if (provider.id === 'groq' && isOpenAiHostedModel(model)) {
-    model = provider.model;
+  if (provider.id === 'groq') {
+    model = GROQ_MODEL_ALIASES[model] ?? model;
+    if (isOpenAiHostedModel(model)) model = provider.model;
   }
   return { apiKey, baseUrl: provider.baseUrl, model, providerId: provider.id };
 }

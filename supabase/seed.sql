@@ -1273,7 +1273,7 @@ insert into public.integrations (tenant_id, kind, config, is_active, created_by)
 values (
   '11111111-1111-1111-1111-111111111111',
   'ai',
-  '{"baseUrl":"https://api.groq.com/openai/v1","model":"llama-3.1-8b-instant"}'::jsonb,
+  '{"baseUrl":"https://api.groq.com/openai/v1","model":"openai/gpt-oss-20b"}'::jsonb,
   true,
   '22222222-2222-2222-2222-222222222222'
 )
