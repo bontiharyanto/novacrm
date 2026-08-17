@@ -3,7 +3,7 @@
 **Peran:** `superadmin`  
 **Login lab:** `superadmin@novacrm.app` / `NovaCRM!2026` → `/dashboard`  
 **UI:** default chrome **ID**. `EN | ID` di top bar. Isi tiket tetap seperti diketik.  
-**Companion:** [Admin](admin-system.md) · [Manager](manager-ops.md) · [RBAC](../RBAC.md) · [Deploy](../DEPLOYMENT.md)
+**Companion:** [Operasi tenant](tenant-operations.md) · [Admin](admin-system.md) · [Manager](manager-ops.md) · [RBAC](../RBAC.md) · [Deploy](../DEPLOYMENT.md) · [VPS](../VPS.md)
 
 Superadmin adalah **pemilik platform**: semua tenant, semua role, termasuk record Tenant. Pakai hemat. Kerja harian ITSM tetap di admin / manager / SPV / agent.
 

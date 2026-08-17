@@ -3,7 +3,7 @@
 **Peran:** `manager`  
 **Login lab:** `manager@novacrm.app` / `NovaCRM!2026` → `/dashboard`  
 **UI:** default chrome **ID**. `EN | ID` di top bar. Isi tiket tetap seperti diketik.  
-**Companion:** [Admin](admin-system.md) · [SPV](lead-spv.md) · [User](user-operator.md) · [Superadmin](superadmin.md) · [RBAC](../RBAC.md)
+**Companion:** [Operasi tenant](tenant-operations.md) · [Admin](admin-system.md) · [SPV](lead-spv.md) · [User](user-operator.md) · [Superadmin](superadmin.md) · [RBAC](../RBAC.md)
 
 Manager merancang **cara kerja operasional**: account, organisasi, orang, SLA, katalog, workflow, import. Bukan pemegang kunci plugin (itu admin) dan bukan pemilik platform (itu superadmin).
 

@@ -5,6 +5,8 @@
 **Product version:** laptop demo (desk + portal + Ops)  
 **Languages:** Bahasa Indonesia (this pack). Product chrome defaults to **ID**; toggle `EN | ID` on the top bar.
 
+Setup satu klien end-to-end (tenant, account, divisi/dept, portal, arsip — tanpa hapus data): [Operasi tenant](tenant-operations.md). Produksi: [VPS.md](../VPS.md).
+
 ## Role playbooks (daily use)
 
 Tujuh role produk. Pilih dokumen sesuai login.
@@ -33,6 +35,8 @@ Item katalog: [Catalog & record producer](catalog-guidance.md). Matriks hak: [RB
 | [Workers](../WORKERS.md) | Engineer: scale BullMQ workers |
 | [MFA](../MFA.md) | TOTP toggle — off until production |
 | [Persiapan migrasi server](../MIGRATE-SERVER.md) | Engineer: akun, secret, DNS sebelum VPS |
+| [Operasi tenant](tenant-operations.md) | Admin/manager: tenant → account → org → portal → arsip |
+| [VPS go-live](../VPS.md) | Engineer: produksi `novacrm.click` |
 | [Deployment](../DEPLOYMENT.md) | Engineer: VPS / production |
 
 ## Demo logins

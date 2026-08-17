@@ -213,6 +213,8 @@ Browser: hard refresh `Cmd+Shift+R`. Cek https://novacrm.click/api/health.
 
 Isi plan, tanggal kontrak, grace. Lab `novacrm-demo` biarkan **Protected**. Data tidak dihapus saat expire.
 
+Setup account, divisi/dept, user portal, dan arsip (tanpa Delete): [tenant-operations.md](user-guide/tenant-operations.md).
+
 ---
 
 ## 5. Yang tidak boleh

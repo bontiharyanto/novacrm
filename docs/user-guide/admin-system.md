@@ -3,7 +3,7 @@
 **Peran:** `admin` (tenant). Superadmin = platform, di luar dokumen ini.  
 **Login lab:** `admin@novacrm.app` / `NovaCRM!2026` → `/dashboard`  
 **UI:** default chrome **ID**. Ganti `EN | ID` di top bar. Isi tiket tetap seperti diketik.  
-**Companion:** [User](user-operator.md) · [Team Lead / SPV](lead-spv.md) · [Manager](manager-ops.md) · [Superadmin](superadmin.md) · [Katalog](catalog-guidance.md) · [RBAC](../RBAC.md)
+**Companion:** [Operasi tenant](tenant-operations.md) · [User](user-operator.md) · [Team Lead / SPV](lead-spv.md) · [Manager](manager-ops.md) · [Superadmin](superadmin.md) · [Katalog](catalog-guidance.md) · [RBAC](../RBAC.md)
 
 Administrator menyiapkan tenant agar agent, SPV, dan customer bisa bekerja. Bukan menggantikan agent mengerjakan antrian harian.
 
