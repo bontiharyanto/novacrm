@@ -904,6 +904,18 @@ export const en = {
     readNotice: 'Privacy notice',
     confirmConsent: 'I have read and agree',
   },
+  workflow: {
+    back: 'Automation',
+    newFlow: 'New flow',
+    name: 'Flow name',
+    save: 'Save flow',
+    saveAs: 'Save as',
+    saveAsTitle: 'Save as a new flow',
+    saveAsHint: 'Creates a new automation with this name. The current canvas is copied.',
+    saving: 'Saving…',
+    active: 'Active',
+    inactive: 'Inactive',
+  },
 };
 
 export type Dictionary = typeof en;

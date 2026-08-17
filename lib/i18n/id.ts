@@ -907,4 +907,16 @@ export const id: Dictionary = {
     readNotice: 'Pemberitahuan privasi',
     confirmConsent: 'Saya telah membaca dan menyetujui',
   },
+  workflow: {
+    back: 'Otomasi',
+    newFlow: 'Flow baru',
+    name: 'Nama flow',
+    save: 'Simpan flow',
+    saveAs: 'Simpan sebagai',
+    saveAsTitle: 'Simpan sebagai flow baru',
+    saveAsHint: 'Membuat otomasi baru dengan nama ini. Kanvas saat ini disalin.',
+    saving: 'Menyimpan…',
+    active: 'Aktif',
+    inactive: 'Nonaktif',
+  },
 };

@@ -20,6 +20,8 @@ import '@xyflow/react/dist/style.css';
 import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Dialog } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
@@ -67,7 +69,7 @@ function WorkflowEditorInner({ ruleId, template }: { ruleId?: string; template?:
   const router = useRouter();
   const { t } = useI18n();
   const seed = template ? getWorkflowTemplate(template).definition : emptyDefinition();
-  const [name, setName] = useState(template ? getWorkflowTemplate(template).name : 'New flow');
+  const [name, setName] = useState(template ? getWorkflowTemplate(template).name : '');
   const [isActive, setIsActive] = useState(true);
   const [nodes, setNodes, onNodesChange] = useNodesState(toFlow(seed).nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(toFlow(seed).edges);
@@ -76,6 +78,8 @@ function WorkflowEditorInner({ ruleId, template }: { ruleId?: string; template?:
   const [assetTypes, setAssetTypes] = useState<AssetTypeOption[]>(DEFAULT_ASSET_TYPES);
   const [runs, setRuns] = useState<Array<{ id: string; status: string; event: string; createdAt: string }>>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [saveAsOpen, setSaveAsOpen] = useState(false);
+  const [saveAsName, setSaveAsName] = useState('');
   const [error, setError] = useState('');
 
   const selected = nodes.find((node) => node.id === selectedId);
@@ -168,10 +172,8 @@ function WorkflowEditorInner({ ruleId, template }: { ruleId?: string; template?:
     [selectedId, setNodes],
   );
 
-  async function save() {
-    setIsSaving(true);
-    setError('');
-    const definition: WorkflowDefinition = {
+  function currentDefinition(): WorkflowDefinition {
+    return {
       nodes: nodes.map((node) => ({
         id: node.id,
         type: (node.type === 'condition' ? 'condition' : node.type === 'action' ? 'action' : 'trigger') as
@@ -189,11 +191,21 @@ function WorkflowEditorInner({ ruleId, template }: { ruleId?: string; template?:
         targetHandle: edge.targetHandle ?? undefined,
       })),
     };
-    const body = { name, isActive, definition };
-    const response = await fetch(ruleId ? `/api/workflows/${ruleId}` : '/api/workflows', {
-      method: ruleId ? 'PATCH' : 'POST',
+  }
+
+  async function persist(options: { asNew?: boolean; nameOverride?: string } = {}) {
+    const nextName = (options.nameOverride ?? name).trim();
+    if (nextName.length < 1) {
+      setError(t.workflow.name);
+      return;
+    }
+    setIsSaving(true);
+    setError('');
+    const createNew = !ruleId || Boolean(options.asNew);
+    const response = await fetch(createNew ? '/api/workflows' : `/api/workflows/${ruleId}`, {
+      method: createNew ? 'POST' : 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+      body: JSON.stringify({ name: nextName, isActive, definition: currentDefinition() }),
     });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok || !payload.data?.id) {
@@ -203,11 +215,19 @@ function WorkflowEditorInner({ ruleId, template }: { ruleId?: string; template?:
       setIsSaving(false);
       return;
     }
-    toastSuccess(t.common.saved);
-    if (!ruleId) {
+    toastSuccess(createNew ? t.common.created : t.common.saved);
+    setName(nextName);
+    setSaveAsOpen(false);
+    if (createNew) {
       router.replace(`/workflows/${payload.data.id}`);
     }
     setIsSaving(false);
+  }
+
+  function openSaveAs() {
+    const base = name.trim() || t.workflow.newFlow;
+    setSaveAsName(ruleId ? `${base} (copy)` : base);
+    setSaveAsOpen(true);
   }
 
   const inspector = useMemo(() => {
@@ -383,28 +403,67 @@ function WorkflowEditorInner({ ruleId, template }: { ruleId?: string; template?:
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <Link href="/workflows" className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-200">
-              <ArrowLeft className="h-3.5 w-3.5" /> Automation
+              <ArrowLeft className="h-3.5 w-3.5" /> {t.workflow.back}
             </Link>
             <input
               value={name}
               onChange={(event) => setName(event.target.value)}
-              className="mt-1 block w-full max-w-md bg-transparent text-xl font-semibold text-zinc-50 outline-none"
+              placeholder={t.workflow.newFlow}
+              aria-label={t.workflow.name}
+              className="mt-1 block w-full max-w-md bg-transparent text-xl font-semibold text-zinc-50 outline-none placeholder:text-zinc-600"
             />
           </div>
           <div className="flex items-center gap-2">
             <Button type="button" variant="ghost" onClick={() => setIsActive((value) => !value)}>
-              {isActive ? 'Active' : 'Inactive'}
+              {isActive ? t.workflow.active : t.workflow.inactive}
             </Button>
             <Button type="button" variant="ghost" onClick={() => router.push('/workflows')}>
-              Cancel
+              {t.common.cancel}
             </Button>
-            <Button type="button" onClick={() => void save()} disabled={isSaving || name.trim().length < 1}>
-              {isSaving ? 'Saving...' : 'Save flow'}
+            <Button type="button" variant="outline" onClick={openSaveAs} disabled={isSaving}>
+              {t.workflow.saveAs}
+            </Button>
+            <Button type="button" onClick={() => void persist()} disabled={isSaving || name.trim().length < 1}>
+              {isSaving ? t.workflow.saving : t.workflow.save}
             </Button>
           </div>
         </div>
         {error ? <p className="mt-2 text-sm text-rose-400">{error}</p> : null}
       </header>
+
+      <Dialog open={saveAsOpen} title={t.workflow.saveAsTitle} onClose={() => setSaveAsOpen(false)}>
+        <div className="space-y-4">
+          <p className="text-sm text-zinc-400">{t.workflow.saveAsHint}</p>
+          <div className="space-y-1.5">
+            <Label htmlFor="workflow-save-as-name">{t.workflow.name}</Label>
+            <Input
+              id="workflow-save-as-name"
+              value={saveAsName}
+              onChange={(event) => setSaveAsName(event.target.value)}
+              placeholder={t.workflow.newFlow}
+              autoFocus
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' && saveAsName.trim()) {
+                  event.preventDefault();
+                  void persist({ asNew: true, nameOverride: saveAsName });
+                }
+              }}
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="ghost" onClick={() => setSaveAsOpen(false)}>
+              {t.common.cancel}
+            </Button>
+            <Button
+              type="button"
+              onClick={() => void persist({ asNew: true, nameOverride: saveAsName })}
+              disabled={isSaving || saveAsName.trim().length < 1}
+            >
+              {isSaving ? t.workflow.saving : t.workflow.saveAs}
+            </Button>
+          </div>
+        </div>
+      </Dialog>
 
       <div className="grid flex-1 lg:grid-cols-[200px_minmax(0,1fr)_300px]">
         <aside className="space-y-2 border-r border-zinc-800 p-4">
