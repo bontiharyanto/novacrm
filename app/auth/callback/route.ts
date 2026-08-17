@@ -4,6 +4,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { ACCOUNT_ALL, ACCOUNT_COOKIE } from '@/lib/accounts/schema';
 import { finalizeSsoProfile } from '@/lib/auth/sso';
 import { homePathForRole, isCustomerRole, parseAppRole } from '@/lib/rbac/roles';
+import { setWelcomeCookie, withWelcomeQuery } from '@/lib/auth/welcome';
 
 function safeNextPath(value: string) {
   if (value.startsWith('/') && !value.startsWith('//')) return value;
@@ -60,13 +61,14 @@ export async function GET(request: NextRequest) {
     });
   }
 
+  setWelcomeCookie();
   const dest = isCustomerRole(role)
     ? next && next.startsWith('/portal') && next !== '/portal'
       ? next
-      : '/portal?welcome=1'
+      : '/portal'
     : next && !next.startsWith('/portal')
       ? next
       : homePathForRole(role);
 
-  return NextResponse.redirect(new URL(dest, request.url));
+  return NextResponse.redirect(new URL(withWelcomeQuery(dest), request.url));
 }

@@ -13,6 +13,7 @@ import {
 import { finalizeSsoProfile } from '@/lib/auth/sso';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { homePathForRole, isCustomerRole, parseAppRole } from '@/lib/rbac/roles';
+import { setWelcomeCookie, withWelcomeQuery } from '@/lib/auth/welcome';
 
 export const runtime = 'nodejs';
 
@@ -73,7 +74,8 @@ async function finishSaml(request: NextRequest, samlResponse: string, relayState
         ? relay.nextPath
         : homePathForRole(role);
 
-    return NextResponse.redirect(new URL(dest, request.url));
+    setWelcomeCookie();
+    return NextResponse.redirect(new URL(withWelcomeQuery(dest), request.url));
   } catch {
     return loginError(request, tenantSlug);
   }

@@ -4,6 +4,7 @@ import { getSessionProfile } from '@/lib/auth/session';
 import { isStaffRole, isTenantAdminRole } from '@/lib/rbac/roles';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { createSupabaseAdminClient, hasServiceRole } from '@/lib/supabase/admin';
+import { setWelcomeCookie } from '@/lib/auth/welcome';
 
 export type MfaPolicy = {
   required: boolean;
@@ -118,6 +119,7 @@ export async function verifyMfaLogin(factorId: string, code: string) {
     code: code.trim(),
   });
   if (verified.error) return { data: null, error: verified.error.message };
+  setWelcomeCookie();
   return { data: { ok: true }, error: null };
 }
 

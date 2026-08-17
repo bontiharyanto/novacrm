@@ -51,6 +51,7 @@ import { isTenantAdminRole, ROLE_LABEL } from '@/lib/rbac/roles';
 import { PresenceControl } from '@/components/layout/presence-control';
 import { NotificationBell } from '@/components/layout/notification-bell';
 import { IdleSessionGuard } from '@/components/layout/idle-session-guard';
+import { BrandWelcome } from '@/components/brand/brand-welcome';
 import { NovaWordmark } from '@/components/brand/nova-mark';
 import { cn } from '@/lib/utils';
 
@@ -557,6 +558,7 @@ export function AgentShell({
         hidden={onAssistant}
       />
       <IdleSessionGuard minutes={idleTimeoutMinutes} />
+      <BrandWelcome variant="desk" />
     </div>
   );
 }

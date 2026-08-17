@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { ACCOUNT_ALL, ACCOUNT_COOKIE } from '@/lib/accounts/schema';
 import { homePathForRole, isCustomerRole, parseAppRole } from '@/lib/rbac/roles';
+import { setWelcomeCookie, withWelcomeQuery } from '@/lib/auth/welcome';
 
 export type SignInState = { error: string } | null;
 
@@ -43,14 +44,9 @@ export async function signInAction(_prev: SignInState, formData: FormData): Prom
 
   const role = parseAppRole(profile?.role ?? data.user.user_metadata?.role);
   if (isCustomerRole(role)) {
-    cookies().set('novacrm_portal_welcome', '1', {
-      path: '/',
-      sameSite: 'lax',
-      httpOnly: false,
-      maxAge: 20,
-    });
-    const dest = next && next.startsWith('/portal') && next !== '/portal' ? next : '/portal?welcome=1';
-    redirect(dest);
+    setWelcomeCookie();
+    const dest = next && next.startsWith('/portal') && next !== '/portal' ? next : '/portal';
+    redirect(withWelcomeQuery(dest));
   }
 
   if (profile?.tenant_id) {
@@ -73,5 +69,6 @@ export async function signInAction(_prev: SignInState, formData: FormData): Prom
     maxAge: 60 * 60 * 24 * 30,
   });
   const dest = next && !next.startsWith('/portal') ? next : homePathForRole(role);
-  redirect(dest);
+  setWelcomeCookie();
+  redirect(withWelcomeQuery(dest));
 }

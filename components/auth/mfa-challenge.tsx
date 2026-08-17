@@ -23,7 +23,7 @@ export function MfaChallenge({ factorId, nextPath }: { factorId: string; nextPat
       setError(result.error);
       return;
     }
-    router.replace(nextPath && nextPath.startsWith('/') ? nextPath : '/dashboard');
+    router.replace(nextPath && nextPath.startsWith('/') ? `${nextPath}${nextPath.includes('?') ? '&' : '?'}welcome=1` : '/dashboard?welcome=1');
     router.refresh();
   }
 
