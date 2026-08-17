@@ -90,6 +90,7 @@ export const id: Dictionary = {
     ssoDenied: 'Domain email ini tidak diizinkan untuk tenant ini. Pakai akun kerja atau login email.',
     tenantPaused: 'Tenant ini dijeda atau diarsipkan. Minta pemilik platform untuk mengaktifkannya lagi.',
     tenantExpired: 'Kontrak tenant ini sudah berakhir. Minta pemilik platform untuk memperpanjang atau mengaktifkannya lagi.',
+    idleTimeout: 'Keluar karena tidak ada aktivitas. Masuk lagi untuk melanjutkan.',
     passwordExpired: 'Kata sandi kedaluwarsa. Masuk, lalu ganti untuk melanjutkan.',
   },
   passwordPolicy: {
@@ -107,6 +108,15 @@ export const id: Dictionary = {
     status: 'Kata sandi',
     ok: 'Berlaku',
     due: 'Kedaluwarsa',
+  },
+  idlePolicy: {
+    title: 'Keluar otomatis',
+    hint: 'Keluar otomatis dari desk dan portal jika tidak ada klik, ketikan, atau scroll. Default 30 menit. Update daftar realtime tidak dihitung aktivitas.',
+    off: 'Mati',
+    minutes: '{{n}} menit',
+    save: 'Simpan keluar otomatis',
+    warn: 'Tidak ada aktivitas. Anda akan keluar dalam sekitar {{n}} detik.',
+    stay: 'Tetap masuk',
   },
   accountPick: {
     title: 'Filter desk',

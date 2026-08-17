@@ -1,5 +1,6 @@
 import { createSupabaseAdminClient, hasServiceRole } from '@/lib/supabase/admin';
 import { sendEmail } from '@/lib/integrations/email';
+import { getSmtpConfigForTenant } from '@/lib/settings/integrations';
 import { sendTelegram } from '@/lib/integrations/telegram';
 import { sendWhatsApp } from '@/lib/integrations/whatsapp';
 import { appendNotificationLog } from '@/lib/notifications/logs';
@@ -60,6 +61,7 @@ export async function processNotificationJob(payload: NotificationJobPayload) {
   }
 
   const storedChannels = await loadActiveChannels(tenantId);
+  const smtp = await getSmtpConfigForTenant(tenantId);
   const channels =
     storedChannels.length > 0
       ? storedChannels
@@ -117,7 +119,8 @@ export async function processNotificationJob(payload: NotificationJobPayload) {
           });
           const result = await sendEmail(recipient, subject, html, {
             apiKey: channel.config.apiKey || process.env.RESEND_API_KEY,
-            from: channel.config.from || process.env.EMAIL_FROM,
+            from: channel.config.from || smtp?.from || process.env.EMAIL_FROM,
+            smtp,
           });
           results.push({ channel: 'email', ok: Boolean(result.ok), error: result.error });
           await appendNotificationLog({

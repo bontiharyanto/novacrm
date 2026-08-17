@@ -3,6 +3,7 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { ACCOUNT_COOKIE } from '@/lib/accounts/schema';
+import { IDLE_COOKIE } from '@/lib/auth/idle-timeout';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getSessionProfile } from '@/lib/auth/session';
 import { getPreferences } from '@/lib/preferences/server';
@@ -20,8 +21,25 @@ export async function signOutAction() {
     }
   }
   store.delete(ACCOUNT_COOKIE);
+  store.delete(IDLE_COOKIE);
 
   redirect('/login');
+}
+
+export async function signOutIdleAction() {
+  const supabase = await createSupabaseServerClient();
+  await supabase.auth.signOut();
+
+  const store = cookies();
+  for (const cookie of store.getAll()) {
+    if (cookie.name.includes('-auth-token') || cookie.name.startsWith('sb-')) {
+      store.delete(cookie.name);
+    }
+  }
+  store.delete(ACCOUNT_COOKIE);
+  store.delete(IDLE_COOKIE);
+
+  redirect('/login?error=idle');
 }
 
 export async function changeOwnPassword(currentPassword: string, nextPassword: string) {

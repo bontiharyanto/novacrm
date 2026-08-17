@@ -31,6 +31,7 @@ export default async function PortalLayout({ children }: { children: React.React
         userId={session.userId}
         privacyEnabled={Boolean(privacy?.isPublished)}
         pendingCsat={pendingCsat}
+        idleTimeoutMinutes={tenant?.idleTimeoutMinutes ?? 30}
       >
         <PortalCsatGate pending={pendingCsat}>{children}</PortalCsatGate>
       </PortalShell>

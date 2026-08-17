@@ -16,6 +16,8 @@ import {
 } from '@/lib/auth/mfa';
 import { saveOwnTelegramChatId, saveOwnWhatsAppPhone } from '@/lib/settings/telegram-link';
 import { savePasswordPolicy } from '@/lib/auth/password-actions';
+import { saveIdlePolicy } from '@/lib/auth/idle-actions';
+import { IDLE_OPTIONS, parseIdleMinutes, type IdleMinutes } from '@/lib/auth/idle-timeout';
 import type { PasswordPolicy } from '@/lib/auth/password-policy';
 import { ChangePasswordForm } from '@/components/auth/change-password-form';
 import { useI18n } from '@/components/layout/preferences-provider';
@@ -30,6 +32,7 @@ export function SecuritySettings({
   forcePassword,
   passwordPolicy,
   passwordDaysLeft,
+  idleMinutes: initialIdleMinutes = 30,
   telegramChatId: initialTelegramChatId = '',
   whatsappPhone: initialWhatsAppPhone = '',
 }: {
@@ -40,6 +43,7 @@ export function SecuritySettings({
   forcePassword?: boolean;
   passwordPolicy?: PasswordPolicy;
   passwordDaysLeft?: number;
+  idleMinutes?: number;
   telegramChatId?: string;
   whatsappPhone?: string;
 }) {
@@ -54,6 +58,7 @@ export function SecuritySettings({
   const [whatsappPhone, setWhatsappPhone] = useState(initialWhatsAppPhone);
   const [rotationEnabled, setRotationEnabled] = useState(passwordPolicy?.enabled ?? true);
   const [maxAgeDays, setMaxAgeDays] = useState(String(passwordPolicy?.maxAgeDays ?? 30));
+  const [idleMinutes, setIdleMinutes] = useState<IdleMinutes>(parseIdleMinutes(initialIdleMinutes));
 
   async function saveToggle() {
     setSaving(true);
@@ -160,6 +165,48 @@ export function SecuritySettings({
                 }}
               >
                 {t.passwordPolicy.save}
+              </Button>
+            </CardContent>
+          </Card>
+        ) : null}
+
+        {canToggle ? (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">{t.idlePolicy.title}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-xs leading-5 text-zinc-500">{t.idlePolicy.hint}</p>
+              <div className="flex flex-wrap gap-2">
+                {IDLE_OPTIONS.map((option) => (
+                  <button
+                    key={option}
+                    type="button"
+                    onClick={() => setIdleMinutes(option)}
+                    className={`rounded-md border px-2.5 py-1.5 text-xs transition-colors ${
+                      idleMinutes === option
+                        ? 'nova-accent-chip'
+                        : 'border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'
+                    }`}
+                  >
+                    {option === 0 ? t.idlePolicy.off : t.idlePolicy.minutes.replace('{{n}}', String(option))}
+                  </button>
+                ))}
+              </div>
+              <Button
+                type="button"
+                disabled={saving}
+                onClick={() => {
+                  void (async () => {
+                    setSaving(true);
+                    const result = await saveIdlePolicy({ minutes: idleMinutes });
+                    setSaving(false);
+                    setMessage(result.error ?? t.common.saved);
+                    if (!result.error) router.refresh();
+                  })();
+                }}
+              >
+                {t.idlePolicy.save}
               </Button>
             </CardContent>
           </Card>

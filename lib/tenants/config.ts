@@ -2,6 +2,7 @@
 
 import { getSessionProfile } from '@/lib/auth/session';
 import { canRole } from '@/lib/rbac/ability';
+import { DEFAULT_IDLE_MINUTES, parseIdleMinutes } from '@/lib/auth/idle-timeout';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 
 export type TenantConfig = {
@@ -12,6 +13,7 @@ export type TenantConfig = {
   timezone: string;
   supportEmail: string;
   status: 'active' | 'paused' | 'archived';
+  idleTimeoutMinutes: number;
 };
 
 function mapTenant(row: {
@@ -22,6 +24,7 @@ function mapTenant(row: {
   timezone: string;
   support_email?: string | null;
   status: TenantConfig['status'];
+  idle_timeout_minutes?: number | null;
 }): TenantConfig {
   return {
     id: row.id,
@@ -31,6 +34,7 @@ function mapTenant(row: {
     timezone: row.timezone,
     supportEmail: row.support_email ?? '',
     status: row.status,
+    idleTimeoutMinutes: parseIdleMinutes(row.idle_timeout_minutes ?? DEFAULT_IDLE_MINUTES),
   };
 }
 

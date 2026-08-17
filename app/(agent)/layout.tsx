@@ -37,6 +37,7 @@ export default async function AgentLayout({ children }: { children: React.ReactN
         userId={session.userId}
         accounts={scope.accounts}
         activeAccountId={scope.account?.id ?? (scope.accounts.length > 0 ? ACCOUNT_ALL : null)}
+        idleTimeoutMinutes={tenant?.idleTimeoutMinutes ?? 30}
       >
         <div key={scope.account?.id ?? ACCOUNT_ALL}>{children}</div>
       </AgentShell>

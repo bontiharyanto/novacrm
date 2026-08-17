@@ -1,4 +1,4 @@
-import { getMailpitUrl, getSmtpConfig, sendSmtpEmail } from '@/lib/integrations/smtp';
+import { getMailpitUrl, parseSmtpSettings, sendSmtpEmail, type SmtpSettings } from '@/lib/integrations/smtp';
 
 export type EmailSendResult = {
   ok: boolean;
@@ -18,12 +18,12 @@ export async function sendEmail(
   to: string,
   subject: string,
   html: string,
-  options?: { apiKey?: string; from?: string },
+  options?: { apiKey?: string; from?: string; smtp?: SmtpSettings | null },
 ): Promise<EmailSendResult> {
   try {
     const apiKey = options?.apiKey ?? process.env.RESEND_API_KEY;
-    const from = options?.from ?? process.env.EMAIL_FROM ?? 'NovaCRM <no-reply@novacrm.app>';
-    const smtp = getSmtpConfig();
+    const smtp = options?.smtp ?? parseSmtpSettings(null);
+    const from = options?.from ?? smtp?.from ?? process.env.EMAIL_FROM ?? 'NovaCRM <no-reply@novacrm.app>';
 
     if (apiKey) {
       const response = await fetch('https://api.resend.com/emails', {
@@ -50,8 +50,8 @@ export async function sendEmail(
       return { ok: true, id: payload?.id, via: 'resend' };
     }
 
-    if (smtp.host && smtp.port) {
-      const result = await sendSmtpEmail(to, subject, html, { from, host: smtp.host, port: smtp.port });
+    if (smtp?.host && smtp.port) {
+      const result = await sendSmtpEmail(to, subject, html, { ...smtp, from });
       if (result.ok) {
         return { ok: true, id: result.id, via: 'smtp' };
       }
@@ -65,7 +65,7 @@ export async function sendEmail(
       return { ok: true, id: 'dev-sink', dryRun: true, via: 'dev' };
     }
 
-    return { ok: false, error: 'RESEND_API_KEY is not configured.' };
+    return { ok: false, error: 'Email is not configured. Add Resend on Email, or host/port on SMTP.' };
   } catch (error) {
     return {
       ok: false,

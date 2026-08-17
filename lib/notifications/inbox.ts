@@ -68,6 +68,25 @@ export async function createInboxItems(input: {
     return { count: 0, error: null };
   }
 
+  const rows = unique.map((item) => ({
+    userId: item.userId,
+    kind: item.kind,
+    title: item.title.slice(0, 180),
+    body: item.body.slice(0, 500),
+    href: item.href ?? null,
+    ticketId: item.ticketId ?? null,
+  }));
+
+  try {
+    const supabase = await createSupabaseServerClient();
+    const rpc = await supabase.rpc('insert_in_app_notifications', { items: rows });
+    if (!rpc.error) {
+      return { count: Number(rpc.data) || unique.length, error: null };
+    }
+  } catch {
+    // Workers / missing RPC fall through.
+  }
+
   const supabase = inboxWriter() ?? (await createSupabaseServerClient());
   const { error } = await supabase.from('in_app_notifications').insert(
     unique.map((item) => ({
@@ -154,6 +173,46 @@ async function profileRoles(tenantId: string, userIds: string[]) {
   return roles;
 }
 
+async function inboxAudience(groupId?: string, accountId?: string) {
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { data, error } = await supabase.rpc('inbox_audience', {
+      p_group_id: groupId ?? null,
+      p_account_id: accountId ?? null,
+    });
+    if (!error && Array.isArray(data)) {
+      return data.map((row) => ({
+        userId: String(row.user_id),
+        role: parseAppRole(row.role),
+      }));
+    }
+  } catch {
+    // Missing RPC or no session.
+  }
+
+  const tenantId = (await getSessionProfile())?.profile.tenantId;
+  if (!tenantId) return [] as Array<{ userId: string; role: AppRole }>;
+  const ids = new Set<string>();
+  if (groupId) {
+    for (const id of await groupMemberIds(tenantId, groupId)) ids.add(id);
+  }
+  if (accountId) {
+    for (const id of await accountStaffIds(tenantId, accountId)) ids.add(id);
+  }
+  for (const id of await staffIdsAtLeast(tenantId, 'manager')) ids.add(id);
+  const roles = await profileRoles(tenantId, Array.from(ids));
+  return Array.from(ids)
+    .map((userId) => ({ userId, role: roles.get(userId) }))
+    .filter(
+      (row): row is { userId: string; role: AppRole } =>
+        Boolean(row.role) && isStaffRole(row.role) && row.role !== 'admin' && row.role !== 'superadmin',
+    );
+}
+
+function isDeskWatcher(role: AppRole | undefined) {
+  return role === 'team_lead' || role === 'supervisor' || role === 'manager';
+}
+
 function hrefForRole(role: AppRole | undefined, ticketId: string) {
   return isCustomerRole(role) ? `/portal/${ticketId}` : `/tickets/${ticketId}`;
 }
@@ -184,27 +243,6 @@ async function accountStaffIds(tenantId: string, accountId: string) {
       ...(groupMembers ?? []).map((row) => row.user_id as string),
     ]),
   );
-}
-
-async function supervisionWatcherIds(
-  tenantId: string,
-  options: { groupId?: string; accountId?: string; priority?: string },
-) {
-  const raw = new Set<string>();
-  if (options.groupId) {
-    for (const id of await groupMemberIds(tenantId, options.groupId)) raw.add(id);
-  }
-  if (options.accountId) {
-    for (const id of await accountStaffIds(tenantId, options.accountId)) raw.add(id);
-  }
-  const roles = await profileRoles(tenantId, Array.from(raw));
-  const critical = options.priority === 'critical';
-  return Array.from(raw).filter((id) => {
-    const role = roles.get(id);
-    if (role === 'team_lead') return true;
-    if (role === 'supervisor') return critical;
-    return false;
-  });
 }
 
 export async function staffIdsAtLeast(tenantId: string, minRole: AppRole, accountId?: string) {
@@ -277,49 +315,37 @@ export async function notifyTicketInbox(input: {
   ]);
 
   if (input.event === 'ticket.create') {
-    if (input.ticket.assigneeId && isStaffRole(roles.get(input.ticket.assigneeId))) {
+    const seen = new Set<string>();
+    const pushStaff = (userId: string, title: string, role?: AppRole) => {
+      if (!userId || seen.has(userId) || !isStaffRole(role ?? roles.get(userId))) return;
+      seen.add(userId);
       staffDrafts.push({
-        userId: input.ticket.assigneeId,
+        userId,
         kind: 'ticket',
-        title: `${number} assigned to you`,
+        title,
         body: input.ticket.title,
-        href: hrefForRole(roles.get(input.ticket.assigneeId), input.ticket.id),
+        href: `/tickets/${input.ticket.id}`,
         ticketId: input.ticket.id,
       });
-    } else if (!input.ticket.assigneeId) {
-      const queue = input.ticket.groupId ? await groupMemberIds(input.tenantId, input.ticket.groupId) : [];
-      const queueRoles = await profileRoles(input.tenantId, queue);
-      for (const userId of queue) {
-        const role = queueRoles.get(userId);
-        if (!isStaffRole(role) || ROLE_RANK[role] >= ROLE_RANK.team_lead) continue;
-        staffDrafts.push({
-          userId,
-          kind: 'ticket',
-          title: `${number} in queue`,
-          body: input.ticket.title,
-          href: `/tickets/${input.ticket.id}`,
-          ticketId: input.ticket.id,
-        });
-      }
+    };
+
+    if (input.ticket.assigneeId && isStaffRole(roles.get(input.ticket.assigneeId))) {
+      pushStaff(input.ticket.assigneeId, `${number} assigned to you`, roles.get(input.ticket.assigneeId));
     }
+
     const requesterIsCustomer = isCustomerRole(roles.get(input.ticket.requesterId ?? ''));
     if (requesterIsCustomer || !input.ticket.assigneeId) {
-      const watchers = await supervisionWatcherIds(input.tenantId, {
-        groupId: input.ticket.groupId,
-        accountId: input.ticket.accountId,
-        priority: input.ticket.priority,
-      });
+      const audience = await inboxAudience(input.ticket.groupId, input.ticket.accountId);
       const watchTitle = [number, 'baru', accountLabel, priorityLabel].filter(Boolean).join(' · ');
-      for (const userId of watchers) {
-        if (userId === input.ticket.assigneeId) continue;
-        staffDrafts.push({
-          userId,
-          kind: 'ticket',
-          title: watchTitle,
-          body: input.ticket.title,
-          href: `/tickets/${input.ticket.id}`,
-          ticketId: input.ticket.id,
-        });
+      for (const member of audience) {
+        if (member.userId === input.ticket.assigneeId) continue;
+        if (!input.ticket.assigneeId && (member.role === 'agent' || member.role === 'team_lead')) {
+          pushStaff(member.userId, `${number} in queue`, member.role);
+          continue;
+        }
+        if (isDeskWatcher(member.role)) {
+          pushStaff(member.userId, watchTitle, member.role);
+        }
       }
     }
     if (input.ticket.requesterId) {

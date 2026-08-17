@@ -88,6 +88,7 @@ export const en = {
     ssoDenied: 'That email domain is not allowed for this tenant. Use a work account or email login.',
     tenantPaused: 'This tenant is paused or archived. Ask the platform owner to resume it.',
     tenantExpired: 'This tenant contract has ended. Ask the platform owner to extend or resume it.',
+    idleTimeout: 'Signed out because there was no activity. Sign in again.',
     passwordExpired: 'Your password expired. Sign in, then change it to continue.',
   },
   passwordPolicy: {
@@ -105,6 +106,15 @@ export const en = {
     status: 'Password',
     ok: 'Valid',
     due: 'Expired',
+  },
+  idlePolicy: {
+    title: 'Idle timeout',
+    hint: 'Sign out desk and portal users after no click, typing, or scroll. Default 30 minutes. Live list updates do not count as activity.',
+    off: 'Off',
+    minutes: '{{n}} minutes',
+    save: 'Save idle timeout',
+    warn: 'No activity. You will be signed out in about {{n}} seconds.',
+    stay: 'Stay signed in',
   },
   accountPick: {
     title: 'Filter desk',

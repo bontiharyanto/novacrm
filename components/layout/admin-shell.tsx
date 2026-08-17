@@ -50,6 +50,7 @@ import { canRole } from '@/lib/rbac/ability';
 import { isTenantAdminRole, ROLE_LABEL } from '@/lib/rbac/roles';
 import { PresenceControl } from '@/components/layout/presence-control';
 import { NotificationBell } from '@/components/layout/notification-bell';
+import { IdleSessionGuard } from '@/components/layout/idle-session-guard';
 import { NovaWordmark } from '@/components/brand/nova-mark';
 import { cn } from '@/lib/utils';
 
@@ -424,6 +425,7 @@ export function AgentShell({
   userId,
   accounts,
   activeAccountId,
+  idleTimeoutMinutes = 30,
 }: {
   children: ReactNode;
   role: AppRole;
@@ -431,6 +433,7 @@ export function AgentShell({
   userId?: string;
   accounts: AccountRecord[];
   activeAccountId?: string | null;
+  idleTimeoutMinutes?: number;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -553,6 +556,7 @@ export function AgentShell({
         onOpenChange={setAgentOpen}
         hidden={onAssistant}
       />
+      <IdleSessionGuard minutes={idleTimeoutMinutes} />
     </div>
   );
 }

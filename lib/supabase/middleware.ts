@@ -4,6 +4,7 @@ import { getServerSupabaseConfig, isSupabaseConfigured } from '@/lib/config/env'
 import { homePathForRole, isAppRole, isCustomerRole, isTenantAdminRole, parseAppRole } from '@/lib/rbac/roles';
 import { DEFAULT_PASSWORD_MAX_AGE_DAYS, isPasswordExpired } from '@/lib/auth/password-policy';
 import { isTenantLoginBlocked } from '@/lib/tenants/lifecycle';
+import { DEFAULT_IDLE_MINUTES, IDLE_COOKIE, isIdleExpired, parseIdleMinutes } from '@/lib/auth/idle-timeout';
 
 function isPublicPath(pathname: string) {
   return (
@@ -124,11 +125,27 @@ export async function updateSession(request: NextRequest) {
   const role = profile?.role;
 
   if (user && profile?.tenantId) {
-    const { data: tenantAccess } = await supabase
+    type TenantAccessRow = {
+      status: string;
+      expires_at: string | null;
+      grace_days: number | null;
+      is_protected: boolean | null;
+      idle_timeout_minutes?: number | null;
+    };
+    const tenantQuery = await supabase
       .from('tenants')
-      .select('status, expires_at, grace_days, is_protected')
+      .select('status, expires_at, grace_days, is_protected, idle_timeout_minutes')
       .eq('id', profile.tenantId)
       .maybeSingle();
+    let tenantAccess = tenantQuery.data as TenantAccessRow | null;
+    if (tenantQuery.error) {
+      const retry = await supabase
+        .from('tenants')
+        .select('status, expires_at, grace_days, is_protected')
+        .eq('id', profile.tenantId)
+        .maybeSingle();
+      tenantAccess = retry.data as TenantAccessRow | null;
+    }
     const blocked = Boolean(
       tenantAccess &&
         isTenantLoginBlocked({
@@ -151,6 +168,32 @@ export async function updateSession(request: NextRequest) {
       redirectUrl.pathname = '/login';
       redirectUrl.search = expiredWhileActive ? 'error=tenant_expired' : 'error=tenant_paused';
       return NextResponse.redirect(redirectUrl);
+    }
+
+    const idleMinutes = parseIdleMinutes(tenantAccess?.idle_timeout_minutes ?? DEFAULT_IDLE_MINUTES);
+    if (idleMinutes > 0 && !isPublicPath(pathname)) {
+      const raw = request.cookies.get(IDLE_COOKIE)?.value;
+      const lastActive = raw ? Number(raw) : NaN;
+      if (Number.isFinite(lastActive) && isIdleExpired(lastActive, idleMinutes)) {
+        if (pathname.startsWith('/api/')) {
+          return NextResponse.json({ data: null, error: 'Session idle timeout' }, { status: 401 });
+        }
+        await supabase.auth.signOut();
+        const redirectUrl = request.nextUrl.clone();
+        redirectUrl.pathname = '/login';
+        redirectUrl.search = 'error=idle';
+        const idleResponse = NextResponse.redirect(redirectUrl);
+        idleResponse.cookies.set(IDLE_COOKIE, '', { path: '/', maxAge: 0 });
+        return idleResponse;
+      }
+      if (!Number.isFinite(lastActive)) {
+        supabaseResponse.cookies.set(IDLE_COOKIE, String(Date.now()), {
+          path: '/',
+          sameSite: 'lax',
+          maxAge: 60 * 60 * 24,
+          httpOnly: false,
+        });
+      }
     }
   }
 

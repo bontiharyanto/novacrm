@@ -8,6 +8,7 @@ import { sendEmail, getMailpitUrl } from '@/lib/integrations/email';
 import { sendTelegram } from '@/lib/integrations/telegram';
 import { sendWhatsApp } from '@/lib/integrations/whatsapp';
 import { pingAi } from '@/lib/integrations/ai';
+import { parseSmtpSettings, sendSmtpEmail } from '@/lib/integrations/smtp';
 import { isMaskedSecret, maskSecret } from '@/lib/utils/secrets';
 import {
   DEFAULT_AI_BASE_URL,
@@ -349,6 +350,54 @@ export async function testIntegration(kind: string, values: Record<string, strin
     return result;
   }
 
+  if (kind === 'smtp') {
+    const { data: row } = await supabase
+      .from('integrations')
+      .select('id, config')
+      .eq('tenant_id', tenantId)
+      .eq('kind', 'smtp')
+      .maybeSingle();
+    const config = asRecord(row?.config);
+    const password = await resolveSecret(config.password, values.password);
+    const merged = {
+      host: values.host || config.host,
+      port: values.port || config.port,
+      username: values.username || config.username,
+      password,
+      from: values.from || config.from,
+      encryption: values.encryption || config.encryption,
+    };
+    const settings = parseSmtpSettings(merged);
+    const to = session.profile.email;
+    let result: { ok: boolean; error?: string; message?: string };
+    if (!settings) {
+      result = { ok: false, error: 'SMTP host and port are required.' };
+    } else if (!to) {
+      result = { ok: false, error: 'Admin email is required for the SMTP test.' };
+    } else {
+      const sent = await sendSmtpEmail(to, 'NovaCRM SMTP test', '<p>SMTP channel OK.</p>', {
+        ...settings,
+        from: settings.from || DEFAULT_EMAIL_FROM,
+      });
+      result = sent.ok
+        ? { ok: true, message: `SMTP test sent to ${to} via ${settings.host}:${settings.port}.` }
+        : { ok: false, error: sent.error };
+    }
+    await recordTest(
+      'integrations',
+      row?.id,
+      {
+        tenant_id: tenantId,
+        kind: 'smtp',
+        config: merged,
+        is_active: true,
+        created_by: session.userId,
+      },
+      result,
+    );
+    return result;
+  }
+
   if (!CHANNEL_KINDS.has(kind)) {
     return testPluginConnection(kind, values, session.profile.tenantId, session.userId);
   }
@@ -415,7 +464,7 @@ export async function testIntegration(kind: string, values: Record<string, strin
   return result;
 }
 
-export async function getAiConfigForTenant(tenantId: string) {
+function envAiFallback() {
   const envKey = process.env.GROQ_API_KEY || process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY;
   const envBase = process.env.GROQ_API_KEY
     ? 'https://api.groq.com/openai/v1'
@@ -429,18 +478,52 @@ export async function getAiConfigForTenant(tenantId: string) {
     : process.env.GEMINI_API_KEY
       ? 'gemini-2.0-flash'
       : DEFAULT_AI_MODEL;
+  return { envKey, envBase, envModel };
+}
 
-  if (!hasServiceRole()) {
-    return envKey ? { apiKey: envKey, baseUrl: envBase, model: envModel } : null;
+async function loadTenantAiConfig(tenantId: string) {
+  try {
+    const supabase = await createSupabaseServerClient();
+    const rpc = await supabase.rpc('tenant_ai_config');
+    if (!rpc.error && rpc.data) return asRecord(rpc.data);
+  } catch {
+    // Workers have no cookie store.
   }
-  const supabase = createSupabaseAdminClient();
-  const { data } = await supabase
-    .from('integrations')
-    .select('config')
-    .eq('tenant_id', tenantId)
-    .eq('kind', 'ai')
-    .maybeSingle();
-  const config = asRecord(data?.config);
+
+  if (hasServiceRole()) {
+    try {
+      const supabase = createSupabaseAdminClient();
+      const { data } = await supabase
+        .from('integrations')
+        .select('config')
+        .eq('tenant_id', tenantId)
+        .eq('kind', 'ai')
+        .maybeSingle();
+      if (data?.config) return asRecord(data.config);
+    } catch {
+      // New secret keys may not bypass RLS the same way as a JWT service_role key.
+    }
+  }
+
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { data } = await supabase
+      .from('integrations')
+      .select('config')
+      .eq('tenant_id', tenantId)
+      .eq('kind', 'ai')
+      .maybeSingle();
+    if (data?.config) return asRecord(data.config);
+  } catch {
+    // Customer RLS cannot read integrations without tenant_ai_config().
+  }
+
+  return {};
+}
+
+export async function getAiConfigForTenant(tenantId: string) {
+  const { envKey, envBase, envModel } = envAiFallback();
+  const config = await loadTenantAiConfig(tenantId);
   const apiKey = config.apiKey || envKey;
   if (!apiKey) return null;
   return resolveAiSettings({
@@ -448,6 +531,39 @@ export async function getAiConfigForTenant(tenantId: string) {
     baseUrl: config.baseUrl || envBase,
     model: config.model || envModel,
   });
+}
+
+export async function getSmtpConfigForTenant(tenantId: string) {
+  let config: Record<string, string | undefined> = {};
+  if (hasServiceRole()) {
+    try {
+      const supabase = createSupabaseAdminClient();
+      const { data } = await supabase
+        .from('integrations')
+        .select('config')
+        .eq('tenant_id', tenantId)
+        .eq('kind', 'smtp')
+        .maybeSingle();
+      if (data?.config) config = asRecord(data.config);
+    } catch {
+      // Invalid service role still falls through to env SMTP.
+    }
+  }
+  if (!config.host) {
+    try {
+      const supabase = await createSupabaseServerClient();
+      const { data } = await supabase
+        .from('integrations')
+        .select('config')
+        .eq('tenant_id', tenantId)
+        .eq('kind', 'smtp')
+        .maybeSingle();
+      if (data?.config) config = asRecord(data.config);
+    } catch {
+      // Workers / RLS.
+    }
+  }
+  return parseSmtpSettings(config) ?? parseSmtpSettings(null);
 }
 
 export async function getWebhookSecretFromDb(

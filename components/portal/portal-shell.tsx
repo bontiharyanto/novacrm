@@ -12,6 +12,7 @@ import { AskAiButton, AssistantWidget } from '@/components/assistant/assistant-w
 import { useI18n } from '@/components/layout/preferences-provider';
 import { NovaMark } from '@/components/brand/nova-mark';
 import { PortalWelcome } from '@/components/portal/portal-welcome';
+import { IdleSessionGuard } from '@/components/layout/idle-session-guard';
 import { PrivacyModuleProvider, usePrivacyEnabled } from '@/components/portal/privacy-module';
 import { useMarkPrivacySeen } from '@/components/portal/portal-consent-banner';
 import { cn } from '@/lib/utils';
@@ -41,16 +42,18 @@ export function PortalShell({
   userId,
   privacyEnabled = false,
   pendingCsat = [],
+  idleTimeoutMinutes = 30,
 }: {
   children: React.ReactNode;
   fullName: string;
   userId?: string;
   privacyEnabled?: boolean;
   pendingCsat?: PendingCsatTicket[];
+  idleTimeoutMinutes?: number;
 }) {
   return (
     <PrivacyModuleProvider enabled={privacyEnabled}>
-      <PortalShellInner fullName={fullName} userId={userId} pendingCsat={pendingCsat}>
+      <PortalShellInner fullName={fullName} userId={userId} pendingCsat={pendingCsat} idleTimeoutMinutes={idleTimeoutMinutes}>
         {children}
       </PortalShellInner>
     </PrivacyModuleProvider>
@@ -62,11 +65,13 @@ function PortalShellInner({
   fullName,
   userId,
   pendingCsat,
+  idleTimeoutMinutes,
 }: {
   children: React.ReactNode;
   fullName: string;
   userId?: string;
   pendingCsat: PendingCsatTicket[];
+  idleTimeoutMinutes: number;
 }) {
   const pathname = usePathname();
   const { t } = useI18n();
@@ -180,6 +185,7 @@ function PortalShellInner({
           variant="portal"
         />
       ) : null}
+      <IdleSessionGuard minutes={idleTimeoutMinutes} />
     </div>
   );
 }
