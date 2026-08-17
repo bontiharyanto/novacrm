@@ -20,7 +20,7 @@ as $$
     where am.tenant_id = public.current_tenant_id()
       and p_account_id is not null
       and am.account_id = p_account_id
-      and coalesce(am.role, '') is distinct from 'portal'
+      and am.role is distinct from 'portal'
     union
     select p.id
     from public.profiles p
