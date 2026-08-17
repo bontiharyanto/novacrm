@@ -1,6 +1,6 @@
 -- NovaCRM seed: 1 tenant, 3 accounts, 3 users, org/groups, SLA, 10 assets, 12 CMDB items, tickets
 
-insert into public.tenants (id, name, slug, accent_color, timezone, support_email, status)
+insert into public.tenants (id, name, slug, accent_color, timezone, support_email, status, is_protected, subscription_plan)
 values (
   '11111111-1111-1111-1111-111111111111',
   'NovaCRM Demo Tenant',
@@ -8,13 +8,16 @@ values (
   '#3b82f6',
   'Asia/Jakarta',
   'support@novacrm.app',
-  'active'
+  'active',
+  true,
+  'enterprise'
 )
 on conflict (id) do update set
   name = excluded.name,
   slug = excluded.slug,
   support_email = excluded.support_email,
-  mfa_required = false;
+  mfa_required = false,
+  is_protected = true;
 
 update public.tenants
 set public_url = coalesce(nullif(public_url, ''), 'http://localhost:3000')

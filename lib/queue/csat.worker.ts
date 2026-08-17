@@ -2,16 +2,21 @@ import { Worker } from 'bullmq';
 import { createRedisConnection, csatQueueName } from '@/lib/queue/connection';
 import { applyOverdueCsatRatings } from '@/lib/csat/auto-rate';
 import { scheduleCsatAutoRate } from '@/lib/queue/csat.queue';
+import { applyExpiredTenants } from '@/lib/tenants/auto-pause';
 
 export function startCsatWorker() {
   const worker = new Worker(
     csatQueueName,
     async () => {
-      const result = await applyOverdueCsatRatings();
-      if (!result.ok) {
-        throw new Error(result.error ?? 'CSAT auto-rate failed');
+      const csat = await applyOverdueCsatRatings();
+      if (!csat.ok) {
+        throw new Error(csat.error ?? 'CSAT auto-rate failed');
       }
-      return result;
+      const tenants = await applyExpiredTenants();
+      if (!tenants.ok) {
+        throw new Error(tenants.error ?? 'Tenant auto-pause failed');
+      }
+      return { applied: csat.applied, paused: tenants.paused };
     },
     {
       connection: createRedisConnection(),
@@ -23,9 +28,12 @@ export function startCsatWorker() {
     console.error(`[csat-worker] job ${job?.id} failed`, error.message);
   });
 
-  worker.on('completed', (job, result: { applied?: number }) => {
+  worker.on('completed', (job, result: { applied?: number; paused?: number }) => {
     if (result?.applied) {
       console.info(`[csat-worker] job ${job.id} auto-rated ${result.applied} ticket(s)`);
+    }
+    if (result?.paused) {
+      console.info(`[csat-worker] job ${job.id} paused ${result.paused} expired tenant(s)`);
     }
   });
 

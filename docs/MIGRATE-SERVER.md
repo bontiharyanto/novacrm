@@ -130,6 +130,7 @@ Lalu hanya file **baru** yang dijalankan `migrate.sh` berikutnya.
 | `20250814140000` + `14140100` | RBAC |
 | `20250814150000` … `14180000` | Insights, plugin, SSO, account access, catalog standard |
 | `20250815130000` … `15200000` | RCA, OLA/UC, MFA toggle, CSAT, tenant platform |
+| `20250817140000_tenant_administration.sql` | Plan, contract end, grace, auto-pause, protected |
 | `20250815300000_staff_reviews.sql` | Penilaian staf |
 | `20250815310000_staff_review_ai.sql` | Opini AI pada penilaian |
 | `20250815320000_assistant_threads_staff.sql` | Nova Agent: semua staf boleh simpan thread |

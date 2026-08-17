@@ -2,8 +2,9 @@
 
 import { revalidatePath } from 'next/cache';
 import { getSessionProfile } from '@/lib/auth/session';
-import { DEMO_TENANT_ID } from '@/lib/config/constants';
 import { canRole } from '@/lib/rbac/ability';
+import { tenantBackendBase, tenantLoginUrl } from '@/lib/tenants/backend-url';
+import { dateInputToExpiry, trialExpiresAt, type TenantPlan } from '@/lib/tenants/lifecycle';
 import { createSupabaseAdminClient, hasServiceRole } from '@/lib/supabase/admin';
 import {
   createTenantSchema,
@@ -25,10 +26,21 @@ type TenantRow = {
   support_email?: string | null;
   status: TenantStatus;
   mfa_required?: boolean;
+  is_protected?: boolean | null;
+  subscription_plan?: string | null;
+  expires_at?: string | null;
+  grace_days?: number | null;
+  auto_pause_on_expiry?: boolean | null;
+  password_rotation_enabled?: boolean | null;
+  password_max_age_days?: number | null;
+  public_url?: string | null;
   created_at: string;
 };
 
 function mapTenant(row: TenantRow, counts?: { adminCount: number; userCount: number }): TenantRecord {
+  const plan = (['trial', 'standard', 'enterprise'] as const).includes(row.subscription_plan as TenantPlan)
+    ? (row.subscription_plan as TenantPlan)
+    : 'standard';
   return {
     id: row.id,
     name: row.name,
@@ -38,6 +50,16 @@ function mapTenant(row: TenantRow, counts?: { adminCount: number; userCount: num
     supportEmail: row.support_email ?? '',
     status: row.status,
     mfaRequired: Boolean(row.mfa_required),
+    isProtected: Boolean(row.is_protected),
+    subscriptionPlan: plan,
+    expiresAt: row.expires_at ?? undefined,
+    graceDays: Number(row.grace_days ?? 7),
+    autoPauseOnExpiry: row.auto_pause_on_expiry !== false,
+    passwordRotationEnabled: row.password_rotation_enabled !== false,
+    passwordMaxAgeDays: Number(row.password_max_age_days ?? 30),
+    publicUrl: row.public_url ?? '',
+    backendUrl: tenantBackendBase(row.slug, row.public_url),
+    loginUrl: tenantLoginUrl(row.slug, row.public_url),
     createdAt: row.created_at,
     adminCount: counts?.adminCount ?? 0,
     userCount: counts?.userCount ?? 0,
@@ -166,6 +188,13 @@ export async function createTenant(input: unknown) {
       timezone: parsed.data.timezone,
       support_email: parsed.data.supportEmail ?? null,
       status: 'active',
+      subscription_plan: parsed.data.subscriptionPlan ?? 'standard',
+      expires_at:
+        dateInputToExpiry(parsed.data.expiresAt) ??
+        (parsed.data.subscriptionPlan === 'trial' ? trialExpiresAt() : null),
+      grace_days: parsed.data.graceDays ?? 7,
+      auto_pause_on_expiry: true,
+      is_protected: false,
       created_by: gate.session.userId,
     })
     .select('*')
@@ -347,16 +376,18 @@ export async function updateTenant(tenantId: string, input: unknown) {
     return { data: null, error: gate.error ?? 'Unauthorized' };
   }
 
+  const admin = createSupabaseAdminClient();
+  const { data: existing } = await admin.from('tenants').select('is_protected').eq('id', tenantId).maybeSingle();
+
   if (parsed.data.status && parsed.data.status !== 'active') {
-    if (tenantId === DEMO_TENANT_ID) {
-      return { data: null, error: 'The lab tenant cannot be paused or archived' };
+    if (existing?.is_protected) {
+      return { data: null, error: 'This tenant is protected and cannot be paused or archived' };
     }
     if (tenantId === gate.session.profile.tenantId) {
       return { data: null, error: 'You cannot pause the tenant you are signed into' };
     }
   }
 
-  const admin = createSupabaseAdminClient();
   if (parsed.data.slug) {
     const { data: slugTaken } = await admin
       .from('tenants')
@@ -376,6 +407,15 @@ export async function updateTenant(tenantId: string, input: unknown) {
   if (parsed.data.timezone !== undefined) patch.timezone = parsed.data.timezone;
   if (parsed.data.supportEmail !== undefined) patch.support_email = parsed.data.supportEmail || null;
   if (parsed.data.status !== undefined) patch.status = parsed.data.status;
+  if (parsed.data.subscriptionPlan !== undefined) patch.subscription_plan = parsed.data.subscriptionPlan;
+  if (parsed.data.expiresAt !== undefined) patch.expires_at = dateInputToExpiry(parsed.data.expiresAt);
+  if (parsed.data.graceDays !== undefined) patch.grace_days = parsed.data.graceDays;
+  if (parsed.data.autoPauseOnExpiry !== undefined) patch.auto_pause_on_expiry = parsed.data.autoPauseOnExpiry;
+  if (parsed.data.isProtected !== undefined) patch.is_protected = parsed.data.isProtected;
+  if (parsed.data.passwordRotationEnabled !== undefined) {
+    patch.password_rotation_enabled = parsed.data.passwordRotationEnabled;
+  }
+  if (parsed.data.passwordMaxAgeDays !== undefined) patch.password_max_age_days = parsed.data.passwordMaxAgeDays;
 
   const { data, error } = await admin.from('tenants').update(patch).eq('id', tenantId).select('*').single();
   if (error || !data) {

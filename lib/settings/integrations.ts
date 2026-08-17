@@ -450,9 +450,11 @@ export async function getAiConfigForTenant(tenantId: string) {
   });
 }
 
-export async function getWebhookSecretFromDb(kind: 'alert' | 'email' | 'generic' | 'whatsapp' | 'telegram') {
+export async function getWebhookSecretFromDb(
+  kind: 'alert' | 'email' | 'generic' | 'whatsapp' | 'telegram',
+  tenantId = process.env.WEBHOOK_TENANT_ID,
+) {
   if (!hasServiceRole()) return undefined;
-  const tenantId = process.env.WEBHOOK_TENANT_ID;
   if (!tenantId) return undefined;
   const supabase = createSupabaseAdminClient();
   const { data } = await supabase

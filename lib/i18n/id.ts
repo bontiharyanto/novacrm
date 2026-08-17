@@ -89,6 +89,7 @@ export const id: Dictionary = {
     ssoEmail: 'IdP tidak mengirim email. Minta admin IdP melepas klaim email.',
     ssoDenied: 'Domain email ini tidak diizinkan untuk tenant ini. Pakai akun kerja atau login email.',
     tenantPaused: 'Tenant ini dijeda atau diarsipkan. Minta pemilik platform untuk mengaktifkannya lagi.',
+    tenantExpired: 'Kontrak tenant ini sudah berakhir. Minta pemilik platform untuk memperpanjang atau mengaktifkannya lagi.',
     passwordExpired: 'Kata sandi kedaluwarsa. Masuk, lalu ganti untuk melanjutkan.',
   },
   passwordPolicy: {

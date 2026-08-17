@@ -40,15 +40,20 @@ Untuk plugin Groq/WA, user biasa, SLA, katalog: pakai **admin** atau **manager**
 
 | Field | Arti |
 | --- | --- |
-| Name / slug | Identitas platform. Login SSO: `/login?tenant={slug}` |
+| Name / slug | Identitas platform. Login: `/login?tenant={slug}`. Backend: `/api/v1/t/{slug}` (template `{+origin}/api/v1/t/{tenant}`) |
 | Accent color | Warna chrome desk/portal klien itu (tombol, nav, process strip). Halaman login tetap biru sampai sign-in |
 | Timezone | Jam SLA / laporan |
 | Support email | Alamat support yang tampil ke operasi |
 | Status | `active` · `paused` · `archived` |
+| Plan | `trial` (default +14 hari jika tanggal kosong) · `standard` · `enterprise` |
+| Contract end | Tanggal akhir kontrak. Kosong = tidak kedaluwarsa |
+| Grace days | Hari setelah kontrak berakhir sebelum login diblok (default 7) |
+| Auto-pause | Worker menjeda tenant setelah grace. Data **tidak** dihapus |
+| Protected | Flag di database. Tenant terlindungi tidak ikut expiry / tidak bisa di-pause. Lab `novacrm-demo` di-set dari seed, bukan hardcode ID |
 
 Yang ikut dibuat: account **Internal**, group **Service Desk** L1, SLA office hours, admin sebagai lead.
 
-`paused` / `archived` menolak login. Tenant lab `novacrm-demo` dan tenant tempat Anda sedang login **tidak** bisa di-pause.
+`paused` / `archived` menolak login. Setelah `expires_at` + grace, login juga ditolak (`tenant_expired`) meski status masih active; worker lalu set `paused` jika auto-pause nyala. Tenant **protected** dan tenant tempat Anda sedang login **tidak** bisa di-pause.
 
 Data tetap diisolasi `tenant_id`. Superadmin lab tetap di tenant demo; setelah create, **sign out** lalu login sebagai admin klien.
 
@@ -100,6 +105,7 @@ Anda *bisa* melakukan semua itu. Jangan — kecuali insiden platform.
 ## 7. Checklist superadmin
 
 - [ ] Tenant status `active` kecuali ada alasan tertulis
+- [ ] Kontrak klien diisi di `/tenants/{id}` (plan, tanggal akhir, grace); lab tetap **Protected**
 - [ ] Klien baru dibuat dari `/tenants`, bukan copy tenant lab
 - [ ] Ada admin tenant selain akun superadmin
 - [ ] Tidak ada superadmin idle tanpa MFA/password produksi yang diganti (lab password `NovaCRM!2026` **wajib ganti** di produksi)

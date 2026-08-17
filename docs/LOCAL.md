@@ -101,7 +101,7 @@ WFM desk: [http://localhost:3000/wfm](http://localhost:3000/wfm) — occupancy, 
 16. Organization: [http://localhost:3000/org](http://localhost:3000/org) — Internal divisi/unit vs assignment groups. Tickets can queue to a group; filter **My groups**
 17. SLA: [http://localhost:3000/sla](http://localhost:3000/sla) — per-account matrix (type × priority) + calendar. Switch to Bank for Gold INC P1 15m/4h. Waiting/hold pauses the clock. New tickets snapshot the agreement. **Underpinning contracts** (UC) for Fortinet / Indosat live on the same page; link them on vendor groups at `/org`.
 18. Hold / escalate: open a ticket → **Hold** + reason `Pending vendor` (case number) pauses SLA. **Escalate L2 / L3** queues Internal `L2 Network` / `L3 Infra` and keeps the clock running. Demo: Bank *WiFi lantai 2* (vendor hold); Internal *Backup gagal* already on L2.
-19. Users: [http://localhost:3000/users](http://localhost:3000/users) — **New user** (admin) creates a login. **Access** = `customer` / `agent` / `team_lead` / `supervisor` / `manager` / `admin` / `superadmin`. **Level** = L1/L2/L3 from group membership. Admin can **Reset authenticator** and **Reset password** on a profile after an identity check. Password rotation (portal + desk) is **30 days**; expired users can only open the change-password page. Policy: Settings → **Security**. Superadmin: [Tenants](http://localhost:3000/tenants) creates a client workspace + first admin (Internal account, Service Desk L1, office-hours SLA). Pause/archive blocks login. Lab tenant cannot be paused.
+19. Users: [http://localhost:3000/users](http://localhost:3000/users) — **New user** (admin) creates a login. **Access** = `customer` / `agent` / `team_lead` / `supervisor` / `manager` / `admin` / `superadmin`. **Level** = L1/L2/L3 from group membership. Admin can **Reset authenticator** and **Reset password** on a profile after an identity check. Password rotation (portal + desk) is **30 days**; expired users can only open the change-password page. Policy: Settings → **Security**. Superadmin: [Tenants](http://localhost:3000/tenants) creates a client workspace + first admin (Internal account, Service Desk L1, office-hours SLA). Set plan, contract end, grace, auto-pause, and **Protected** on the tenant record — lab lock is `is_protected`, not a hardcoded ID. Pause/archive or contract end + grace blocks login. Data is never deleted on expiry.
 20. `http://localhost:3000/api/health` should show Redis `up`
 21. Sysadmin Ops: [http://127.0.0.1:3100](http://127.0.0.1:3100) — service health, BullMQ queues (`notifications`, `workflows`, `wfm`, `csat`), retry failed jobs. Independent of the desk. Details: [OPS.md](OPS.md). Scale workers: [WORKERS.md](WORKERS.md). Optional: `OPS_TOKEN` + header `x-ops-token`.
 22. AI Insights: [http://localhost:3000/insights](http://localhost:3000/insights) — four cards (queue pressure, SLA risk, workforce load, account health). Needs Groq (or another AI plugin) on **Integrations**.
@@ -113,6 +113,9 @@ WFM desk: [http://localhost:3000/wfm](http://localhost:3000/wfm) — occupancy, 
 
 - App (dev): http://localhost:3000
 - App (Docker): http://localhost:3001
+- Tenant backend (lab): http://localhost:3000/api/v1/t/novacrm-demo
+- Tenant health: http://localhost:3000/api/v1/t/novacrm-demo/health
+- Tenant OpenAPI: http://localhost:3000/api/v1/t/novacrm-demo/openapi.json
 - Ops (sysadmin): http://127.0.0.1:3100
 - Supabase Studio: http://127.0.0.1:54323
 - MinIO console: http://localhost:9001
@@ -143,6 +146,7 @@ docker exec -i supabase_db_novacrm psql -U postgres -d postgres < supabase/migra
 docker exec -i supabase_db_novacrm psql -U postgres -d postgres < supabase/migrations/20250815200000_tenant_platform.sql
 docker exec -i supabase_db_novacrm psql -U postgres -d postgres < supabase/migrations/20250816110000_password_rotation.sql
 docker exec -i supabase_db_novacrm psql -U postgres -d postgres < supabase/migrations/20250817120000_csat_auto_timeout.sql
+docker exec -i supabase_db_novacrm psql -U postgres -d postgres < supabase/migrations/20250817140000_tenant_administration.sql
 ```
 
 Then re-run only the new `UPDATE`/`INSERT` at the end of `supabase/seed.sql` if those rows are missing.

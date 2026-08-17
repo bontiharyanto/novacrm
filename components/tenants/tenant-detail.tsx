@@ -12,9 +12,17 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { toastError, toastSuccess } from '@/components/ui/toast';
-import { DEMO_TENANT_ID } from '@/lib/config/constants';
+import { expiryToDateInput, tenantAccessState } from '@/lib/tenants/lifecycle';
 import { setTenantStatus, updateTenant } from '@/lib/tenants/actions';
-import { TENANT_STATUS_LABEL, TENANT_TIMEZONES, type TenantRecord, type TenantStatus } from '@/lib/tenants/schema';
+import {
+  TENANT_PLAN_LABEL,
+  TENANT_PLANS,
+  TENANT_STATUS_LABEL,
+  TENANT_TIMEZONES,
+  type TenantRecord,
+  type TenantStatus,
+} from '@/lib/tenants/schema';
+import { formatDateLong } from '@/lib/utils/dates';
 
 const statusTone: Record<TenantStatus, 'success' | 'warning' | 'neutral'> = {
   active: 'success',
@@ -29,11 +37,19 @@ export function TenantDetail({ tenant, currentTenantId }: { tenant: TenantRecord
   const [accentColor, setAccentColor] = useState(tenant.accentColor);
   const [timezone, setTimezone] = useState(tenant.timezone);
   const [supportEmail, setSupportEmail] = useState(tenant.supportEmail);
+  const [subscriptionPlan, setSubscriptionPlan] = useState(tenant.subscriptionPlan);
+  const [expiresAt, setExpiresAt] = useState(expiryToDateInput(tenant.expiresAt));
+  const [graceDays, setGraceDays] = useState(String(tenant.graceDays));
+  const [autoPauseOnExpiry, setAutoPauseOnExpiry] = useState(tenant.autoPauseOnExpiry);
+  const [isProtected, setIsProtected] = useState(tenant.isProtected);
+  const [passwordRotationEnabled, setPasswordRotationEnabled] = useState(tenant.passwordRotationEnabled);
+  const [passwordMaxAgeDays, setPasswordMaxAgeDays] = useState(String(tenant.passwordMaxAgeDays));
   const [isSaving, setIsSaving] = useState(false);
   const [isStatusBusy, setIsStatusBusy] = useState(false);
   const [error, setError] = useState('');
 
-  const locked = tenant.id === DEMO_TENANT_ID || tenant.id === currentTenantId;
+  const locked = tenant.isProtected || tenant.id === currentTenantId;
+  const access = tenantAccessState(tenant);
 
   async function handleSave(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -45,6 +61,13 @@ export function TenantDetail({ tenant, currentTenantId }: { tenant: TenantRecord
       accentColor,
       timezone,
       supportEmail: supportEmail || undefined,
+      subscriptionPlan,
+      expiresAt,
+      graceDays: Number(graceDays),
+      autoPauseOnExpiry,
+      isProtected,
+      passwordRotationEnabled,
+      passwordMaxAgeDays: Number(passwordMaxAgeDays),
     });
     if (result.error) {
       setError(result.error);
@@ -85,6 +108,10 @@ export function TenantDetail({ tenant, currentTenantId }: { tenant: TenantRecord
           <div className="mt-1 flex flex-wrap items-center gap-2">
             <h1 className="text-xl font-semibold text-zinc-50">{tenant.name}</h1>
             <Badge tone={statusTone[tenant.status]}>{TENANT_STATUS_LABEL[tenant.status]}</Badge>
+            <Badge tone="neutral">{TENANT_PLAN_LABEL[tenant.subscriptionPlan]}</Badge>
+            {tenant.isProtected ? <Badge tone="info">Protected</Badge> : null}
+            {access === 'expiring' ? <Badge tone="warning">Expiring</Badge> : null}
+            {access === 'grace' ? <Badge tone="warning">Grace</Badge> : null}
           </div>
           <p className="mt-1 font-mono text-xs text-zinc-500">{tenant.slug}</p>
         </div>
@@ -132,6 +159,72 @@ export function TenantDetail({ tenant, currentTenantId }: { tenant: TenantRecord
           </div>
         </div>
 
+        <div className="space-y-4 rounded-lg border border-zinc-800 p-4">
+          <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Administration</p>
+          <p className="text-xs leading-5 text-zinc-500">
+            Contract end is stored on the tenant. Empty date means no expiry. After the end date plus grace days, login
+            is blocked. Auto-pause never deletes data.
+          </p>
+          <div className="grid gap-5 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="subscriptionPlan">Plan</Label>
+              <Select
+                id="subscriptionPlan"
+                value={subscriptionPlan}
+                onChange={(event) => setSubscriptionPlan(event.target.value as typeof subscriptionPlan)}
+              >
+                {TENANT_PLANS.map((item) => (
+                  <option key={item} value={item}>
+                    {TENANT_PLAN_LABEL[item]}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="expiresAt">Contract end</Label>
+              <Input id="expiresAt" type="date" value={expiresAt} onChange={(event) => setExpiresAt(event.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="graceDays">Grace days</Label>
+              <Input
+                id="graceDays"
+                inputMode="numeric"
+                value={graceDays}
+                onChange={(event) => setGraceDays(event.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="passwordMaxAgeDays">Password max age</Label>
+              <Input
+                id="passwordMaxAgeDays"
+                inputMode="numeric"
+                value={passwordMaxAgeDays}
+                onChange={(event) => setPasswordMaxAgeDays(event.target.value)}
+              />
+            </div>
+          </div>
+          <label className="flex items-center gap-2 text-sm text-zinc-200">
+            <input
+              type="checkbox"
+              checked={autoPauseOnExpiry}
+              onChange={(event) => setAutoPauseOnExpiry(event.target.checked)}
+            />
+            Auto-pause after grace
+          </label>
+          <label className="flex items-center gap-2 text-sm text-zinc-200">
+            <input type="checkbox" checked={isProtected} onChange={(event) => setIsProtected(event.target.checked)} />
+            Protected (skip expiry and pause lock)
+          </label>
+          <label className="flex items-center gap-2 text-sm text-zinc-200">
+            <input
+              type="checkbox"
+              checked={passwordRotationEnabled}
+              onChange={(event) => setPasswordRotationEnabled(event.target.checked)}
+            />
+            Password rotation
+          </label>
+        </div>
+
         {error ? <p className="text-sm text-rose-400">{error}</p> : null}
         <Button type="submit" disabled={isSaving}>
           {isSaving ? 'Saving…' : 'Save'}
@@ -145,14 +238,36 @@ export function TenantDetail({ tenant, currentTenantId }: { tenant: TenantRecord
             <p className="text-sm text-zinc-300">
               {tenant.adminCount} admin · {tenant.userCount} users
             </p>
-            <p className="font-mono text-xs text-zinc-500">/login?tenant={tenant.slug}</p>
+            <p className="text-xs text-zinc-500">
+              Contract: {tenant.expiresAt ? formatDateLong(tenant.expiresAt) : 'No expiry'} · grace {tenant.graceDays}d
+            </p>
+            <p className="font-mono text-xs text-zinc-500">{tenant.loginUrl}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="space-y-3 p-4">
+            <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Backend</p>
+            <p className="break-all font-mono text-xs text-zinc-300">{tenant.backendUrl}</p>
+            <p className="text-xs leading-5 text-zinc-500">
+              OpenAPI 3 path template: /api/v1/t/{'{tenant}'}. Webhooks: {tenant.backendUrl}/webhooks/generic
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                void navigator.clipboard.writeText(tenant.backendUrl);
+                toastSuccess('Backend URL copied');
+              }}
+            >
+              Copy backend URL
+            </Button>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="space-y-3 p-4">
             <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Status</p>
             <p className="text-xs leading-5 text-zinc-500">
-              Paused or archived tenants cannot sign in. Lab tenant and the tenant you are using stay active.
+              Paused or archived tenants cannot sign in. Protected tenants and the tenant you are using stay active.
             </p>
             <div className="flex flex-wrap gap-2">
               {tenant.status !== 'active' ? (

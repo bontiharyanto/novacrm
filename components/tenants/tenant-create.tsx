@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { toastError, toastSuccess } from '@/components/ui/toast';
 import { createTenant } from '@/lib/tenants/actions';
-import { TENANT_TIMEZONES } from '@/lib/tenants/schema';
+import { TENANT_PLAN_LABEL, TENANT_PLANS, TENANT_TIMEZONES, type TenantPlan } from '@/lib/tenants/schema';
 
 function slugify(value: string) {
   return value
@@ -40,6 +40,9 @@ export function TenantCreate() {
   const [adminName, setAdminName] = useState('');
   const [adminEmail, setAdminEmail] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
+  const [subscriptionPlan, setSubscriptionPlan] = useState<TenantPlan>('standard');
+  const [expiresAt, setExpiresAt] = useState('');
+  const [graceDays, setGraceDays] = useState('7');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -58,6 +61,9 @@ export function TenantCreate() {
       adminName,
       adminEmail,
       adminPassword,
+      subscriptionPlan,
+      expiresAt: expiresAt || undefined,
+      graceDays: Number(graceDays),
     });
     if (result.error || !result.data?.id) {
       const message = result.error ?? 'Could not create tenant';
@@ -151,6 +157,42 @@ export function TenantCreate() {
         </div>
 
         <div className="space-y-4 rounded-lg border border-zinc-800 p-4">
+          <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Administration</p>
+          <div className="grid gap-5 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="subscriptionPlan">Plan</Label>
+              <Select
+                id="subscriptionPlan"
+                value={subscriptionPlan}
+                onChange={(event) => setSubscriptionPlan(event.target.value as TenantPlan)}
+              >
+                {TENANT_PLANS.map((item) => (
+                  <option key={item} value={item}>
+                    {TENANT_PLAN_LABEL[item]}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="expiresAt">Contract end</Label>
+              <Input id="expiresAt" type="date" value={expiresAt} onChange={(event) => setExpiresAt(event.target.value)} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="graceDays">Grace days</Label>
+              <Input
+                id="graceDays"
+                inputMode="numeric"
+                value={graceDays}
+                onChange={(event) => setGraceDays(event.target.value)}
+              />
+            </div>
+          </div>
+          <p className="text-xs leading-5 text-zinc-500">
+            Trial without a date gets 14 days. Standard and enterprise stay open until you set a contract end.
+          </p>
+        </div>
+
+        <div className="space-y-4 rounded-lg border border-zinc-800 p-4">
           <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">First admin</p>
           <div className="grid gap-5 sm:grid-cols-2">
             <div className="space-y-2">
@@ -204,6 +246,7 @@ export function TenantCreate() {
             <p>Internal account, Service Desk L1, office-hours SLA, and this admin as group lead.</p>
             <p>Give the password to the client admin once. They change it after first login.</p>
             <p className="font-mono text-zinc-400">/login?tenant={previewSlug || 'slug'}</p>
+            <p className="font-mono text-zinc-400">/api/v1/t/{previewSlug || 'slug'}</p>
           </CardContent>
         </Card>
       </aside>

@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { getServerSupabaseConfig, isSupabaseConfigured } from '@/lib/config/env';
 import { homePathForRole, isAppRole, isCustomerRole, isTenantAdminRole, parseAppRole } from '@/lib/rbac/roles';
 import { DEFAULT_PASSWORD_MAX_AGE_DAYS, isPasswordExpired } from '@/lib/auth/password-policy';
+import { isTenantLoginBlocked } from '@/lib/tenants/lifecycle';
 
 function isPublicPath(pathname: string) {
   return (
@@ -14,7 +15,9 @@ function isPublicPath(pathname: string) {
     pathname === '/api/auth/sso' ||
     pathname.startsWith('/api/auth/saml') ||
     pathname.startsWith('/auth/callback') ||
-    pathname.startsWith('/api/webhooks/')
+    pathname.startsWith('/api/webhooks/') ||
+    pathname.startsWith('/api/t/') ||
+    pathname.startsWith('/api/v1/t/')
   );
 }
 
@@ -120,17 +123,33 @@ export async function updateSession(request: NextRequest) {
   const profile = user ? await roleFromProfile(supabase, user.id, roleFromMetadata(user)) : undefined;
   const role = profile?.role;
 
-  if (user && profile?.tenantId && !pathname.startsWith('/api/')) {
-    const { data: tenantStatus } = await supabase
+  if (user && profile?.tenantId) {
+    const { data: tenantAccess } = await supabase
       .from('tenants')
-      .select('status')
+      .select('status, expires_at, grace_days, is_protected')
       .eq('id', profile.tenantId)
       .maybeSingle();
-    if (tenantStatus?.status && tenantStatus.status !== 'active') {
+    const blocked = Boolean(
+      tenantAccess &&
+        isTenantLoginBlocked({
+          status: tenantAccess.status as 'active' | 'paused' | 'archived',
+          isProtected: Boolean(tenantAccess.is_protected),
+          expiresAt: tenantAccess.expires_at as string | null,
+          graceDays: Number(tenantAccess.grace_days ?? 7),
+        }),
+    );
+    if (blocked) {
+      const expiredWhileActive = tenantAccess?.status === 'active';
+      if (pathname.startsWith('/api/')) {
+        return NextResponse.json(
+          { data: null, error: expiredWhileActive ? 'Tenant access expired' : 'Tenant is paused' },
+          { status: 403 },
+        );
+      }
       await supabase.auth.signOut();
       const redirectUrl = request.nextUrl.clone();
       redirectUrl.pathname = '/login';
-      redirectUrl.search = 'error=tenant_paused';
+      redirectUrl.search = expiredWhileActive ? 'error=tenant_expired' : 'error=tenant_paused';
       return NextResponse.redirect(redirectUrl);
     }
   }

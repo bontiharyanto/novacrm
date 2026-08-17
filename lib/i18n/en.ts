@@ -87,6 +87,7 @@ export const en = {
     ssoEmail: 'The identity provider did not return an email. Ask the IdP admin to release the email claim.',
     ssoDenied: 'That email domain is not allowed for this tenant. Use a work account or email login.',
     tenantPaused: 'This tenant is paused or archived. Ask the platform owner to resume it.',
+    tenantExpired: 'This tenant contract has ended. Ask the platform owner to extend or resume it.',
     passwordExpired: 'Your password expired. Sign in, then change it to continue.',
   },
   passwordPolicy: {
