@@ -163,39 +163,50 @@ end $$;
 
 notify pgrst, 'reload schema';
 
--- Demo history: Bank laptop finance moved then transferred
+-- Demo history: Bank laptop finance moved then transferred (only if seed assets exist)
 insert into public.asset_movements (
   id, tenant_id, account_id, asset_id, event_type,
   from_location, to_location, from_assignee, to_assignee,
   from_status, to_status, note, created_at, created_by
 )
-values
-  (
-    'eeeeeeee-0001-0001-0001-000000000001',
-    '11111111-1111-1111-1111-111111111111',
-    '55555555-0001-0001-0001-000000000002',
-    'aaaaaaaa-0001-0001-0001-000000000001',
-    'move',
-    'Jakarta HQ', 'Lt. 3',
-    'Finance', 'Finance',
-    'active', 'active',
-    'Relokasi ke lantai marketing',
-    now() - interval '18 days',
-    '22222222-2222-2222-2222-222222222222'
-  ),
-  (
-    'eeeeeeee-0001-0001-0001-000000000002',
-    '11111111-1111-1111-1111-111111111111',
-    '55555555-0001-0001-0001-000000000002',
-    'aaaaaaaa-0001-0001-0001-000000000001',
-    'transfer',
-    'Lt. 3', 'Lt. 3',
-    'Finance', 'Operations',
-    'active', 'active',
-    'Mutasi pemakai setelah reorg',
-    now() - interval '6 days',
-    '33333333-3333-3333-3333-333333333333'
-  )
+select
+  v.id, v.tenant_id, v.account_id, v.asset_id, v.event_type,
+  v.from_location, v.to_location, v.from_assignee, v.to_assignee,
+  v.from_status, v.to_status, v.note, v.created_at, v.created_by
+from (
+  values
+    (
+      'eeeeeeee-0001-0001-0001-000000000001'::uuid,
+      '11111111-1111-1111-1111-111111111111'::uuid,
+      '55555555-0001-0001-0001-000000000002'::uuid,
+      'aaaaaaaa-0001-0001-0001-000000000001'::uuid,
+      'move',
+      'Jakarta HQ', 'Lt. 3',
+      'Finance', 'Finance',
+      'active', 'active',
+      'Relokasi ke lantai marketing',
+      now() - interval '18 days',
+      '22222222-2222-2222-2222-222222222222'::uuid
+    ),
+    (
+      'eeeeeeee-0001-0001-0001-000000000002'::uuid,
+      '11111111-1111-1111-1111-111111111111'::uuid,
+      '55555555-0001-0001-0001-000000000002'::uuid,
+      'aaaaaaaa-0001-0001-0001-000000000001'::uuid,
+      'transfer',
+      'Lt. 3', 'Lt. 3',
+      'Finance', 'Operations',
+      'active', 'active',
+      'Mutasi pemakai setelah reorg',
+      now() - interval '6 days',
+      '33333333-3333-3333-3333-333333333333'::uuid
+    )
+) as v(
+  id, tenant_id, account_id, asset_id, event_type,
+  from_location, to_location, from_assignee, to_assignee,
+  from_status, to_status, note, created_at, created_by
+)
+where exists (select 1 from public.assets a where a.id = v.asset_id)
 on conflict (id) do nothing;
 
 alter table public.assets disable trigger assets_log_movement;

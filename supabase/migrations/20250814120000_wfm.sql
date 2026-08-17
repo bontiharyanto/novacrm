@@ -648,6 +648,20 @@ select
   '22222222-2222-2222-2222-222222222222'
 from generate_series(0, 3) as n
 where exists (select 1 from public.wfm_oncall_rotations where id = 'dddddddd-0001-0001-0001-000000000001')
+  and exists (
+    select 1 from public.profiles p
+    where p.id = case
+      when n % 2 = 0 then '33333333-3333-3333-3333-333333333339'::uuid
+      else '33333333-3333-3333-3333-333333333337'::uuid
+    end
+  )
+  and exists (
+    select 1 from public.profiles p
+    where p.id = case
+      when n % 2 = 0 then '33333333-3333-3333-3333-333333333337'::uuid
+      else '33333333-3333-3333-3333-333333333333'::uuid
+    end
+  )
   and not exists (
     select 1 from public.wfm_oncall_slots s
     where s.rotation_id = 'dddddddd-0001-0001-0001-000000000001'

@@ -1,6 +1,6 @@
 # Persiapan migrasi ke server
 
-Dokumen ini dikerjakan **sebelum** `prod:bootstrap`. Isi checklist, kumpulkan akun dan rahasia, baru jalankan cutover di [SERVER.md](SERVER.md). Detail Compose/Traefik/GHCR: [DEPLOYMENT.md](DEPLOYMENT.md). Laptop: [LOCAL.md](LOCAL.md).
+Dokumen ini dikerjakan **sebelum** `prod:bootstrap`. Isi checklist, kumpulkan akun dan rahasia, baru jalankan cutover di [SERVER.md](SERVER.md). Instance `novacrm.click` yang sudah jalan: [VPS.md](VPS.md). Detail Compose/Traefik/GHCR: [DEPLOYMENT.md](DEPLOYMENT.md). Laptop: [LOCAL.md](LOCAL.md).
 
 Jangan `supabase db reset`. Jangan commit `.env.local` atau `.env.production`. Jangan `seed.sql` ke database yang sudah berisi data klien.
 

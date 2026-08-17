@@ -1,7 +1,8 @@
 # Local laptop test
 
 Operator training (login, tickets, CMDB, portal): [user-guide/README.md](user-guide/README.md).  
-Sysadmin console: [OPS.md](OPS.md).
+Sysadmin console: [OPS.md](OPS.md).  
+Produksi `novacrm.click` (VPS + cara push kode): [VPS.md](VPS.md). `.env.production` tidak masuk git.
 
 Use this before any VPS/GitHub deploy. Auth, tickets, Kanban, and uploads all need local Docker services plus a local (or hosted) Supabase.
 

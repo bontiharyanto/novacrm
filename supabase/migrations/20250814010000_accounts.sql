@@ -175,27 +175,31 @@ where id in (
 );
 
 insert into public.cmdb_items (id, tenant_id, account_id, asset_id, name, type, attributes, relations)
-values
-  (
-    'bbbbbbbb-0001-0001-0001-000000000011',
-    '11111111-1111-1111-1111-111111111111',
-    '55555555-0001-0001-0001-000000000003',
-    'aaaaaaaa-0001-0001-0001-000000000008',
-    'print-wh',
-    'printer',
-    '{"site":"gudang"}'::jsonb,
-    '[]'::jsonb
-  ),
-  (
-    'bbbbbbbb-0001-0001-0001-000000000012',
-    '11111111-1111-1111-1111-111111111111',
-    '55555555-0001-0001-0001-000000000003',
-    'aaaaaaaa-0001-0001-0001-000000000010',
-    'mobile-field-02',
-    'endpoint',
-    '{"owner":"sales"}'::jsonb,
-    '[]'::jsonb
-  )
+select v.id, v.tenant_id, v.account_id, v.asset_id, v.name, v.type, v.attributes, v.relations
+from (
+  values
+    (
+      'bbbbbbbb-0001-0001-0001-000000000011'::uuid,
+      '11111111-1111-1111-1111-111111111111'::uuid,
+      '55555555-0001-0001-0001-000000000003'::uuid,
+      'aaaaaaaa-0001-0001-0001-000000000008'::uuid,
+      'print-wh',
+      'printer',
+      '{"site":"gudang"}'::jsonb,
+      '[]'::jsonb
+    ),
+    (
+      'bbbbbbbb-0001-0001-0001-000000000012'::uuid,
+      '11111111-1111-1111-1111-111111111111'::uuid,
+      '55555555-0001-0001-0001-000000000003'::uuid,
+      'aaaaaaaa-0001-0001-0001-000000000010'::uuid,
+      'mobile-field-02',
+      'endpoint',
+      '{"owner":"sales"}'::jsonb,
+      '[]'::jsonb
+    )
+) as v(id, tenant_id, account_id, asset_id, name, type, attributes, relations)
+where exists (select 1 from public.assets a where a.id = v.asset_id)
 on conflict (id) do nothing;
 
 update public.cmdb_items c

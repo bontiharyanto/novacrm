@@ -154,68 +154,94 @@ create trigger tickets_group_same_account
 before insert or update of group_id, account_id on public.tickets
 for each row execute function public.enforce_ticket_group_account();
 
--- Demo org on Internal
+-- Demo org on Internal. manager_id is null until seed creates lab profiles.
 insert into public.org_units (id, tenant_id, account_id, parent_id, type, name, slug, manager_id, created_by)
-values
-  (
-    '88888888-0001-0001-0001-000000000001',
-    '11111111-1111-1111-1111-111111111111',
-    '55555555-0001-0001-0001-000000000001',
-    null,
-    'division',
-    'Divisi Operasi',
-    'operasi',
-    '22222222-2222-2222-2222-222222222222',
-    '22222222-2222-2222-2222-222222222222'
-  ),
-  (
-    '88888888-0001-0001-0001-000000000002',
-    '11111111-1111-1111-1111-111111111111',
-    '55555555-0001-0001-0001-000000000001',
-    null,
-    'division',
-    'Divisi Layanan',
-    'layanan',
-    '22222222-2222-2222-2222-222222222222',
-    '22222222-2222-2222-2222-222222222222'
-  )
+select
+  v.id,
+  v.tenant_id,
+  v.account_id,
+  v.parent_id,
+  v.type,
+  v.name,
+  v.slug,
+  (select p.id from public.profiles p where p.id = v.manager_id),
+  v.created_by
+from (
+  values
+    (
+      '88888888-0001-0001-0001-000000000001'::uuid,
+      '11111111-1111-1111-1111-111111111111'::uuid,
+      '55555555-0001-0001-0001-000000000001'::uuid,
+      null::uuid,
+      'division'::public.org_unit_type,
+      'Divisi Operasi',
+      'operasi',
+      '22222222-2222-2222-2222-222222222222'::uuid,
+      '22222222-2222-2222-2222-222222222222'::uuid
+    ),
+    (
+      '88888888-0001-0001-0001-000000000002'::uuid,
+      '11111111-1111-1111-1111-111111111111'::uuid,
+      '55555555-0001-0001-0001-000000000001'::uuid,
+      null::uuid,
+      'division'::public.org_unit_type,
+      'Divisi Layanan',
+      'layanan',
+      '22222222-2222-2222-2222-222222222222'::uuid,
+      '22222222-2222-2222-2222-222222222222'::uuid
+    )
+) as v(id, tenant_id, account_id, parent_id, type, name, slug, manager_id, created_by)
+where exists (select 1 from public.accounts a where a.id = v.account_id)
 on conflict (id) do nothing;
 
 insert into public.org_units (id, tenant_id, account_id, parent_id, type, name, slug, manager_id, created_by)
-values
-  (
-    '88888888-0001-0001-0001-000000000011',
-    '11111111-1111-1111-1111-111111111111',
-    '55555555-0001-0001-0001-000000000001',
-    '88888888-0001-0001-0001-000000000001',
-    'unit',
-    'Unit Network',
-    'network',
-    '22222222-2222-2222-2222-222222222222',
-    '22222222-2222-2222-2222-222222222222'
-  ),
-  (
-    '88888888-0001-0001-0001-000000000012',
-    '11111111-1111-1111-1111-111111111111',
-    '55555555-0001-0001-0001-000000000001',
-    '88888888-0001-0001-0001-000000000001',
-    'unit',
-    'Unit Infra',
-    'infra',
-    '22222222-2222-2222-2222-222222222222',
-    '22222222-2222-2222-2222-222222222222'
-  ),
-  (
-    '88888888-0001-0001-0001-000000000013',
-    '11111111-1111-1111-1111-111111111111',
-    '55555555-0001-0001-0001-000000000001',
-    '88888888-0001-0001-0001-000000000002',
-    'unit',
-    'Unit Service Desk',
-    'service-desk',
-    '33333333-3333-3333-3333-333333333333',
-    '22222222-2222-2222-2222-222222222222'
-  )
+select
+  v.id,
+  v.tenant_id,
+  v.account_id,
+  v.parent_id,
+  v.type,
+  v.name,
+  v.slug,
+  (select p.id from public.profiles p where p.id = v.manager_id),
+  v.created_by
+from (
+  values
+    (
+      '88888888-0001-0001-0001-000000000011'::uuid,
+      '11111111-1111-1111-1111-111111111111'::uuid,
+      '55555555-0001-0001-0001-000000000001'::uuid,
+      '88888888-0001-0001-0001-000000000001'::uuid,
+      'unit'::public.org_unit_type,
+      'Unit Network',
+      'network',
+      '22222222-2222-2222-2222-222222222222'::uuid,
+      '22222222-2222-2222-2222-222222222222'::uuid
+    ),
+    (
+      '88888888-0001-0001-0001-000000000012'::uuid,
+      '11111111-1111-1111-1111-111111111111'::uuid,
+      '55555555-0001-0001-0001-000000000001'::uuid,
+      '88888888-0001-0001-0001-000000000001'::uuid,
+      'unit'::public.org_unit_type,
+      'Unit Infra',
+      'infra',
+      '22222222-2222-2222-2222-222222222222'::uuid,
+      '22222222-2222-2222-2222-222222222222'::uuid
+    ),
+    (
+      '88888888-0001-0001-0001-000000000013'::uuid,
+      '11111111-1111-1111-1111-111111111111'::uuid,
+      '55555555-0001-0001-0001-000000000001'::uuid,
+      '88888888-0001-0001-0001-000000000002'::uuid,
+      'unit'::public.org_unit_type,
+      'Unit Service Desk',
+      'service-desk',
+      '33333333-3333-3333-3333-333333333333'::uuid,
+      '22222222-2222-2222-2222-222222222222'::uuid
+    )
+) as v(id, tenant_id, account_id, parent_id, type, name, slug, manager_id, created_by)
+where exists (select 1 from public.org_units parent where parent.id = v.parent_id)
 on conflict (id) do nothing;
 
 update public.profiles
