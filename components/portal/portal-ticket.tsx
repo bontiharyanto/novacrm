@@ -32,6 +32,7 @@ type TicketItem = {
   comments: Array<{ id: string; author: string; comment: string; createdAt: string }>;
   csatScore?: number;
   csatComment?: string;
+  csatSource?: 'customer' | 'auto_timeout';
 };
 
 const statusTone: Record<TicketStatus, 'info' | 'warning' | 'success' | 'neutral'> = {
@@ -111,14 +112,15 @@ export function PortalTicket({
       remaining={csatRemaining}
       nextTicketId={nextCsatId}
       initial={
-        ticket.csatScore
-          ? ({
-              ticketId: ticket.id,
-              score: ticket.csatScore as CsatResponse['score'],
-              comment: ticket.csatComment,
-              createdAt: ticket.createdAt,
-            } satisfies CsatResponse)
-          : null
+            ticket.csatScore
+              ? ({
+                  ticketId: ticket.id,
+                  score: ticket.csatScore as CsatResponse['score'],
+                  comment: ticket.csatComment,
+                  createdAt: ticket.createdAt,
+                  source: ticket.csatSource,
+                } satisfies CsatResponse)
+              : null
       }
     />
   );

@@ -344,7 +344,7 @@ Login as `customer@novacrm.app`.
 | **New request** | Freeform ticket |
 | **Privacy** | Privacy notice and DSAR (only after admin **Enable on portal**) |
 
-After the desk **resolves** or **closes** a ticket, **CSAT is required** (score 1–5, comment optional). The portal locks catalog, new request, Ask AI, and home until every unrated ticket is scored. The change-password page stays available. Email / WhatsApp after resolve must open `/portal/{id}`, not the desk.
+After the desk **resolves** or **closes** a ticket, **CSAT is required** (score 1–5, comment optional). The portal locks catalog, new request, Ask AI, and home until every unrated ticket is scored. The change-password page stays available. If the requester does not rate within **7 working days**, NovaCRM writes **5/5 automatically** and unlocks the portal. Email / WhatsApp after resolve must open `/portal/{id}`, not the desk.
 
 ## Lab 7 — Portal round-trip
 

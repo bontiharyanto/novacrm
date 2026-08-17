@@ -16,7 +16,7 @@ Do not expose `:3100` on a public interface without `OPS_TOKEN`.
 ## What it shows
 
 - Service probes: app `:3000`, Docker app `:3001`, Redis, Postgres, Supabase API, Studio, MinIO, Mailpit, Ops itself
-- BullMQ counts for `novacrm-notifications`, `novacrm-workflows`, `novacrm-wfm`
+- BullMQ counts for `novacrm-notifications`, `novacrm-workflows`, `novacrm-wfm`, `novacrm-csat`
 - Failed jobs + **Retry** / **Retry failed**
 - Shortcuts to Studio, MinIO console, Mailpit
 
@@ -31,8 +31,8 @@ Scale workers (add a second BullMQ process): [WORKERS.md](WORKERS.md). Default i
 | `GET` | `/health` | Open |
 | `GET` | `/` | Required |
 | `GET` | `/api/status` | Required |
-| `POST` | `/api/queues/{notifications\|workflows\|wfm}/jobs/{id}/retry` | Required |
-| `POST` | `/api/queues/{notifications\|workflows\|wfm}/failed/retry` | Required |
+| `POST` | `/api/queues/{notifications\|workflows\|wfm\|csat}/jobs/{id}/retry` | Required |
+| `POST` | `/api/queues/{notifications\|workflows\|wfm\|csat}/failed/retry` | Required |
 
 Auth when `OPS_TOKEN` is set: header `x-ops-token`, `Authorization: Bearer`, or cookie `ops_token`.
 

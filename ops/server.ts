@@ -6,6 +6,7 @@ import { Queue } from 'bullmq';
 import { loadLocalEnvFile } from '../lib/config/load-local-env';
 import {
   createRedisConnection,
+  csatQueueName,
   notificationQueueName,
   pingRedis,
   wfmQueueName,
@@ -33,10 +34,18 @@ function probeUrl(url: string) {
   return url.replace('127.0.0.1', host).replace('localhost', host);
 }
 
+const QUEUE_LABELS: Record<string, string> = {
+  notifications: 'Notifications',
+  workflows: 'Workflows',
+  wfm: 'WFM dispatch',
+  csat: 'CSAT auto-rate',
+};
+
 const QUEUES = [
   { key: 'notifications', name: notificationQueueName },
   { key: 'workflows', name: workflowQueueName },
   { key: 'wfm', name: wfmQueueName },
+  { key: 'csat', name: csatQueueName },
 ] as const;
 
 const PAGE = readFileSync(resolve(process.cwd(), 'ops/dashboard.html'), 'utf8');
@@ -118,8 +127,7 @@ async function queueSnapshot() {
       return {
         key: item.key,
         name: item.name,
-        label:
-          item.key === 'notifications' ? 'Notifications' : item.key === 'workflows' ? 'Workflows' : 'WFM dispatch',
+        label: QUEUE_LABELS[item.key] ?? item.name,
         counts: {
           waiting: counts.wait ?? 0,
           active: counts.active ?? 0,

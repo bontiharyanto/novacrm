@@ -251,6 +251,8 @@ export const en = {
     csatSubmit: 'Submit rating',
     csatSaving: 'Saving…',
     csatWaiting: 'Waiting for the requester to rate this ticket.',
+    csatAuto:
+      'Rated automatically at 5/5 after 7 working days without a response. This unlocks the portal.',
     csatError: 'Unable to save rating',
     csatScore: {
       1: 'Poor',

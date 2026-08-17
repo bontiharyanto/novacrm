@@ -253,6 +253,8 @@ export const id: Dictionary = {
     csatSubmit: 'Kirim penilaian',
     csatSaving: 'Menyimpan…',
     csatWaiting: 'Menunggu pemohon menilai tiket ini.',
+    csatAuto:
+      'Dinilai otomatis 5/5 setelah 7 hari kerja tanpa respons. Portal terbuka kembali.',
     csatError: 'Penilaian belum tersimpan',
     csatScore: {
       1: 'Buruk',

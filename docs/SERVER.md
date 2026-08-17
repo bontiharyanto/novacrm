@@ -118,6 +118,7 @@ Apply in filename order (migrate.sh does this):
 - `20250815170000_sso_oidc_fields.sql` (SSO allowedDomains + defaultRole)
 - `20250815180000_tenant_mfa.sql` (tenant MFA toggle, default off)
 - `20250815190000_csat_uc_credits.sql` (CSAT after resolve + UC service credits)
+- `20250817120000_csat_auto_timeout.sql` (CSAT 5/5 auto after 7 working days)
 - `20250815200000_tenant_platform.sql` (superadmin tenant list/create/pause)
 - `20250815300000_staff_reviews.sql` (staff reviews under WFM)
 - `20250815310000_staff_review_ai.sql` (advisory AI scores on a review)

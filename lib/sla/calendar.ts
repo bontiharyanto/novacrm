@@ -138,6 +138,36 @@ export function remainingBusinessMinutes(from: Date, until: Date, calendar: SlaC
   return total;
 }
 
+export function isWorkingDay(date: Date, calendar: SlaCalendarConfig) {
+  const parts = partsInZone(date, calendar.timezone);
+  if (calendar.holidays.includes(parts.dateKey)) return false;
+  if (calendar.is24x7) return true;
+  return windowsForDay(calendar, parts.dateKey, parts.weekday).length > 0;
+}
+
+/** Due instant after `days` full working days have elapsed from `from` (resolve day is not counted). */
+export function addWorkingDays(from: Date, days: number, calendar: SlaCalendarConfig) {
+  if (days <= 0) return from;
+  const start = partsInZone(from, calendar.timezone);
+  const next = nextCivilDay(start.year, start.month, start.day);
+  let cursor = fromZoned(calendar.timezone, next.year, next.month, next.day, 0, 0);
+  let counted = 0;
+  for (let step = 0; step < 400; step += 1) {
+    if (isWorkingDay(cursor, calendar)) {
+      counted += 1;
+      if (counted >= days) {
+        const due = partsInZone(cursor, calendar.timezone);
+        const after = nextCivilDay(due.year, due.month, due.day);
+        return fromZoned(calendar.timezone, after.year, after.month, after.day, 0, 0);
+      }
+    }
+    const parts = partsInZone(cursor, calendar.timezone);
+    const following = nextCivilDay(parts.year, parts.month, parts.day);
+    cursor = fromZoned(calendar.timezone, following.year, following.month, following.day, 0, 0);
+  }
+  return cursor;
+}
+
 export function toCalendarConfig(row: {
   timezone?: string | null;
   is_24x7?: boolean | null;

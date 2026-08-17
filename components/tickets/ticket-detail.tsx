@@ -86,6 +86,7 @@ type TicketItem = {
   relatedIncidents?: RelatedIncident[];
   csatScore?: number;
   csatComment?: string;
+  csatSource?: 'customer' | 'auto_timeout';
 };
 
 type AgentOption = {
@@ -521,10 +522,14 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
                 <div className="mt-3">
                   <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">CSAT</p>
                   <p className="mt-1 text-sm text-zinc-50">{ticket.csatScore}/5</p>
-                  {ticket.csatComment ? <p className="text-xs text-zinc-500">{ticket.csatComment}</p> : null}
+                  {ticket.csatSource === 'auto_timeout' ? (
+                    <p className="text-xs text-zinc-500">{t.portal.csatAuto}</p>
+                  ) : ticket.csatComment ? (
+                    <p className="text-xs text-zinc-500">{ticket.csatComment}</p>
+                  ) : null}
                 </div>
               ) : ticket.status === 'resolved' || ticket.status === 'closed' ? (
-                <p className="mt-3 text-xs text-zinc-500">Waiting for requester CSAT.</p>
+                <p className="mt-3 text-xs text-zinc-500">{t.portal.csatWaiting}</p>
               ) : null}
             </div>
             <div>

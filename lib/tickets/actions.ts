@@ -136,13 +136,14 @@ async function loadTicket(client: SupabaseClient, ticketId: string, tenantId?: s
 
   const { data: csat } = await client
     .from('ticket_csat')
-    .select('score, comment')
+    .select('score, comment, source')
     .eq('ticket_id', ticket.id)
     .eq('tenant_id', ticket.tenantId)
     .maybeSingle();
   if (csat) {
     ticket.csatScore = csat.score;
     ticket.csatComment = csat.comment ?? undefined;
+    ticket.csatSource = csat.source === 'auto_timeout' ? 'auto_timeout' : 'customer';
   }
 
   return { data: ticket, error: null };

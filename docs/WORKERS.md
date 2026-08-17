@@ -7,15 +7,16 @@ Web replica menangani HTTP. **Worker** menarik job dari Redis. Jangan samakan ju
 
 ## Yang sudah jalan (default)
 
-Satu proses `npm run worker` membuka **tiga** antrian:
+Satu proses `npm run worker` membuka **empat** antrian:
 
 | Queue | Concurrency per proses | Isi job |
 | --- | --- | --- |
 | `novacrm-notifications` | 5 | WhatsApp, Telegram, email |
 | `novacrm-workflows` | 3 | Flow Designer (assign, status, notifikasi) |
 | `novacrm-wfm` | 4 | Dispatch roster / on-call |
+| `novacrm-csat` | 1 | Auto 5/5 after 7 working days without CSAT |
 
-**1 container ≈ 12 job paralel.** Laptop dan VPS awal: **1 worker**. Produksi yang harus tetap hidup saat deploy: **2**. Jarang perlu lebih dari 3.
+**1 container ≈ 13 job paralel.** Laptop dan VPS awal: **1 worker**. Produksi yang harus tetap hidup saat deploy: **2**. Jarang perlu lebih dari 3.
 
 Cek jumlah worker di Ops: [http://127.0.0.1:3100](http://127.0.0.1:3100) — kolom workers per queue. Satu proses = 1 worker per queue (bukan 12).
 
@@ -36,6 +37,7 @@ Naikkan **concurrency dulu** jika hanya satu queue yang menumpuk (edit file di b
 | `lib/queue/notification.worker.ts` | notifications | `concurrency: 5` |
 | `lib/queue/workflow.worker.ts` | workflows | `concurrency: 3` |
 | `lib/queue/wfm.worker.ts` | wfm | `concurrency: 4` |
+| `lib/queue/csat.worker.ts` | csat | `concurrency: 1` |
 
 Workflow menulis tiket — jangan naikkan concurrency terlalu tinggi (race). Notifikasi ke Fonnte/Resend mudah kena rate limit jika `container × concurrency` besar.
 

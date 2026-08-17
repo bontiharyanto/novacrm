@@ -11,12 +11,14 @@ function mapCsat(row: {
   score: number;
   comment?: string | null;
   created_at: string;
+  source?: string | null;
 }): CsatResponse {
   return {
     ticketId: row.ticket_id,
     score: row.score as CsatResponse['score'],
     comment: row.comment ?? undefined,
     createdAt: row.created_at,
+    source: row.source === 'auto_timeout' ? 'auto_timeout' : 'customer',
   };
 }
 
@@ -26,7 +28,7 @@ export async function getTicketCsat(ticketId: string): Promise<CsatResponse | nu
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase
     .from('ticket_csat')
-    .select('ticket_id, score, comment, created_at')
+    .select('ticket_id, score, comment, created_at, source')
     .eq('ticket_id', ticketId)
     .eq('tenant_id', session.profile.tenantId)
     .maybeSingle();
@@ -64,9 +66,10 @@ export async function submitTicketCsat(input: unknown) {
       ticket_id: parsed.data.ticketId,
       score: parsed.data.score,
       comment: parsed.data.comment || null,
+      source: 'customer',
       created_by: session.userId,
     })
-    .select('ticket_id, score, comment, created_at')
+    .select('ticket_id, score, comment, created_at, source')
     .single();
 
   if (error) {

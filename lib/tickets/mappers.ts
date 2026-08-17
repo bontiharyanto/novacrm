@@ -72,6 +72,7 @@ export type TicketRecord = {
   resolvedAt?: string;
   csatScore?: number;
   csatComment?: string;
+  csatSource?: 'customer' | 'auto_timeout';
   aiSummary?: string;
   aiSummaryAt?: string;
   relatedIncidents?: Array<{ id: string; number: string; title: string; status: TicketStatus }>;

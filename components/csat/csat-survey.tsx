@@ -78,7 +78,11 @@ export function CsatSurvey({
             <p className="text-sm text-zinc-50">
               {saved.score}/5 · {labels[saved.score]}
             </p>
-            {saved.comment ? <p className="mt-1 text-xs text-zinc-500">{saved.comment}</p> : null}
+            {saved.source === 'auto_timeout' ? (
+              <p className="mt-1 text-xs text-zinc-500">{t.portal.csatAuto}</p>
+            ) : saved.comment ? (
+              <p className="mt-1 text-xs text-zinc-500">{saved.comment}</p>
+            ) : null}
           </div>
         ) : canSubmit ? (
           <>

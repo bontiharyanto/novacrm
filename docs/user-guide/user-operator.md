@@ -188,7 +188,7 @@ Buka tiket di **My tickets** / `/portal/{id}`.
 
 - Baca status dan komentar agent.
 - Tambah komentar jika diminta info.
-- Setelah **resolved** / **closed**, **CSAT wajib** (1–5). Portal mengunci katalog, permintaan baru, dan Ask AI sampai semua tiket selesai dinilai. Email / WhatsApp memakai tautan `/portal/{id}`, bukan desk `/tickets/{id}`.
+- Setelah **resolved** / **closed**, **CSAT wajib** (1–5). Portal mengunci katalog, permintaan baru, dan Ask AI sampai semua tiket selesai dinilai. Jika pemohon tidak menilai dalam **7 hari kerja**, sistem mengisi **5/5 otomatis** dan portal terbuka lagi. Email / WhatsApp memakai tautan `/portal/{id}`, bukan desk `/tickets/{id}`.
 - Jangan buka tiket duplikat untuk isu yang sama; balas yang sudah ada.
 
 ## B.5 Ask AI (portal)

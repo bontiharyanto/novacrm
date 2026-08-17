@@ -11,11 +11,17 @@ export const submitCsatSchema = z.object({
 
 export type CsatScore = z.infer<typeof csatScoreSchema>;
 
+export const CSAT_AUTO_WORKING_DAYS = 7;
+export const CSAT_AUTO_SCORE = 5 as const;
+export const CSAT_SOURCES = ['customer', 'auto_timeout'] as const;
+export type CsatSource = (typeof CSAT_SOURCES)[number];
+
 export type CsatResponse = {
   ticketId: string;
   score: CsatScore;
   comment?: string;
   createdAt: string;
+  source?: CsatSource;
 };
 
 export type PendingCsatTicket = {
