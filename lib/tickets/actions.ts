@@ -1,6 +1,12 @@
 'use server';
 
 import { ticketCommentSchema, ticketSchema, ticketUpdateSchema } from '@/lib/tickets/schema';
+import {
+  buildAttachmentMessage,
+  buildVisitMessage,
+  isTenantObjectKey,
+  visitMetaPayload,
+} from '@/lib/tickets/activity';
 import { dispatchTicketNotification } from '@/lib/notifications/dispatcher';
 import { getSessionProfile } from '@/lib/auth/session';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
@@ -9,7 +15,16 @@ import { canRole } from '@/lib/rbac/ability';
 import { isCustomerRole } from '@/lib/rbac/roles';
 import { notifyTicketInbox } from '@/lib/notifications/inbox';
 import { normalizePhone, safeNotificationText } from '@/lib/notifications/helpers';
-import { mapTicketRow, textToDescription, withAccounts, withAssets, withContracts, withGroups, type TicketRecord } from '@/lib/tickets/mappers';
+import {
+  mapCommentRow,
+  mapTicketRow,
+  textToDescription,
+  withAccounts,
+  withAssets,
+  withContracts,
+  withGroups,
+  type TicketRecord,
+} from '@/lib/tickets/mappers';
 import { evaluateWorkflow } from '@/lib/workflows/actions';
 import { requireAccountId } from '@/lib/accounts/scope';
 import { applyTicketSlaChange, snapshotSla } from '@/lib/sla/engine';
@@ -117,22 +132,22 @@ async function loadTicket(client: SupabaseClient, ticketId: string, tenantId?: s
     message: string;
     created_at: string;
     created_by?: string | null;
+    kind?: string | null;
+    meta?: unknown;
   }>;
 
   const authorIds = comments.map((item) => item.created_by || item.author_id).filter(Boolean) as string[];
+  const names = new Map<string, string>();
   if (authorIds.length > 0) {
     const { data: profiles } = await client.from('profiles').select('id, full_name').in('id', authorIds);
-    const names = new Map((profiles ?? []).map((row) => [row.id, row.full_name]));
-    ticket.comments = comments
-      .slice()
-      .sort((a, b) => a.created_at.localeCompare(b.created_at))
-      .map((item) => ({
-        id: item.id,
-        author: names.get(item.created_by || item.author_id || '') || 'Agent',
-        comment: item.message,
-        createdAt: item.created_at,
-      }));
+    for (const row of profiles ?? []) names.set(row.id, row.full_name);
   }
+  ticket.comments = comments
+    .slice()
+    .sort((a, b) => a.created_at.localeCompare(b.created_at))
+    .map((item) =>
+      mapCommentRow(item, names.get(item.created_by || item.author_id || '') || undefined),
+    );
 
   const { data: csat } = await client
     .from('ticket_csat')
@@ -628,12 +643,44 @@ export async function addTicketComment(ticketId: string, input: unknown) {
     return { data: null, error: existing.error ?? 'Ticket not found' };
   }
 
+  const tenantId = session.profile.tenantId;
+  const invalidKey = (key?: string) => Boolean(key && !isTenantObjectKey(tenantId, key));
+
+  let kind = parsed.kind;
+  let message = parsed.comment;
+  let meta: Record<string, unknown> = {};
+  let notifyText = parsed.comment;
+
+  if (kind === 'visit' && isCustomerRole(session.profile.role)) {
+    return { data: null, error: 'Unauthorized' };
+  }
+
+  if (kind === 'attachment' && parsed.attachment) {
+    if (invalidKey(parsed.attachment.key)) return { data: null, error: 'Invalid file' };
+    message = buildAttachmentMessage(parsed.attachment);
+    meta = parsed.attachment;
+    notifyText = `Attachment uploaded: ${parsed.attachment.filename}`;
+  } else if (kind === 'visit' && parsed.visit) {
+    if (invalidKey(parsed.visit.before?.key) || invalidKey(parsed.visit.after?.key)) {
+      return { data: null, error: 'Invalid file' };
+    }
+    message = buildVisitMessage(parsed.visit);
+    meta = visitMetaPayload(parsed.visit);
+    notifyText = parsed.visit.notes;
+  } else {
+    kind = 'comment';
+    message = sanitizeCommentHtml(parsed.comment);
+    notifyText = parsed.comment;
+  }
+
   const { error } = await supabase.from('ticket_comments').insert({
-    tenant_id: session.profile.tenantId,
+    tenant_id: tenantId,
     ticket_id: ticketId,
     author_id: session.userId,
     created_by: session.userId,
-    message: sanitizeCommentHtml(parsed.comment),
+    message,
+    kind,
+    meta,
   });
 
   if (error) {
@@ -677,9 +724,9 @@ export async function addTicketComment(ticketId: string, input: unknown) {
     actorName: session.profile.fullName,
     action: 'commented',
   });
-  await afterTicketMutation('ticket.comment_add', reloaded.data, parsed.comment);
+  await afterTicketMutation('ticket.comment_add', reloaded.data, notifyText);
   const comment = reloaded.data.comments.at(-1);
-  return { data: comment ?? { id: ticketId, author: parsed.author, comment: parsed.comment, createdAt: new Date().toISOString() }, error: null };
+  return { data: comment ?? { id: ticketId, author: parsed.author, comment: notifyText, createdAt: new Date().toISOString() }, error: null };
 }
 
 async function afterTicketMutation(

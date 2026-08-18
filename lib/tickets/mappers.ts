@@ -1,11 +1,20 @@
 import type { TicketPendingReason, TicketPriority, TicketStatus, TicketType } from '@/lib/tickets/schema';
 import { isSupportTier, type SupportTier } from '@/lib/tickets/pending';
+import {
+  parseTicketActivity,
+  type TicketAttachmentMeta,
+  type TicketCommentKind,
+  type TicketVisitMeta,
+} from '@/lib/tickets/activity';
 
 export type TicketCommentRecord = {
   id: string;
   author: string;
   comment: string;
   createdAt: string;
+  kind: TicketCommentKind;
+  attachment?: TicketAttachmentMeta;
+  visit?: TicketVisitMeta;
 };
 
 export type TicketRecord = {
@@ -154,8 +163,35 @@ type TicketRow = {
     message: string;
     created_at: string;
     created_by?: string | null;
+    kind?: string | null;
+    meta?: unknown;
   }>;
 };
+
+export function mapCommentRow(
+  comment: {
+    id: string;
+    author_id?: string | null;
+    message: string;
+    created_at: string;
+    created_by?: string | null;
+    kind?: string | null;
+    meta?: unknown;
+    author?: string;
+  },
+  authorName?: string,
+): TicketCommentRecord {
+  const activity = parseTicketActivity(comment);
+  return {
+    id: comment.id,
+    author: authorName || comment.author || (comment.created_by ? 'Agent' : comment.author_id || 'Agent'),
+    comment: activity.comment,
+    createdAt: comment.created_at,
+    kind: activity.kind,
+    attachment: activity.attachment,
+    visit: activity.visit,
+  };
+}
 
 export function mapTicketRow(row: TicketRow): TicketRecord {
   return {
@@ -218,12 +254,7 @@ export function mapTicketRow(row: TicketRow): TicketRecord {
     comments: (row.ticket_comments ?? [])
       .slice()
       .sort((a, b) => a.created_at.localeCompare(b.created_at))
-      .map((comment) => ({
-        id: comment.id,
-        author: comment.created_by ? 'Agent' : comment.author_id || 'Agent',
-        comment: comment.message,
-        createdAt: comment.created_at,
-      })),
+      .map((comment) => mapCommentRow(comment)),
   };
 }
 
@@ -304,15 +335,18 @@ export function withContracts(
 
 export function withCommentAuthors(
   ticket: TicketRecord,
-  comments: Array<{ id: string; author_id?: string | null; message: string; created_at: string; author?: string }>,
+  comments: Array<{
+    id: string;
+    author_id?: string | null;
+    message: string;
+    created_at: string;
+    author?: string;
+    kind?: string | null;
+    meta?: unknown;
+  }>,
 ): TicketRecord {
   return {
     ...ticket,
-    comments: comments.map((comment) => ({
-      id: comment.id,
-      author: comment.author || 'Agent',
-      comment: comment.message,
-      createdAt: comment.created_at,
-    })),
+    comments: comments.map((comment) => mapCommentRow(comment, comment.author)),
   };
 }

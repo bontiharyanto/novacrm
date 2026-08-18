@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { TypeBadge } from '@/components/tickets/type-badge';
 import { ProcessStrip } from '@/components/tickets/process-strip';
 import { CommentEditor, CommentHtml } from '@/components/tickets/comment-editor';
+import { ActivityEntry, type ActivityComment } from '@/components/tickets/activity-entry';
 import { formatRelativeId } from '@/lib/utils/dates';
 import { useRealtimeTable } from '@/lib/supabase/realtime';
 import { useI18n } from '@/components/layout/preferences-provider';
@@ -29,7 +30,7 @@ type TicketItem = {
   dueDate?: string;
   requesterName: string;
   createdAt: string;
-  comments: Array<{ id: string; author: string; comment: string; createdAt: string }>;
+  comments: ActivityComment[];
   csatScore?: number;
   csatComment?: string;
   csatSource?: 'customer' | 'auto_timeout';
@@ -171,13 +172,7 @@ export function PortalTicket({
               {t.portal.opened.replace('{{time}}', formatRelativeId(ticket.createdAt, locale))}
             </p>
             {ticket.comments.map((item) => (
-              <div key={item.id} className="rounded-lg border border-zinc-800 bg-zinc-950/60 p-3">
-                <div className="mb-2 flex items-center justify-between gap-3 text-xs text-zinc-500">
-                  <span className="text-zinc-300">{item.author}</span>
-                  <span>{formatRelativeId(item.createdAt, locale)}</span>
-                </div>
-                <CommentHtml html={item.comment} />
-              </div>
+              <ActivityEntry key={item.id} item={item} />
             ))}
             <div className="space-y-3 border-t border-zinc-800 pt-4">
               <CommentEditor key={editorKey} value={comment} onChange={setComment} />

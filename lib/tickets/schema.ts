@@ -55,10 +55,43 @@ export const ticketUpdateSchema = z.object({
 
 export const ticketStatusUpdateSchema = ticketUpdateSchema;
 
-export const ticketCommentSchema = z.object({
-  author: z.string().min(1),
-  comment: z.string().min(1).max(20000),
+const ticketFileSchema = z.object({
+  key: z.string().min(3).max(400),
+  filename: z.string().min(1).max(180),
+  contentType: z.string().min(1).max(120),
 });
+
+export const ticketCommentSchema = z
+  .object({
+    author: z.string().min(1),
+    comment: z.string().max(20000).optional().default(''),
+    kind: z.enum(['comment', 'attachment', 'visit']).optional().default('comment'),
+    attachment: ticketFileSchema.optional(),
+    visit: z
+      .object({
+        notes: z.string().min(3).max(4000),
+        before: ticketFileSchema.optional(),
+        after: ticketFileSchema.optional(),
+      })
+      .optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.kind === 'visit') {
+      if (!value.visit?.notes.trim()) {
+        ctx.addIssue({ code: 'custom', message: 'Visit notes are required', path: ['visit', 'notes'] });
+      }
+      return;
+    }
+    if (value.kind === 'attachment') {
+      if (!value.attachment?.key) {
+        ctx.addIssue({ code: 'custom', message: 'Attachment is required', path: ['attachment'] });
+      }
+      return;
+    }
+    if (!value.comment.trim()) {
+      ctx.addIssue({ code: 'custom', message: 'Comment is required', path: ['comment'] });
+    }
+  });
 
 export type TicketStatus = z.infer<typeof ticketStatusSchema>;
 export type TicketPriority = z.infer<typeof ticketPrioritySchema>;

@@ -18,6 +18,9 @@ import { ProcessStrip } from '@/components/tickets/process-strip';
 import { formatRelativeId } from '@/lib/utils/dates';
 import { useRealtimeTable } from '@/lib/supabase/realtime';
 import { CommentEditor, CommentHtml } from '@/components/tickets/comment-editor';
+import { ActivityEntry, type ActivityComment } from '@/components/tickets/activity-entry';
+import { VisitReportForm } from '@/components/tickets/visit-report-form';
+import { uploadTicketFile } from '@/lib/tickets/upload-client';
 import { displayTicketNumber, isTicketType, TICKET_TYPES, type TicketType } from '@/lib/tickets/process';
 import {
   defaultPendingReason,
@@ -74,7 +77,7 @@ type TicketItem = {
   accountName?: string;
   accountCode?: string;
   createdAt: string;
-  comments: Array<{ id: string; author: string; comment: string; createdAt: string }>;
+  comments: ActivityComment[];
   problemId?: string;
   problemNumber?: string;
   problemTitle?: string;
@@ -265,24 +268,9 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
   async function handleUpload(file: File) {
     setIsUploading(true);
     try {
-      const presign = await fetch('/api/storage/presign', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filename: file.name, contentType: file.type || 'application/octet-stream' }),
-      });
-      const payload = await presign.json().catch(() => ({}));
-      if (!presign.ok || !payload.data?.url) {
-        toastError(payload.error ?? t.tickets.uploadFailed);
-        return;
-      }
-
-      const uploaded = await fetch(payload.data.url, {
-        method: 'PUT',
-        headers: { 'Content-Type': file.type || 'application/octet-stream' },
-        body: file,
-      });
-      if (!uploaded.ok) {
-        toastError(t.tickets.uploadFailed);
+      const uploaded = await uploadTicketFile(file);
+      if (uploaded.error || !uploaded.data) {
+        toastError(uploaded.error ?? t.tickets.uploadFailed);
         return;
       }
 
@@ -291,7 +279,8 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           author,
-          comment: `Attachment uploaded: ${file.name} (${payload.data.key})`,
+          kind: 'attachment',
+          attachment: uploaded.data,
         }),
       });
       if (!commentResponse.ok) {
@@ -398,20 +387,14 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-sm text-zinc-400">Activity</CardTitle>
+            <CardTitle className="text-sm text-zinc-400">{t.tickets.activity}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="rounded-lg border border-zinc-800 bg-zinc-950/60 p-3 text-xs text-zinc-500">
               Opened {formatRelativeId(ticket.createdAt)} by {ticket.requesterName}
             </div>
             {ticket.comments.map((item) => (
-              <div key={item.id} className="rounded-lg border border-zinc-800 bg-zinc-950/60 p-3">
-                <div className="mb-2 flex items-center justify-between gap-3 text-xs text-zinc-400">
-                  <span>{item.author}</span>
-                  <span>{formatRelativeId(item.createdAt)}</span>
-                </div>
-                <CommentHtml html={item.comment} />
-              </div>
+              <ActivityEntry key={item.id} item={item} />
             ))}
             <div className="space-y-3 border-t border-zinc-800 pt-4">
               <input
@@ -440,6 +423,7 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
                   />
                 </label>
               </div>
+              <VisitReportForm ticketId={ticketId} author={author} onSaved={() => loadTicket()} />
             </div>
           </CardContent>
         </Card>
