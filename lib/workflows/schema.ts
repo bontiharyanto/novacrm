@@ -111,7 +111,7 @@ export const WORKFLOW_ACTIONS: Array<{ id: WorkflowAction; label: string; hint: 
   { id: 'send_email', label: 'Send email', hint: 'Notify requester or assignee' },
   { id: 'send_whatsapp', label: 'Send WhatsApp', hint: 'Reply on WhatsApp' },
   { id: 'send_telegram', label: 'Send Telegram', hint: 'Reply on Telegram' },
-  { id: 'assign', label: 'Assign', hint: 'Set the assignee' },
+  { id: 'assign', label: 'Assign', hint: 'Queue a group or set a person' },
   { id: 'change_status', label: 'Change status', hint: 'Move process state' },
   { id: 'create_ticket', label: 'Create ticket', hint: 'Open an incident if none exists' },
   { id: 'create_asset', label: 'Create asset', hint: 'Open an ITAM record' },

@@ -83,7 +83,7 @@ export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
     group: 'starter',
     name: 'Auto assign new ticket',
     title: 'Standard',
-    hint: 'Ticket created → WFM dispatch to an eligible agent on the assignment group.',
+    hint: 'Ticket created → assign to a tenant group (WFM picks a member) or first available L1.',
     definition: {
       nodes: [
         {
@@ -107,7 +107,7 @@ export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
     group: 'starter',
     name: 'Inbound triage',
     title: 'Normal',
-    hint: 'Any inbound channel → assign → in progress → email requester.',
+    hint: 'Any inbound channel → assign to a group or WFM → in progress → email requester.',
     definition: {
       nodes: [
         {
@@ -147,7 +147,7 @@ export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
     group: 'starter',
     name: 'P1 machine alert',
     title: 'Complex',
-    hint: 'Monitoring alert → if critical, assign + in progress + notify. Else email only.',
+    hint: 'Monitoring alert → if critical, assign to a group or WFM + in progress + notify. Else email only.',
     definition: {
       nodes: [
         {
@@ -200,7 +200,7 @@ export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
     id: 'inbound-whatsapp',
     name: 'WhatsApp inbound',
     title: 'WhatsApp',
-    hint: 'WhatsApp message → WFM assign → in progress → reply on WhatsApp.',
+    hint: 'WhatsApp message → assign to a group or WFM → in progress → reply on WhatsApp.',
     source: 'whatsapp',
     notify: 'send_whatsapp',
   }),
@@ -208,7 +208,7 @@ export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
     id: 'inbound-telegram',
     name: 'Telegram inbound',
     title: 'Telegram',
-    hint: 'Telegram message → reply on the inbound chat → WFM assign → in progress.',
+    hint: 'Telegram message → reply on the inbound chat → assign to a group or WFM → in progress.',
     source: 'telegram',
     notify: 'send_telegram',
     notifyFirst: true,
@@ -217,7 +217,7 @@ export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
     id: 'inbound-email',
     name: 'Email inbound',
     title: 'Email',
-    hint: 'Inbound email → WFM assign → in progress → email requester.',
+    hint: 'Inbound email → assign to a group or WFM → in progress → email requester.',
     source: 'email',
     notify: 'send_email',
   }),
@@ -226,7 +226,7 @@ export const WORKFLOW_TEMPLATES: WorkflowTemplate[] = [
     group: 'inbound',
     name: 'Multichannel inbound',
     title: 'Multichannel',
-    hint: 'WA / Telegram / email → assign → in progress → reply on the same channel.',
+    hint: 'WA / Telegram / email → assign to a group or WFM → in progress → reply on the same channel.',
     definition: {
       nodes: [
         {

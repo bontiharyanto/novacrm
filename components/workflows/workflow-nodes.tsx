@@ -57,7 +57,13 @@ export function ActionNode({ data, selected }: NodeProps<Node<ActionNodeData>>) 
       <Handle type="target" position={Position.Left} className="!h-2.5 !w-2.5 !border-zinc-600 !bg-blue-500" />
       <p className="text-[10px] uppercase tracking-[0.16em] text-zinc-500">Action</p>
       <p className="mt-1 text-sm font-medium text-zinc-50">{actionLabel(data.action)}</p>
-      {data.target ? <p className="truncate font-mono text-[11px] text-zinc-500">{data.target}</p> : null}
+      {data.action === 'assign' ? (
+        <p className="truncate text-[11px] text-zinc-500">
+          {data.label || (data.target?.startsWith('group:') ? 'Group' : data.target ? 'Person' : 'First available')}
+        </p>
+      ) : data.target ? (
+        <p className="truncate font-mono text-[11px] text-zinc-500">{data.target}</p>
+      ) : null}
       <Handle type="source" position={Position.Right} className="!h-2.5 !w-2.5 !border-zinc-600 !bg-zinc-500" />
     </div>
   );

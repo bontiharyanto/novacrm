@@ -50,7 +50,10 @@ export function WorkflowPicker() {
               <span className="text-zinc-200">Inbound</span> — one flow per channel, or Multichannel if WhatsApp,
               Telegram, and email should share triage. Do not run both.
             </p>
-            <p>Assign with an empty agent uses WFM / the assignment group. Save and keep the flow active.</p>
+            <p>
+              Assign can target a group (WFM picks a member), a person, or stay empty for first available. Save and
+              keep the flow active.
+            </p>
           </CardContent>
         </Card>
       </aside>

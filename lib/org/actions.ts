@@ -254,7 +254,10 @@ function mapGroup(
   };
 }
 
-export async function listAssignmentGroups(accountId?: string | null): Promise<AssignmentGroup[]> {
+export async function listAssignmentGroups(
+  accountId?: string | null,
+  options?: { allAccounts?: boolean },
+): Promise<AssignmentGroup[]> {
   const session = await getSessionProfile();
   if (!session || !canRole(session.profile.role, 'read', 'Org')) return [];
   const scoped = await requireAccountId(session, accountId);
@@ -266,7 +269,7 @@ export async function listAssignmentGroups(accountId?: string | null): Promise<A
     .select(GROUP_SELECT)
     .eq('tenant_id', session.profile.tenantId)
     .order('name');
-  if (scoped.accountId) {
+  if (!options?.allAccounts && scoped.accountId) {
     query = query.eq('account_id', scoped.accountId);
   }
 

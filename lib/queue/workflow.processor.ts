@@ -5,7 +5,7 @@ import { sendTelegram } from '@/lib/integrations/telegram';
 import { orderedActionNodes, triggerMatches, definitionFromLegacy } from '@/lib/workflows/graph';
 import type { WorkflowDefinition, WorkflowEvent } from '@/lib/workflows/schema';
 import type { TicketStatus } from '@/lib/tickets/schema';
-import { dispatchTicket, resolveInboundGroupId } from '@/lib/wfm/dispatch';
+import { dispatchTicket, resolveAccountL1GroupId, resolveInboundGroupId } from '@/lib/wfm/dispatch';
 
 export type WorkflowJobPayload = {
   tenantId: string;
@@ -32,6 +32,26 @@ export type WorkflowJobPayload = {
 };
 
 const STATUSES: TicketStatus[] = ['open', 'in_progress', 'waiting', 'hold', 'resolved', 'closed'];
+
+async function refreshTicketContacts(
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
+  tenantId: string,
+  ticketId: string,
+  ticket: WorkflowJobPayload['ticket'],
+) {
+  const { data } = await supabase
+    .from('tickets')
+    .select('assignee_id, assignee_name, assignee_chat_id, requester_phone, requester_email')
+    .eq('id', ticketId)
+    .eq('tenant_id', tenantId)
+    .maybeSingle();
+  if (!data) return;
+  ticket.assigneeId = data.assignee_id ?? undefined;
+  ticket.assigneeName = data.assignee_name ?? undefined;
+  ticket.assigneeChatId = data.assignee_chat_id ?? undefined;
+  ticket.requesterPhone = data.requester_phone ?? ticket.requesterPhone;
+  ticket.requesterEmail = data.requester_email ?? ticket.requesterEmail;
+}
 
 export async function processWorkflowJob(payload: WorkflowJobPayload): Promise<{
   ok: boolean;
@@ -97,19 +117,54 @@ export async function processWorkflowJob(payload: WorkflowJobPayload): Promise<{
       }
 
       if (action === 'assign') {
+        if (target.startsWith('group:')) {
+          const groupId = target.slice(6);
+          const { data: group } = await supabase
+            .from('assignment_groups')
+            .select('id, name')
+            .eq('id', groupId)
+            .eq('tenant_id', payload.tenantId)
+            .eq('is_active', true)
+            .maybeSingle();
+          if (!group) {
+            results.push({ action, ok: false, detail: 'Assignment group not found' });
+            continue;
+          }
+          await supabase
+            .from('tickets')
+            .update({ group_id: group.id, assignee_id: null, assignee_name: null, assignee_chat_id: null })
+            .eq('id', payload.ticketId)
+            .eq('tenant_id', payload.tenantId);
+          const dispatched = await dispatchTicket(payload.tenantId, payload.ticketId, { client: supabase, force: true });
+          results.push({
+            action,
+            ok: dispatched.ok,
+            detail: dispatched.assigneeName
+              ? `${group.name} → ${dispatched.assigneeName}`
+              : dispatched.error ?? group.name,
+          });
+          await refreshTicketContacts(supabase, payload.tenantId, payload.ticketId, payload.ticket);
+          continue;
+        }
         const uuidTarget = /^[0-9a-f-]{36}$/i.test(target);
         if (!uuidTarget) {
           const { data: ticketRow } = await supabase
             .from('tickets')
-            .select('id, group_id, assignee_id')
+            .select('id, group_id, assignee_id, account_id')
             .eq('id', payload.ticketId)
             .eq('tenant_id', payload.tenantId)
             .maybeSingle();
           let groupId = ticketRow?.group_id as string | null | undefined;
           if (!groupId) {
-            groupId = await resolveInboundGroupId(supabase, payload.tenantId);
+            groupId =
+              (await resolveAccountL1GroupId(supabase, payload.tenantId, ticketRow?.account_id)) ??
+              (await resolveInboundGroupId(supabase, payload.tenantId));
             if (groupId) {
-              await supabase.from('tickets').update({ group_id: groupId }).eq('id', payload.ticketId).eq('tenant_id', payload.tenantId);
+              await supabase
+                .from('tickets')
+                .update({ group_id: groupId })
+                .eq('id', payload.ticketId)
+                .eq('tenant_id', payload.tenantId);
             }
           }
           const dispatched = await dispatchTicket(payload.tenantId, payload.ticketId, { client: supabase, force: true });
@@ -118,6 +173,7 @@ export async function processWorkflowJob(payload: WorkflowJobPayload): Promise<{
             ok: dispatched.ok,
             detail: dispatched.assigneeName ?? dispatched.error ?? (dispatched.skipped ? 'skipped' : 'wfm'),
           });
+          await refreshTicketContacts(supabase, payload.tenantId, payload.ticketId, payload.ticket);
           continue;
         }
         const assigneeId = target;
@@ -139,6 +195,7 @@ export async function processWorkflowJob(payload: WorkflowJobPayload): Promise<{
               .eq('id', payload.ticketId)
               .eq('tenant_id', payload.tenantId);
             results.push({ action, ok: true, detail: profile.full_name });
+            await refreshTicketContacts(supabase, payload.tenantId, payload.ticketId, payload.ticket);
           } else {
             results.push({ action, ok: false, detail: 'Assignee not found' });
           }
@@ -194,9 +251,18 @@ export async function processWorkflowJob(payload: WorkflowJobPayload): Promise<{
       }
 
       if (action === 'send_whatsapp') {
-        const phone = payload.ticket.requesterPhone;
+        let phone = payload.ticket.requesterPhone;
+        if (target === 'assignee' && payload.ticket.assigneeId) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('phone')
+            .eq('id', payload.ticket.assigneeId)
+            .eq('tenant_id', payload.tenantId)
+            .maybeSingle();
+          phone = profile?.phone || phone;
+        }
         if (!phone) {
-          results.push({ action, ok: false, detail: 'No requester phone' });
+          results.push({ action, ok: false, detail: 'No WhatsApp number' });
           continue;
         }
         const sent = await sendWhatsApp(
@@ -208,7 +274,19 @@ export async function processWorkflowJob(payload: WorkflowJobPayload): Promise<{
       }
 
       if (action === 'send_telegram') {
-        const chatId = payload.ticket.assigneeChatId;
+        let chatId = payload.ticket.assigneeChatId;
+        if (target !== 'assignee') {
+          const { data: inbound } = await supabase
+            .from('inbound_events')
+            .select('sender')
+            .eq('ticket_id', payload.ticketId)
+            .eq('tenant_id', payload.tenantId)
+            .eq('channel', 'telegram')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (inbound?.sender) chatId = inbound.sender;
+        }
         if (!chatId) {
           results.push({ action, ok: false, detail: 'No Telegram chat' });
           continue;

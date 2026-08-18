@@ -32,8 +32,18 @@ import { getWorkflowTemplate } from '@/lib/workflows/templates';
 import { DEFAULT_ASSET_TYPES, type AssetTypeOption } from '@/lib/assets/types';
 import { toastError, toastSuccess } from '@/components/ui/toast';
 import { useI18n } from '@/components/layout/preferences-provider';
+import { formatGroupQueueLabel } from '@/lib/org/schema';
 
 type AgentOption = { id: string; fullName: string };
+type GroupOption = {
+  id: string;
+  name: string;
+  kind: string;
+  isActive?: boolean;
+  tier?: 'l1' | 'l2' | 'l3';
+  partyKind?: 'internal' | 'vendor' | 'principal';
+  partyName?: string;
+};
 
 const STATUSES = ['open', 'in_progress', 'waiting', 'hold', 'resolved', 'closed'];
 
@@ -75,6 +85,7 @@ function WorkflowEditorInner({ ruleId, template }: { ruleId?: string; template?:
   const [edges, setEdges, onEdgesChange] = useEdgesState(toFlow(seed).edges);
   const [selectedId, setSelectedId] = useState<string | null>('trigger');
   const [agents, setAgents] = useState<AgentOption[]>([]);
+  const [groups, setGroups] = useState<GroupOption[]>([]);
   const [assetTypes, setAssetTypes] = useState<AssetTypeOption[]>(DEFAULT_ASSET_TYPES);
   const [runs, setRuns] = useState<Array<{ id: string; status: string; event: string; createdAt: string }>>([]);
   const [isSaving, setIsSaving] = useState(false);
@@ -89,6 +100,16 @@ function WorkflowEditorInner({ ruleId, template }: { ruleId?: string; template?:
       .then((response) => response.json())
       .then((payload) => setAgents(payload.data ?? []))
       .catch(() => setAgents([]));
+    void fetch('/api/org/groups?all=1')
+      .then((response) => response.json())
+      .then((payload) =>
+        setGroups(
+          ((payload.data ?? []) as GroupOption[]).filter(
+            (group) => group.isActive !== false && group.kind !== 'cab',
+          ),
+        ),
+      )
+      .catch(() => setGroups([]));
     void fetch('/api/assets/types')
       .then((response) => response.json())
       .then((payload) => {
@@ -342,7 +363,7 @@ function WorkflowEditorInner({ ruleId, template }: { ruleId?: string; template?:
             ))}
           </Select>
         </div>
-        {action === 'send_email' ? (
+        {action === 'send_email' || action === 'send_whatsapp' || action === 'send_telegram' ? (
           <div className="space-y-1.5">
             <Label>Send to</Label>
             <Select value={String(selected.data.target ?? 'requester')} onChange={(event) => patchSelected({ target: event.target.value })}>
@@ -353,15 +374,42 @@ function WorkflowEditorInner({ ruleId, template }: { ruleId?: string; template?:
         ) : null}
         {action === 'assign' ? (
           <div className="space-y-1.5">
-            <Label>Assignee</Label>
-            <Select value={String(selected.data.target ?? '')} onChange={(event) => patchSelected({ target: event.target.value })}>
-              <option value="">First available agent</option>
-              {agents.map((agent) => (
-                <option key={agent.id} value={agent.id}>
-                  {agent.fullName}
-                </option>
-              ))}
+            <Label>Assign to</Label>
+            <Select
+              value={String(selected.data.target ?? '')}
+              onChange={(event) => {
+                const value = event.target.value;
+                const group = groups.find((item) => `group:${item.id}` === value);
+                const agent = agents.find((item) => item.id === value);
+                patchSelected({
+                  target: value,
+                  label: group ? formatGroupQueueLabel(group) : agent?.fullName || '',
+                });
+              }}
+            >
+              <option value="">First available (WFM)</option>
+              {groups.length > 0 ? (
+                <optgroup label="Groups">
+                  {groups.map((group) => (
+                    <option key={group.id} value={`group:${group.id}`}>
+                      {formatGroupQueueLabel(group)}
+                    </option>
+                  ))}
+                </optgroup>
+              ) : null}
+              {agents.length > 0 ? (
+                <optgroup label="People">
+                  {agents.map((agent) => (
+                    <option key={agent.id} value={agent.id}>
+                      {agent.fullName}
+                    </option>
+                  ))}
+                </optgroup>
+              ) : null}
             </Select>
+            <p className="text-[11px] leading-5 text-zinc-500">
+              A group queues the ticket there and WFM picks a member. A person assigns that user only.
+            </p>
           </div>
         ) : null}
         {action === 'change_status' ? (
@@ -390,7 +438,7 @@ function WorkflowEditorInner({ ruleId, template }: { ruleId?: string; template?:
         ) : null}
       </div>
     );
-  }, [agents, assetTypes, patchSelected, selected]);
+  }, [agents, assetTypes, groups, patchSelected, selected]);
 
   return (
     <motion.div
