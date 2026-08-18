@@ -23,7 +23,7 @@ Dokumen ini untuk orang yang **memakai** NovaCRM setiap hari: mengerjakan tiket 
 | --- | --- |
 | Tiket: buat, assign ke diri, komentar, lampiran, hold, escalate | **Integrations** (`/settings`) |
 | Aset + pergerakan, CMDB (account yang di-assign) | Membuat user, mengubah SLA, menulis katalog |
-| Baca WFM (occupancy / forecast mengikuti filter account); **Clock in** / **Clock out**; lihat **Roster saya**; ganti presence sendiri; baca penilaian sendiri yang sudah dikirim, lalu **Akui** | Menulis roster tim / skills / on-call / penilaian (itu Lead/SPV). Jangan rewrite roster bersama di lab |
+| Baca WFM (occupancy / forecast mengikuti filter account); **Clock in** / **Clock out**; lihat **Roster saya**; ajukan / terima **Tukar shift**; ganti presence sendiri; baca penilaian sendiri yang sudah dikirim, lalu **Akui** | Menulis roster tim / skills / on-call / penilaian / menyetujui tukar (itu Lead/SPV). Jangan rewrite roster bersama di lab |
 | Appearance (tema / bahasa) | Import massal, workflow, accounts write |
 | Filter **Mine** / **My groups** / **Unassigned** | Melihat account yang bukan membership Anda |
 
@@ -54,6 +54,7 @@ Login **bukan** absensi. Setelah masuk, banner atas menampilkan shift hari ini. 
 3. Ganti **Sibuk** saat handle tiket; **Istirahat** untuk pause singkat.
 4. **Clock out** atau pilih **Offline**. Logout / idle timeout juga clock-out.
 5. **WFM → Roster saya** — hanya baris Anda minggu ini. Tidak bisa unggah atau edit.
+6. **WFM → Tukar shift** — pilih rekan + tanggal masing-masing (harus sudah ada di roster). Rekan **Terima**, lalu SPV **Setujui**. Jangan tukar lewat edit sel.
 
 Simulasi lab: login **`sari.l1@novacrm.app`** / `NovaCRM!2026` (Pagi 08:00–16:00). Cadangan: `budi.l1@novacrm.app` (Siang). Isi roster tim memakai `admin@novacrm.app` atau `spv@novacrm.app`.
 
@@ -155,6 +156,7 @@ Password lab sama: `NovaCRM!2026`. Filter **My groups** menampilkan antrian grou
 ## A.8 Checklist harian agent
 
 - [ ] **Clock in** jika ada shift hari ini; presence **Tersedia** sebelum ambil antrian
+- [ ] Tukar shift lewat **WFM → Tukar shift**, bukan lewat edit roster
 - [ ] Filter **Mine** + **Unassigned** + chip **SLA risk**
 - [ ] Tiket baru di-assign (diri atau group), status bukan mengambang di New
 - [ ] Komentar berbahasa jelas untuk customer

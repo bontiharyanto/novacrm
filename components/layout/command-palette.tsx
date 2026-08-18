@@ -75,6 +75,9 @@ export function CommandPalette({ open, onOpenChange, role }: { open: boolean; on
               <Command.Item className="cmdk-item" onSelect={() => go('/wfm')}>
                 <CalendarClock className="h-3.5 w-3.5" /> {t.nav.wfm}
               </Command.Item>
+              <Command.Item className="cmdk-item" onSelect={() => go('/wfm/swaps')}>
+                <CalendarClock className="h-3.5 w-3.5" /> {t.wfm.swaps}
+              </Command.Item>
               <Command.Item className="cmdk-item" onSelect={() => go('/wfm/reviews')}>
                 <CalendarClock className="h-3.5 w-3.5" /> {t.wfm.reviews}
               </Command.Item>

@@ -137,11 +137,14 @@ Pastikan: home unit, group (L1/L2/L3), **account membership**. Tanpa membership,
 | --- | --- | --- |
 | Occupancy / forecast | Baca, pakai untuk assign | Baca + tindak lanjut kapasitas |
 | Roster / skills / on-call | Baca; clock-in sendiri | Tulis roster (kelas: jangan rewrite shared kecuali isolasi) |
+| Tukar shift | Ajukan / terima | **Setujui** (menerapkan kedua sel) / tolak; lihat gap coverage + clock-in vs roster |
 | Penilaian | Tulis skor 1–5 + catatan; kirim | Sama + boleh edit draf orang lain |
 
 Shift standar per tenant: **Pagi** 08:00–16:00 (Sen–Jum), **Siang** 12:00–20:00 (Sen–Jum), **Malam** 21:00–05:00, **24 jam** (1×24, setiap hari).
 
 **Roster (SPV/admin):** pilih group + shift → **Terapkan ke minggu ini**, atau unggah CSV/Excel (`date`, `email`/`name`, `group`, `shift`). Klik sel kosong menaruh shift terpilih; sel terisi + shift lain = ganti; shift sama = hapus. Agen hanya melihat **Roster saya**.
+
+**Tukar shift (`/wfm/swaps`):** agen mengajukan, rekan menerima, SPV menyetujui. Approval menukar kedua sel secara atomik (log di `wfm_shift_swap_events`). Laporan di halaman yang sama: hari tanpa coverage, dan clock-in vs roster minggu ini.
 
 Presence operasional (bukan login): **Tersedia** = auto-assign; **Sibuk / Istirahat / Offline** = tidak. Assign manual tetap boleh. Clock-in/out tertulis di punch (bukan payroll HR).
 
@@ -193,4 +196,5 @@ SLA ingat: DSAR 30 hari, breach 72 jam. Detail: `/governance`.
 - [ ] Item katalog yang dipakai minggu ini Published dan field-nya jelas
 - [ ] Agent baru punya group + account membership
 - [ ] Roster / on-call minggu berjalan terisi
+- [ ] Antrian **Tukar shift** (`/wfm/swaps`) diputus hari yang sama; cek gap coverage
 - [ ] Insights: tidak ada account yang “diam” padahal SLA breach

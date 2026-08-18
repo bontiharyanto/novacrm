@@ -112,7 +112,7 @@ Add after lunch:
 
 **CMDB.** Always demo on **Bank Nusantara**. Internal is a different graph; **All** mixes accounts. Impact uses the linked asset, not a ticket→CI field. Do not let the class rewrite seeded topology.
 
-**WFM.** Occupancy/forecast follow the account filter. Team roster and the seeded staff review are **shared** — do not let the class rewrite them unless the tenant is isolated. Own **Clock in** + **Roster saya** is the agent lab (`sari.l1@novacrm.app`, Pagi). Login ≠ attendance. Only **Tersedia** is auto-assigned. Auto-assign needs Redis + `npm run worker`. Reviews are 1–5 human scores plus advisory AI — not CSAT-on-person and not an HR pack.
+**WFM.** Occupancy/forecast follow the account filter. Team roster and the seeded staff review are **shared** — do not let the class rewrite them unless the tenant is isolated. Own **Clock in** + **Roster saya** is the agent lab (`sari.l1@novacrm.app`, Pagi). **Tukar shift** is optional (Sari ↔ Budi, trainer as SPV). Login ≠ attendance. Only **Tersedia** is auto-assigned. Auto-assign needs Redis + `npm run worker`. Reviews are 1–5 human scores plus advisory AI — not CSAT-on-person and not an HR pack.
 
 **Realtime.** Two browsers (admin + agent) on the same ticket: a status change should appear without refresh. If it does not, Redis is down — check `/api/health`.
 

@@ -37,6 +37,21 @@ export const applyRosterSchema = z.object({
   toDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
 });
 
+export const wfmSwapStatusSchema = z.enum(['pending_peer', 'pending_lead', 'approved', 'rejected', 'cancelled']);
+
+export const createShiftSwapSchema = z.object({
+  groupId: uuidSchema,
+  counterpartId: uuidSchema,
+  requesterDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  counterpartDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  note: z.preprocess(emptyToUndefined, z.string().max(240).optional()),
+});
+
+export const decideShiftSwapSchema = z.object({
+  id: uuidSchema,
+  note: z.preprocess(emptyToUndefined, z.string().max(240).optional()),
+});
+
 export const timeOffSchema = z.object({
   userId: uuidSchema,
   startsAt: z.string(),
@@ -241,4 +256,55 @@ export type WfmAdherenceRow = {
   expected: boolean;
   actual: WfmPresenceStatus;
   adherent: boolean;
+};
+
+export type WfmSwapStatus = z.infer<typeof wfmSwapStatusSchema>;
+
+export type WfmShiftSwap = {
+  id: string;
+  groupId: string;
+  groupName?: string;
+  requesterId: string;
+  requesterName?: string;
+  counterpartId: string;
+  counterpartName?: string;
+  requesterDate: string;
+  counterpartDate: string;
+  requesterTemplateName?: string;
+  counterpartTemplateName?: string;
+  requesterHours?: string;
+  counterpartHours?: string;
+  status: WfmSwapStatus;
+  note?: string;
+  decisionNote?: string;
+  decidedByName?: string;
+  createdAt: string;
+  appliedAt?: string;
+};
+
+export type WfmSwapEvent = {
+  id: string;
+  action: string;
+  fromStatus?: WfmSwapStatus;
+  toStatus?: WfmSwapStatus;
+  createdAt: string;
+  actorName?: string;
+};
+
+export type WfmCoverageGap = {
+  workDate: string;
+  groupId: string;
+  groupName: string;
+  headcount: number;
+};
+
+export type WfmAttendanceRow = {
+  workDate: string;
+  userId: string;
+  userName: string;
+  groupName: string;
+  shiftName: string;
+  hours: string;
+  clockedIn: boolean;
+  clockInAt?: string;
 };

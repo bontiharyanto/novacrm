@@ -61,6 +61,7 @@ function slugify(value: string) {
 function revalidateWfm() {
   revalidatePath('/wfm');
   revalidatePath('/wfm/roster');
+  revalidatePath('/wfm/swaps');
   revalidatePath('/wfm/skills');
   revalidatePath('/wfm/oncall');
   revalidatePath('/wfm/forecast');
