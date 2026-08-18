@@ -42,6 +42,7 @@ Item katalog: [Catalog & record producer](catalog-guidance.md). Matriks hak: [RB
 | [Restore](../RESTORE.md) | Engineer: latihan restore ke scratch |
 | [Kesiapan operasional](../OPERATIONS.md) | Engineer: pilot vs produksi, kuota Free |
 | [Demo E2E](../DEMO-E2E.md) | Presenter: skrip klik 35–70 menit |
+| [Retensi log](../LOG-RETENTION.md) | Engineer: prune log Supabase + Docker |
 
 ## Demo logins
 

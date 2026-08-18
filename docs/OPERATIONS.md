@@ -4,7 +4,7 @@ Status instance **novacrm.click**: Ubuntu VPS Jakarta (2 vCPU / 4 GB / 60 GB) + 
 
 Dokumen ini membatasi apa yang boleh dijual sebagai “sudah produksi”. Bukan checklist fitur desk (itu di [user-guide](user-guide/README.md)). Demo klik: [DEMO-E2E.md](DEMO-E2E.md).
 
-Cadangan: [BACKUP.md](BACKUP.md). Restore: [RESTORE.md](RESTORE.md). VPS: [VPS.md](VPS.md).
+Cadangan: [BACKUP.md](BACKUP.md). Restore: [RESTORE.md](RESTORE.md). Log yang boleh dipangkas: [LOG-RETENTION.md](LOG-RETENTION.md). VPS: [VPS.md](VPS.md).
 
 ---
 
@@ -74,7 +74,7 @@ Postgres **polos di VPS 4 GB** bukan pengganti drop-in (Auth + Realtime). Self-h
 | Kapan | Apa |
 | --- | --- |
 | Setiap pagi (opsional) | `ls /backups/novacrm-*.sql.gz` + `tail backup.log` |
-| Tiap bulan | Ukuran DB di Supabase Observability |
+| Tiap bulan | Ukuran DB di Supabase Observability; log Docker/tabel — [LOG-RETENTION.md](LOG-RETENTION.md) |
 | Tiap kuartal | Restore drill scratch |
 | Menjelang 400 MB | Billing Pro; jangan klik *Increase disk* di Free dengan harapan gratis |
 
