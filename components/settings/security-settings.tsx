@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -21,8 +21,22 @@ import { IDLE_OPTIONS, parseIdleMinutes, type IdleMinutes } from '@/lib/auth/idl
 import type { PasswordPolicy } from '@/lib/auth/password-policy';
 import { ChangePasswordForm } from '@/components/auth/change-password-form';
 import { useI18n } from '@/components/layout/preferences-provider';
+import { cn } from '@/lib/utils';
 
 type Factor = { id: string; status?: string; friendly_name?: string };
+
+function Section({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="space-y-3">
+      <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-zinc-500">{title}</p>
+      {children}
+    </section>
+  );
+}
+
+function CardFooter({ children }: { children: ReactNode }) {
+  return <div className="flex justify-end border-t border-zinc-800/80 pt-4">{children}</div>;
+}
 
 export function SecuritySettings({
   policy,
@@ -49,6 +63,7 @@ export function SecuritySettings({
 }) {
   const router = useRouter();
   const { t } = useI18n();
+  const copy = t.securityPage;
   const [required, setRequired] = useState(policy.required);
   const [message, setMessage] = useState('');
   const [saving, setSaving] = useState(false);
@@ -64,7 +79,7 @@ export function SecuritySettings({
     setSaving(true);
     const result = await setMfaRequired(required);
     setSaving(false);
-    setMessage(result.error ?? (required ? 'MFA required for password staff after next login.' : 'MFA requirement off. Lab passwords still work.'));
+    setMessage(result.error ?? (required ? copy.mfaHint : copy.mfaLab));
     router.refresh();
   }
 
@@ -77,7 +92,7 @@ export function SecuritySettings({
       return;
     }
     setEnroll(result.data);
-    setMessage('Scan the QR in an authenticator app, then enter the 6-digit code.');
+    setMessage(copy.totpVerify);
   }
 
   async function confirmEnroll() {
@@ -85,7 +100,7 @@ export function SecuritySettings({
     setSaving(true);
     const result = await verifyMfaEnroll(enroll.factorId, code);
     setSaving(false);
-    setMessage(result.error ?? 'Authenticator enrolled.');
+    setMessage(result.error ?? t.common.saved);
     if (!result.error) {
       setEnroll(null);
       setCode('');
@@ -97,269 +112,303 @@ export function SecuritySettings({
     setSaving(true);
     const result = await unenrollOwnMfa(factorId);
     setSaving(false);
-    setMessage(result.error ?? 'Authenticator removed.');
+    setMessage(result.error ?? t.common.saved);
     router.refresh();
   }
 
   return (
-    <div className="grid min-h-[calc(100vh-3.5rem)] lg:grid-cols-[minmax(0,1fr)_320px]">
-      <div className="space-y-6 p-6">
+    <div className="mx-auto max-w-5xl space-y-8 p-6">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Settings</p>
-          <h1 className="text-2xl font-semibold text-zinc-50">Security</h1>
-          <p className="mt-1 text-sm text-zinc-500">TOTP authenticator. Leave the tenant toggle off until production Auth is ready.</p>
+          <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">{copy.kicker}</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-zinc-50">{t.nav.security}</h1>
+          <p className="mt-1 max-w-xl text-sm leading-6 text-zinc-500">{copy.subtitle}</p>
         </div>
-        {forceEnroll ? (
-          <p className="rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
-            This tenant requires MFA. Enroll an authenticator to continue.
-          </p>
-        ) : null}
-        {message ? <p className="text-sm text-zinc-400">{message}</p> : null}
+      </div>
 
+      {forceEnroll ? (
+        <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-100">
+          {copy.forceEnroll}
+        </p>
+      ) : null}
+      {message ? (
+        <p className="rounded-lg border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-sm text-zinc-300">{message}</p>
+      ) : null}
+
+      {canToggle ? (
+        <Section title={copy.tenant}>
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Card>
+              <CardHeader className="p-5 pb-2">
+                <CardTitle className="text-base">{t.passwordPolicy.title}</CardTitle>
+                <CardDescription className="text-xs leading-5">{t.passwordPolicy.hint}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4 p-5 pt-3">
+                <div className="flex flex-wrap items-center gap-3">
+                  <label className="flex items-center gap-2 text-sm text-zinc-200">
+                    <input
+                      type="checkbox"
+                      checked={rotationEnabled}
+                      onChange={(event) => setRotationEnabled(event.target.checked)}
+                      className="h-4 w-4 rounded border-zinc-700 bg-zinc-950"
+                    />
+                    {t.passwordPolicy.enable}
+                  </label>
+                  <div className="flex h-9 items-center overflow-hidden rounded-md border border-zinc-800 bg-zinc-950">
+                    <input
+                      className="h-full w-16 bg-transparent text-center text-sm text-zinc-100 outline-none"
+                      inputMode="numeric"
+                      value={maxAgeDays}
+                      onChange={(event) => setMaxAgeDays(event.target.value)}
+                    />
+                    <span className="border-l border-zinc-800 px-2.5 text-xs text-zinc-500">{t.passwordPolicy.days}</span>
+                  </div>
+                </div>
+                <CardFooter>
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={saving}
+                    onClick={() => {
+                      void (async () => {
+                        setSaving(true);
+                        const result = await savePasswordPolicy({
+                          enabled: rotationEnabled,
+                          maxAgeDays: Number(maxAgeDays),
+                        });
+                        setSaving(false);
+                        setMessage(result.error ?? t.common.saved);
+                        if (!result.error) router.refresh();
+                      })();
+                    }}
+                  >
+                    {t.passwordPolicy.save}
+                  </Button>
+                </CardFooter>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="p-5 pb-2">
+                <CardTitle className="text-base">{t.idlePolicy.title}</CardTitle>
+                <CardDescription className="text-xs leading-5">{t.idlePolicy.hint}</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4 p-5 pt-3">
+                <div className="grid grid-cols-4 gap-1 rounded-lg border border-zinc-800 bg-zinc-950 p-1">
+                  {IDLE_OPTIONS.map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => setIdleMinutes(option)}
+                      className={cn(
+                        'rounded-md px-2 py-1.5 text-xs transition-colors',
+                        idleMinutes === option
+                          ? 'bg-zinc-800 text-zinc-50 nova-accent-chip'
+                          : 'text-zinc-500 hover:text-zinc-200',
+                      )}
+                    >
+                      {option === 0 ? t.idlePolicy.off : t.idlePolicy.minutes.replace('{{n}}', String(option))}
+                    </button>
+                  ))}
+                </div>
+                <CardFooter>
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={saving}
+                    onClick={() => {
+                      void (async () => {
+                        setSaving(true);
+                        const result = await saveIdlePolicy({ minutes: idleMinutes });
+                        setSaving(false);
+                        setMessage(result.error ?? t.common.saved);
+                        if (!result.error) router.refresh();
+                      })();
+                    }}
+                  >
+                    {t.idlePolicy.save}
+                  </Button>
+                </CardFooter>
+              </CardContent>
+            </Card>
+
+            <Card className="lg:col-span-2">
+              <CardHeader className="p-5 pb-2">
+                <CardTitle className="text-base">{copy.mfaTitle}</CardTitle>
+                <CardDescription className="text-xs leading-5">
+                  {policy.labLocked ? copy.mfaLab : copy.mfaHint}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4 p-5 pt-3">
+                <label className="flex items-center gap-2 text-sm text-zinc-200">
+                  <input
+                    type="checkbox"
+                    checked={required}
+                    disabled={policy.labLocked}
+                    onChange={(event) => setRequired(event.target.checked)}
+                    className="h-4 w-4 rounded border-zinc-700 bg-zinc-950"
+                  />
+                  {copy.mfaRequire}
+                </label>
+                <CardFooter>
+                  <Button type="button" size="sm" disabled={saving || policy.labLocked} onClick={() => void saveToggle()}>
+                    {copy.mfaSave}
+                  </Button>
+                </CardFooter>
+              </CardContent>
+            </Card>
+          </div>
+        </Section>
+      ) : null}
+
+      <Section title={copy.account}>
         <Card>
-          <CardHeader>
+          <CardHeader className="p-5 pb-2">
             <CardTitle className="text-base">{t.portal.changePassword}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
             {!forcePassword && passwordDaysLeft != null ? (
-              <p className="text-xs text-zinc-500">{t.passwordPolicy.daysLeft.replace('{{n}}', String(passwordDaysLeft))}</p>
+              <CardDescription className="text-xs">
+                {t.passwordPolicy.daysLeft.replace('{{n}}', String(passwordDaysLeft))}
+              </CardDescription>
             ) : null}
+          </CardHeader>
+          <CardContent className="p-5 pt-3">
             <ChangePasswordForm forced={forcePassword} afterHref={forcePassword ? '/dashboard' : undefined} />
           </CardContent>
         </Card>
 
-        {canToggle ? (
+        <div className="grid gap-4 lg:grid-cols-2">
           <Card>
-            <CardHeader>
-              <CardTitle className="text-base">{t.passwordPolicy.title}</CardTitle>
+            <CardHeader className="p-5 pb-2">
+              <CardTitle className="text-base">WhatsApp</CardTitle>
+              <CardDescription className="text-xs leading-5">{copy.waHint}</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-xs leading-5 text-zinc-500">{t.passwordPolicy.hint}</p>
-              <label className="flex items-center gap-2 text-sm text-zinc-200">
-                <input type="checkbox" checked={rotationEnabled} onChange={(event) => setRotationEnabled(event.target.checked)} />
-                {t.passwordPolicy.enable}
-              </label>
-              <div className="flex items-center gap-2">
+            <CardContent className="space-y-4 p-5 pt-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="whatsapp-phone">{copy.waLabel}</Label>
                 <Input
-                  className="w-24"
+                  id="whatsapp-phone"
+                  inputMode="tel"
+                  value={whatsappPhone}
+                  onChange={(event) => setWhatsappPhone(event.target.value)}
+                  placeholder="0812xxxxxxxx"
+                />
+              </div>
+              <CardFooter>
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={saving}
+                  onClick={() => {
+                    void (async () => {
+                      setSaving(true);
+                      const result = await saveOwnWhatsAppPhone(whatsappPhone);
+                      setSaving(false);
+                      setMessage(result.error ?? t.common.saved);
+                      if (!result.error && result.data?.phone) setWhatsappPhone(result.data.phone);
+                      if (!result.error) router.refresh();
+                    })();
+                  }}
+                >
+                  {copy.waSave}
+                </Button>
+              </CardFooter>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="p-5 pb-2">
+              <CardTitle className="text-base">Telegram</CardTitle>
+              <CardDescription className="text-xs leading-5">{copy.tgHint}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4 p-5 pt-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="telegram-chat-id">{copy.tgLabel}</Label>
+                <Input
+                  id="telegram-chat-id"
                   inputMode="numeric"
-                  value={maxAgeDays}
-                  onChange={(event) => setMaxAgeDays(event.target.value)}
+                  value={telegramChatId}
+                  onChange={(event) => setTelegramChatId(event.target.value)}
+                  placeholder="123456789"
                 />
-                <span className="text-sm text-zinc-500">{t.passwordPolicy.days}</span>
               </div>
-              <Button
-                type="button"
-                disabled={saving}
-                onClick={() => {
-                  void (async () => {
-                    setSaving(true);
-                    const result = await savePasswordPolicy({
-                      enabled: rotationEnabled,
-                      maxAgeDays: Number(maxAgeDays),
-                    });
-                    setSaving(false);
-                    setMessage(result.error ?? t.common.saved);
-                    if (!result.error) router.refresh();
-                  })();
-                }}
-              >
-                {t.passwordPolicy.save}
-              </Button>
+              <CardFooter>
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={saving}
+                  onClick={() => {
+                    void (async () => {
+                      setSaving(true);
+                      const result = await saveOwnTelegramChatId(telegramChatId);
+                      setSaving(false);
+                      setMessage(result.error ?? t.common.saved);
+                      if (!result.error) router.refresh();
+                    })();
+                  }}
+                >
+                  {copy.tgSave}
+                </Button>
+              </CardFooter>
             </CardContent>
           </Card>
-        ) : null}
-
-        {canToggle ? (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">{t.idlePolicy.title}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-xs leading-5 text-zinc-500">{t.idlePolicy.hint}</p>
-              <div className="flex flex-wrap gap-2">
-                {IDLE_OPTIONS.map((option) => (
-                  <button
-                    key={option}
-                    type="button"
-                    onClick={() => setIdleMinutes(option)}
-                    className={`rounded-md border px-2.5 py-1.5 text-xs transition-colors ${
-                      idleMinutes === option
-                        ? 'nova-accent-chip'
-                        : 'border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'
-                    }`}
-                  >
-                    {option === 0 ? t.idlePolicy.off : t.idlePolicy.minutes.replace('{{n}}', String(option))}
-                  </button>
-                ))}
-              </div>
-              <Button
-                type="button"
-                disabled={saving}
-                onClick={() => {
-                  void (async () => {
-                    setSaving(true);
-                    const result = await saveIdlePolicy({ minutes: idleMinutes });
-                    setSaving(false);
-                    setMessage(result.error ?? t.common.saved);
-                    if (!result.error) router.refresh();
-                  })();
-                }}
-              >
-                {t.idlePolicy.save}
-              </Button>
-            </CardContent>
-          </Card>
-        ) : null}
-
-        {canToggle ? (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Require MFA</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <label className="flex items-center gap-2 text-sm text-zinc-200">
-                <input
-                  type="checkbox"
-                  checked={required}
-                  disabled={policy.labLocked}
-                  onChange={(event) => setRequired(event.target.checked)}
-                />
-                Require TOTP for password staff
-              </label>
-              {policy.labLocked ? (
-                <p className="text-xs text-amber-300">Demo tenant is locked off so classroom logins stay `NovaCRM!2026`.</p>
-              ) : (
-                <p className="text-xs text-zinc-500">
-                  Turn this on after hosted Supabase Auth MFA is enabled. SSO (Google / Microsoft) skips app TOTP.
-                </p>
-              )}
-              <Button type="button" disabled={saving || policy.labLocked} onClick={() => void saveToggle()}>
-                Save policy
-              </Button>
-            </CardContent>
-          </Card>
-        ) : null}
+        </div>
 
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base">WhatsApp</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-sm text-zinc-500">
-              Nomor HP pribadi. Admin harus sudah mengisi API Key Fonnte di Integrations. Assign tiket ke Anda
-              masuk ke nomor ini.
-            </p>
-            <div className="space-y-1.5">
-              <Label htmlFor="whatsapp-phone">Nomor WhatsApp</Label>
-              <Input
-                id="whatsapp-phone"
-                inputMode="tel"
-                value={whatsappPhone}
-                onChange={(event) => setWhatsappPhone(event.target.value)}
-                placeholder="0812xxxxxxxx"
-              />
-            </div>
-            <Button
-              type="button"
-              disabled={saving}
-              onClick={() => {
-                void (async () => {
-                  setSaving(true);
-                  const result = await saveOwnWhatsAppPhone(whatsappPhone);
-                  setSaving(false);
-                  setMessage(result.error ?? 'Nomor WhatsApp disimpan. Assign tiket ke Anda akan masuk ke sini.');
-                  if (!result.error && result.data?.phone) setWhatsappPhone(result.data.phone);
-                  if (!result.error) router.refresh();
-                })();
-              }}
-            >
-              Simpan WhatsApp
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Telegram</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-sm text-zinc-500">
-              Buka Telegram, cari <span className="font-mono text-zinc-300">@userinfobot</span>, kirim /start, salin
-              Id. Admin harus sudah mengisi Bot Token di Integrations.
-            </p>
-            <div className="space-y-1.5">
-              <Label htmlFor="telegram-chat-id">Chat ID</Label>
-              <Input
-                id="telegram-chat-id"
-                inputMode="numeric"
-                value={telegramChatId}
-                onChange={(event) => setTelegramChatId(event.target.value)}
-                placeholder="123456789"
-              />
-            </div>
-            <Button
-              type="button"
-              disabled={saving}
-              onClick={() => {
-                void (async () => {
-                  setSaving(true);
-                  const result = await saveOwnTelegramChatId(telegramChatId);
-                  setSaving(false);
-                  setMessage(result.error ?? 'Telegram Chat ID disimpan. Assign tiket ke Anda akan masuk ke bot.');
-                  if (!result.error) router.refresh();
-                })();
-              }}
-            >
-              Simpan Telegram
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
+          <CardHeader className="p-5 pb-2">
             <CardTitle className="text-base">Authenticator</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
             {factors.length === 0 && !enroll ? (
-              <p className="text-sm text-zinc-500">No TOTP factor yet. Optional until the tenant toggle is on.</p>
+              <CardDescription className="text-xs">{copy.totpEmpty}</CardDescription>
             ) : null}
+          </CardHeader>
+          <CardContent className="space-y-3 p-5 pt-3">
             {factors.map((factor) => (
-              <div key={factor.id} className="flex items-center justify-between rounded-lg border border-zinc-800 px-3 py-2">
-                <div>
-                  <p className="text-sm text-zinc-100">{factor.friendly_name || 'Authenticator'}</p>
+              <div
+                key={factor.id}
+                className="flex items-center justify-between gap-3 rounded-lg border border-zinc-800 bg-zinc-950/40 px-3 py-2.5"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm text-zinc-100">{factor.friendly_name || 'Authenticator'}</p>
                   <Badge tone={factor.status === 'verified' ? 'success' : 'neutral'}>{factor.status ?? 'totp'}</Badge>
                 </div>
                 <Button type="button" variant="outline" size="sm" disabled={saving} onClick={() => void remove(factor.id)}>
-                  Remove
+                  {copy.totpRemove}
                 </Button>
               </div>
             ))}
             {enroll ? (
-              <div className="space-y-3">
+              <div className="grid gap-4 sm:grid-cols-[10rem_minmax(0,1fr)]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={enroll.qr} alt="TOTP QR" className="h-40 w-40 rounded-md border border-zinc-800 bg-white p-2" />
-                <p className="font-mono text-xs text-zinc-500">{enroll.secret}</p>
-                <div className="space-y-1.5">
-                  <Label htmlFor="mfa-code">6-digit code</Label>
-                  <Input id="mfa-code" inputMode="numeric" value={code} onChange={(event) => setCode(event.target.value)} />
+                <div className="space-y-3">
+                  <p className="break-all font-mono text-xs text-zinc-500">{enroll.secret}</p>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="mfa-code">{copy.totpCode}</Label>
+                    <Input id="mfa-code" inputMode="numeric" value={code} onChange={(event) => setCode(event.target.value)} />
+                  </div>
+                  <Button type="button" size="sm" disabled={saving || code.trim().length < 6} onClick={() => void confirmEnroll()}>
+                    {copy.totpVerify}
+                  </Button>
                 </div>
-                <Button type="button" disabled={saving || code.trim().length < 6} onClick={() => void confirmEnroll()}>
-                  Verify and enroll
-                </Button>
               </div>
             ) : (
-              <Button type="button" variant="outline" disabled={saving} onClick={() => void beginEnroll()}>
-                Enroll authenticator
-              </Button>
+              <CardFooter>
+                <Button type="button" variant="outline" size="sm" disabled={saving} onClick={() => void beginEnroll()}>
+                  {copy.totpEnroll}
+                </Button>
+              </CardFooter>
             )}
           </CardContent>
         </Card>
-      </div>
-      <aside className="border-t border-zinc-800 bg-zinc-900/40 p-6 text-sm text-zinc-500 lg:border-l lg:border-t-0">
-        Production: enable MFA in hosted Supabase Auth, enroll one admin, then flip Require MFA. Lost phone: another admin
-        removes the factor from the user record.
-      </aside>
+      </Section>
+
+      <Card>
+        <CardHeader className="p-5 pb-2">
+          <CardTitle className="text-base">{copy.notes}</CardTitle>
+        </CardHeader>
+        <CardContent className="p-5 pt-2">
+          <p className="max-w-3xl text-sm leading-6 text-zinc-500">{copy.notesBody}</p>
+        </CardContent>
+      </Card>
     </div>
   );
 }
