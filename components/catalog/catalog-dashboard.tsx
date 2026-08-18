@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Plus } from 'lucide-react';
+import { Copy, Plus } from 'lucide-react';
+import { CatalogCopyDialog } from '@/components/catalog/catalog-copy-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -13,12 +14,13 @@ import { useI18n } from '@/components/layout/preferences-provider';
 import { localizedType } from '@/lib/i18n/labels';
 import type { CatalogCategory, CatalogItem, CatalogVariableSet } from '@/lib/catalog/schema';
 
-export function CatalogDashboard() {
+export function CatalogDashboard({ canCopyCatalog = false }: { canCopyCatalog?: boolean }) {
   const { t, locale } = useI18n();
   const [items, setItems] = useState<CatalogItem[]>([]);
   const [categories, setCategories] = useState<CatalogCategory[]>([]);
   const [sets, setSets] = useState<CatalogVariableSet[]>([]);
   const [loading, setLoading] = useState(true);
+  const [copyOpen, setCopyOpen] = useState(false);
 
   const load = useCallback(async () => {
     const response = await fetch('/api/catalog');
@@ -43,6 +45,15 @@ export function CatalogDashboard() {
           <h1 className="text-2xl font-semibold text-zinc-50">{t.catalog.title}</h1>
         </div>
         <div className="flex gap-2">
+          {canCopyCatalog ? (
+            <button
+              type="button"
+              onClick={() => setCopyOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-md border border-zinc-800 px-2.5 py-1.5 text-xs text-zinc-300 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-zinc-700"
+            >
+              <Copy className="h-3.5 w-3.5" /> {t.catalog.copy.action}
+            </button>
+          ) : null}
           <Link
             href="/catalog/sets/new"
             className="inline-flex items-center gap-1.5 rounded-md border border-zinc-800 px-2.5 py-1.5 text-xs text-zinc-300 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-zinc-700"
@@ -139,6 +150,10 @@ export function CatalogDashboard() {
         <p className="text-xs text-zinc-500">
           {t.catalog.categories}: {categories.map((item) => item.name).join(' · ')}
         </p>
+      ) : null}
+
+      {canCopyCatalog ? (
+        <CatalogCopyDialog open={copyOpen} onClose={() => setCopyOpen(false)} onCopied={() => void load()} />
       ) : null}
     </div>
   );

@@ -536,6 +536,17 @@ export const id: Dictionary = {
     fieldContact: 'Nomor atau email yang bisa dihubungi',
     fieldContactHint: '08xxxxxxxxxx atau nama@perusahaan.com',
     fieldNotes: 'Keterangan tambahan (opsional)',
+    copy: {
+      action: 'Salin dari tenant…',
+      title: 'Salin katalog dari tenant',
+      hint: 'Menyalin kategori, variable set, dan item ke tenant ini. Slug yang sudah ada dipertahankan. Tiket dan akun tidak disalin.',
+      emptySources: 'Belum ada tenant lain yang punya isi katalog.',
+      itemsShort: 'item',
+      summary: '{{categories}} kategori · {{sets}} variable set · {{items}} item',
+      confirm: 'Salin katalog',
+      failed: 'Katalog gagal disalin.',
+      done: 'Tersalin {{items}} item, {{categories}} kategori, {{sets}} set. {{skipped}} item yang sudah ada dilewati.',
+    },
   },
   sla: {
     kicker: 'Konfigurasi',
