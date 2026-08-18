@@ -1,11 +1,21 @@
 #!/bin/sh
 set -eu
 
+export PATH="/usr/local/bin:/usr/bin:/bin:${PATH:-}"
+
 STAMP="${1:-}"
 BACKUP_DIR="${BACKUP_DIR:-/backups}"
 
 if [ -z "$STAMP" ]; then
-  echo "Usage: ./scripts/restore.sh YYYYMMDD"
+  echo "Usage: CONFIRM_RESTORE=1 DATABASE_URL=... ./scripts/restore.sh YYYYMMDD"
+  echo "See docs/RESTORE.md. Never point this at production without an agreed cutover."
+  exit 1
+fi
+
+if [ "${CONFIRM_RESTORE:-}" != "1" ]; then
+  echo "Refusing restore (CONFIRM_RESTORE is not 1)."
+  echo "Use a scratch Supabase DATABASE_URL, then: CONFIRM_RESTORE=1 ./scripts/restore.sh YYYYMMDD"
+  echo "Runbook: docs/RESTORE.md"
   exit 1
 fi
 

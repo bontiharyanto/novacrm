@@ -2,7 +2,7 @@
 
 Runbook instance yang **sudah jalan**: Ubuntu VPS + Traefik + image GHCR + Supabase hosted.
 
-Lab laptop tetap: [LOCAL.md](LOCAL.md). Checklist umum: [MIGRATE-SERVER.md](MIGRATE-SERVER.md), [SERVER.md](SERVER.md), [DEPLOYMENT.md](DEPLOYMENT.md). Cadangan 02:00: [BACKUP.md](BACKUP.md).
+Lab laptop tetap: [LOCAL.md](LOCAL.md). Checklist umum: [MIGRATE-SERVER.md](MIGRATE-SERVER.md), [SERVER.md](SERVER.md), [DEPLOYMENT.md](DEPLOYMENT.md). Cadangan 02:00: [BACKUP.md](BACKUP.md). Restore: [RESTORE.md](RESTORE.md).
 
 Jangan `supabase db reset`. Jangan `npx supabase start` di VPS. Jangan commit file env.
 

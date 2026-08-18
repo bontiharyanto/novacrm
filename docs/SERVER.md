@@ -84,7 +84,7 @@ Make the GHCR package public, or keep `docker login ghcr.io` on the VPS (the wor
 - [ ] Webhook secrets rotated (`WHATSAPP_WEBHOOK_SECRET`, …) — send as `x-webhook-secret` header only, never `?secret=`
 - [ ] MinIO CORS allows `https://$APP_HOST`
 - [ ] Backup: dump sekali + cron 02:00 — [BACKUP.md](BACKUP.md)
-- [ ] Restore drill: `./scripts/restore.sh YYYYMMDD` on a scratch project
+- [ ] Restore drill on a scratch project — [RESTORE.md](RESTORE.md)
 
 ## 6. Rollback
 

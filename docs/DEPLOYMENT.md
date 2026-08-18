@@ -122,8 +122,10 @@ Daily **02:00 Asia/Jakarta** inside the `backup` service (`scripts/cron-backup.s
 
 ```bash
 ./scripts/backup.sh
-./scripts/restore.sh 20260813
+CONFIRM_RESTORE=1 DATABASE_URL=... ./scripts/restore.sh 20260813
 ```
+
+Restore drill: [RESTORE.md](RESTORE.md) (scratch project only).
 
 ## Health
 

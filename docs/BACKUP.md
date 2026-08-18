@@ -88,15 +88,9 @@ Log cron: `/backups/backup.log`.
 
 ## Restore
 
-Hanya ke **project scratch** dulu. Restore ke URI production menimpa data live.
+Runbook lengkap (scratch wajib, `CONFIRM_RESTORE=1`, jangan pakai URI production): [RESTORE.md](RESTORE.md).
 
-```bash
-# di dalam container backup, tanggal = stempel file (YYYYMMDD)
-docker compose --env-file .env.production -f docker-compose.prod.yml exec backup \
-  sh -c 'BACKUP_DIR=/backups /scripts/restore.sh 20260818'
-```
-
-`restore.sh` butuh `DATABASE_URL` (sudah ada di env container). `psql` di image 17 menerima dump 17.
+Dump plain SQL **tanpa DROP**. Restore ke database yang sudah berisi tabel akan gagal. Latihan hanya ke **project Supabase baru**.
 
 Jangan `supabase db reset` di production.
 
@@ -131,4 +125,4 @@ Tanpa variabel itu, dump Postgres tetap ada di volume VPS.
 | --- | --- |
 | `scripts/cron-backup.sh` | Entry crontab 02:00 (muat env, lalu dump) |
 | `scripts/backup.sh` | `pg_dump` + gzip + retensi 7 hari + mirror S3 opsional |
-| `scripts/restore.sh` | `gunzip \| psql` + mirror MinIO jika S3 diisi |
+| `scripts/restore.sh` | `gunzip \| psql`; wajib `CONFIRM_RESTORE=1` + URI scratch — [RESTORE.md](RESTORE.md) |

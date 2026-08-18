@@ -157,7 +157,7 @@ Jangan mulai langkah ini jika DNS belum resolve atau `prod:check` masih placehol
 5. Superadmin: tenant klien di `/tenants` (bukan memakai tenant lab bersama)
 6. MFA: nyalakan Auth TOTP di Supabase, lalu toggle di Settings → Security ([MFA.md](MFA.md))
 7. MinIO CORS izinkan `https://$APP_HOST`
-8. Dump sekali + cron 02:00; uji restore di proyek scratch — [BACKUP.md](BACKUP.md)
+8. Dump sekali + cron 02:00; uji restore di proyek scratch — [BACKUP.md](BACKUP.md), [RESTORE.md](RESTORE.md)
 
 Langkah perintah lengkap: [SERVER.md](SERVER.md) §3–6.
 

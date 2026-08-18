@@ -81,7 +81,7 @@ Sama seperti admin, plus tanggung jawab platform:
 - Webhook: header `x-webhook-secret`, bukan query `?secret=`. Tolak secret `change-me-*`.
 - Ops `:3100` loopback + `OPS_TOKEN` di VPS. Jangan publish 0.0.0.0.
 - Worker: default 1; HA = 2. [WORKERS.md](../WORKERS.md).
-- Backup: dump 02:00 WIB, cek file, restore — [BACKUP.md](../BACKUP.md).
+- Backup: dump 02:00 WIB — [BACKUP.md](../BACKUP.md). Restore drill scratch — [RESTORE.md](../RESTORE.md).
 
 Health: `GET /api/health` — Redis `up`, env lengkap.
 
