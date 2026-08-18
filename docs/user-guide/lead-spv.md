@@ -136,10 +136,16 @@ Pastikan: home unit, group (L1/L2/L3), **account membership**. Tanpa membership,
 | Halaman | Lead | SPV |
 | --- | --- | --- |
 | Occupancy / forecast | Baca, pakai untuk assign | Baca + tindak lanjut kapasitas |
-| Roster / skills / on-call | Baca | Tulis (kelas: jangan rewrite shared roster) |
+| Roster / skills / on-call | Baca; clock-in sendiri | Tulis roster (kelas: jangan rewrite shared kecuali isolasi) |
 | Penilaian | Tulis skor 1–5 + catatan; kirim | Sama + boleh edit draf orang lain |
 
-Occupancy dan forecast mengikuti **filter account**. Roster/skills/on-call **tenant-wide** (bukan per customer). **Penilaian** juga tenant-wide: pilih agen, periode, skor 1–5 (mutu / SLA / kerja sama / kepemilikan), kirim. **Minta AI** mengisi opini kedua dari metrik tiket (bukan skor resmi). Snapshot + AI muncul di detail. Agent hanya melihat penilaian yang sudah dikirim, lalu **Akui**. Bukan form HR tahunan dan bukan CSAT per orang. Kelas: jangan rewrite penilaian seed. Kebijakan dispatch ada di **assignment group** (`/org` — form dispatch = manager/admin). Auto-assign butuh Redis + worker. Lead/SPV menaati group yang sudah ada.
+Shift standar per tenant: **Pagi** 08:00–16:00 (Sen–Jum), **Siang** 12:00–20:00 (Sen–Jum), **Malam** 21:00–05:00, **24 jam** (1×24, setiap hari).
+
+**Roster (SPV/admin):** pilih group + shift → **Terapkan ke minggu ini**, atau unggah CSV/Excel (`date`, `email`/`name`, `group`, `shift`). Klik sel kosong menaruh shift terpilih; sel terisi + shift lain = ganti; shift sama = hapus. Agen hanya melihat **Roster saya**.
+
+Presence operasional (bukan login): **Tersedia** = auto-assign; **Sibuk / Istirahat / Offline** = tidak. Assign manual tetap boleh. Clock-in/out tertulis di punch (bukan payroll HR).
+
+Occupancy dan forecast mengikuti **filter account**. Roster/skills/on-call **tenant-wide**. **Penilaian** juga tenant-wide: skor 1–5, **Minta AI** advisory. Agent **Akui** penilaian yang sudah dikirim. Dispatch di **assignment group** (`/org`). Auto-assign butuh Redis + worker.
 
 ---
 
@@ -179,7 +185,7 @@ SLA ingat: DSAR 30 hari, breach 72 jam. Detail: `/governance`.
 - [ ] SLA risk punya komentar + next action
 - [ ] Hold > 24 jam di-review
 - [ ] CAB hari ini ada keputusan atau jadwal ulang
-- [ ] Assign mengikuti siapa yang on-shift (WFM)
+- [ ] Assign mengikuti siapa yang on-shift **dan** Tersedia (sudah clock-in)
 
 **SPV (tambahan)**
 

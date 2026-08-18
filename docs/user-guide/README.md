@@ -51,7 +51,7 @@ Password lab: `NovaCRM!2026` (bukan produksi).
 | Supervisor | `spv@novacrm.app` | `/dashboard` |
 | Team lead | `lead@novacrm.app` | `/dashboard` |
 | Agent | `agent@novacrm.app` | `/dashboard` |
-| L1 / L2 / L3 / on-call | `sari.l1@` · `raka.l2@` · `maya.l3@` · `andi.oncall@novacrm.app` | `/dashboard` |
+| L1 / L2 / L3 / on-call | `sari.l1@` · `budi.l1@` · `raka.l2@` · `maya.l3@` · `andi.oncall@novacrm.app` | `/dashboard` |
 | Customer | `customer@novacrm.app` | `/portal` |
 
 ## URLs (laptop)

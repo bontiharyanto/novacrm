@@ -23,7 +23,7 @@ Dokumen ini untuk orang yang **memakai** NovaCRM setiap hari: mengerjakan tiket 
 | --- | --- |
 | Tiket: buat, assign ke diri, komentar, lampiran, hold, escalate | **Integrations** (`/settings`) |
 | Aset + pergerakan, CMDB (account yang di-assign) | Membuat user, mengubah SLA, menulis katalog |
-| Baca WFM (occupancy / forecast mengikuti filter account), update kehadiran sendiri; baca penilaian sendiri yang sudah dikirim, lalu **Akui** | Roster / skills / on-call / menulis penilaian (itu Lead/SPV; tenant-wide — jangan rewrite di lab bersama) |
+| Baca WFM (occupancy / forecast mengikuti filter account); **Clock in** / **Clock out**; lihat **Roster saya**; ganti presence sendiri; baca penilaian sendiri yang sudah dikirim, lalu **Akui** | Menulis roster tim / skills / on-call / penilaian (itu Lead/SPV). Jangan rewrite roster bersama di lab |
 | Appearance (tema / bahasa) | Import massal, workflow, accounts write |
 | Filter **Mine** / **My groups** / **Unassigned** | Melihat account yang bukan membership Anda |
 
@@ -36,7 +36,26 @@ Jika daftar kosong: cek switcher **Account** (Internal vs Bank Nusantara), bukan
 3. Switcher **Account** di bawah logo — pilih customer yang sedang dikerjakan, atau **All**.
 4. Tema / bahasa di top bar. Palette `⌘K`. Tiket baru `⌘N`.
 
-Keluar: ikon bawah sidebar.
+Keluar: ikon bawah sidebar. Logout men-set presence **Offline** (clock-out).
+
+## A.2b Shift hari ini dan clock-in
+
+Login **bukan** absensi. Setelah masuk, banner atas menampilkan shift hari ini. Sidebar: **Tersedia / Sibuk / Istirahat / Offline**.
+
+| Presence | EN | Tiket baru (auto-assign) | Masih clocked-in |
+| --- | --- | --- | --- |
+| **Tersedia** | Available | Ya | Ya |
+| **Sibuk** | Busy | Tidak | Ya |
+| **Istirahat** | Break | Tidak | Ya |
+| **Offline** | Offline | Tidak | Tidak |
+
+1. Cek banner: *Shift hari ini* (nama + jam + group). Jika di luar jam: *Di luar jam shift*.
+2. **Clock in** → status **Tersedia**. Tanpa clock-in, default **Offline** (tidak di-auto-assign).
+3. Ganti **Sibuk** saat handle tiket; **Istirahat** untuk pause singkat.
+4. **Clock out** atau pilih **Offline**. Logout / idle timeout juga clock-out.
+5. **WFM → Roster saya** — hanya baris Anda minggu ini. Tidak bisa unggah atau edit.
+
+Simulasi lab: login **`sari.l1@novacrm.app`** / `NovaCRM!2026` (Pagi 08:00–16:00). Cadangan: `budi.l1@novacrm.app` (Siang). Isi roster tim memakai `admin@novacrm.app` atau `spv@novacrm.app`.
 
 ## A.3 Antrian
 
@@ -135,6 +154,7 @@ Password lab sama: `NovaCRM!2026`. Filter **My groups** menampilkan antrian grou
 
 ## A.8 Checklist harian agent
 
+- [ ] **Clock in** jika ada shift hari ini; presence **Tersedia** sebelum ambil antrian
 - [ ] Filter **Mine** + **Unassigned** + chip **SLA risk**
 - [ ] Tiket baru di-assign (diri atau group), status bukan mengambang di New
 - [ ] Komentar berbahasa jelas untuk customer

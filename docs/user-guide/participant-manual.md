@@ -402,7 +402,7 @@ Repeat alerts within 24 hours update the **same** ticket (correlation).
 
 **AI Insights** (`/insights`) — four cards: queue pressure, SLA breach risk, workforce load, account health. Role-aware. Uses the same AI provider as Assistant. Narratives are tenant-scoped; do not treat them as a ticket update.
 
-**WFM** (`/wfm`) — occupancy, roster, skills, on-call, forecast, **reviews**. Occupancy and forecast follow the **account** filter (assignment groups on that account). Roster, skills, on-call, and reviews are **tenant-wide**. Dispatch policy lives on the assignment group (`/org`). Auto-assign needs Redis + `npm run worker`. Classroom: **read** occupancy and forecast; set your own presence if asked. Do **not** rewrite the shared roster, skills, on-call slots, or the seeded staff review unless the trainer says the tenant is isolated. Lead/SPV: **Penilaian** → New → scores 1–5 + notes → **Ask AI** (advisory) → Submit. Agent: open the submitted review and **Akui**. Snapshot and AI scores are period metrics, not the official score.
+**WFM** (`/wfm`) — occupancy, roster, skills, on-call, forecast, **reviews**. Occupancy and forecast follow the **account** filter. Roster, skills, on-call, and reviews are **tenant-wide**. Standard shifts: **Pagi** 08:00–16:00, **Siang** 12:00–20:00, **Malam** 21:00–05:00, **24 jam**. Login is **not** clock-in. After sign-in the banner shows today's shift; **Clock in** sets **Tersedia / Available**. **Sibuk / Busy** and **Istirahat / Break** stay clocked-in but are not auto-assigned. **Offline** is clock-out (also on logout / idle). Agents open **Roster saya** (own week only). SPV/admin apply the week or upload CSV/Excel. Classroom: clock-in and read occupancy/forecast; do **not** rewrite the shared roster, skills, on-call, or the seeded staff review unless the tenant is isolated. Lead/SPV: **Penilaian** → scores 1–5 → **Ask AI** (advisory) → Submit. Agent: **Akui**. Auto-assign needs Redis + `npm run worker`.
 
 **Import** (`/import`) — manager+. Download a template, fill rows, preview, then import only if the preview has no errors.
 
@@ -434,7 +434,9 @@ Password rotation: portal and desk passwords expire every **30 days**. Expired u
 ## Lab 11b — Insights and WFM (full day)
 
 1. Sidebar → **AI Insights**. Run one card if AI is connected (trainer confirms).
-2. Sidebar → **WFM**. Open occupancy, then forecast. Presence (own) is OK. Do not edit the shared roster, skills, or on-call. Open **Reviews** and read the seeded Sari review; do not rewrite it.
+2. Sidebar → **WFM**. Open occupancy, then forecast.
+3. As **`sari.l1@novacrm.app`**: confirm the today-shift banner, **Clock in**, change presence to **Sibuk** then back to **Tersedia**, open **Roster saya** (own row only).
+4. Presence (own) is OK. Do not edit the shared team roster, skills, or on-call unless the trainer isolated the tenant. Open **Reviews** and read the seeded Sari review; do not rewrite it.
 
 ---
 
