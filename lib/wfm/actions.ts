@@ -11,6 +11,8 @@ import {
   rosterEntrySchema,
   skillSchema,
   shiftTemplateSchema,
+  setShiftTemplateActiveSchema,
+  updateShiftTemplateSchema,
   timeOffSchema,
   timeOffStatusSchema,
   type WfmAdherenceRow,
@@ -61,10 +63,15 @@ function slugify(value: string) {
 function revalidateWfm() {
   revalidatePath('/wfm');
   revalidatePath('/wfm/roster');
+  revalidatePath('/wfm/shifts');
   revalidatePath('/wfm/swaps');
   revalidatePath('/wfm/skills');
   revalidatePath('/wfm/oncall');
   revalidatePath('/wfm/forecast');
+}
+
+function writeClient() {
+  return hasServiceRole() ? createSupabaseAdminClient() : null;
 }
 
 export async function listWfmOccupancy(): Promise<WfmOccupancyRow[]> {
@@ -322,6 +329,28 @@ export async function clockSelfOffline(source: 'logout' | 'idle' = 'logout') {
   }
 }
 
+function mapTemplate(row: {
+  id: string;
+  name: string;
+  start_local: string;
+  end_local: string;
+  days: number[] | null;
+  timezone: string;
+  is_active: boolean;
+  rosterCount?: number;
+}): WfmShiftTemplate {
+  return {
+    id: row.id,
+    name: row.name,
+    startLocal: String(row.start_local).slice(0, 5),
+    endLocal: String(row.end_local).slice(0, 5),
+    days: row.days ?? [],
+    timezone: row.timezone,
+    isActive: row.is_active,
+    rosterCount: row.rosterCount,
+  };
+}
+
 export async function listShiftTemplates(): Promise<WfmShiftTemplate[]> {
   const session = await getSessionProfile();
   if (!session || !canRole(session.profile.role, 'read', 'Wfm')) return [];
@@ -333,16 +362,28 @@ export async function listShiftTemplates(): Promise<WfmShiftTemplate[]> {
     .eq('tenant_id', session.profile.tenantId)
     .eq('is_active', true)
     .order('start_local');
+  return sortShiftTemplates((data ?? []).map((row) => mapTemplate(row)));
+}
+
+export async function listShiftTemplateCatalog(): Promise<WfmShiftTemplate[]> {
+  const session = await getSessionProfile();
+  if (!session || !canRole(session.profile.role, 'read', 'Wfm')) return [];
+  const supabase = await createSupabaseServerClient();
+  await ensureDefaultShiftTemplates(supabase, session);
+  const [{ data }, { data: roster }] = await Promise.all([
+    supabase
+      .from('wfm_shift_templates')
+      .select('id, name, start_local, end_local, days, timezone, is_active')
+      .eq('tenant_id', session.profile.tenantId)
+      .order('name'),
+    supabase.from('wfm_roster_entries').select('template_id').eq('tenant_id', session.profile.tenantId),
+  ]);
+  const counts = new Map<string, number>();
+  for (const row of roster ?? []) {
+    counts.set(row.template_id, (counts.get(row.template_id) ?? 0) + 1);
+  }
   return sortShiftTemplates(
-    (data ?? []).map((row) => ({
-      id: row.id,
-      name: row.name,
-      startLocal: String(row.start_local).slice(0, 5),
-      endLocal: String(row.end_local).slice(0, 5),
-      days: row.days ?? [],
-      timezone: row.timezone,
-      isActive: row.is_active,
-    })),
+    (data ?? []).map((row) => mapTemplate({ ...row, rosterCount: counts.get(row.id) ?? 0 })),
   );
 }
 
@@ -351,7 +392,8 @@ async function ensureDefaultShiftTemplates(
   session: NonNullable<Awaited<ReturnType<typeof getSessionProfile>>>,
 ) {
   if (!canRole(session.profile.role, 'create', 'Wfm')) return;
-  const { data: existing } = await supabase
+  const reader = writeClient() ?? supabase;
+  const { data: existing } = await reader
     .from('wfm_shift_templates')
     .select('name')
     .eq('tenant_id', session.profile.tenantId);
@@ -359,7 +401,7 @@ async function ensureDefaultShiftTemplates(
   const missing = DEFAULT_SHIFT_TEMPLATES.filter((template) => !have.has(template.name.toLowerCase()));
   if (missing.length === 0) return;
   const scoped = await requireAccountId(session);
-  const { error } = await supabase.from('wfm_shift_templates').insert(
+  const { error } = await reader.from('wfm_shift_templates').insert(
     missing.map((template) => ({
       tenant_id: session.profile.tenantId,
       account_id: scoped.accountId,
@@ -375,32 +417,86 @@ async function ensureDefaultShiftTemplates(
   if (error) console.error('ensureDefaultShiftTemplates', error.message);
 }
 
+function templateWriteError(message: string) {
+  if (message.includes('idx_wfm_shift_templates_tenant_name') || message.toLowerCase().includes('duplicate')) {
+    return 'A shift with that name already exists';
+  }
+  return message;
+}
+
 export async function createShiftTemplate(input: unknown) {
-  const parsed = shiftTemplateSchema.parse(input);
+  const parsedResult = shiftTemplateSchema.safeParse(input);
+  if (!parsedResult.success) return { data: null, error: formatZodError(parsedResult.error) };
+  const parsed = parsedResult.data;
   const session = await getSessionProfile();
   if (!session || !canRole(session.profile.role, 'create', 'Wfm')) {
     return { data: null, error: 'Unauthorized' };
   }
   const scoped = await requireAccountId(session);
-  const supabase = await createSupabaseServerClient();
+  const supabase = writeClient() ?? (await createSupabaseServerClient());
   const { data, error } = await supabase
     .from('wfm_shift_templates')
     .insert({
       tenant_id: session.profile.tenantId,
       account_id: scoped.accountId,
-      name: parsed.name,
-      start_local: parsed.startLocal,
-      end_local: parsed.endLocal,
+      name: parsed.name.trim(),
+      start_local: parsed.startLocal.slice(0, 5),
+      end_local: parsed.endLocal.slice(0, 5),
       days: parsed.days,
       timezone: parsed.timezone,
-      is_active: parsed.isActive,
+      is_active: parsed.isActive ?? true,
       created_by: session.userId,
     })
     .select('id')
-    .single();
-  if (error) return { data: null, error: error.message };
+    .maybeSingle();
+  if (error) return { data: null, error: templateWriteError(error.message) };
   revalidateWfm();
   return { data, error: null };
+}
+
+export async function updateShiftTemplate(input: unknown) {
+  const parsedResult = updateShiftTemplateSchema.safeParse(input);
+  if (!parsedResult.success) return { data: null, error: formatZodError(parsedResult.error) };
+  const parsed = parsedResult.data;
+  const session = await getSessionProfile();
+  if (!session || !canRole(session.profile.role, 'create', 'Wfm')) {
+    return { data: null, error: 'Unauthorized' };
+  }
+  const supabase = writeClient() ?? (await createSupabaseServerClient());
+  const { error } = await supabase
+    .from('wfm_shift_templates')
+    .update({
+      name: parsed.name.trim(),
+      start_local: parsed.startLocal.slice(0, 5),
+      end_local: parsed.endLocal.slice(0, 5),
+      days: parsed.days,
+      timezone: parsed.timezone,
+      is_active: parsed.isActive ?? true,
+    })
+    .eq('id', parsed.id)
+    .eq('tenant_id', session.profile.tenantId);
+  if (error) return { data: null, error: templateWriteError(error.message) };
+  revalidateWfm();
+  return { data: { id: parsed.id }, error: null };
+}
+
+export async function setShiftTemplateActive(input: unknown) {
+  const parsedResult = setShiftTemplateActiveSchema.safeParse(input);
+  if (!parsedResult.success) return { data: null, error: formatZodError(parsedResult.error) };
+  const parsed = parsedResult.data;
+  const session = await getSessionProfile();
+  if (!session || !canRole(session.profile.role, 'create', 'Wfm')) {
+    return { data: null, error: 'Unauthorized' };
+  }
+  const supabase = writeClient() ?? (await createSupabaseServerClient());
+  const { error } = await supabase
+    .from('wfm_shift_templates')
+    .update({ is_active: parsed.isActive })
+    .eq('id', parsed.id)
+    .eq('tenant_id', session.profile.tenantId);
+  if (error) return { data: null, error: error.message };
+  revalidateWfm();
+  return { data: { id: parsed.id }, error: null };
 }
 
 export async function listRoster(fromDate: string, toDate: string, groupId?: string): Promise<WfmRosterEntry[]> {

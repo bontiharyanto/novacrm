@@ -137,10 +137,11 @@ Pastikan: home unit, group (L1/L2/L3), **account membership**. Tanpa membership,
 | --- | --- | --- |
 | Occupancy / forecast | Baca, pakai untuk assign | Baca + tindak lanjut kapasitas |
 | Roster / skills / on-call | Baca; clock-in sendiri | Tulis roster (kelas: jangan rewrite shared kecuali isolasi) |
+| Shift (jam) | Baca | Ubah jam / hari / timezone; tambah shift custom; sembunyikan dari dropdown |
 | Tukar shift | Ajukan / terima | **Setujui** (menerapkan kedua sel) / tolak; lihat gap coverage + clock-in vs roster |
 | Penilaian | Tulis skor 1–5 + catatan; kirim | Sama + boleh edit draf orang lain |
 
-Shift standar per tenant: **Pagi** 08:00–16:00 (Sen–Jum), **Siang** 12:00–20:00 (Sen–Jum), **Malam** 21:00–05:00, **24 jam** (1×24, setiap hari).
+Shift default per tenant: **Pagi** 08:00–16:00 (Sen–Jum), **Siang** 12:00–20:00 (Sen–Jum), **Malam** 21:00–05:00, **24 jam** (1×24, setiap hari). Jam **boleh diubah** di `/wfm/shifts` (SPV/admin) tanpa rewrite sel roster — semua sel yang memakai template itu ikut jam baru. Kalau minggu lalu dan minggu ini harus jam berbeda, buat shift baru, jangan timpa yang lama.
 
 **Roster (SPV/admin):** pilih group + shift → **Terapkan ke minggu ini**, atau unggah CSV/Excel (`date`, `email`/`name`, `group`, `shift`). Klik sel kosong menaruh shift terpilih; sel terisi + shift lain = ganti; shift sama = hapus. Agen hanya melihat **Roster saya**.
 

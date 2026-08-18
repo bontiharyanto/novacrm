@@ -9,7 +9,7 @@ Account scope: `accessible_account_ids()` — manager+ sees every tenant account
 | --- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
 | Desk tickets / assets / CMDB | own tickets | ● | ● | ● | ● | ● | ● |
 | WFM read / own presence / clock-in / my roster / request or accept swap | | ● | ● | ● | ● | ● | ● |
-| WFM roster write / skills / on-call / approve swap / coverage report | | | | ● | ● | ● | ● |
+| WFM roster write / skills / on-call / shift hours / approve swap / coverage report | | | | ● | ● | ● | ● |
 | Staff review read (own submitted) | | ● | ● | ● | ● | ● | ● |
 | Staff review write | | | ● | ● | ● | ● | ● |
 | Users read | | | ● | ● | ● | ● | ● |

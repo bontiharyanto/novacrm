@@ -1,3 +1,7 @@
+export const SHIFT_TIMEZONES = ['Asia/Jakarta', 'Asia/Makassar', 'Asia/Jayapura'] as const;
+
+export const ISO_WEEKDAYS = [1, 2, 3, 4, 5, 6, 7] as const;
+
 export const DEFAULT_SHIFT_TEMPLATES = [
   { name: 'Pagi', startLocal: '08:00', endLocal: '16:00', days: [1, 2, 3, 4, 5] },
   { name: 'Siang', startLocal: '12:00', endLocal: '20:00', days: [1, 2, 3, 4, 5] },

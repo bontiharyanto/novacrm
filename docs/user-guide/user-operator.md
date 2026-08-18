@@ -23,7 +23,7 @@ Dokumen ini untuk orang yang **memakai** NovaCRM setiap hari: mengerjakan tiket 
 | --- | --- |
 | Tiket: buat, assign ke diri, komentar, lampiran, hold, escalate | **Integrations** (`/settings`) |
 | Aset + pergerakan, CMDB (account yang di-assign) | Membuat user, mengubah SLA, menulis katalog |
-| Baca WFM (occupancy / forecast mengikuti filter account); **Clock in** / **Clock out**; lihat **Roster saya**; ajukan / terima **Tukar shift**; ganti presence sendiri; baca penilaian sendiri yang sudah dikirim, lalu **Akui** | Menulis roster tim / skills / on-call / penilaian / menyetujui tukar (itu Lead/SPV). Jangan rewrite roster bersama di lab |
+| Baca WFM (occupancy / forecast mengikuti filter account); **Clock in** / **Clock out**; lihat **Roster saya**; ajukan / terima **Tukar shift**; ganti presence sendiri; baca penilaian sendiri yang sudah dikirim, lalu **Akui** | Menulis roster tim / jam shift / skills / on-call / penilaian / menyetujui tukar (itu Lead/SPV). Jangan rewrite roster bersama di lab |
 | Appearance (tema / bahasa) | Import massal, workflow, accounts write |
 | Filter **Mine** / **My groups** / **Unassigned** | Melihat account yang bukan membership Anda |
 

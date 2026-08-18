@@ -79,7 +79,7 @@ npm run local:dev
 | L3 | `maya.l3@novacrm.app` | `NovaCRM!2026` |
 | On-call | `andi.oncall@novacrm.app` | `NovaCRM!2026` |
 
-WFM desk: [http://localhost:3000/wfm](http://localhost:3000/wfm) — occupancy, roster (Pagi/Siang/Malam/24 jam), tukar shift, clock-in, skills, on-call, forecast, reviews. Dispatch policy lives on each assignment group.
+WFM desk: [http://localhost:3000/wfm](http://localhost:3000/wfm) — occupancy, roster, shift hours, tukar shift, clock-in, skills, on-call, forecast, reviews. Dispatch policy lives on each assignment group.
 
 ## What to click through
 
@@ -106,7 +106,7 @@ WFM desk: [http://localhost:3000/wfm](http://localhost:3000/wfm) — occupancy, 
 20. `http://localhost:3000/api/health` should show Redis `up`
 21. Sysadmin Ops: [http://127.0.0.1:3100](http://127.0.0.1:3100) — service health, BullMQ queues (`notifications`, `workflows`, `wfm`, `csat`), retry failed jobs. Independent of the desk. Details: [OPS.md](OPS.md). Scale workers: [WORKERS.md](WORKERS.md). Optional: `OPS_TOKEN` + header `x-ops-token`.
 22. AI Insights: [http://localhost:3000/insights](http://localhost:3000/insights) — four cards (queue pressure, SLA risk, workforce load, account health). Needs Groq (or another AI plugin) on **Integrations**.
-23. WFM: [http://localhost:3000/wfm](http://localhost:3000/wfm) — occupancy, roster (Pagi / Siang / Malam / 24 jam; apply week or CSV/Excel), **tukar shift** (`/wfm/swaps`: agen → rekan → SPV), skills, on-call, forecast, reviews (`/wfm/reviews`). Banner + **Clock in** after login; agents see **Roster saya**. Demo: `admin@novacrm.app` apply Pagi, then `sari.l1@novacrm.app` clock-in. Dispatch policy lives on each assignment group.
+23. WFM: [http://localhost:3000/wfm](http://localhost:3000/wfm) — occupancy, roster, **shift hours** (`/wfm/shifts`), **tukar shift** (`/wfm/swaps`: agen → rekan → SPV), skills, on-call, forecast, reviews (`/wfm/reviews`). Banner + **Clock in** after login; agents see **Roster saya**. Demo: `admin@novacrm.app` apply Pagi, then `sari.l1@novacrm.app` clock-in. Dispatch policy lives on each assignment group.
 24. Bulk import: [http://localhost:3000/import](http://localhost:3000/import) — download template → fill → preview → import (manager+).
 25. Integrations catalog: Settings → **Integrations**. Built-in slugs include AI, WhatsApp, Telegram, email, Gmail, Exchange, Slack, Teams, Jira, Salesforce, Entra / Google / Okta / SAML SSO, webhook. **Tambah plugin** adds a tenant card. Google / Microsoft / Okta show login buttons on `/login` when `clientId` is set and the same provider is enabled in Supabase Auth. SAML shows **Continue with SAML** when the plugin has an HTTPS SSO URL + IdP signing cert; ACS is `/api/auth/saml/acs`, SP metadata is `/api/auth/saml/metadata`. Optional `allowedDomains` (e.g. `novacrm.app`) JIT-provisions staff; invited emails copy memberships. MFA TOTP is a tenant toggle (Settings → Security), default off; lab cannot enable it. `/login?tenant=novacrm-demo` selects the tenant.
 

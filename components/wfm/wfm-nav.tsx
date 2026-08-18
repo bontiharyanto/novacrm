@@ -8,6 +8,7 @@ import { useI18n } from '@/components/layout/preferences-provider';
 const tabs = [
   { href: '/wfm', key: 'occupancy' as const },
   { href: '/wfm/roster', key: 'roster' as const },
+  { href: '/wfm/shifts', key: 'shifts' as const },
   { href: '/wfm/swaps', key: 'swaps' as const },
   { href: '/wfm/skills', key: 'skills' as const },
   { href: '/wfm/oncall', key: 'oncall' as const },

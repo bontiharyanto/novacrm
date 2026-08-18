@@ -22,6 +22,15 @@ export const shiftTemplateSchema = z.object({
   isActive: z.boolean().optional().default(true),
 });
 
+export const updateShiftTemplateSchema = shiftTemplateSchema.extend({
+  id: uuidSchema,
+});
+
+export const setShiftTemplateActiveSchema = z.object({
+  id: uuidSchema,
+  isActive: z.boolean(),
+});
+
 export const rosterEntrySchema = z.object({
   userId: uuidSchema,
   groupId: uuidSchema,
@@ -119,6 +128,7 @@ export type WfmShiftTemplate = {
   days: number[];
   timezone: string;
   isActive: boolean;
+  rosterCount?: number;
 };
 
 export type WfmRosterEntry = {
