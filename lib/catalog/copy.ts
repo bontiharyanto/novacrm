@@ -33,12 +33,8 @@ async function requireSuperadmin() {
   return { session, error: null };
 }
 
-export async function listCatalogCopySources(): Promise<CatalogCopySource[]> {
-  const gate = await requireSuperadmin();
-  if (gate.error || !gate.session) return [];
-
+async function listOtherTenants(currentId: string): Promise<CatalogCopySource[]> {
   const admin = createSupabaseAdminClient();
-  const currentId = gate.session.profile.tenantId;
   const { data: tenants } = await admin.from('tenants').select('id, name, slug').neq('id', currentId).order('name');
   if (!tenants?.length) return [];
 
@@ -58,30 +54,55 @@ export async function listCatalogCopySources(): Promise<CatalogCopySource[]> {
   const setCount = countBy(sets);
   const itemCount = countBy(items);
 
-  return tenants
-    .map((row) => ({
-      id: row.id as string,
-      name: row.name as string,
-      slug: row.slug as string,
-      categories: categoryCount.get(row.id as string) ?? 0,
-      sets: setCount.get(row.id as string) ?? 0,
-      items: itemCount.get(row.id as string) ?? 0,
-    }))
-    .filter((row) => row.categories + row.sets + row.items > 0);
+  return tenants.map((row) => ({
+    id: row.id as string,
+    name: row.name as string,
+    slug: row.slug as string,
+    categories: categoryCount.get(row.id as string) ?? 0,
+    sets: setCount.get(row.id as string) ?? 0,
+    items: itemCount.get(row.id as string) ?? 0,
+  }));
+}
+
+export async function listCatalogCopySources(): Promise<CatalogCopySource[]> {
+  const gate = await requireSuperadmin();
+  if (gate.error || !gate.session) return [];
+  return (await listOtherTenants(gate.session.profile.tenantId)).filter(
+    (row) => row.categories + row.sets + row.items > 0,
+  );
+}
+
+export async function listCatalogCopyTargets(): Promise<CatalogCopySource[]> {
+  const gate = await requireSuperadmin();
+  if (gate.error || !gate.session) return [];
+  return listOtherTenants(gate.session.profile.tenantId);
+}
+
+export async function copyCatalogToTenant(destTenantId: string) {
+  const gate = await requireSuperadmin();
+  if (gate.error || !gate.session) return { data: null, error: gate.error ?? 'Unauthorized' };
+  return runCatalogCopy(gate.session.profile.tenantId, destTenantId, gate.session.userId);
 }
 
 export async function copyCatalogFromTenant(sourceTenantId: string) {
   const gate = await requireSuperadmin();
   if (gate.error || !gate.session) return { data: null, error: gate.error ?? 'Unauthorized' };
+  return runCatalogCopy(sourceTenantId, gate.session.profile.tenantId, gate.session.userId);
+}
 
-  if (!TENANT_ID.test(sourceTenantId)) return { data: null, error: 'Invalid tenant' };
-
-  const destTenantId = gate.session.profile.tenantId;
+async function runCatalogCopy(sourceTenantId: string, destTenantId: string, userId: string) {
+  if (!TENANT_ID.test(sourceTenantId) || !TENANT_ID.test(destTenantId)) {
+    return { data: null, error: 'Invalid tenant' };
+  }
   if (sourceTenantId === destTenantId) return { data: null, error: 'Choose a different tenant.' };
 
   const admin = createSupabaseAdminClient();
-  const { data: source } = await admin.from('tenants').select('id').eq('id', sourceTenantId).maybeSingle();
+  const [{ data: source }, { data: dest }] = await Promise.all([
+    admin.from('tenants').select('id').eq('id', sourceTenantId).maybeSingle(),
+    admin.from('tenants').select('id').eq('id', destTenantId).maybeSingle(),
+  ]);
   if (!source) return { data: null, error: 'Source tenant was not found.' };
+  if (!dest) return { data: null, error: 'Destination tenant was not found.' };
 
   const [{ data: sourceCategories }, { data: sourceSets }, { data: sourceItems }, { data: destCategories }, { data: destSets }, { data: destItems }] =
     await Promise.all([
@@ -123,7 +144,7 @@ export async function copyCatalogFromTenant(sourceTenantId: string) {
         description: row.description,
         sort_order: row.sort_order,
         is_active: row.is_active,
-        created_by: gate.session.userId,
+        created_by: userId,
       })
       .select('id')
       .maybeSingle();
@@ -149,7 +170,7 @@ export async function copyCatalogFromTenant(sourceTenantId: string) {
         name: row.name,
         description: row.description,
         variables: row.variables ?? [],
-        created_by: gate.session.userId,
+        created_by: userId,
       })
       .select('id')
       .maybeSingle();
@@ -177,7 +198,7 @@ export async function copyCatalogFromTenant(sourceTenantId: string) {
       priority: row.priority,
       variables: row.variables ?? [],
       is_active: row.is_active,
-      created_by: gate.session.userId,
+      created_by: userId,
     });
     if (error) return { data: null, error: error.message };
     itemSlugs.add(String(row.slug));

@@ -153,7 +153,12 @@ export function CatalogDashboard({ canCopyCatalog = false }: { canCopyCatalog?: 
       ) : null}
 
       {canCopyCatalog ? (
-        <CatalogCopyDialog open={copyOpen} onClose={() => setCopyOpen(false)} onCopied={() => void load()} />
+        <CatalogCopyDialog
+          open={copyOpen}
+          onClose={() => setCopyOpen(false)}
+          onCopied={() => void load()}
+          hasLocalCatalog={items.length + categories.length + sets.length > 0}
+        />
       ) : null}
     </div>
   );

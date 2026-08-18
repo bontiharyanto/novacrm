@@ -556,10 +556,14 @@ export const id: Dictionary = {
     fieldContactHint: '08xxxxxxxxxx atau nama@perusahaan.com',
     fieldNotes: 'Keterangan tambahan (opsional)',
     copy: {
-      action: 'Salin dari tenant…',
+      action: 'Salin katalog…',
       title: 'Salin katalog dari tenant',
       hint: 'Menyalin kategori, variable set, dan item ke tenant ini. Slug yang sudah ada dipertahankan. Tiket dan akun tidak disalin.',
+      toTitle: 'Salin katalog ini ke tenant',
+      toHint:
+        'Menyalin katalog yang sedang Anda lihat ke tenant yang dipilih. Slug yang sudah ada di tujuan dipertahankan. Tiket dan akun tidak disalin.',
       emptySources: 'Belum ada tenant lain yang punya isi katalog.',
+      emptyTargets: 'Belum ada tenant lain.',
       itemsShort: 'item',
       summary: '{{categories}} kategori · {{sets}} variable set · {{items}} item',
       confirm: 'Salin katalog',

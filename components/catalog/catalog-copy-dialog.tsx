@@ -5,44 +5,54 @@ import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { Select } from '@/components/ui/select';
 import { useI18n } from '@/components/layout/preferences-provider';
-import { copyCatalogFromTenant, listCatalogCopySources, type CatalogCopySource } from '@/lib/catalog/copy';
+import {
+  copyCatalogFromTenant,
+  copyCatalogToTenant,
+  listCatalogCopySources,
+  listCatalogCopyTargets,
+  type CatalogCopySource,
+} from '@/lib/catalog/copy';
 
 export function CatalogCopyDialog({
   open,
   onClose,
   onCopied,
+  hasLocalCatalog,
 }: {
   open: boolean;
   onClose: () => void;
   onCopied: () => void;
+  hasLocalCatalog: boolean;
 }) {
   const { t } = useI18n();
   const copy = t.catalog.copy;
-  const [sources, setSources] = useState<CatalogCopySource[]>([]);
-  const [sourceId, setSourceId] = useState('');
+  const pushOut = hasLocalCatalog;
+  const [rows, setRows] = useState<CatalogCopySource[]>([]);
+  const [tenantId, setTenantId] = useState('');
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState('');
 
   useEffect(() => {
     if (!open) return;
     setMessage('');
-    void listCatalogCopySources().then((rows) => {
-      setSources(rows);
-      setSourceId((current) => current || rows[0]?.id || '');
+    const load = pushOut ? listCatalogCopyTargets : listCatalogCopySources;
+    void load().then((next) => {
+      setRows(next);
+      setTenantId((current) => current || next[0]?.id || '');
     });
-  }, [open]);
+  }, [open, pushOut]);
 
-  const selected = sources.find((row) => row.id === sourceId);
+  const selected = rows.find((row) => row.id === tenantId);
 
   return (
-    <Dialog open={open} title={copy.title} onClose={onClose}>
+    <Dialog open={open} title={pushOut ? copy.toTitle : copy.title} onClose={onClose}>
       <div className="space-y-4">
-        <p className="text-sm leading-6 text-zinc-500">{copy.hint}</p>
-        {sources.length === 0 ? (
-          <p className="text-sm text-zinc-400">{copy.emptySources}</p>
+        <p className="text-sm leading-6 text-zinc-500">{pushOut ? copy.toHint : copy.hint}</p>
+        {rows.length === 0 ? (
+          <p className="text-sm text-zinc-400">{pushOut ? copy.emptyTargets : copy.emptySources}</p>
         ) : (
-          <Select value={sourceId} onChange={(event) => setSourceId(event.target.value)}>
-            {sources.map((row) => (
+          <Select value={tenantId} onChange={(event) => setTenantId(event.target.value)}>
+            {rows.map((row) => (
               <option key={row.id} value={row.id}>
                 {row.name} ({row.slug}) · {row.items} {copy.itemsShort}
               </option>
@@ -64,11 +74,13 @@ export function CatalogCopyDialog({
           </Button>
           <Button
             type="button"
-            disabled={pending || !sourceId}
+            disabled={pending || !tenantId}
             onClick={() => {
               void (async () => {
                 setPending(true);
-                const result = await copyCatalogFromTenant(sourceId);
+                const result = pushOut
+                  ? await copyCatalogToTenant(tenantId)
+                  : await copyCatalogFromTenant(tenantId);
                 setPending(false);
                 if (result.error || !result.data) {
                   setMessage(result.error ?? copy.failed);

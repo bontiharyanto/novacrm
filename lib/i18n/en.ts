@@ -553,10 +553,14 @@ export const en = {
     fieldContactHint: '08xxxxxxxxxx or name@company.com',
     fieldNotes: 'Additional notes (optional)',
     copy: {
-      action: 'Copy from tenant…',
+      action: 'Copy catalog…',
       title: 'Copy catalog from tenant',
       hint: 'Copies categories, variable sets, and items into this tenant. Existing slugs are kept. Tickets and accounts are not copied.',
+      toTitle: 'Copy this catalog to a tenant',
+      toHint:
+        'Copies the catalog you are viewing into the tenant you pick. Existing slugs there are kept. Tickets and accounts are not copied.',
       emptySources: 'No other tenant has catalog content yet.',
+      emptyTargets: 'No other tenant is available.',
       itemsShort: 'items',
       summary: '{{categories}} categories · {{sets}} variable sets · {{items}} items',
       confirm: 'Copy catalog',
