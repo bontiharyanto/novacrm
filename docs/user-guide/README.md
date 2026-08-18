@@ -41,6 +41,7 @@ Item katalog: [Catalog & record producer](catalog-guidance.md). Matriks hak: [RB
 | [Backup](../BACKUP.md) | Engineer: dump 02:00 WIB |
 | [Restore](../RESTORE.md) | Engineer: latihan restore ke scratch |
 | [Kesiapan operasional](../OPERATIONS.md) | Engineer: pilot vs produksi, kuota Free |
+| [Demo E2E](../DEMO-E2E.md) | Presenter: skrip klik 35–70 menit |
 
 ## Demo logins
 
@@ -71,7 +72,7 @@ Always tell the class **which URL** they should use before the first login.
 
 ## How to use this pack
 
-1. Facilitator reads the trainer guide the day before class.
+1. Facilitator reads the trainer guide the day before class. For a short stakeholder walkthrough use [Demo E2E](../DEMO-E2E.md).
 2. Print or share the participant manual (PDF from Markdown is fine).
 3. Run labs in order. Do not skip **Account switcher** — most CMDB/asset demos are scoped to **Bank Nusantara**.
 4. End with the portal lab so agents see the customer experience.

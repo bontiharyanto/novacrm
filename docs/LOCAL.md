@@ -1,6 +1,7 @@
 # Local laptop test
 
 Operator training (login, tickets, CMDB, portal): [user-guide/README.md](user-guide/README.md).  
+Skrip demo presenter (35–70 menit): [DEMO-E2E.md](DEMO-E2E.md).  
 Sysadmin console: [OPS.md](OPS.md).  
 Produksi `novacrm.click` (VPS + cara push kode): [VPS.md](VPS.md). `.env.production` tidak masuk git.
 

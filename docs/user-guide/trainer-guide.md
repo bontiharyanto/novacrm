@@ -2,7 +2,7 @@
 # NovaCRM Trainer Guide
 
 **Document type:** facilitator runbook  
-**Companion:** [Participant manual](participant-manual.md) · daily role playbooks: [Admin](admin-system.md) · [User](user-operator.md) · [Team Lead / SPV](lead-spv.md) · [Manager](manager-ops.md) · [Superadmin](superadmin.md)  
+**Companion:** [Participant manual](participant-manual.md) · **skrip demo singkat:** [DEMO-E2E](../DEMO-E2E.md) · daily role playbooks: [Admin](admin-system.md) · [User](user-operator.md) · [Team Lead / SPV](lead-spv.md) · [Manager](manager-ops.md) · [Superadmin](superadmin.md)  
 **Duration options:** half day (3.5 h) or full day (6.5 h)  
 **Class size:** 6–12 (pair on one laptop if needed)
 
