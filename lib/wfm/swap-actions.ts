@@ -17,6 +17,7 @@ import { createSupabaseAdminClient, hasServiceRole } from '@/lib/supabase/admin'
 import { formatZodError } from '@/lib/validation/zod-error';
 import { eachYmd, formatShiftHours } from '@/lib/wfm/default-shifts';
 import { zonedYmd } from '@/lib/wfm/time';
+import { notifySwapInbox, staffIdsAtLeast } from '@/lib/notifications/inbox';
 
 function revalidateSwaps() {
   revalidatePath('/wfm');
@@ -168,6 +169,24 @@ async function findRosterCell(tenantId: string, userId: string, groupId: string,
   return data;
 }
 
+async function pingSwap(
+  tenantId: string,
+  actorId: string,
+  userIds: string[],
+  title: string,
+  body: string,
+) {
+  try {
+    await notifySwapInbox({ tenantId, actorId, userIds, title, body });
+  } catch (error) {
+    console.error('[swap] inbox', error instanceof Error ? error.message : error);
+  }
+}
+
+async function supervisorAudience(tenantId: string) {
+  return staffIdsAtLeast(tenantId, 'supervisor');
+}
+
 export async function createShiftSwap(input: unknown) {
   const parsedResult = createShiftSwapSchema.safeParse(input);
   if (!parsedResult.success) return { data: null, error: formatZodError(parsedResult.error) };
@@ -221,6 +240,13 @@ export async function createShiftSwap(input: unknown) {
     requesterDate: parsed.requesterDate,
     counterpartDate: parsed.counterpartDate,
   });
+  await pingSwap(
+    session.profile.tenantId,
+    session.userId,
+    [parsed.counterpartId],
+    'Shift swap requested',
+    `${session.profile.fullName} wants to swap ${parsed.requesterDate} with your ${parsed.counterpartDate}. Open WFM → Swaps to accept.`,
+  );
   revalidateSwaps();
   return { data, error: null };
 }
@@ -235,7 +261,7 @@ export async function acceptShiftSwap(input: unknown) {
   const supabase = writeClient() ?? (await createSupabaseServerClient());
   const { data: current } = await supabase
     .from('wfm_shift_swaps')
-    .select('id, status, counterpart_id, tenant_id')
+    .select('id, status, requester_id, counterpart_id, tenant_id')
     .eq('id', parsedResult.data.id)
     .eq('tenant_id', session.profile.tenantId)
     .maybeSingle();
@@ -249,6 +275,23 @@ export async function acceptShiftSwap(input: unknown) {
     .eq('status', 'pending_peer');
   if (error) return { data: null, error: error.message };
   await logEvent(session.profile.tenantId, current.id, session.userId, 'peer_accepted', 'pending_peer', 'pending_lead');
+  const leads = (await supervisorAudience(session.profile.tenantId)).filter(
+    (id) => id !== current.requester_id,
+  );
+  await pingSwap(
+    session.profile.tenantId,
+    session.userId,
+    [current.requester_id],
+    'Swap accepted — waiting for supervisor',
+    `${session.profile.fullName} accepted. A supervisor still needs to apply the roster.`,
+  );
+  await pingSwap(
+    session.profile.tenantId,
+    session.userId,
+    leads,
+    'Swap needs approval',
+    `${session.profile.fullName} accepted a shift swap. Open WFM → Swaps to approve.`,
+  );
   revalidateSwaps();
   return { data: { id: current.id }, error: null };
 }
@@ -295,6 +338,31 @@ export async function rejectShiftSwap(input: unknown) {
     next,
     { note: parsedResult.data.note },
   );
+  if (next === 'cancelled') {
+    await pingSwap(
+      session.profile.tenantId,
+      session.userId,
+      [current.counterpart_id],
+      'Swap cancelled',
+      `${session.profile.fullName} cancelled the shift swap.`,
+    );
+  } else if (isPeer) {
+    await pingSwap(
+      session.profile.tenantId,
+      session.userId,
+      [current.requester_id],
+      'Swap declined',
+      `${session.profile.fullName} declined the shift swap.`,
+    );
+  } else {
+    await pingSwap(
+      session.profile.tenantId,
+      session.userId,
+      [current.requester_id, current.counterpart_id],
+      'Swap declined',
+      `${session.profile.fullName} declined the shift swap.`,
+    );
+  }
   revalidateSwaps();
   return { data: { id: current.id }, error: null };
 }
@@ -309,7 +377,7 @@ export async function approveShiftSwap(input: unknown) {
   const supabase = await createSupabaseServerClient();
   const { data: current } = await supabase
     .from('wfm_shift_swaps')
-    .select('id, status')
+    .select('id, status, requester_id, counterpart_id')
     .eq('id', parsedResult.data.id)
     .eq('tenant_id', session.profile.tenantId)
     .maybeSingle();
@@ -330,6 +398,13 @@ export async function approveShiftSwap(input: unknown) {
       .eq('id', current.id);
   }
   await logEvent(session.profile.tenantId, current.id, session.userId, 'lead_approved', 'pending_lead', 'approved');
+  await pingSwap(
+    session.profile.tenantId,
+    session.userId,
+    [current.requester_id, current.counterpart_id],
+    'Swap approved',
+    `${session.profile.fullName} applied the shift swap. Check WFM → Roster.`,
+  );
   revalidateSwaps();
   return { data: { id: current.id }, error: null };
 }

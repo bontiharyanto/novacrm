@@ -3,7 +3,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { createSupabaseAdminClient, hasServiceRole } from '@/lib/supabase/admin';
 import { isCustomerRole, isStaffRole, parseAppRole, ROLE_RANK, type AppRole } from '@/lib/rbac/roles';
 
-export const INBOX_KINDS = ['assign', 'comment', 'status', 'rca', 'ticket'] as const;
+export const INBOX_KINDS = ['assign', 'comment', 'status', 'rca', 'ticket', 'swap'] as const;
 export type InboxKind = (typeof INBOX_KINDS)[number];
 
 export type InboxItem = {
@@ -419,4 +419,24 @@ export async function notifyTicketInbox(input: {
       includeActor: input.event === 'ticket.create',
     });
   }
+}
+
+export async function notifySwapInbox(input: {
+  tenantId: string;
+  actorId: string;
+  userIds: string[];
+  title: string;
+  body: string;
+}) {
+  return createInboxItems({
+    tenantId: input.tenantId,
+    actorId: input.actorId,
+    items: input.userIds.map((userId) => ({
+      userId,
+      kind: 'swap' as const,
+      title: input.title,
+      body: input.body,
+      href: '/wfm/swaps',
+    })),
+  });
 }

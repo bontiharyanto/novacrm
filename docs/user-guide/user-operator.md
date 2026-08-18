@@ -54,7 +54,7 @@ Login **bukan** absensi. Setelah masuk, banner atas menampilkan shift hari ini. 
 3. Ganti **Sibuk** saat handle tiket; **Istirahat** untuk pause singkat.
 4. **Clock out** atau pilih **Offline**. Logout / idle timeout juga clock-out.
 5. **WFM → Roster saya** — hanya baris Anda minggu ini. Tidak bisa unggah atau edit.
-6. **WFM → Tukar shift** — pilih rekan + tanggal masing-masing (harus sudah ada di roster). Rekan **Terima**, lalu SPV **Setujui**. Jangan tukar lewat edit sel.
+6. **WFM → Tukar shift** — pilih rekan + tanggal masing-masing (harus sudah ada di roster). Rekan mendapat **lonceng**, lalu **Terima**. SPV mendapat lonceng untuk **Setujui**. Jangan tukar lewat edit sel.
 
 Simulasi lab: login **`sari.l1@novacrm.app`** / `NovaCRM!2026` (Pagi 08:00–16:00). Cadangan: `budi.l1@novacrm.app` (Siang). Isi roster tim memakai `admin@novacrm.app` atau `spv@novacrm.app`.
 

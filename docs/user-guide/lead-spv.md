@@ -145,7 +145,7 @@ Shift default per tenant: **Pagi** 08:00–16:00 (Sen–Jum), **Siang** 12:00–
 
 **Roster (SPV/admin):** pilih group + shift → **Terapkan ke minggu ini**, atau unggah CSV/Excel (`date`, `email`/`name`, `group`, `shift`). Klik sel kosong menaruh shift terpilih; sel terisi + shift lain = ganti; shift sama = hapus. Agen hanya melihat **Roster saya**.
 
-**Tukar shift (`/wfm/swaps`):** agen mengajukan, rekan menerima, SPV menyetujui. Approval menukar kedua sel secara atomik (log di `wfm_shift_swap_events`). Laporan di halaman yang sama: hari tanpa coverage, dan clock-in vs roster minggu ini.
+**Tukar shift (`/wfm/swaps`):** agen mengajukan, rekan menerima, SPV menyetujui. Lonceng header: rekan saat diajukan, pengaju saat diterima/ditolak, SPV saat menunggu approval. Approval menukar kedua sel secara atomik (log di `wfm_shift_swap_events`). Laporan di halaman yang sama: hari tanpa coverage, dan clock-in vs roster minggu ini.
 
 Presence operasional (bukan login): **Tersedia** = auto-assign; **Sibuk / Istirahat / Offline** = tidak. Assign manual tetap boleh. Clock-in/out tertulis di punch (bukan payroll HR).
 
