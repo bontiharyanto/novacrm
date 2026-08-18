@@ -88,6 +88,7 @@ export function reportSearchParams(input: {
   to?: string;
   format?: string;
   preview?: boolean;
+  kind?: string;
 }) {
   const params = new URLSearchParams();
   if (input.preset === 'custom' && input.from && input.to) {
@@ -98,5 +99,6 @@ export function reportSearchParams(input: {
   }
   if (input.format) params.set('format', input.format);
   if (input.preview) params.set('preview', '1');
+  if (input.kind) params.set('kind', input.kind);
   return params.toString();
 }

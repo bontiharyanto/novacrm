@@ -8,6 +8,9 @@ import {
   reportToPdf,
   reportToXlsx,
 } from '@/lib/reports/export';
+import { wfmReportFilename, wfmReportToCsv, wfmReportToXlsx } from '@/lib/reports/wfm-export';
+import { parseReportPeriod } from '@/lib/reports/period';
+import { listWfmAttendance, listWfmCoverage } from '@/lib/wfm/swap-actions';
 import type { ReportExportFormat } from '@/lib/reports/schema';
 
 function parseFormat(value: string | null): ReportExportFormat | null {
@@ -16,13 +19,42 @@ function parseFormat(value: string | null): ReportExportFormat | null {
 }
 
 export async function GET(request: NextRequest) {
-  const auth = await requireApiUser('read', 'Ticket');
-  if (auth.error) return auth.error;
-
+  const kind = request.nextUrl.searchParams.get('kind');
   const format = parseFormat(request.nextUrl.searchParams.get('format'));
   if (!format) {
     return NextResponse.json({ data: null, error: 'format must be csv, xlsx, or pdf' }, { status: 400 });
   }
+
+  if (kind === 'workforce') {
+    const auth = await requireApiUser('create', 'Wfm');
+    if (auth.error) return auth.error;
+    if (format === 'pdf') {
+      return NextResponse.json({ data: null, error: 'Workforce export is CSV or Excel only' }, { status: 400 });
+    }
+    const period = parseReportPeriod({
+      range: request.nextUrl.searchParams.get('range'),
+      from: request.nextUrl.searchParams.get('from'),
+      to: request.nextUrl.searchParams.get('to'),
+    });
+    const [coverage, attendance] = await Promise.all([
+      listWfmCoverage(period.startKey, period.endKey),
+      listWfmAttendance(period.startKey, period.endKey),
+    ]);
+    const body =
+      format === 'xlsx'
+        ? await wfmReportToXlsx(coverage, attendance)
+        : Buffer.from(wfmReportToCsv(coverage, attendance), 'utf8');
+    return new NextResponse(new Uint8Array(body), {
+      headers: {
+        'Content-Type': exportContentType(format),
+        'Content-Disposition': `attachment; filename="${wfmReportFilename(period.startKey, period.endKey, format)}"`,
+        'Cache-Control': 'no-store',
+      },
+    });
+  }
+
+  const auth = await requireApiUser('read', 'Ticket');
+  if (auth.error) return auth.error;
 
   const report = await getReportSnapshot({
     range: request.nextUrl.searchParams.get('range'),

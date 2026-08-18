@@ -870,6 +870,7 @@ export const en = {
     swaps: 'Swaps',
     swapsHint:
       'Agent requests a swap, the other agent accepts, then a supervisor applies both roster cells at once. Same day swaps shift type; different days trade the duty.',
+    swapsReportLink: 'Coverage and clock-in export: Reports → Workforce.',
     swapRequest: 'Request swap',
     swapSubmit: 'Send request',
     swapAccept: 'Accept',

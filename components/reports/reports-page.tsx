@@ -36,8 +36,12 @@ const RANGES: Array<{ id: ReportPreset; label: string }> = [
 ];
 
 const FORMATS: ReportExportFormat[] = ['csv', 'xlsx', 'pdf'];
+const WFM_FORMATS: Array<Exclude<ReportExportFormat, 'pdf'>> = ['csv', 'xlsx'];
 
-export function ReportsPage() {
+type ReportKind = 'tickets' | 'workforce';
+
+export function ReportsPage({ canWorkforce = false }: { canWorkforce?: boolean }) {
+  const [kind, setKind] = useState<ReportKind>('tickets');
   const [preset, setPreset] = useState<ReportPreset>(30);
   const [from, setFrom] = useState(() => formatDay(subDays(new Date(), 29)));
   const [to, setTo] = useState(() => formatDay(new Date()));
@@ -53,13 +57,17 @@ export function ReportsPage() {
   const minKey = formatDay(subDays(new Date(), REPORT_MAX_DAYS - 1));
 
   const load = useCallback(async () => {
+    if (kind === 'workforce') {
+      setLoading(false);
+      return;
+    }
     const query = reportSearchParams({ preset, from, to });
     if (!query) return;
     const response = await fetch(`/api/reports?${query}`);
     const payload = await response.json();
     setReport(payload.data);
     setLoading(false);
-  }, [preset, from, to]);
+  }, [kind, preset, from, to]);
 
   useEffect(() => {
     void load();
@@ -70,6 +78,13 @@ export function ReportsPage() {
   function resetPreview() {
     setShowPreview(false);
     setReviewedKey('');
+  }
+
+  function changeKind(next: ReportKind) {
+    if (next === kind) return;
+    resetPreview();
+    if (next === 'workforce' && format === 'pdf') setFormat('xlsx');
+    setKind(next);
   }
 
   function changePreset(next: ReportPreset) {
@@ -96,18 +111,28 @@ export function ReportsPage() {
   }
 
   async function download() {
-    if (!report) return;
     setExporting(true);
     try {
-      const response = await fetch(
-        `/api/reports/export?from=${report.periodStart}&to=${report.periodEnd}&format=${format}`,
-      );
+      const query =
+        kind === 'workforce'
+          ? reportSearchParams({ preset, from, to, format, kind: 'workforce' })
+          : report
+            ? `from=${report.periodStart}&to=${report.periodEnd}&format=${format}`
+            : '';
+      if (!query) return;
+      const response = await fetch(`/api/reports/export?${query}`);
       if (!response.ok) return;
       const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = exportFilename(report, format);
+      const periodLabel = kind === 'workforce' ? `${period.startKey}-${period.endKey}` : `${report?.periodStart}-${report?.periodEnd}`;
+      link.download =
+        kind === 'workforce'
+          ? `novacrm-wfm-${period.startKey.replace(/-/g, '')}-${period.endKey.replace(/-/g, '')}.${format === 'xlsx' ? 'xlsx' : format}`
+          : report
+            ? exportFilename(report, format)
+            : `novacrm-ops-${periodLabel}.${format}`;
       link.click();
       URL.revokeObjectURL(url);
     } finally {
@@ -116,7 +141,10 @@ export function ReportsPage() {
   }
 
   const reviewed = reviewedKey === `${period.startKey}:${period.endKey}:${format}`;
-  const stale = !report || report.periodStart !== period.startKey || report.periodEnd !== period.endKey;
+  const stale = kind === 'workforce' ? false : !report || report.periodStart !== period.startKey || report.periodEnd !== period.endKey;
+  const formats = kind === 'workforce' ? WFM_FORMATS : FORMATS;
+  const periodQuery = reportSearchParams({ preset, from, to });
+  const canExport = kind === 'workforce' ? Boolean(periodQuery) && !exporting : Boolean(report) && reviewed && !exporting;
 
   return (
     <motion.div
@@ -131,7 +159,9 @@ export function ReportsPage() {
             Operations
           </Link>
           <h1 className="mt-1 text-2xl font-semibold text-zinc-50">Reports</h1>
-          {report && !stale ? (
+          {kind === 'workforce' ? (
+            <p className="mt-1 text-sm text-zinc-500">Coverage gaps and clock-in vs roster — export only, no preview</p>
+          ) : report && !stale ? (
             <p className="mt-1 text-sm text-zinc-500">
               {formatReportPeriod(report)}
               <span className="mx-2 text-zinc-700">·</span>
@@ -142,6 +172,28 @@ export function ReportsPage() {
           )}
         </div>
         <div className="flex flex-wrap items-center gap-2">
+          {canWorkforce ? (
+            <div className="flex rounded-lg border border-zinc-800 bg-zinc-950 p-0.5">
+              {(
+                [
+                  { id: 'tickets' as const, label: 'Tickets' },
+                  { id: 'workforce' as const, label: 'Workforce' },
+                ]
+              ).map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => changeKind(item.id)}
+                  className={cn(
+                    'rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-200 ease-out',
+                    kind === item.id ? 'bg-zinc-800 text-zinc-50' : 'text-zinc-400 hover:text-zinc-200',
+                  )}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          ) : null}
           <Link
             href="/settings/reports"
             className="rounded-md border border-zinc-800 px-3 py-1.5 text-xs text-zinc-300 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-zinc-700 hover:text-zinc-50"
@@ -199,7 +251,7 @@ export function ReportsPage() {
             </div>
           ) : null}
           <div className="flex rounded-lg border border-zinc-800 bg-zinc-950 p-0.5">
-            {FORMATS.map((item) => (
+            {formats.map((item) => (
               <button
                 key={item}
                 type="button"
@@ -213,27 +265,41 @@ export function ReportsPage() {
               </button>
             ))}
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setShowPreview(true);
-              setReviewedKey(`${period.startKey}:${period.endKey}:${format}`);
-            }}
-            disabled={!report || stale}
-          >
-            <Eye className="h-3.5 w-3.5" />
-            Preview
-          </Button>
-          <Button type="button" size="sm" onClick={() => void download()} disabled={!report || !reviewed || exporting}>
+          {kind === 'tickets' ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setShowPreview(true);
+                setReviewedKey(`${period.startKey}:${period.endKey}:${format}`);
+              }}
+              disabled={!report || stale}
+            >
+              <Eye className="h-3.5 w-3.5" />
+              Preview
+            </Button>
+          ) : null}
+          <Button type="button" size="sm" onClick={() => void download()} disabled={!canExport}>
             <Download className="h-3.5 w-3.5" />
             {exporting ? 'Exporting...' : 'Export'}
           </Button>
         </div>
       </div>
 
-      {loading && !report ? (
+      {kind === 'workforce' ? (
+        <Card>
+          <CardContent className="space-y-3 p-5">
+            <p className="text-sm text-zinc-200">Export coverage and clock-in for {period.startKey} – {period.endKey}</p>
+            <p className="text-sm leading-relaxed text-zinc-500">
+              Excel has two sheets: <span className="text-zinc-300">Coverage gaps</span> (group × day with nobody on roster,
+              including weekends when the shift is Mon–Fri) and <span className="text-zinc-300">Clock-in vs roster</span>.
+              CSV is one file with a <span className="font-mono text-xs text-zinc-400">sheet</span> column. Groups with no
+              roster in the window are omitted. The gap list is long by design — open the file; there is no on-screen preview.
+            </p>
+          </CardContent>
+        </Card>
+      ) : loading && !report ? (
         <div className="space-y-3">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {Array.from({ length: 4 }).map((_, index) => (

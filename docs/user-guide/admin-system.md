@@ -201,10 +201,10 @@ Alert berulang dalam 24 jam meng-update tiket yang sama. Pesan WA / Telegram / e
 ## 13. Laporan, Insights, WFM
 
 - **Dashboard** — KPI + aging account aktif.
-- **Reports** — 7 / 30 / 90 hari atau custom; CSV / Excel / PDF. Kartu **Vendor / UC queue** (open, breach, antrian, kredit). KPI **CSAT** (portal mewajibkan skor 1–5 setelah resolved/closed).
+- **Reports** — Tickets: 7 / 30 / 90 hari atau custom; CSV / Excel / PDF (preview dulu). Kartu **Vendor / UC queue**. KPI **CSAT**. Workforce (SPV+): coverage gaps + clock-in vs roster, CSV/Excel tanpa preview.
 - **Assistant** — baca fakta 7 hari; **tidak** mengubah tiket. Perlu AI di Integrations.
 - **AI Insights** — tekanan antrian, risiko SLA, beban WFM, kesehatan account.
-- **WFM** — occupancy/forecast mengikuti filter account; roster/skills/on-call/penilaian **tenant-wide**. Shift default Pagi / Siang / Malam / 24 jam; jam diubah di `/wfm/shifts`. Apply minggu atau unggah CSV/Excel. **Tukar shift** di `/wfm/swaps` (agen → rekan → SPV). Agen: banner shift + clock-in + **Roster saya**. Presence Tersedia/Sibuk/Istirahat/Offline; hanya Tersedia yang auto-assign. Dispatch di assignment group. Auto-assign butuh worker. Kelas bersama: jangan rewrite roster/penilaian seed kecuali tenant terisolasi.
+- **WFM** — occupancy/forecast mengikuti filter account; roster/skills/on-call/penilaian **tenant-wide**. Shift default Pagi / Siang / Malam / 24 jam; jam diubah di `/wfm/shifts`. Apply minggu atau unggah CSV/Excel. **Tukar shift** di `/wfm/swaps` (agen → rekan → SPV). Laporan coverage/clock-in di **Reports → Workforce**. Agen: banner shift + clock-in + **Roster saya**. Presence Tersedia/Sibuk/Istirahat/Offline; hanya Tersedia yang auto-assign. Dispatch di assignment group. Auto-assign butuh worker. Kelas bersama: jangan rewrite roster/penilaian seed kecuali tenant terisolasi.
 
 ---
 

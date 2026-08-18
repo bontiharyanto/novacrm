@@ -873,6 +873,7 @@ export const id: Dictionary = {
     swaps: 'Tukar shift',
     swapsHint:
       'Agen mengajukan tukar, rekan menerima, lalu supervisor menerapkan kedua sel roster sekaligus. Tanggal sama = tukar jenis shift; tanggal beda = tukar tugas.',
+    swapsReportLink: 'Export gap coverage dan clock-in: Reports → Workforce.',
     swapRequest: 'Ajukan tukar',
     swapSubmit: 'Kirim pengajuan',
     swapAccept: 'Terima',

@@ -411,7 +411,7 @@ export async function approveShiftSwap(input: unknown) {
 
 export async function listWfmCoverage(fromDate: string, toDate: string): Promise<WfmCoverageGap[]> {
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'read', 'Wfm')) return [];
+  if (!session || !canRole(session.profile.role, 'create', 'Wfm')) return [];
   const supabase = await createSupabaseServerClient();
   const [{ data: roster }, { data: groups }] = await Promise.all([
     supabase
@@ -427,8 +427,10 @@ export async function listWfmCoverage(fromDate: string, toDate: string): Promise
     const key = `${row.group_id}:${row.work_date}`;
     counts.set(key, (counts.get(key) ?? 0) + 1);
   }
+  const groupsWithRoster = new Set((roster ?? []).map((row) => row.group_id));
   const gaps: WfmCoverageGap[] = [];
   for (const group of groups ?? []) {
+    if (!groupsWithRoster.has(group.id)) continue;
     for (const cursor of eachYmd(fromDate, toDate)) {
       const headcount = counts.get(`${group.id}:${cursor}`) ?? 0;
       if (headcount === 0) {
@@ -441,7 +443,7 @@ export async function listWfmCoverage(fromDate: string, toDate: string): Promise
 
 export async function listWfmAttendance(fromDate: string, toDate: string): Promise<WfmAttendanceRow[]> {
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'read', 'Wfm')) return [];
+  if (!session || !canRole(session.profile.role, 'create', 'Wfm')) return [];
   const supabase = await createSupabaseServerClient();
   const fromIso = `${fromDate}T00:00:00+07:00`;
   const toIso = `${toDate}T23:59:59+07:00`;

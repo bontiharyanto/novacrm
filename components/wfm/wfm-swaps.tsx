@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -17,13 +18,7 @@ import {
   createShiftSwap,
   rejectShiftSwap,
 } from '@/lib/wfm/swap-actions';
-import type {
-  WfmAttendanceRow,
-  WfmCoverageGap,
-  WfmRosterEntry,
-  WfmShiftSwap,
-  WfmSwapStatus,
-} from '@/lib/wfm/schema';
+import type { WfmRosterEntry, WfmShiftSwap, WfmSwapStatus } from '@/lib/wfm/schema';
 
 type Staff = { id: string; fullName: string };
 type Group = { id: string; name: string };
@@ -41,8 +36,6 @@ export function WfmSwaps({
   groups,
   staff,
   roster,
-  coverage,
-  attendance,
   currentUserId,
   canRequest,
   canApprove,
@@ -51,8 +44,6 @@ export function WfmSwaps({
   groups: Group[];
   staff: Staff[];
   roster: WfmRosterEntry[];
-  coverage: WfmCoverageGap[];
-  attendance: WfmAttendanceRow[];
   currentUserId: string;
   canRequest: boolean;
   canApprove: boolean;
@@ -155,7 +146,17 @@ export function WfmSwaps({
   return (
     <div className="space-y-8 p-6">
       <WfmNav />
-      <p className="text-sm text-zinc-500">{t.wfm.swapsHint}</p>
+      <p className="text-sm text-zinc-500">
+        {t.wfm.swapsHint}
+        {canApprove ? (
+          <>
+            {' '}
+            <Link href="/reports" className="text-zinc-300 transition-colors hover:text-zinc-50">
+              {t.wfm.swapsReportLink}
+            </Link>
+          </>
+        ) : null}
+      </p>
 
       {canRequest ? (
         <section className="rounded-xl border border-zinc-800 p-4">
@@ -325,79 +326,6 @@ export function WfmSwaps({
           </div>
         )}
       </section>
-
-      {canApprove ? (
-        <div className="grid gap-6 lg:grid-cols-2">
-          <section>
-            <h2 className="mb-3 text-sm font-medium text-zinc-50">{t.wfm.coverageTitle}</h2>
-            {coverage.length === 0 ? (
-              <p className="rounded-xl border border-zinc-800 px-4 py-8 text-center text-sm text-zinc-500">
-                {t.wfm.coverageEmpty}
-              </p>
-            ) : (
-              <div className="overflow-hidden rounded-xl border border-zinc-800">
-                <table className="w-full text-left text-sm">
-                  <thead className="border-b border-zinc-800 bg-zinc-950 text-[11px] uppercase tracking-[0.12em] text-zinc-500">
-                    <tr>
-                      <th className="px-3 py-2 font-medium">{t.wfm.coverageDate}</th>
-                      <th className="px-3 py-2 font-medium">{t.nav.organization}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {coverage.map((gap) => (
-                      <tr key={`${gap.groupId}:${gap.workDate}`} className="border-b border-zinc-800/80 last:border-0">
-                        <td className="px-3 py-2.5 font-mono text-xs text-zinc-300">{dateLabel(gap.workDate)}</td>
-                        <td className="px-3 py-2.5 text-zinc-50">{gap.groupName}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
-          <section>
-            <h2 className="mb-3 text-sm font-medium text-zinc-50">{t.wfm.attendanceTitle}</h2>
-            {attendance.length === 0 ? (
-              <p className="rounded-xl border border-zinc-800 px-4 py-8 text-center text-sm text-zinc-500">
-                {t.wfm.attendanceEmpty}
-              </p>
-            ) : (
-              <div className="overflow-hidden rounded-xl border border-zinc-800">
-                <table className="w-full text-left text-sm">
-                  <thead className="border-b border-zinc-800 bg-zinc-950 text-[11px] uppercase tracking-[0.12em] text-zinc-500">
-                    <tr>
-                      <th className="px-3 py-2 font-medium">{t.wfm.agent}</th>
-                      <th className="px-3 py-2 font-medium">{t.wfm.coverageDate}</th>
-                      <th className="px-3 py-2 font-medium">{t.wfm.status}</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {attendance.map((row) => (
-                      <tr
-                        key={`${row.userId}:${row.workDate}:${row.groupName}`}
-                        className="border-b border-zinc-800/80 last:border-0"
-                      >
-                        <td className="px-3 py-2.5 text-zinc-50">
-                          {row.userName}
-                          <p className="text-[11px] text-zinc-500">
-                            {row.shiftName} {row.hours}
-                          </p>
-                        </td>
-                        <td className="px-3 py-2.5 font-mono text-xs text-zinc-400">{dateLabel(row.workDate)}</td>
-                        <td className="px-3 py-2.5">
-                          <Badge tone={row.clockedIn ? 'success' : 'warning'}>
-                            {row.clockedIn ? t.wfm.attendanceClocked : t.wfm.attendanceMissed}
-                          </Badge>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
-        </div>
-      ) : null}
     </div>
   );
 }

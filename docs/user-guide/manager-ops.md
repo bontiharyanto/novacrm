@@ -129,7 +129,7 @@ Jenis yang tersedia mengikuti katalog import di aplikasi (users, assets, CI, …
 
 **Governance** — RoPA, DSAR 30 hari, breach 72 jam, notice portal. Anda boleh create/update.
 
-**WFM** — occupancy/forecast mengikuti filter account; roster/skills/on-call/penilaian **satu grid untuk seluruh tenant**. Shift default: Pagi / Siang / Malam / 24 jam; jam di `/wfm/shifts`. **Terapkan ke minggu ini** atau unggah CSV/Excel. **Tukar shift** (`/wfm/swaps`): agen → rekan → SPV; laporan gap coverage + clock-in vs roster. Agen clock-in manual (login ≠ absensi). Dispatch: on-shift **dan** Tersedia. Policy di `/org`. Di tenant demo bersama, jangan rewrite roster atau penilaian seed kecuali isolasi disepakati.
+**WFM** — occupancy/forecast mengikuti filter account; roster/skills/on-call/penilaian **satu grid untuk seluruh tenant**. Shift default: Pagi / Siang / Malam / 24 jam; jam di `/wfm/shifts`. **Terapkan ke minggu ini** atau unggah CSV/Excel. **Tukar shift** (`/wfm/swaps`): agen → rekan → SPV. Gap coverage + clock-in vs roster: **Reports → Workforce** (CSV/Excel, tanpa preview). Agen clock-in manual (login ≠ absensi). Dispatch: on-shift **dan** Tersedia. Policy di `/org`. Di tenant demo bersama, jangan rewrite roster atau penilaian seed kecuali isolasi disepakati.
 
 ---
 
