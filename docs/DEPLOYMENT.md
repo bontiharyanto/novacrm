@@ -112,7 +112,7 @@ Email in production needs `RESEND_API_KEY`. Without it, outbound mail is logged 
 
 ## 6. Backup
 
-Daily 02:00 Asia/Jakarta inside the `backup` service.
+Daily **02:00 Asia/Jakarta** inside the `backup` service (`scripts/cron-backup.sh` so `DATABASE_URL` is visible to BusyBox cron).
 
 - Postgres: `pg_dump` → `/backups/novacrm-YYYYMMDD.sql.gz` (client image `postgres:17-alpine`; must be ≥ hosted server, currently 17.x)
 - MinIO → R2/S3 when `BACKUP_S3_*` is set

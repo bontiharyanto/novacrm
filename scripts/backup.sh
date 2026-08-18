@@ -1,19 +1,30 @@
 #!/bin/sh
 set -eu
 
+export PATH="/usr/local/bin:/usr/bin:/bin:${PATH:-}"
+export TZ="${TZ:-Asia/Jakarta}"
+
 STAMP="$(date +%Y%m%d)"
 BACKUP_DIR="${BACKUP_DIR:-/backups}"
 RETENTION_DAYS="${BACKUP_RETENTION_DAYS:-7}"
 mkdir -p "$BACKUP_DIR"
 
-if [ -n "${DATABASE_URL:-}" ] && command -v pg_dump >/dev/null 2>&1; then
-  DUMP_FILE="$BACKUP_DIR/novacrm-$STAMP.sql.gz"
-  TMP_SQL="$BACKUP_DIR/novacrm-$STAMP.sql"
-  echo "Dumping Postgres to $DUMP_FILE"
-  pg_dump "$DATABASE_URL" -f "$TMP_SQL"
-  gzip -c "$TMP_SQL" > "$DUMP_FILE"
-  rm -f "$TMP_SQL"
+if [ -z "${DATABASE_URL:-}" ]; then
+  echo "DATABASE_URL is missing; skip Postgres dump."
+  exit 1
 fi
+
+if ! command -v pg_dump >/dev/null 2>&1; then
+  echo "pg_dump not found in PATH=$PATH"
+  exit 1
+fi
+
+DUMP_FILE="$BACKUP_DIR/novacrm-$STAMP.sql.gz"
+TMP_SQL="$BACKUP_DIR/novacrm-$STAMP.sql"
+echo "Dumping Postgres to $DUMP_FILE"
+pg_dump "$DATABASE_URL" -f "$TMP_SQL"
+gzip -c "$TMP_SQL" > "$DUMP_FILE"
+rm -f "$TMP_SQL"
 
 if [ -n "${BACKUP_S3_ENDPOINT:-}" ] && [ -n "${BACKUP_S3_BUCKET:-}" ]; then
   if ! command -v mc >/dev/null 2>&1; then
