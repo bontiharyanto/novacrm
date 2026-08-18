@@ -35,6 +35,14 @@ import { dispatchTicket } from '@/lib/wfm/dispatch';
 import { computeAdherence, computeForecast } from '@/lib/wfm/forecast';
 import { isOpenTicketStatus } from '@/lib/wfm/time';
 import { formatZodError } from '@/lib/validation/zod-error';
+import { parseImportFile } from '@/lib/import/parse';
+import { isStaffRole } from '@/lib/rbac/roles';
+import {
+  ROSTER_IMPORT_MAX,
+  keyName,
+  mapRosterImportRows,
+  parseWorkDate,
+} from '@/lib/wfm/roster-import';
 
 function slugify(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'skill';
@@ -273,6 +281,115 @@ export async function upsertRosterEntry(input: unknown) {
   if (error) return { data: null, error: error.message };
   revalidateWfm();
   return { data, error: null };
+}
+
+export async function importRosterFile(formData: FormData) {
+  const session = await getSessionProfile();
+  if (!session || !canRole(session.profile.role, 'create', 'Wfm')) {
+    return { data: null, error: 'Unauthorized' };
+  }
+
+  const file = formData.get('file');
+  if (!(file instanceof File) || file.size === 0) {
+    return { data: null, error: 'Choose a .csv or .xlsx file.' };
+  }
+
+  const parsedFile = await parseImportFile(file);
+  if (parsedFile.error) return { data: null, error: parsedFile.error };
+  if (parsedFile.rows.length === 0) return { data: null, error: 'The file has no data rows.' };
+  if (parsedFile.rows.length > ROSTER_IMPORT_MAX) {
+    return { data: null, error: `Maximum ${ROSTER_IMPORT_MAX} rows per upload.` };
+  }
+
+  const defaultGroupId = String(formData.get('groupId') ?? '').trim();
+  const supabase = await createSupabaseServerClient();
+  const tenantId = session.profile.tenantId;
+
+  const [{ data: profiles }, { data: groups }, templates] = await Promise.all([
+    supabase.from('profiles').select('id, full_name, email, role').eq('tenant_id', tenantId),
+    supabase.from('assignment_groups').select('id, name, slug').eq('tenant_id', tenantId).eq('is_active', true),
+    listShiftTemplates(),
+  ]);
+
+  const staff = (profiles ?? []).filter((row) => isStaffRole(row.role));
+  const byEmail = new Map(staff.map((row) => [String(row.email ?? '').trim().toLowerCase(), row.id]));
+  const byName = new Map(staff.map((row) => [keyName(row.full_name), row.id]));
+  const groupByKey = new Map<string, string>();
+  for (const group of groups ?? []) {
+    groupByKey.set(keyName(group.name), group.id);
+    if (group.slug) groupByKey.set(keyName(group.slug), group.id);
+  }
+  const shiftByKey = new Map<string, string>();
+  for (const template of templates.filter((item) => item.isActive !== false)) {
+    shiftByKey.set(keyName(template.name), template.id);
+    shiftByKey.set(keyName(`${template.startLocal}-${template.endLocal}`), template.id);
+  }
+
+  const rows = mapRosterImportRows(parsedFile.rows);
+  const errors: string[] = [];
+  const payload: Array<{
+    tenant_id: string;
+    user_id: string;
+    group_id: string;
+    work_date: string;
+    template_id: string;
+    source: 'planned';
+    created_by: string;
+  }> = [];
+  const seen = new Set<string>();
+
+  rows.forEach((row, index) => {
+    const line = index + 2;
+    const workDate = parseWorkDate(row.workDate);
+    if (!workDate) {
+      errors.push(`Row ${line}: invalid date.`);
+      return;
+    }
+    const userId =
+      (row.email ? byEmail.get(row.email.toLowerCase()) : undefined) ??
+      (row.name ? byName.get(keyName(row.name)) : undefined);
+    if (!userId) {
+      errors.push(`Row ${line}: agent not found (${row.email || row.name || 'empty'}).`);
+      return;
+    }
+    const groupId = row.group ? groupByKey.get(keyName(row.group)) : defaultGroupId;
+    if (!groupId) {
+      errors.push(`Row ${line}: ${row.group ? `group not found (${row.group})` : 'group is required'}.`);
+      return;
+    }
+    const templateId = row.shift ? shiftByKey.get(keyName(row.shift)) : undefined;
+    if (!templateId) {
+      errors.push(`Row ${line}: shift not found (${row.shift || 'empty'}).`);
+      return;
+    }
+    const key = `${userId}:${groupId}:${workDate}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+    payload.push({
+      tenant_id: tenantId,
+      user_id: userId,
+      group_id: groupId,
+      work_date: workDate,
+      template_id: templateId,
+      source: 'planned',
+      created_by: session.userId,
+    });
+  });
+
+  if (payload.length === 0) {
+    return { data: null, error: errors[0] ?? 'No valid roster rows.' };
+  }
+
+  const { error } = await supabase.from('wfm_roster_entries').upsert(payload, {
+    onConflict: 'user_id,group_id,work_date',
+  });
+  if (error) return { data: null, error: error.message };
+
+  revalidateWfm();
+  return {
+    data: { imported: payload.length, failed: errors.length, errors: errors.slice(0, 12) },
+    error: errors.length ? `${payload.length} imported. ${errors.length} row(s) skipped.` : null,
+  };
 }
 
 export async function deleteRosterEntry(id: string) {

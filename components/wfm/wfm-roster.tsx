@@ -5,10 +5,11 @@ import { addDays, format, startOfWeek } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Select } from '@/components/ui/select';
 import { WfmNav } from '@/components/wfm/wfm-nav';
-import { deleteRosterEntry, upsertRosterEntry } from '@/lib/wfm/actions';
+import { deleteRosterEntry, importRosterFile, upsertRosterEntry } from '@/lib/wfm/actions';
 import type { WfmRosterEntry, WfmShiftTemplate } from '@/lib/wfm/schema';
 import { useI18n } from '@/components/layout/preferences-provider';
 import { useRouter } from 'next/navigation';
+import { toastError, toastSuccess } from '@/components/ui/toast';
 
 type Staff = { id: string; fullName: string };
 type Group = { id: string; name: string };
@@ -32,6 +33,7 @@ export function WfmRoster({
   const days = Array.from({ length: 7 }, (_, index) => addDays(weekStart, index));
   const [groupId, setGroupId] = useState(groups[0]?.id ?? '');
   const [templateId, setTemplateId] = useState(templates[0]?.id ?? '');
+  const [uploading, setUploading] = useState(false);
   const filtered = useMemo(
     () => (groupId ? entries.filter((entry) => entry.groupId === groupId) : entries),
     [entries, groupId],
@@ -53,6 +55,29 @@ export function WfmRoster({
     router.refresh();
   }
 
+  async function handleUpload(file: File) {
+    setUploading(true);
+    try {
+      const form = new FormData();
+      form.set('file', file);
+      form.set('groupId', groupId);
+      const result = await importRosterFile(form);
+      if (!result.data) {
+        toastError(result.error ?? t.wfm.rosterImportFailed);
+        return;
+      }
+      toastSuccess(t.wfm.rosterImported.replace('{{n}}', String(result.data.imported)));
+      if (result.data.errors.length) {
+        toastError(result.data.errors.slice(0, 3).join(' '));
+      }
+      router.refresh();
+    } catch {
+      toastError(t.wfm.rosterImportFailed);
+    } finally {
+      setUploading(false);
+    }
+  }
+
   return (
     <div className="space-y-6 p-6">
       <WfmNav />
@@ -72,6 +97,30 @@ export function WfmRoster({
               </option>
             ))}
           </Select>
+        ) : null}
+        {canEdit ? (
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            <a href="/api/wfm/roster/template?format=csv" className="text-xs text-zinc-400 hover:text-zinc-200">
+              {t.wfm.rosterTemplateCsv}
+            </a>
+            <a href="/api/wfm/roster/template?format=xlsx" className="text-xs text-zinc-400 hover:text-zinc-200">
+              {t.wfm.rosterTemplateXlsx}
+            </a>
+            <label className="inline-flex cursor-pointer items-center rounded-md border border-zinc-800 px-2.5 py-1.5 text-xs text-zinc-200 hover:border-zinc-700">
+              {uploading ? t.wfm.rosterUploading : t.wfm.rosterUpload}
+              <input
+                type="file"
+                accept=".csv,.xlsx,.xls,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                className="hidden"
+                disabled={uploading}
+                onChange={(event) => {
+                  const file = event.target.files?.[0];
+                  if (file) void handleUpload(file);
+                  event.target.value = '';
+                }}
+              />
+            </label>
+          </div>
         ) : null}
       </div>
       <div className="overflow-x-auto rounded-xl border border-zinc-800">
@@ -122,7 +171,9 @@ export function WfmRoster({
           </tbody>
         </table>
       </div>
-      <p className="text-xs text-zinc-500">{t.wfm.rosterHint}</p>
+      <p className="text-xs text-zinc-500">
+        {t.wfm.rosterHint} {canEdit ? t.wfm.rosterUploadHint : ''}
+      </p>
     </div>
   );
 }
