@@ -33,6 +33,7 @@ import { getSessionProfile } from '@/lib/auth/session';
 import { canRole } from '@/lib/rbac/ability';
 import { requireAccountId } from '@/lib/accounts/scope';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { createSupabaseAdminClient, hasServiceRole } from '@/lib/supabase/admin';
 import { listEligibleAgentsForGroup, loadDispatchPolicy } from '@/lib/wfm/eligible';
 import { dispatchTicket } from '@/lib/wfm/dispatch';
 import { computeAdherence, computeForecast } from '@/lib/wfm/forecast';
@@ -446,26 +447,22 @@ export async function upsertRosterEntry(input: unknown) {
   if (!session || !canRole(session.profile.role, 'create', 'Wfm')) {
     return { data: null, error: 'Unauthorized' };
   }
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
-    .from('wfm_roster_entries')
-    .upsert(
-      {
-        tenant_id: session.profile.tenantId,
-        user_id: parsed.userId,
-        group_id: parsed.groupId,
-        work_date: parsed.workDate,
-        template_id: parsed.templateId,
-        source: parsed.source,
-        created_by: session.userId,
-      },
-      { onConflict: 'user_id,group_id,work_date' },
-    )
-    .select('id')
-    .single();
+  const supabase = hasServiceRole() ? createSupabaseAdminClient() : await createSupabaseServerClient();
+  const { error } = await supabase.from('wfm_roster_entries').upsert(
+    {
+      tenant_id: session.profile.tenantId,
+      user_id: parsed.userId,
+      group_id: parsed.groupId,
+      work_date: parsed.workDate,
+      template_id: parsed.templateId,
+      source: parsed.source,
+      created_by: session.userId,
+    },
+    { onConflict: 'user_id,group_id,work_date' },
+  );
   if (error) return { data: null, error: error.message };
   revalidateWfm();
-  return { data, error: null };
+  return { data: { ok: true }, error: null };
 }
 
 export async function applyStandardRoster(input: unknown) {

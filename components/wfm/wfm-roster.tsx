@@ -38,6 +38,9 @@ export function WfmRoster({
   const [templateId, setTemplateId] = useState(templates[0]?.id ?? '');
   const [uploading, setUploading] = useState(false);
   const [applying, setApplying] = useState(false);
+  const [pendingKey, setPendingKey] = useState<string | null>(null);
+  const [localCells, setLocalCells] = useState<Record<string, WfmRosterEntry | null>>({});
+  const selected = templates.find((template) => template.id === templateId) ?? templates[0];
   const filtered = useMemo(() => {
     if (selfOnly) return entries;
     return groupId ? entries.filter((entry) => entry.groupId === groupId) : entries;
@@ -55,29 +58,59 @@ export function WfmRoster({
   }, [filtered, selfOnly, staff]);
 
   async function assign(userId: string, workDate: string, entry?: WfmRosterEntry) {
+    const shift = selected;
+    const key = `${userId}:${workDate}`;
     if (!groupId) {
       toastError(t.wfm.emptyGroups);
       return;
     }
-    if (!templateId) {
+    if (!shift) {
       toastError(t.wfm.rosterCellFailed);
       return;
     }
-    if (entry && entry.templateId === templateId) {
-      const removed = await deleteRosterEntry(entry.id);
-      if (removed.error) {
-        toastError(removed.error);
+    setPendingKey(key);
+    try {
+      if (entry && entry.templateId === shift.id) {
+        const removed = await deleteRosterEntry(entry.id);
+        if (removed.error) {
+          toastError(removed.error);
+          return;
+        }
+        setLocalCells((current) => ({ ...current, [key]: null }));
+        router.refresh();
         return;
       }
+      const result = await upsertRosterEntry({
+        userId,
+        groupId,
+        workDate,
+        templateId: shift.id,
+        source: 'override',
+      });
+      if (result.error) {
+        toastError(result.error);
+        return;
+      }
+      setLocalCells((current) => ({
+        ...current,
+        [key]: {
+          id: entry?.id ?? key,
+          userId,
+          groupId,
+          workDate,
+          templateId: shift.id,
+          templateName: shift.name,
+          startLocal: shift.startLocal,
+          endLocal: shift.endLocal,
+          source: 'override',
+        },
+      }));
       router.refresh();
-      return;
+    } catch {
+      toastError(t.wfm.rosterCellFailed);
+    } finally {
+      setPendingKey(null);
     }
-    const result = await upsertRosterEntry({ userId, groupId, workDate, templateId, source: 'override' });
-    if (result.error) {
-      toastError(result.error);
-      return;
-    }
-    router.refresh();
   }
 
   async function applyWeek() {
@@ -197,13 +230,15 @@ export function WfmRoster({
                 <td className="px-3 py-2.5 text-zinc-50">{person.fullName}</td>
                 {days.map((day) => {
                   const ymd = format(day, 'yyyy-MM-dd');
-                  const entry = byKey.get(`${person.id}:${ymd}`);
+                  const key = `${person.id}:${ymd}`;
+                  const entry = key in localCells ? localCells[key] ?? undefined : byKey.get(key);
+                  const saving = pendingKey === key;
                   return (
                     <td key={ymd} className="px-2 py-2">
                       {entry ? (
                         <button
                           type="button"
-                          disabled={!canEdit}
+                          disabled={!canEdit || saving}
                           onClick={() => void assign(person.id, ymd, entry)}
                           className="w-full rounded-md border border-zinc-800 bg-zinc-900 px-2 py-1 text-left text-xs text-zinc-200 hover:border-zinc-600 disabled:opacity-70"
                         >
@@ -215,15 +250,14 @@ export function WfmRoster({
                           </span>
                         </button>
                       ) : canEdit ? (
-                        <Button
+                        <button
                           type="button"
-                          size="sm"
-                          variant="ghost"
-                          className="w-full"
+                          disabled={saving || !selected}
                           onClick={() => void assign(person.id, ymd)}
+                          className="w-full rounded-md border border-dashed border-zinc-700 px-2 py-1 text-left text-xs text-zinc-400 hover:border-zinc-500 hover:text-zinc-200 disabled:opacity-50"
                         >
-                          +
-                        </Button>
+                          {saving ? '…' : selected ? `+ ${selected.name}` : '+'}
+                        </button>
                       ) : (
                         <span className="text-xs text-zinc-700">—</span>
                       )}
