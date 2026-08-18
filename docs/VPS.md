@@ -240,6 +240,7 @@ Setup account, divisi/dept, user portal, dan arsip (tanpa Delete): [tenant-opera
 | `:9001` timeout | Port tidak dipublish | Pakai app / `https://files.novacrm.click` (S3) |
 | `pg_dump: server version mismatch` | Image backup 16 vs Supabase 17 | Recreate `backup` (`postgres:17-alpine`) — [BACKUP.md](BACKUP.md) |
 | `no such service: web: disabled` | `up backup --scale web=1` | Recreate tanpa `--scale` |
+| `/tenants` hilang | Role `admin` | Login `superadmin@novacrm.app` |
 
 Log:
 
