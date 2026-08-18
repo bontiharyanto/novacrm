@@ -55,13 +55,28 @@ export function WfmRoster({
   }, [filtered, selfOnly, staff]);
 
   async function assign(userId: string, workDate: string, entry?: WfmRosterEntry) {
-    if (!groupId || !templateId) return;
+    if (!groupId) {
+      toastError(t.wfm.emptyGroups);
+      return;
+    }
+    if (!templateId) {
+      toastError(t.wfm.rosterCellFailed);
+      return;
+    }
     if (entry && entry.templateId === templateId) {
-      await deleteRosterEntry(entry.id);
+      const removed = await deleteRosterEntry(entry.id);
+      if (removed.error) {
+        toastError(removed.error);
+        return;
+      }
       router.refresh();
       return;
     }
-    await upsertRosterEntry({ userId, groupId, workDate, templateId, source: 'override' });
+    const result = await upsertRosterEntry({ userId, groupId, workDate, templateId, source: 'override' });
+    if (result.error) {
+      toastError(result.error);
+      return;
+    }
     router.refresh();
   }
 
@@ -200,7 +215,13 @@ export function WfmRoster({
                           </span>
                         </button>
                       ) : canEdit ? (
-                        <Button size="sm" variant="ghost" className="w-full" onClick={() => void assign(person.id, ymd)}>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          className="w-full"
+                          onClick={() => void assign(person.id, ymd)}
+                        >
                           +
                         </Button>
                       ) : (

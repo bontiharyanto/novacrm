@@ -796,11 +796,12 @@ export const id: Dictionary = {
     noMembers: 'Belum ada anggota di group ini.',
     emptyGroups: 'Pilih account yang punya assignment group.',
     rosterHint:
-      'Shift: Pagi 08:00–16:00, Siang 12:00–20:00, Malam 21:00–05:00, 24 jam (1×24). Sel kosong menaruh shift terpilih. Sel terisi dengan shift lain mengganti; shift yang sama menghapus.',
+      'Pilih shift di dropdown, lalu klik +. Jangan ketik di sel. Pagi 08:00–16:00, Siang 12:00–20:00, Malam 21:00–05:00, 24 jam. Sel terisi + shift lain = ganti; shift sama = hapus.',
     rosterApplyWeek: 'Terapkan ke minggu ini',
     rosterApplying: 'Menerapkan…',
     rosterApplied: 'Roster standar diterapkan ke {{n}} sel.',
     rosterApplyFailed: 'Gagal menerapkan roster standar.',
+    rosterCellFailed: 'Shift tidak tersimpan. Pilih shift di dropdown, lalu klik + lagi.',
     rosterUpload: 'Unggah roster',
     rosterUploading: 'Mengunggah…',
     rosterTemplateCsv: 'Template CSV',

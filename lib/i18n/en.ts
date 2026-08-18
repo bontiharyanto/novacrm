@@ -798,6 +798,7 @@ export const en = {
     rosterApplying: 'Applying…',
     rosterApplied: 'Standard roster applied to {{n}} cells.',
     rosterApplyFailed: 'Unable to apply the standard roster.',
+    rosterCellFailed: 'Unable to save that shift. Pick a shift, then click + again.',
     rosterUpload: 'Upload roster',
     rosterUploading: 'Uploading…',
     rosterTemplateCsv: 'CSV template',
