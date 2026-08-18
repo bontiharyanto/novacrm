@@ -30,7 +30,7 @@ psql_docker() {
   docker run --rm \
     -e DATABASE_URL \
     -v "$MIGRATIONS_DIR:/migrations:ro" \
-    postgres:16-alpine \
+    postgres:17-alpine \
     psql "$DATABASE_URL" -v ON_ERROR_STOP=1 "$@"
 }
 

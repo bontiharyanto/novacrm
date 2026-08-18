@@ -44,7 +44,7 @@ if [ "${SKIP_SEED:-}" != "1" ]; then
     docker run --rm \
       -e DATABASE_URL \
       -v "$ROOT_DIR/supabase:/supabase:ro" \
-      postgres:16-alpine \
+      postgres:17-alpine \
       psql "$DATABASE_URL" -v ON_ERROR_STOP=0 -f /supabase/seed.sql
   fi
 fi

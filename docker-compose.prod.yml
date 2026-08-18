@@ -117,7 +117,7 @@ services:
     entrypoint: ["/bin/sh", "/minio-init.sh"]
 
   backup:
-    image: postgres:16-alpine
+    image: postgres:17-alpine
     depends_on:
       - minio
     env_file:

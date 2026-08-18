@@ -8,8 +8,11 @@ mkdir -p "$BACKUP_DIR"
 
 if [ -n "${DATABASE_URL:-}" ] && command -v pg_dump >/dev/null 2>&1; then
   DUMP_FILE="$BACKUP_DIR/novacrm-$STAMP.sql.gz"
+  TMP_SQL="$BACKUP_DIR/novacrm-$STAMP.sql"
   echo "Dumping Postgres to $DUMP_FILE"
-  pg_dump "$DATABASE_URL" | gzip > "$DUMP_FILE"
+  pg_dump "$DATABASE_URL" -f "$TMP_SQL"
+  gzip -c "$TMP_SQL" > "$DUMP_FILE"
+  rm -f "$TMP_SQL"
 fi
 
 if [ -n "${BACKUP_S3_ENDPOINT:-}" ] && [ -n "${BACKUP_S3_BUCKET:-}" ]; then
