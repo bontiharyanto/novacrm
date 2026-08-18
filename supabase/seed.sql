@@ -1432,4 +1432,30 @@ where t.title = 'AC ruang server panas'
   and t.tenant_id = '11111111-1111-1111-1111-111111111111'
 on conflict (ticket_id) do nothing;
 
+insert into public.wfm_shift_templates (
+  tenant_id, account_id, name, start_local, end_local, days, timezone, created_by
+)
+select
+  '11111111-1111-1111-1111-111111111111',
+  '55555555-0001-0001-0001-000000000001',
+  d.name,
+  d.start_local::time,
+  d.end_local::time,
+  d.days,
+  'Asia/Jakarta',
+  '22222222-2222-2222-2222-222222222222'
+from (
+  values
+    ('Pagi', '08:00', '16:00', '{1,2,3,4,5}'::smallint[]),
+    ('Siang', '12:00', '20:00', '{1,2,3,4,5}'::smallint[]),
+    ('Malam', '21:00', '05:00', '{1,2,3,4,5,6,7}'::smallint[]),
+    ('24 jam', '00:00', '00:00', '{1,2,3,4,5,6,7}'::smallint[])
+) as d(name, start_local, end_local, days)
+where not exists (
+  select 1
+  from public.wfm_shift_templates s
+  where s.tenant_id = '11111111-1111-1111-1111-111111111111'
+    and lower(s.name) = lower(d.name)
+);
+
 

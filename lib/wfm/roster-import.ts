@@ -7,6 +7,8 @@ export const ROSTER_TEMPLATE_HEADERS = ['date', 'email', 'name', 'group', 'shift
 export const ROSTER_TEMPLATE_SAMPLE = [
   { date: '2026-08-17', email: 'andi@novacrm.app', name: 'Andi On-call', group: 'Bank L1', shift: 'Pagi' },
   { date: '2026-08-18', email: 'budi@novacrm.app', name: 'Budi L1', group: 'Bank L1', shift: 'Siang' },
+  { date: '2026-08-19', email: 'andi@novacrm.app', name: 'Andi On-call', group: 'Bank L1', shift: 'Malam' },
+  { date: '2026-08-20', email: 'budi@novacrm.app', name: 'Budi L1', group: 'Bank L1', shift: '24 jam' },
 ];
 
 export type RosterImportRow = {

@@ -7,6 +7,7 @@ import {
   oncallRotationSchema,
   oncallSlotSchema,
   presenceSchema,
+  applyRosterSchema,
   rosterEntrySchema,
   skillSchema,
   shiftTemplateSchema,
@@ -21,6 +22,8 @@ import {
   type WfmOncallRotation,
   type WfmPresence,
   type WfmPresenceStatus,
+  type WfmAttendanceSource,
+  type WfmDeskState,
   type WfmRosterEntry,
   type WfmShiftTemplate,
   type WfmSkill,
@@ -33,7 +36,7 @@ import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { listEligibleAgentsForGroup, loadDispatchPolicy } from '@/lib/wfm/eligible';
 import { dispatchTicket } from '@/lib/wfm/dispatch';
 import { computeAdherence, computeForecast } from '@/lib/wfm/forecast';
-import { isOpenTicketStatus } from '@/lib/wfm/time';
+import { addDaysYmd, isOpenTicketStatus, pickActiveOrTodayShift, zonedYmd } from '@/lib/wfm/time';
 import { formatZodError } from '@/lib/validation/zod-error';
 import { parseImportFile } from '@/lib/import/parse';
 import { isStaffRole } from '@/lib/rbac/roles';
@@ -43,6 +46,12 @@ import {
   mapRosterImportRows,
   parseWorkDate,
 } from '@/lib/wfm/roster-import';
+import {
+  DEFAULT_SHIFT_TEMPLATES,
+  eachYmd,
+  isoWeekdayFromYmd,
+  sortShiftTemplates,
+} from '@/lib/wfm/default-shifts';
 
 function slugify(value: string) {
   return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 60) || 'skill';
@@ -123,40 +132,58 @@ export async function listEligibleAgents(groupId?: string): Promise<WfmEligibleA
     reasons: [],
     openTickets: 0,
     maxOpen: 8,
-    presence: 'available' as const,
+    presence: 'offline' as const,
     onShift: true,
     skillIds: [],
   }));
 }
 
-export async function getMyPresence(): Promise<WfmPresenceStatus> {
-  const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'read', 'Wfm')) return 'available';
-  const supabase = await createSupabaseServerClient();
-  const { data } = await supabase
-    .from('wfm_presence')
-    .select('status')
-    .eq('tenant_id', session.profile.tenantId)
-    .eq('user_id', session.userId)
-    .maybeSingle();
-  return (data?.status as WfmPresenceStatus | undefined) ?? 'available';
+async function writeAttendancePunch(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  tenantId: string,
+  userId: string,
+  kind: 'clock_in' | 'clock_out',
+  status: WfmPresenceStatus,
+  source: WfmAttendanceSource,
+  rosterEntryId?: string | null,
+) {
+  await supabase.from('wfm_attendance_punches').insert({
+    tenant_id: tenantId,
+    user_id: userId,
+    kind,
+    status,
+    source,
+    roster_entry_id: rosterEntryId ?? null,
+    created_by: userId,
+  });
 }
 
-export async function setMyPresence(input: unknown) {
-  const parsed = presenceSchema.parse(input);
+async function applyPresence(
+  status: WfmPresenceStatus,
+  source: WfmAttendanceSource,
+  until?: string,
+) {
   const session = await getSessionProfile();
   if (!session || !canRole(session.profile.role, 'update', 'Wfm')) {
     return { data: null, error: 'Unauthorized' };
   }
   const supabase = await createSupabaseServerClient();
+  const { data: current } = await supabase
+    .from('wfm_presence')
+    .select('status')
+    .eq('tenant_id', session.profile.tenantId)
+    .eq('user_id', session.userId)
+    .maybeSingle();
+  const previous = (current?.status as WfmPresenceStatus | undefined) ?? 'offline';
+
   const { data, error } = await supabase
     .from('wfm_presence')
     .upsert(
       {
         tenant_id: session.profile.tenantId,
         user_id: session.userId,
-        status: parsed.status,
-        until: parsed.until ?? null,
+        status,
+        until: until ?? null,
         created_by: session.userId,
       },
       { onConflict: 'tenant_id,user_id' },
@@ -164,28 +191,186 @@ export async function setMyPresence(input: unknown) {
     .select('user_id, status, until, updated_at')
     .single();
   if (error || !data) return { data: null, error: error?.message ?? 'Unable to set presence' };
+
+  const clockedIn = previous === 'offline' && status !== 'offline';
+  const clockedOut = previous !== 'offline' && status === 'offline';
+  if (clockedIn || clockedOut) {
+    const desk = await loadDeskShift(supabase, session.profile.tenantId, session.userId);
+    await writeAttendancePunch(
+      supabase,
+      session.profile.tenantId,
+      session.userId,
+      clockedIn ? 'clock_in' : 'clock_out',
+      status,
+      source,
+      desk.today?.rosterEntryId,
+    );
+  }
+
   revalidateWfm();
-  return { data: { userId: data.user_id, status: data.status, until: data.until ?? undefined, updatedAt: data.updated_at } as WfmPresence, error: null };
+  revalidatePath('/dashboard');
+  return {
+    data: {
+      userId: data.user_id,
+      status: data.status,
+      until: data.until ?? undefined,
+      updatedAt: data.updated_at,
+    } as WfmPresence,
+    error: null,
+  };
+}
+
+async function loadDeskShift(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  tenantId: string,
+  userId: string,
+): Promise<Pick<WfmDeskState, 'withinShift' | 'today'>> {
+  const timeZone = 'Asia/Jakarta';
+  const now = new Date();
+  const today = zonedYmd(now, timeZone);
+  const yesterday = addDaysYmd(today, -1);
+  const { data } = await supabase
+    .from('wfm_roster_entries')
+    .select('id, group_id, work_date, wfm_shift_templates(name, start_local, end_local, timezone)')
+    .eq('tenant_id', tenantId)
+    .eq('user_id', userId)
+    .in('work_date', [yesterday, today]);
+  const mapped = (data ?? []).map((row) => {
+    const template = Array.isArray(row.wfm_shift_templates) ? row.wfm_shift_templates[0] : row.wfm_shift_templates;
+    return {
+      rosterEntryId: row.id as string,
+      groupId: row.group_id as string,
+      workDate: row.work_date as string,
+      templateName: template?.name ?? 'Shift',
+      startLocal: template ? String(template.start_local).slice(0, 5) : '00:00',
+      endLocal: template ? String(template.end_local).slice(0, 5) : '00:00',
+      timezone: template?.timezone ?? timeZone,
+    };
+  });
+  const picked = pickActiveOrTodayShift(mapped, now, timeZone);
+  if (!picked.entry) return { withinShift: false, today: null };
+  const { data: group } = await supabase
+    .from('assignment_groups')
+    .select('name')
+    .eq('id', picked.entry.groupId)
+    .maybeSingle();
+  return {
+    withinShift: picked.withinShift,
+    today: {
+      workDate: picked.entry.workDate,
+      groupId: picked.entry.groupId,
+      groupName: group?.name,
+      rosterEntryId: picked.entry.rosterEntryId,
+      templateName: picked.entry.templateName,
+      startLocal: picked.entry.startLocal,
+      endLocal: picked.entry.endLocal,
+    },
+  };
+}
+
+export async function getMyPresence(): Promise<WfmPresenceStatus> {
+  const state = await getMyDeskState();
+  return state.presence;
+}
+
+export async function getMyDeskState(): Promise<WfmDeskState> {
+  const session = await getSessionProfile();
+  if (!session || !canRole(session.profile.role, 'read', 'Wfm')) {
+    return { presence: 'offline', clockedIn: false, withinShift: false, today: null };
+  }
+  const supabase = await createSupabaseServerClient();
+  const [{ data }, shift] = await Promise.all([
+    supabase
+      .from('wfm_presence')
+      .select('status')
+      .eq('tenant_id', session.profile.tenantId)
+      .eq('user_id', session.userId)
+      .maybeSingle(),
+    loadDeskShift(supabase, session.profile.tenantId, session.userId),
+  ]);
+  const presence = (data?.status as WfmPresenceStatus | undefined) ?? 'offline';
+  return {
+    presence,
+    clockedIn: presence !== 'offline',
+    withinShift: shift.withinShift,
+    today: shift.today,
+  };
+}
+
+export async function setMyPresence(input: unknown) {
+  const parsed = presenceSchema.parse(input);
+  return applyPresence(parsed.status, 'presence', parsed.until);
+}
+
+export async function clockIn() {
+  return applyPresence('available', 'manual');
+}
+
+export async function clockOut() {
+  return applyPresence('offline', 'manual');
+}
+
+export async function clockSelfOffline(source: 'logout' | 'idle' = 'logout') {
+  try {
+    const session = await getSessionProfile();
+    if (!session || !isStaffRole(session.profile.role)) return;
+    await applyPresence('offline', source);
+  } catch {
+    // Sign-out must still succeed if presence write fails.
+  }
 }
 
 export async function listShiftTemplates(): Promise<WfmShiftTemplate[]> {
   const session = await getSessionProfile();
   if (!session || !canRole(session.profile.role, 'read', 'Wfm')) return [];
   const supabase = await createSupabaseServerClient();
+  await ensureDefaultShiftTemplates(supabase, session);
   const { data } = await supabase
     .from('wfm_shift_templates')
     .select('id, name, start_local, end_local, days, timezone, is_active')
     .eq('tenant_id', session.profile.tenantId)
+    .eq('is_active', true)
     .order('start_local');
-  return (data ?? []).map((row) => ({
-    id: row.id,
-    name: row.name,
-    startLocal: String(row.start_local).slice(0, 5),
-    endLocal: String(row.end_local).slice(0, 5),
-    days: row.days ?? [],
-    timezone: row.timezone,
-    isActive: row.is_active,
-  }));
+  return sortShiftTemplates(
+    (data ?? []).map((row) => ({
+      id: row.id,
+      name: row.name,
+      startLocal: String(row.start_local).slice(0, 5),
+      endLocal: String(row.end_local).slice(0, 5),
+      days: row.days ?? [],
+      timezone: row.timezone,
+      isActive: row.is_active,
+    })),
+  );
+}
+
+async function ensureDefaultShiftTemplates(
+  supabase: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  session: NonNullable<Awaited<ReturnType<typeof getSessionProfile>>>,
+) {
+  if (!canRole(session.profile.role, 'create', 'Wfm')) return;
+  const { data: existing } = await supabase
+    .from('wfm_shift_templates')
+    .select('name')
+    .eq('tenant_id', session.profile.tenantId);
+  const have = new Set((existing ?? []).map((row) => row.name.trim().toLowerCase()));
+  const missing = DEFAULT_SHIFT_TEMPLATES.filter((template) => !have.has(template.name.toLowerCase()));
+  if (missing.length === 0) return;
+  const scoped = await requireAccountId(session);
+  const { error } = await supabase.from('wfm_shift_templates').insert(
+    missing.map((template) => ({
+      tenant_id: session.profile.tenantId,
+      account_id: scoped.accountId,
+      name: template.name,
+      start_local: template.startLocal,
+      end_local: template.endLocal,
+      days: [...template.days],
+      timezone: 'Asia/Jakarta',
+      is_active: true,
+      created_by: session.userId,
+    })),
+  );
+  if (error) console.error('ensureDefaultShiftTemplates', error.message);
 }
 
 export async function createShiftTemplate(input: unknown) {
@@ -281,6 +466,81 @@ export async function upsertRosterEntry(input: unknown) {
   if (error) return { data: null, error: error.message };
   revalidateWfm();
   return { data, error: null };
+}
+
+export async function applyStandardRoster(input: unknown) {
+  const parsedResult = applyRosterSchema.safeParse(input);
+  if (!parsedResult.success) {
+    return { data: null, error: formatZodError(parsedResult.error) };
+  }
+  const parsed = parsedResult.data;
+  if (parsed.toDate < parsed.fromDate) {
+    return { data: null, error: 'Date range is invalid' };
+  }
+  const session = await getSessionProfile();
+  if (!session || !canRole(session.profile.role, 'create', 'Wfm')) {
+    return { data: null, error: 'Unauthorized' };
+  }
+  const supabase = await createSupabaseServerClient();
+  const { data: template } = await supabase
+    .from('wfm_shift_templates')
+    .select('id, days')
+    .eq('tenant_id', session.profile.tenantId)
+    .eq('id', parsed.templateId)
+    .maybeSingle();
+  if (!template) return { data: null, error: 'Shift template not found' };
+
+  const allowedDays = new Set<number>(template.days ?? []);
+  const workDates = eachYmd(parsed.fromDate, parsed.toDate).filter((ymd) => allowedDays.has(isoWeekdayFromYmd(ymd)));
+  if (workDates.length === 0) {
+    return { data: null, error: 'Selected shift has no days in this week' };
+  }
+
+  const { data: members } = await supabase
+    .from('assignment_group_members')
+    .select('user_id')
+    .eq('tenant_id', session.profile.tenantId)
+    .eq('group_id', parsed.groupId);
+  let userIds = Array.from(new Set((members ?? []).map((row) => row.user_id)));
+  if (userIds.length === 0) {
+    const { data: group } = await supabase
+      .from('assignment_groups')
+      .select('account_id')
+      .eq('id', parsed.groupId)
+      .eq('tenant_id', session.profile.tenantId)
+      .maybeSingle();
+    if (group?.account_id) {
+      const { data: accountMembers } = await supabase
+        .from('account_members')
+        .select('user_id, role')
+        .eq('tenant_id', session.profile.tenantId)
+        .eq('account_id', group.account_id)
+        .neq('role', 'portal');
+      userIds = Array.from(new Set((accountMembers ?? []).map((row) => row.user_id)));
+    }
+  }
+  if (userIds.length === 0) {
+    return { data: null, error: 'No members on this group' };
+  }
+
+  const rows = userIds.flatMap((userId) =>
+    workDates.map((workDate) => ({
+      tenant_id: session.profile.tenantId,
+      user_id: userId,
+      group_id: parsed.groupId,
+      work_date: workDate,
+      template_id: parsed.templateId,
+      source: 'planned' as const,
+      created_by: session.userId,
+    })),
+  );
+
+  const { error } = await supabase.from('wfm_roster_entries').upsert(rows, {
+    onConflict: 'user_id,group_id,work_date',
+  });
+  if (error) return { data: null, error: error.message };
+  revalidateWfm();
+  return { data: { applied: rows.length }, error: null };
 }
 
 export async function importRosterFile(formData: FormData) {

@@ -30,6 +30,13 @@ export const rosterEntrySchema = z.object({
   source: wfmRosterSourceSchema.optional().default('override'),
 });
 
+export const applyRosterSchema = z.object({
+  groupId: uuidSchema,
+  templateId: uuidSchema,
+  fromDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  toDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+});
+
 export const timeOffSchema = z.object({
   userId: uuidSchema,
   startsAt: z.string(),
@@ -171,7 +178,26 @@ export type WfmOncallSlot = {
   backupName?: string;
 };
 
-export type WfmEligibleReason = 'off_shift' | 'on_leave' | 'offline' | 'at_cap' | 'missing_skill';
+export type WfmEligibleReason = 'off_shift' | 'on_leave' | 'offline' | 'busy' | 'at_cap' | 'missing_skill';
+
+export type WfmAttendanceSource = 'manual' | 'presence' | 'logout' | 'idle';
+
+export type WfmDeskShift = {
+  workDate: string;
+  groupId: string;
+  groupName?: string;
+  rosterEntryId?: string;
+  templateName: string;
+  startLocal: string;
+  endLocal: string;
+};
+
+export type WfmDeskState = {
+  presence: WfmPresenceStatus;
+  clockedIn: boolean;
+  withinShift: boolean;
+  today: WfmDeskShift | null;
+};
 
 export type WfmEligibleAgent = {
   id: string;

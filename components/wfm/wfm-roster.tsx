@@ -5,7 +5,8 @@ import { addDays, format, startOfWeek } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Select } from '@/components/ui/select';
 import { WfmNav } from '@/components/wfm/wfm-nav';
-import { deleteRosterEntry, importRosterFile, upsertRosterEntry } from '@/lib/wfm/actions';
+import { applyStandardRoster, deleteRosterEntry, importRosterFile, upsertRosterEntry } from '@/lib/wfm/actions';
+import { formatShiftHours, shiftTemplateLabel } from '@/lib/wfm/default-shifts';
 import type { WfmRosterEntry, WfmShiftTemplate } from '@/lib/wfm/schema';
 import { useI18n } from '@/components/layout/preferences-provider';
 import { useRouter } from 'next/navigation';
@@ -20,12 +21,14 @@ export function WfmRoster({
   groups,
   staff,
   canEdit,
+  selfOnly = false,
 }: {
   entries: WfmRosterEntry[];
   templates: WfmShiftTemplate[];
   groups: Group[];
   staff: Staff[];
   canEdit: boolean;
+  selfOnly?: boolean;
 }) {
   const { t } = useI18n();
   const router = useRouter();
@@ -34,25 +37,55 @@ export function WfmRoster({
   const [groupId, setGroupId] = useState(groups[0]?.id ?? '');
   const [templateId, setTemplateId] = useState(templates[0]?.id ?? '');
   const [uploading, setUploading] = useState(false);
-  const filtered = useMemo(
-    () => (groupId ? entries.filter((entry) => entry.groupId === groupId) : entries),
-    [entries, groupId],
-  );
+  const [applying, setApplying] = useState(false);
+  const filtered = useMemo(() => {
+    if (selfOnly) return entries;
+    return groupId ? entries.filter((entry) => entry.groupId === groupId) : entries;
+  }, [entries, groupId, selfOnly]);
   const byKey = useMemo(() => {
     const map = new Map<string, WfmRosterEntry>();
     for (const entry of filtered) map.set(`${entry.userId}:${entry.workDate}`, entry);
     return map;
   }, [filtered]);
   const members = useMemo(() => {
+    if (selfOnly) return staff;
     const ids = new Set(filtered.map((entry) => entry.userId));
     const listed = staff.filter((person) => ids.has(person.id));
     return listed.length > 0 ? listed : staff;
-  }, [filtered, staff]);
+  }, [filtered, selfOnly, staff]);
 
-  async function assign(userId: string, workDate: string) {
+  async function assign(userId: string, workDate: string, entry?: WfmRosterEntry) {
     if (!groupId || !templateId) return;
+    if (entry && entry.templateId === templateId) {
+      await deleteRosterEntry(entry.id);
+      router.refresh();
+      return;
+    }
     await upsertRosterEntry({ userId, groupId, workDate, templateId, source: 'override' });
     router.refresh();
+  }
+
+  async function applyWeek() {
+    if (!groupId || !templateId) return;
+    setApplying(true);
+    try {
+      const result = await applyStandardRoster({
+        groupId,
+        templateId,
+        fromDate: format(weekStart, 'yyyy-MM-dd'),
+        toDate: format(addDays(weekStart, 6), 'yyyy-MM-dd'),
+      });
+      if (!result.data) {
+        toastError(result.error ?? t.wfm.rosterApplyFailed);
+        return;
+      }
+      toastSuccess(t.wfm.rosterApplied.replace('{{n}}', String(result.data.applied)));
+      router.refresh();
+    } catch {
+      toastError(t.wfm.rosterApplyFailed);
+    } finally {
+      setApplying(false);
+    }
   }
 
   async function handleUpload(file: File) {
@@ -80,23 +113,31 @@ export function WfmRoster({
 
   return (
     <div className="space-y-6 p-6">
-      <WfmNav />
+      <WfmNav selfOnly={selfOnly} />
+      {selfOnly ? <p className="text-sm text-zinc-400">{t.wfm.myRosterHint}</p> : null}
       <div className="flex flex-wrap gap-2">
-        <Select value={groupId} onChange={(event) => setGroupId(event.target.value)} className="max-w-xs">
-          {groups.map((group) => (
-            <option key={group.id} value={group.id}>
-              {group.name}
-            </option>
-          ))}
-        </Select>
+        {selfOnly ? null : (
+          <Select value={groupId} onChange={(event) => setGroupId(event.target.value)} className="max-w-xs">
+            {groups.map((group) => (
+              <option key={group.id} value={group.id}>
+                {group.name}
+              </option>
+            ))}
+          </Select>
+        )}
         {canEdit ? (
           <Select value={templateId} onChange={(event) => setTemplateId(event.target.value)} className="max-w-xs">
             {templates.map((template) => (
               <option key={template.id} value={template.id}>
-                {template.name} {template.startLocal}-{template.endLocal}
+                {shiftTemplateLabel(template.name, template.startLocal, template.endLocal)}
               </option>
             ))}
           </Select>
+        ) : null}
+        {canEdit ? (
+          <Button size="sm" variant="outline" disabled={!groupId || !templateId || applying} onClick={() => void applyWeek()}>
+            {applying ? t.wfm.rosterApplying : t.wfm.rosterApplyWeek}
+          </Button>
         ) : null}
         {canEdit ? (
           <div className="ml-auto flex flex-wrap items-center gap-2">
@@ -148,12 +189,14 @@ export function WfmRoster({
                         <button
                           type="button"
                           disabled={!canEdit}
-                          onClick={() => void deleteRosterEntry(entry.id).then(() => router.refresh())}
+                          onClick={() => void assign(person.id, ymd, entry)}
                           className="w-full rounded-md border border-zinc-800 bg-zinc-900 px-2 py-1 text-left text-xs text-zinc-200 hover:border-zinc-600 disabled:opacity-70"
                         >
                           {entry.templateName}
                           <span className="mt-0.5 block font-mono text-[10px] text-zinc-500">
-                            {entry.startLocal}-{entry.endLocal}
+                            {entry.startLocal && entry.endLocal
+                              ? formatShiftHours(entry.startLocal, entry.endLocal)
+                              : null}
                           </span>
                         </button>
                       ) : canEdit ? (
@@ -172,7 +215,7 @@ export function WfmRoster({
         </table>
       </div>
       <p className="text-xs text-zinc-500">
-        {t.wfm.rosterHint} {canEdit ? t.wfm.rosterUploadHint : ''}
+        {selfOnly ? t.wfm.myRosterHint : t.wfm.rosterHint} {canEdit ? t.wfm.rosterUploadHint : ''}
       </p>
     </div>
   );

@@ -14,7 +14,7 @@ const tabs = [
   { href: '/wfm/reviews', key: 'reviews' as const },
 ];
 
-export function WfmNav() {
+export function WfmNav({ selfOnly = false }: { selfOnly?: boolean }) {
   const pathname = usePathname();
   const { t } = useI18n();
   return (
@@ -36,7 +36,7 @@ export function WfmNav() {
                 active ? 'bg-zinc-800 text-zinc-50' : 'text-zinc-400 hover:text-zinc-200',
               )}
             >
-              {t.wfm[tab.key]}
+              {selfOnly && tab.key === 'roster' ? t.wfm.myRoster : t.wfm[tab.key]}
             </Link>
           );
         })}

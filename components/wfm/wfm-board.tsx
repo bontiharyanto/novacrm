@@ -21,7 +21,7 @@ const presenceTone: Record<WfmPresenceStatus, 'success' | 'warning' | 'info' | '
 export function WfmBoard({ rows, canSetPresence }: { rows: WfmOccupancyRow[]; canSetPresence: boolean }) {
   const { t } = useI18n();
   const router = useRouter();
-  const [presence, setPresence] = useState<WfmPresenceStatus>('available');
+  const [presence, setPresence] = useState<WfmPresenceStatus>('offline');
   const refresh = useCallback(() => router.refresh(), [router]);
   useRealtimeTable('wfm_presence', refresh);
   useRealtimeTable('tickets', refresh);
@@ -82,7 +82,7 @@ export function WfmBoard({ rows, canSetPresence }: { rows: WfmOccupancyRow[]; ca
                       <tr key={agent.id} className="border-b border-zinc-800/80">
                         <td className="px-3 py-2.5 text-zinc-50">{agent.fullName}</td>
                         <td className="px-3 py-2.5">
-                          <Badge tone={presenceTone[agent.presence]}>{agent.presence}</Badge>
+                          <Badge tone={presenceTone[agent.presence]}>{t.wfm[agent.presence]}</Badge>
                         </td>
                         <td className="px-3 py-2.5 font-mono text-xs text-zinc-400">
                           {agent.openTickets}/{agent.maxOpen}
@@ -91,7 +91,9 @@ export function WfmBoard({ rows, canSetPresence }: { rows: WfmOccupancyRow[]; ca
                           {agent.eligible ? (
                             <Badge tone="success">{t.wfm.eligible}</Badge>
                           ) : (
-                            <span className="text-xs text-zinc-500">{agent.reasons.join(', ')}</span>
+                            <span className="text-xs text-zinc-500">
+                              {agent.reasons.map((reason) => t.wfm.reason[reason]).join(', ')}
+                            </span>
                           )}
                         </td>
                       </tr>

@@ -83,4 +83,16 @@ export function isWithinShift(
   return at.getTime() >= start.getTime() && at.getTime() < end.getTime();
 }
 
+export function pickActiveOrTodayShift<
+  T extends { workDate: string; startLocal: string; endLocal: string; timezone?: string },
+>(entries: T[], at: Date, timeZone = 'Asia/Jakarta') {
+  const today = zonedYmd(at, timeZone);
+  const active = entries.find((entry) =>
+    isWithinShift(at, entry.workDate, entry.startLocal, entry.endLocal, entry.timezone ?? timeZone),
+  );
+  if (active) return { entry: active, withinShift: true };
+  const planned = entries.find((entry) => entry.workDate === today);
+  return { entry: planned ?? null, withinShift: false };
+}
+
 export const WEEKDAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];

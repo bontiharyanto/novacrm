@@ -119,11 +119,12 @@ export async function listEligibleAgentsForGroup(
     .filter((row) => isStaffRole(row.role))
     .map((row) => {
       const reasons: WfmEligibleReason[] = [];
-      const presenceStatus = presenceMap.get(row.id)?.status ?? 'available';
+      const presenceStatus = presenceMap.get(row.id)?.status ?? 'offline';
       const shiftOk = !hasRoster || onShift.has(row.id);
       if (!shiftOk) reasons.push('off_shift');
       if (offSet.has(row.id)) reasons.push('on_leave');
       if (presenceStatus === 'offline' || presenceStatus === 'break') reasons.push('offline');
+      if (presenceStatus === 'busy') reasons.push('busy');
       const openTickets = openMap.get(row.id) ?? 0;
       if (openTickets >= maxOpen) reasons.push('at_cap');
       const skillIds = skillMap.get(row.id) ?? [];
@@ -165,10 +166,15 @@ export function pickDispatcher(
   }
   if (strategy === 'oncall') {
     for (const userId of oncallUserIds) {
-      const hit = agents.find((agent) => agent.id === userId && !agent.reasons.includes('on_leave') && agent.presence !== 'offline');
+      const hit = agents.find(
+        (agent) =>
+          agent.id === userId &&
+          !agent.reasons.includes('on_leave') &&
+          agent.presence === 'available',
+      );
       if (hit) return hit;
     }
-    pool = agents.filter((agent) => !agent.reasons.includes('on_leave') && agent.presence !== 'offline');
+    pool = agents.filter((agent) => !agent.reasons.includes('on_leave') && agent.presence === 'available');
   }
 
   if (pool.length === 0) return null;

@@ -16,6 +16,7 @@ import {
   type TenantStatus,
 } from '@/lib/tenants/schema';
 import { formatZodError } from '@/lib/validation/zod-error';
+import { defaultShiftInsertRows } from '@/lib/wfm/default-shifts';
 
 type TenantRow = {
   id: string;
@@ -293,6 +294,13 @@ export async function createTenant(input: unknown) {
       role: 'lead',
       created_by: gate.session.userId,
     });
+
+    const { error: shiftError } = await admin
+      .from('wfm_shift_templates')
+      .insert(defaultShiftInsertRows(tenantId, account.id, gate.session.userId));
+    if (shiftError) {
+      throw new Error(shiftError.message);
+    }
 
     const { data: calendar, error: calendarError } = await admin
       .from('sla_calendars')

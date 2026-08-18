@@ -49,6 +49,7 @@ import type { AppRole, Actions, Subjects } from '@/lib/rbac/ability';
 import { canRole } from '@/lib/rbac/ability';
 import { isTenantAdminRole, ROLE_LABEL } from '@/lib/rbac/roles';
 import { PresenceControl } from '@/components/layout/presence-control';
+import { ShiftBanner } from '@/components/layout/shift-banner';
 import { NotificationBell } from '@/components/layout/notification-bell';
 import { IdleSessionGuard } from '@/components/layout/idle-session-guard';
 import { BrandWelcome } from '@/components/brand/brand-welcome';
@@ -559,6 +560,7 @@ export function AgentShell({
           </div>
         </header>
         <motion.main initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2, ease: 'easeOut' }}>
+          {canRole(role, 'read', 'Wfm') ? <ShiftBanner /> : null}
           {children}
         </motion.main>
       </div>

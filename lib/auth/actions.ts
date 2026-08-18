@@ -9,8 +9,10 @@ import { getSessionProfile } from '@/lib/auth/session';
 import { getPreferences } from '@/lib/preferences/server';
 import { getDictionary } from '@/lib/i18n';
 import { markPasswordChanged } from '@/lib/auth/password-actions';
+import { clockSelfOffline } from '@/lib/wfm/actions';
 
 export async function signOutAction() {
+  await clockSelfOffline('logout');
   const supabase = await createSupabaseServerClient();
   await supabase.auth.signOut();
 
@@ -27,6 +29,7 @@ export async function signOutAction() {
 }
 
 export async function signOutIdleAction() {
+  await clockSelfOffline('idle');
   const supabase = await createSupabaseServerClient();
   await supabase.auth.signOut();
 

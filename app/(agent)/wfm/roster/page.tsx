@@ -19,13 +19,18 @@ export default async function WfmRosterPage() {
     listAssignmentGroups(),
     listAssignableAgents(),
   ]);
+  const canEdit = canRole(session.profile.role, 'create', 'Wfm');
+  const mine = canEdit ? entries : entries.filter((entry) => entry.userId === session.userId);
+  const me = staff.find((agent) => agent.id === session.userId);
+  const visibleStaff = canEdit ? staff : [{ id: session.userId, fullName: me?.fullName ?? session.profile.fullName }];
   return (
     <WfmRoster
-      entries={entries}
+      entries={mine}
       templates={templates}
       groups={groups.map((group) => ({ id: group.id, name: group.name }))}
-      staff={staff.map((agent) => ({ id: agent.id, fullName: agent.fullName }))}
-      canEdit={canRole(session.profile.role, 'create', 'Wfm')}
+      staff={visibleStaff.map((agent) => ({ id: agent.id, fullName: agent.fullName }))}
+      canEdit={canEdit}
+      selfOnly={!canEdit}
     />
   );
 }
