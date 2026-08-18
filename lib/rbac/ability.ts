@@ -97,6 +97,7 @@ export function defineAbilityFor(role: AppRole): AppAbility {
     can('read', 'Workflow');
     can('create', 'Workflow');
     can('update', 'Workflow');
+    can('delete', 'Workflow');
     can('create', 'Governance');
     can('update', 'Governance');
     can('create', 'Wfm');

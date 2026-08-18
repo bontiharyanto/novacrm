@@ -2,18 +2,25 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Plus } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Dialog } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRealtimeTable } from '@/lib/supabase/realtime';
 import { formatRelativeId } from '@/lib/utils/dates';
 import { WORKFLOW_ACTIONS, WORKFLOW_EVENTS, type WorkflowRule, type WorkflowRun } from '@/lib/workflows/schema';
+import { useI18n } from '@/components/layout/preferences-provider';
+import { toastError, toastSuccess } from '@/components/ui/toast';
 
-export function WorkflowDashboard() {
+export function WorkflowDashboard({ canDelete = false }: { canDelete?: boolean }) {
+  const { t } = useI18n();
   const [rules, setRules] = useState<WorkflowRule[]>([]);
   const [runs, setRuns] = useState<WorkflowRun[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pending, setPending] = useState<WorkflowRule | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const load = useCallback(async () => {
     const response = await fetch('/api/workflows');
@@ -37,6 +44,26 @@ export function WorkflowDashboard() {
       body: JSON.stringify({ isActive: !rule.isActive }),
     });
     await load();
+  }
+
+  async function remove() {
+    if (!pending) return;
+    setDeleting(true);
+    try {
+      const response = await fetch(`/api/workflows/${pending.id}`, { method: 'DELETE' });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        toastError(payload.error ?? t.workflow.deleteFailed);
+        return;
+      }
+      setPending(null);
+      await load();
+      toastSuccess(t.workflow.deleted);
+    } catch {
+      toastError(t.workflow.deleteFailed);
+    } finally {
+      setDeleting(false);
+    }
   }
 
   return (
@@ -85,6 +112,7 @@ export function WorkflowDashboard() {
                   <th className="px-3 py-2 font-medium">Level</th>
                   <th className="px-3 py-2 font-medium">State</th>
                   <th className="px-3 py-2 font-medium">Opened</th>
+                  {canDelete ? <th className="px-3 py-2 font-medium" /> : null}
                 </tr>
               </thead>
               <tbody>
@@ -112,6 +140,18 @@ export function WorkflowDashboard() {
                       </button>
                     </td>
                     <td className="px-3 py-2.5 text-zinc-500">{formatRelativeId(rule.createdAt)}</td>
+                    {canDelete ? (
+                      <td className="px-3 py-2.5 text-right">
+                        <button
+                          type="button"
+                          onClick={() => setPending(rule)}
+                          className="rounded-md p-1 text-zinc-500 hover:bg-zinc-800 hover:text-rose-300"
+                          aria-label={t.workflow.delete}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </td>
+                    ) : null}
                   </tr>
                 ))}
               </tbody>
@@ -119,6 +159,21 @@ export function WorkflowDashboard() {
           )}
         </div>
       )}
+
+      <Dialog open={Boolean(pending)} title={t.workflow.deleteTitle} onClose={() => (deleting ? undefined : setPending(null))}>
+        <div className="space-y-4">
+          <p className="text-sm leading-6 text-zinc-400">{t.workflow.deleteHint}</p>
+          {pending ? <p className="text-sm font-medium text-zinc-100">{pending.name}</p> : null}
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="ghost" disabled={deleting} onClick={() => setPending(null)}>
+              {t.common.cancel}
+            </Button>
+            <Button type="button" disabled={deleting} onClick={() => void remove()}>
+              {deleting ? t.workflow.saving : t.workflow.delete}
+            </Button>
+          </div>
+        </div>
+      </Dialog>
     </div>
   );
 }

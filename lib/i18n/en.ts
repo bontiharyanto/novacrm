@@ -1023,6 +1023,11 @@ export const en = {
     saving: 'Saving…',
     active: 'Active',
     inactive: 'Inactive',
+    delete: 'Delete',
+    deleteTitle: 'Delete this flow?',
+    deleteHint: 'The flow stops immediately. Run history stays, but this automation cannot be restored.',
+    deleted: 'Flow deleted.',
+    deleteFailed: 'Unable to delete the flow.',
   },
 };
 

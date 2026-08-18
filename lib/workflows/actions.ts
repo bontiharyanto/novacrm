@@ -180,6 +180,26 @@ export async function updateWorkflowRule(ruleId: string, input: unknown) {
   return { data: mapRule(data as WorkflowRow), error: null };
 }
 
+export async function deleteWorkflowRule(ruleId: string) {
+  const session = await getSessionProfile();
+  if (!session || !canRole(session.profile.role, 'delete', 'Workflow')) {
+    return { data: null, error: 'Unauthorized' };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from('workflow_rules')
+    .delete()
+    .eq('id', ruleId)
+    .eq('tenant_id', session.profile.tenantId)
+    .select('id')
+    .maybeSingle();
+
+  if (error) return { data: null, error: error.message };
+  if (!data) return { data: null, error: 'Workflow not found' };
+  return { data: { id: data.id }, error: null };
+}
+
 export async function evaluateWorkflow(
   event: WorkflowRule['event'],
   context: Record<string, unknown>,

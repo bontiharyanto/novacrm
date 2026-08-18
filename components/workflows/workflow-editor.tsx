@@ -67,15 +67,31 @@ function toFlow(definition: WorkflowDefinition) {
   };
 }
 
-export function WorkflowEditor({ ruleId, template }: { ruleId?: string; template?: string }) {
+export function WorkflowEditor({
+  ruleId,
+  template,
+  canDelete = false,
+}: {
+  ruleId?: string;
+  template?: string;
+  canDelete?: boolean;
+}) {
   return (
     <ReactFlowProvider>
-      <WorkflowEditorInner ruleId={ruleId} template={template} />
+      <WorkflowEditorInner ruleId={ruleId} template={template} canDelete={canDelete} />
     </ReactFlowProvider>
   );
 }
 
-function WorkflowEditorInner({ ruleId, template }: { ruleId?: string; template?: string }) {
+function WorkflowEditorInner({
+  ruleId,
+  template,
+  canDelete,
+}: {
+  ruleId?: string;
+  template?: string;
+  canDelete: boolean;
+}) {
   const router = useRouter();
   const { t } = useI18n();
   const seed = template ? getWorkflowTemplate(template).definition : emptyDefinition();
@@ -90,6 +106,7 @@ function WorkflowEditorInner({ ruleId, template }: { ruleId?: string; template?:
   const [runs, setRuns] = useState<Array<{ id: string; status: string; event: string; createdAt: string }>>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [saveAsOpen, setSaveAsOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [saveAsName, setSaveAsName] = useState('');
   const [error, setError] = useState('');
 
@@ -249,6 +266,26 @@ function WorkflowEditorInner({ ruleId, template }: { ruleId?: string; template?:
     const base = name.trim() || t.workflow.newFlow;
     setSaveAsName(ruleId ? `${base} (copy)` : base);
     setSaveAsOpen(true);
+  }
+
+  async function remove() {
+    if (!ruleId) return;
+    setIsSaving(true);
+    try {
+      const response = await fetch(`/api/workflows/${ruleId}`, { method: 'DELETE' });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        toastError(payload.error ?? t.workflow.deleteFailed);
+        return;
+      }
+      toastSuccess(t.workflow.deleted);
+      router.push('/workflows');
+    } catch {
+      toastError(t.workflow.deleteFailed);
+    } finally {
+      setIsSaving(false);
+      setDeleteOpen(false);
+    }
   }
 
   const inspector = useMemo(() => {
@@ -465,6 +502,11 @@ function WorkflowEditorInner({ ruleId, template }: { ruleId?: string; template?:
             <Button type="button" variant="ghost" onClick={() => setIsActive((value) => !value)}>
               {isActive ? t.workflow.active : t.workflow.inactive}
             </Button>
+            {canDelete && ruleId ? (
+              <Button type="button" variant="ghost" disabled={isSaving} onClick={() => setDeleteOpen(true)}>
+                {t.workflow.delete}
+              </Button>
+            ) : null}
             <Button type="button" variant="ghost" onClick={() => router.push('/workflows')}>
               {t.common.cancel}
             </Button>
@@ -508,6 +550,21 @@ function WorkflowEditorInner({ ruleId, template }: { ruleId?: string; template?:
               disabled={isSaving || saveAsName.trim().length < 1}
             >
               {isSaving ? t.workflow.saving : t.workflow.saveAs}
+            </Button>
+          </div>
+        </div>
+      </Dialog>
+
+      <Dialog open={deleteOpen} title={t.workflow.deleteTitle} onClose={() => (isSaving ? undefined : setDeleteOpen(false))}>
+        <div className="space-y-4">
+          <p className="text-sm leading-6 text-zinc-400">{t.workflow.deleteHint}</p>
+          <p className="text-sm font-medium text-zinc-100">{name || t.workflow.newFlow}</p>
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="ghost" disabled={isSaving} onClick={() => setDeleteOpen(false)}>
+              {t.common.cancel}
+            </Button>
+            <Button type="button" disabled={isSaving} onClick={() => void remove()}>
+              {isSaving ? t.workflow.saving : t.workflow.delete}
             </Button>
           </div>
         </div>

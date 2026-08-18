@@ -1026,5 +1026,10 @@ export const id: Dictionary = {
     saving: 'Menyimpan…',
     active: 'Aktif',
     inactive: 'Nonaktif',
+    delete: 'Hapus',
+    deleteTitle: 'Hapus flow ini?',
+    deleteHint: 'Flow berhenti langsung. Riwayat run tetap ada, tetapi otomasi ini tidak bisa dikembalikan.',
+    deleted: 'Flow dihapus.',
+    deleteFailed: 'Flow gagal dihapus.',
   },
 };
