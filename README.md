@@ -58,6 +58,7 @@ CASL on the frontend; RLS on the backend. Sidebar account filter: one customer a
 | [Persiapan migrasi server](docs/MIGRATE-SERVER.md) | Akun, secret, DNS, migrasi — sebelum bootstrap |
 | [Server cutover](docs/SERVER.md) | Hosted Supabase + VPS checklist |
 | [Production deploy](docs/DEPLOYMENT.md) | VPS / Traefik / GHCR |
+| [Backup](docs/BACKUP.md) | Dump 02:00 WIB, cek file, restore |
 
 ## Getting started (laptop)
 
@@ -123,7 +124,7 @@ Push to `main` runs [.github/workflows/deploy.yml](.github/workflows/deploy.yml)
 
 Production compose: `docker-compose.prod.yml` (Traefik, 3 web replicas, worker, Redis, MinIO, daily 02:00 backup). Restore with `./scripts/restore.sh YYYYMMDD`. Ops is laptop/loopback only — see [docs/OPS.md](docs/OPS.md).
 
-See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for secrets, VPS bootstrap, backup, and server setup.
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for secrets, VPS bootstrap, and server setup. Daily dump: [docs/BACKUP.md](docs/BACKUP.md).
 
 ## License
 

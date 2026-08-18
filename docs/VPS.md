@@ -2,7 +2,7 @@
 
 Runbook instance yang **sudah jalan**: Ubuntu VPS + Traefik + image GHCR + Supabase hosted.
 
-Lab laptop tetap: [LOCAL.md](LOCAL.md). Checklist umum: [MIGRATE-SERVER.md](MIGRATE-SERVER.md), [SERVER.md](SERVER.md), [DEPLOYMENT.md](DEPLOYMENT.md).
+Lab laptop tetap: [LOCAL.md](LOCAL.md). Checklist umum: [MIGRATE-SERVER.md](MIGRATE-SERVER.md), [SERVER.md](SERVER.md), [DEPLOYMENT.md](DEPLOYMENT.md). Cadangan 02:00: [BACKUP.md](BACKUP.md).
 
 Jangan `supabase db reset`. Jangan `npx supabase start` di VPS. Jangan commit file env.
 
@@ -238,7 +238,8 @@ Setup account, divisi/dept, user portal, dan arsip (tanpa Delete): [tenant-opera
 | `TRAEFIK DEFAULT CERT` + 404 | Label `Host(novacrm.local)` atau Traefik tidak baca Docker | `--env-file .env.production` + Traefik **v3.6.1** |
 | `client version 1.24 is too old` | Traefik v3.3 vs Docker 29 | Pin `traefik:v3.6.1`, recreate |
 | `:9001` timeout | Port tidak dipublish | Pakai app / `https://files.novacrm.click` (S3) |
-| `/tenants` hilang | Role `admin` | Login `superadmin@novacrm.app` |
+| `pg_dump: server version mismatch` | Image backup 16 vs Supabase 17 | Recreate `backup` (`postgres:17-alpine`) — [BACKUP.md](BACKUP.md) |
+| `no such service: web: disabled` | `up backup --scale web=1` | Recreate tanpa `--scale` |
 
 Log:
 

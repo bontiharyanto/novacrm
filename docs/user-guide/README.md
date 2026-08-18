@@ -38,6 +38,7 @@ Item katalog: [Catalog & record producer](catalog-guidance.md). Matriks hak: [RB
 | [Operasi tenant](tenant-operations.md) | Admin/manager: tenant → account → org → portal → arsip |
 | [VPS go-live](../VPS.md) | Engineer: produksi `novacrm.click` |
 | [Deployment](../DEPLOYMENT.md) | Engineer: VPS / production |
+| [Backup](../BACKUP.md) | Engineer: dump 02:00 WIB, restore |
 
 ## Demo logins
 
