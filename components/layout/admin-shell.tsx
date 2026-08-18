@@ -315,8 +315,13 @@ function SidebarFooter({
   const appearanceActive = pathname === '/settings/appearance';
   const securityActive = pathname.startsWith('/settings/security');
   const notificationsActive = pathname.startsWith('/settings/notifications');
+  const reportScheduleActive = pathname.startsWith('/settings/reports');
   const integrationsActive =
-    pathname.startsWith('/settings') && !appearanceActive && !securityActive && !notificationsActive;
+    pathname.startsWith('/settings') &&
+    !appearanceActive &&
+    !securityActive &&
+    !notificationsActive &&
+    !reportScheduleActive;
   const roleLabel = t.roles[role] ?? ROLE_LABEL[role] ?? role;
 
   return (
@@ -350,6 +355,13 @@ function SidebarFooter({
               label={t.nav.notifications}
               icon={Mail}
               active={notificationsActive}
+              onNavigate={onNavigate}
+            />
+            <NavLink
+              href="/settings/reports"
+              label={t.nav.reportSchedule}
+              icon={BarChart3}
+              active={reportScheduleActive}
               onNavigate={onNavigate}
             />
           </>

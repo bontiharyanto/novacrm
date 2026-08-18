@@ -143,6 +143,12 @@ export function ReportsPage() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Link
+            href="/settings/reports"
+            className="rounded-md border border-zinc-800 px-3 py-1.5 text-xs text-zinc-300 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-zinc-700 hover:text-zinc-50"
+          >
+            Daily email
+          </Link>
+          <Link
             href="/assistant"
             className="rounded-md border border-zinc-800 px-3 py-1.5 text-xs text-zinc-300 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-zinc-700 hover:text-zinc-50"
           >

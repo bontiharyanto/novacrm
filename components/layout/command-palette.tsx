@@ -188,6 +188,9 @@ export function CommandPalette({ open, onOpenChange, role }: { open: boolean; on
                   <Command.Item className="cmdk-item" onSelect={() => go('/settings/notifications')}>
                     <Mail className="h-3.5 w-3.5" /> {t.nav.notifications}
                   </Command.Item>
+                  <Command.Item className="cmdk-item" onSelect={() => go('/settings/reports')}>
+                    <BarChart3 className="h-3.5 w-3.5" /> {t.nav.reportSchedule}
+                  </Command.Item>
                 </>
               ) : null}
             </Command.Group>

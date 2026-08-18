@@ -494,6 +494,21 @@ values
   )
 on conflict do nothing;
 
+insert into public.report_schedules (
+  tenant_id, is_active, recipients, range_days, send_hour, timezone, include_aging, created_by
+)
+values (
+  '11111111-1111-1111-1111-111111111111',
+  false,
+  'admin@novacrm.app',
+  7,
+  7,
+  'Asia/Jakarta',
+  true,
+  '22222222-2222-2222-2222-222222222222'
+)
+on conflict (tenant_id) do nothing;
+
 insert into public.notification_logs (tenant_id, channel, recipient, subject, body, status)
 values
   ('11111111-1111-1111-1111-111111111111', 'whatsapp', '6281234567890', 'Ticket baru dibuat', 'Halo, tiket baru telah dibuat.', 'sent'),

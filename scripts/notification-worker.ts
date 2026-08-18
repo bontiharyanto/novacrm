@@ -3,6 +3,7 @@ import { startNotificationWorker } from '../lib/queue/notification.worker';
 import { startWorkflowWorker } from '../lib/queue/workflow.worker';
 import { startWfmWorker } from '../lib/queue/wfm.worker';
 import { startCsatWorker } from '../lib/queue/csat.worker';
+import { startReportWorker } from '../lib/queue/report.worker';
 
 loadLocalEnvFile();
 
@@ -10,11 +11,20 @@ const notificationWorker = startNotificationWorker();
 const workflowWorker = startWorkflowWorker();
 const wfmWorker = startWfmWorker();
 const csatWorker = startCsatWorker();
+const reportWorker = startReportWorker();
 
-console.info('NovaCRM workers listening on novacrm-notifications + novacrm-workflows + novacrm-wfm + novacrm-csat');
+console.info(
+  'NovaCRM workers listening on novacrm-notifications + novacrm-workflows + novacrm-wfm + novacrm-csat + novacrm-reports',
+);
 
 async function shutdown() {
-  await Promise.all([notificationWorker.close(), workflowWorker.close(), wfmWorker.close(), csatWorker.close()]);
+  await Promise.all([
+    notificationWorker.close(),
+    workflowWorker.close(),
+    wfmWorker.close(),
+    csatWorker.close(),
+    reportWorker.close(),
+  ]);
   process.exit(0);
 }
 
