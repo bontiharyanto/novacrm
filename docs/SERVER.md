@@ -85,6 +85,7 @@ Make the GHCR package public, or keep `docker login ghcr.io` on the VPS (the wor
 - [ ] MinIO CORS allows `https://$APP_HOST`
 - [ ] Backup: dump sekali + cron 02:00 — [BACKUP.md](BACKUP.md)
 - [ ] Restore drill on a scratch project — [RESTORE.md](RESTORE.md)
+- [ ] Kesiapan operasional (pilot vs produksi) — [OPERATIONS.md](OPERATIONS.md)
 
 ## 6. Rollback
 

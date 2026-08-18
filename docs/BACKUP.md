@@ -2,6 +2,8 @@
 
 Cadangan harian NovaCRM di VPS. Database hosted (Supabase) di-dump ke volume Docker; lampiran MinIO di-mirror hanya jika `BACKUP_S3_*` diisi.
 
+Kesiapan operasional (apa yang boleh disebut produksi): [OPERATIONS.md](OPERATIONS.md). Restore: [RESTORE.md](RESTORE.md).
+
 Jangan commit `.env.production`. Jangan paste isi dump ke chat. Jangan restore dump ke project production kecuali itu tujuan pemulihan yang disepakati.
 
 Runbook VPS: [VPS.md](VPS.md). Compose: `docker-compose.prod.yml` service `backup`.

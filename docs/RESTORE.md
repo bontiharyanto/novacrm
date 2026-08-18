@@ -2,7 +2,7 @@
 
 Pemulihan dari dump harian `novacrm-YYYYMMDD.sql.gz`. Dump **tidak** berisi `DROP`; target harus database **kosong / project scratch**.
 
-Cadangan: [BACKUP.md](BACKUP.md). Jangan `supabase db reset` di production. Jangan paste `DATABASE_URL` atau isi dump ke chat.
+Cadangan: [BACKUP.md](BACKUP.md). Kesiapan operasional: [OPERATIONS.md](OPERATIONS.md). Jangan `supabase db reset` di production. Jangan paste `DATABASE_URL` atau isi dump ke chat.
 
 ---
 

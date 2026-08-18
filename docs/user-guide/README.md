@@ -40,6 +40,7 @@ Item katalog: [Catalog & record producer](catalog-guidance.md). Matriks hak: [RB
 | [Deployment](../DEPLOYMENT.md) | Engineer: VPS / production |
 | [Backup](../BACKUP.md) | Engineer: dump 02:00 WIB |
 | [Restore](../RESTORE.md) | Engineer: latihan restore ke scratch |
+| [Kesiapan operasional](../OPERATIONS.md) | Engineer: pilot vs produksi, kuota Free |
 
 ## Demo logins
 

@@ -82,6 +82,7 @@ Sama seperti admin, plus tanggung jawab platform:
 - Ops `:3100` loopback + `OPS_TOKEN` di VPS. Jangan publish 0.0.0.0.
 - Worker: default 1; HA = 2. [WORKERS.md](../WORKERS.md).
 - Backup: dump 02:00 WIB — [BACKUP.md](../BACKUP.md). Restore drill scratch — [RESTORE.md](../RESTORE.md).
+- Kesiapan operasional (bukan HA 3 tenant × 100 tiket/hari di Free) — [OPERATIONS.md](../OPERATIONS.md).
 
 Health: `GET /api/health` — Redis `up`, env lengkap.
 
