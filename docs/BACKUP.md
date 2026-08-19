@@ -84,7 +84,7 @@ Dump sah:
 - `gzip_ok`
 - Header `-- PostgreSQL database dump` dan `Dumped from database version 17.x`
 
-Log cron: `/backups/backup.log`.
+Log cron: `/backups/backup.log`. Setelah dump sah: pangkas log di VPS vs SQL Editor — [LOG-RETENTION.md](LOG-RETENTION.md) (§ di mana dijalankan).
 
 ---
 

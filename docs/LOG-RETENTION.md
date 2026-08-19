@@ -1,10 +1,46 @@
 # Retensi log — Supabase dan VPS
 
-Apa yang **boleh dipangkas** (tumbuh terus, bukan master tiket) dan apa yang **jangan dihapus**. Tidak ada job otomatis di app; pembersihan manual setelah dump ([BACKUP.md](BACKUP.md)).
+Apa yang **boleh dipangkas** (tumbuh terus, bukan master tiket) dan apa yang **jangan dihapus**. Tidak ada job otomatis di app; pembersihan manual **setelah dump sah** ([BACKUP.md](BACKUP.md)).
 
 Jangan `DELETE` tanpa `WHERE`. Jangan `supabase db reset`. Jangan `docker volume prune` (itu MinIO + Redis + dump).
 
 Kesiapan: [OPERATIONS.md](OPERATIONS.md). Jejak tiket / RoPA bukan “log sampah” — jangan pangkas `ticket_audit_events` hanya untuk kuota Free.
+
+---
+
+## Di mana dijalankan (jangan tertukar)
+
+| Langkah | Mesin | Tempat | Bukan |
+| --- | --- | --- | --- |
+| Cek dump `.sql.gz` | **VPS** `ubuntu@…` `/opt/novacrm` | `docker compose … exec backup` | Laptop |
+| `truncate` log Docker, `backup.log`, `journalctl` | **VPS** | SSH ke production | Laptop / SQL Editor |
+| `SELECT` / `DELETE` tabel log | **Browser** | Supabase → project **NovaCRM produksi** → **SQL Editor** | VPS shell, laptop `psql` ke local Supabase |
+
+Laptop `localhost` + `npx supabase start` = lab. SQL di situ **tidak** memangkas `novacrm.click`.
+
+SQL Editor yang benar: org **Biontinix** → project yang URL-nya sama dengan `NEXT_PUBLIC_SUPABASE_URL` di `.env.production` (bukan project `controldesk`).
+
+---
+
+## Urutan setelah dump
+
+1. **VPS** — pastikan dump hari ini (atau kemarin) `gzip_ok` + header `PostgreSQL database dump` ([BACKUP.md](BACKUP.md)).
+2. **SQL Editor cloud** — `SELECT count` dulu. Jika masih kecil, skip `DELETE`.
+3. **SQL Editor cloud** — `DELETE` hanya tabel di bawah, dengan `WHERE` tanggal.
+4. **VPS** — truncate `*-json.log`, kosongkan `backup.log`, `journalctl --vacuum-time=7d`.
+5. Jangan hapus `novacrm-*.sql.gz` hari ini. Skrip backup sudah memotong file \> 7 hari.
+
+Contoh cek dump di **VPS**:
+
+```bash
+cd /opt/novacrm
+docker compose --env-file .env.production -f docker-compose.prod.yml exec backup sh -c '
+ls -lh /backups/novacrm-*.sql.gz
+f=$(ls -1t /backups/novacrm-*.sql.gz | head -n 1)
+gzip -t "$f" && echo gzip_ok
+zcat "$f" | head -n 6
+'
+```
 
 ---
 
@@ -28,7 +64,7 @@ Platform log Supabase (API / Postgres di dashboard **Logs**): Free ~**1 hari**, 
 
 ## Supabase — tabel yang boleh dipangkas
 
-Jalankan di **SQL Editor** project (role `postgres`), **setelah dump sah**. Hitung dulu, baru `DELETE`.
+Jalankan di **SQL Editor** project produksi (browser), **setelah dump VPS sah**. Bukan `psql` di laptop. Hitung dulu, baru `DELETE`.
 
 Retensi usulan untuk **pilot** (bukan kewajiban hukum):
 
@@ -106,7 +142,7 @@ Auth `refresh_tokens` / `sessions`: biarkan Auth. Jangan hapus manual.
 
 ## VPS — file log
 
-Semua dari host Ubuntu (`/opt/novacrm`), bukan dari laptop.
+Semua dari **SSH VPS** (`/opt/novacrm`). Jangan dijalankan di laptop.
 
 ### Docker (paling sering memenuhi disk)
 
