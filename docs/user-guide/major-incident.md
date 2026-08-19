@@ -100,3 +100,5 @@ Skrip presenter (2 menit):
 4. Tunjukkan centang **Selesaikan juga tiket anak** di kartu status induk. **Jangan Save** di demo bersama (seed harus tetap terbuka).
 
 Kalau tiket belum ada: seed `supabase/seed.sql` (blok major incident) atau buat dua INC baru lalu tautkan.
+
+Skrip klik untuk GitHub / presenter: [DEMO-MAJOR-INCIDENT.md](../DEMO-MAJOR-INCIDENT.md).

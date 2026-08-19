@@ -61,7 +61,8 @@ CASL on the frontend; RLS on the backend. Sidebar account filter: one customer a
 | [Backup](docs/BACKUP.md) | Dump 02:00 WIB, cek file |
 | [Restore](docs/RESTORE.md) | Latihan ke project scratch, cutover |
 | [Kesiapan operasional](docs/OPERATIONS.md) | Pilot vs produksi, kuota Free, checklist |
-| [Demo E2E](docs/DEMO-E2E.md) | Skrip presenter 35–70 menit |
+| [Demo E2E](docs/DEMO-E2E.md) | Presenter: skrip 35–70 menit |
+| [Simulasi major incident](docs/DEMO-MAJOR-INCIDENT.md) | Parent/child Bank Nusantara — 2 menit, bukan RCA |
 | [Retensi log](docs/LOG-RETENTION.md) | Tabel Supabase + log Docker/VPS yang boleh dipangkas |
 | [Bisnis & campaign](docs/BUSINESS.md) | Model sewa tenant, paket, campaign 90 hari, SWOT |
 

@@ -78,7 +78,7 @@ Tulis di papan: URL + tiga akun (admin/agent/customer).
 2. **Tiket baru** (`⌘N`): judul `Laptop Finance lemot`, tipe Insiden, prioritas Medium, account Bank, tautkan `AST-1001` jika ada.
 3. Assign ke diri sendiri. Komentar singkat. Lampiran (screenshot) — file ke **MinIO**, bukan disk Supabase.
 4. Opsional 30 detik: **Escalate L2** pada tiket lain (*Backup gagal* di Internal) — clock SLA tetap jalan.
-5. **Major incident (seed, 60 detik):** switcher **Bank Nusantara** → *WAN Bank Nusantara putus* (badge **Major**, tiga child). Buka *ATM cabang Senayan offline* (badge **Anak**). Bukan RCA. Jangan resolve induk di demo bersama.
+5. **Major incident (seed, 60 detik):** skrip [DEMO-MAJOR-INCIDENT.md](DEMO-MAJOR-INCIDENT.md) — *WAN Bank Nusantara putus* + tiga child. Bukan RCA. Jangan resolve induk di demo bersama.
 
 Jangan tutup *WiFi lantai 2* milik seed jika kelas masih butuh contoh hold.
 
