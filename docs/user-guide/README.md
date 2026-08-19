@@ -43,6 +43,7 @@ Item katalog: [Catalog & record producer](catalog-guidance.md). Matriks hak: [RB
 | [Kesiapan operasional](../OPERATIONS.md) | Engineer: pilot vs produksi, kuota Free |
 | [Demo E2E](../DEMO-E2E.md) | Presenter: skrip klik 35–70 menit |
 | [Retensi log](../LOG-RETENTION.md) | Engineer: prune log Supabase + Docker |
+| [Bisnis & campaign](../BUSINESS.md) | Owner: paket, funnel, analisis |
 
 ## Demo logins
 

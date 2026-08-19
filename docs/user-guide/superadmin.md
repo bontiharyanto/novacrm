@@ -45,7 +45,7 @@ Untuk plugin Groq/WA, user biasa, SLA, katalog: pakai **admin** atau **manager**
 | Timezone | Jam SLA / laporan |
 | Support email | Alamat support yang tampil ke operasi |
 | Status | `active` · `paused` · `archived` |
-| Plan | `trial` (default +14 hari jika tanggal kosong) · `standard` · `enterprise` |
+| Plan | `trial` (default +14 hari jika tanggal kosong) · `standard` · `enterprise` — usulan harga/campaign: [BUSINESS.md](../BUSINESS.md) |
 | Contract end | Tanggal akhir kontrak. Kosong = tidak kedaluwarsa |
 | Grace days | Hari setelah kontrak berakhir sebelum login diblok (default 7) |
 | Auto-pause | Worker menjeda tenant setelah grace. Data **tidak** dihapus |

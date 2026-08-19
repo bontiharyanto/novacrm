@@ -2,7 +2,7 @@
 
 Status instance **novacrm.click**: Ubuntu VPS Jakarta (2 vCPU / 4 GB / 60 GB) + Supabase hosted (plan **Free**) + MinIO/Redis di VPS.
 
-Dokumen ini membatasi apa yang boleh dijual sebagai “sudah produksi”. Bukan checklist fitur desk (itu di [user-guide](user-guide/README.md)). Demo klik: [DEMO-E2E.md](DEMO-E2E.md).
+Dokumen ini membatasi apa yang boleh dijual sebagai “sudah produksi”. Bukan checklist fitur desk (itu di [user-guide](user-guide/README.md)). Demo klik: [DEMO-E2E.md](DEMO-E2E.md). Model bisnis & campaign: [BUSINESS.md](BUSINESS.md).
 
 Cadangan: [BACKUP.md](BACKUP.md). Restore: [RESTORE.md](RESTORE.md). Log yang boleh dipangkas: [LOG-RETENTION.md](LOG-RETENTION.md). VPS: [VPS.md](VPS.md).
 

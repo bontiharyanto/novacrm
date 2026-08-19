@@ -4,6 +4,8 @@ Alur klik dari login sampai portal, CMDB, WFM, dan Reports. Bukan agenda kelas (
 
 **Cerita:** nasabah Bank — laptop Finance lemot / WiFi lantai 2 — desk kerjakan — tautkan aset — selesaikan — customer nilai CSAT — SPV lihat roster & export coverage.
 
+Kampanye dan paket jual: [BUSINESS.md](BUSINESS.md).
+
 Durasi: **35–45 menit** (inti) atau **70 menit** (penuh). Bahasa UI: **ID**. Tema: Midnight.
 
 ---

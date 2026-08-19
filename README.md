@@ -63,6 +63,7 @@ CASL on the frontend; RLS on the backend. Sidebar account filter: one customer a
 | [Kesiapan operasional](docs/OPERATIONS.md) | Pilot vs produksi, kuota Free, checklist |
 | [Demo E2E](docs/DEMO-E2E.md) | Skrip presenter 35–70 menit |
 | [Retensi log](docs/LOG-RETENTION.md) | Tabel Supabase + log Docker/VPS yang boleh dipangkas |
+| [Bisnis & campaign](docs/BUSINESS.md) | Model sewa tenant, paket, campaign 90 hari, SWOT |
 
 ## Getting started (laptop)
 
