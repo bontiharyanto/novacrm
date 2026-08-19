@@ -119,3 +119,40 @@ export const TENANT_PLAN_LABEL: Record<TenantPlan, string> = {
   standard: 'Standard',
   enterprise: 'Enterprise',
 };
+
+/** Commercial proposal — invoice is manual; see docs/BUSINESS.md */
+export const TENANT_PLAN_GUIDE: Record<
+  TenantPlan,
+  { price: string; includes: string; excludes: string }
+> = {
+  trial: {
+    price: '14 days · Rp 0',
+    includes: 'Desk, portal, CSAT. Up to ~8 agents. Empty workspace — not the shared lab.',
+    excludes: 'Production WhatsApp, heavy custom SLA, mass roster apply.',
+  },
+  standard: {
+    price: 'About Rp 3–8 jt / month (invoice)',
+    includes: 'Tickets, portal, CSAT, assets/CMDB, ticket Reports, email notifications. ~15 agents / ~2,000 tickets per month.',
+    excludes: 'Full WFM + Workforce export unless sold as Standard+.',
+  },
+  enterprise: {
+    price: 'About Rp 12–25 jt / month · 12-month contract',
+    includes: 'All modules, WFM, UC/vendor, SSO test, accent, grace / auto-pause, onboarding.',
+    excludes: 'ITOM Discovery, HR payroll, multi-region HA.',
+  },
+};
+
+export const TENANT_PLAN_FEATURES: Array<{
+  label: string;
+  trial: string;
+  standard: string;
+  enterprise: string;
+}> = [
+  { label: 'Desk + portal + CSAT', trial: 'Yes', standard: 'Yes', enterprise: 'Yes' },
+  { label: 'Assets / CMDB', trial: 'Read demo', standard: 'Yes', enterprise: 'Yes' },
+  { label: 'Ticket Reports', trial: 'Yes', standard: 'Yes', enterprise: 'Yes' },
+  { label: 'WFM + Workforce export', trial: 'No', standard: 'Add-on', enterprise: 'Yes' },
+  { label: 'UC / vendor queue', trial: 'No', standard: 'Limited', enterprise: 'Yes' },
+  { label: 'Production WhatsApp', trial: 'No', standard: 'Add-on', enterprise: 'Add-on' },
+];
+

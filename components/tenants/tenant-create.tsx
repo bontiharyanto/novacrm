@@ -13,6 +13,7 @@ import { Select } from '@/components/ui/select';
 import { toastError, toastSuccess } from '@/components/ui/toast';
 import { createTenant } from '@/lib/tenants/actions';
 import { TENANT_PLAN_LABEL, TENANT_PLANS, TENANT_TIMEZONES, type TenantPlan } from '@/lib/tenants/schema';
+import { TenantPlanGuide } from '@/components/tenants/tenant-plan-guide';
 
 function slugify(value: string) {
   return value
@@ -187,6 +188,7 @@ export function TenantCreate() {
               />
             </div>
           </div>
+          <TenantPlanGuide plan={subscriptionPlan} />
           <p className="text-xs leading-5 text-zinc-500">
             Trial without a date gets 14 days. Standard and enterprise stay open until you set a contract end.
           </p>

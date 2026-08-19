@@ -22,6 +22,7 @@ import {
   type TenantRecord,
   type TenantStatus,
 } from '@/lib/tenants/schema';
+import { TenantPlanGuide } from '@/components/tenants/tenant-plan-guide';
 import { formatDateLong } from '@/lib/utils/dates';
 
 const statusTone: Record<TenantStatus, 'success' | 'warning' | 'neutral'> = {
@@ -184,6 +185,9 @@ export function TenantDetail({ tenant, currentTenantId }: { tenant: TenantRecord
               <Label htmlFor="expiresAt">Contract end</Label>
               <Input id="expiresAt" type="date" value={expiresAt} onChange={(event) => setExpiresAt(event.target.value)} />
             </div>
+          </div>
+          <TenantPlanGuide plan={subscriptionPlan} />
+          <div className="grid gap-5 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="graceDays">Grace days</Label>
               <Input
