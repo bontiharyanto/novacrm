@@ -2,7 +2,7 @@
 
 Dokumen komersial internal. Bukan SLA ke klien. Harga di sini **usulan** — belum ada billing otomatis di app (field tenant: `trial` / `standard` / `enterprise` di `/tenants`).
 
-Kesiapan teknis membatasi apa yang boleh dijual: [OPERATIONS.md](OPERATIONS.md). Demo klik: [DEMO-E2E.md](DEMO-E2E.md).
+Kesiapan teknis membatasi apa yang boleh dijual: [OPERATIONS.md](OPERATIONS.md). Demo klik: [DEMO-E2E.md](DEMO-E2E.md). Playbook penjualan: [GTM.md](GTM.md).
 
 ---
 
@@ -123,7 +123,8 @@ Landing cukup: `novacrm.click` + `/login?tenant={slug}` klien. Jangan unggah pas
 
 ### 3.4 Materi yang boleh dipakai
 
-- Skrip [DEMO-E2E.md](DEMO-E2E.md)
+- Skrip [DEMO-E2E.md](DEMO-E2E.md) + [DEMO-MAJOR-INCIDENT.md](DEMO-MAJOR-INCIDENT.md)
+- Playbook penjualan [GTM.md](GTM.md)
 - Playbook role [user-guide](user-guide/README.md)
 - Satu slide kapasitas jujur dari [OPERATIONS.md](OPERATIONS.md)
 
@@ -192,7 +193,7 @@ Tolak trial di tenant `novacrm-demo` bersama: merusak seed + isolasi demo kelas.
 - [ ] SOW 1 halaman: paket, cap tiket/agen, WA add-on, grace pause
 - [ ] Tenant baru per klien (`/tenants`), bukan lab
 - [ ] Harga tertulis internal (tabel §2.2) — update jika berubah
-- [ ] Demo hanya dari [DEMO-E2E.md](DEMO-E2E.md)
+- [ ] Demo hanya dari [DEMO-E2E.md](DEMO-E2E.md) + proof 2 menit [DEMO-MAJOR-INCIDENT.md](DEMO-MAJOR-INCIDENT.md); penjualan: [GTM.md](GTM.md)
 - [ ] Setiap deal ≥ Standard: konfirmasi ukuran DB + rencana Pro
 - [ ] Jangan janji Discovery/CMDB otomatis atau payroll HR
 
@@ -203,6 +204,7 @@ Tolak trial di tenant `novacrm-demo` bersama: merusak seed + isolasi demo kelas.
 | Topik | Dokumen |
 | --- | --- |
 | Field plan / pause | [superadmin](user-guide/superadmin.md) |
-| Demo | [DEMO-E2E.md](DEMO-E2E.md) |
+| Demo | [DEMO-E2E.md](DEMO-E2E.md), [DEMO-MAJOR-INCIDENT.md](DEMO-MAJOR-INCIDENT.md) |
+| Penjualan / GTM | [GTM.md](GTM.md) |
 | Kapasitas | [OPERATIONS.md](OPERATIONS.md) |
 | Backup / restore | [BACKUP.md](BACKUP.md), [RESTORE.md](RESTORE.md) |

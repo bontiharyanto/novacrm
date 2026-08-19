@@ -37,6 +37,8 @@ Laptop memakai judul yang sama; nomor INC/RITM mengikuti counter lokal.
 
 Kalimat penutup: *satu outage, banyak tiket cabang; induk tetap incident, bukan problem.*
 
+Pakai 2 menit ini di demo penjualan: [GTM.md](GTM.md) §6.
+
 ---
 
 ## Kalau tiket tidak ada
