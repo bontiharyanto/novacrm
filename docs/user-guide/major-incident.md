@@ -78,3 +78,25 @@ Tanpa centang, hanya induk yang berubah. Process strip di atas **tidak** membawa
 | Close massal setelah layanan pulih | Hierarki lebih dari satu tingkat |
 
 SPV: pastikan ada **satu owner** di induk. Anak boleh tetap di group/assignee masing-masing.
+
+---
+
+## 7. Lab tenant demo (Bank Nusantara)
+
+Account **Bank Nusantara**. Jangan pakai *Backup gagal* / *AC ruang server* (itu RCA Internal).
+
+| Peran | Judul | Status | Badge |
+| --- | --- | --- | --- |
+| Induk | *WAN Bank Nusantara putus* | in progress, critical | **Major** |
+| Anak | *ATM cabang Senayan offline* | open, high | **Anak** |
+| Anak | *Internet teller cabang Kelapa Gading down* | open, high | **Anak** |
+| Anak (request) | *Reset VPN cabang BSD* | open, medium | **Anak** |
+
+Skrip presenter (2 menit):
+
+1. Switcher → **Bank Nusantara** → Incidents → *WAN Bank Nusantara putus*.
+2. Badge **Major**. Panel kanan: tiga child. Bukan panel **Related problem**.
+3. Buka *ATM cabang Senayan offline* — tautan ke induk.
+4. Tunjukkan centang **Selesaikan juga tiket anak** di kartu status induk. **Jangan Save** di demo bersama (seed harus tetap terbuka).
+
+Kalau tiket belum ada: seed `supabase/seed.sql` (blok major incident) atau buat dua INC baru lalu tautkan.

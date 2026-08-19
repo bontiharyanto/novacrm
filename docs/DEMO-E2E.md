@@ -47,6 +47,7 @@ Kalau waktu sempit: lewati A, mulai B dengan account **Bank Nusantara**.
 | Graph WAN → FW → AP Lt.2 | CMDB | Dampak jaringan |
 | Tiket *WiFi lantai 2* | Bank incidents | Hold vendor, SLA pause |
 | *Backup gagal* | Internal | Problem / L2 — jangan campur dengan Bank |
+| *WAN Bank Nusantara putus* | Bank | Major incident induk; anak: ATM Senayan, teller Kelapa Gading, RITM VPN BSD |
 | Catalog **Install software** | Catalog | Harus **Published** |
 
 Kalau graph kosong: masih di **Internal** atau **All**.
@@ -77,7 +78,7 @@ Tulis di papan: URL + tiga akun (admin/agent/customer).
 2. **Tiket baru** (`⌘N`): judul `Laptop Finance lemot`, tipe Insiden, prioritas Medium, account Bank, tautkan `AST-1001` jika ada.
 3. Assign ke diri sendiri. Komentar singkat. Lampiran (screenshot) — file ke **MinIO**, bukan disk Supabase.
 4. Opsional 30 detik: **Escalate L2** pada tiket lain (*Backup gagal* di Internal) — clock SLA tetap jalan.
-5. Opsional 60 detik: panel **Major incident** (kanan, bukan RCA). Buat/ tautkan dua incident Bank: induk + anak. Badge **Major** / **Anak**. Langkah: [user-guide/major-incident.md](user-guide/major-incident.md).
+5. **Major incident (seed, 60 detik):** switcher **Bank Nusantara** → *WAN Bank Nusantara putus* (badge **Major**, tiga child). Buka *ATM cabang Senayan offline* (badge **Anak**). Bukan RCA. Jangan resolve induk di demo bersama.
 
 Jangan tutup *WiFi lantai 2* milik seed jika kelas masih butuh contoh hold.
 

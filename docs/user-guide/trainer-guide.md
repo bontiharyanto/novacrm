@@ -63,7 +63,7 @@ Portal  customer@novacrm.app / NovaCRM!2026
 | CMDB Bank | CMDB graph | WAN Indosat → firewall → core → Lt.2 AP, VLAN 50 |
 | Ticket *WiFi lantai 2* | Bank incidents | Vendor hold (SLA paused) |
 | Ticket *Backup gagal* | Internal | Problem RCA: workaround + Known error; linked from *AC ruang server panas* |
-| Major incident (Lab 4b) | Bank — two new INC | Parent/child on the ticket panel, **not** RCA. [major-incident.md](major-incident.md) |
+| Major incident | Bank — *WAN Bank Nusantara putus* | Parent + ATM Senayan + teller Kelapa Gading + RITM VPN BSD. **Not** RCA. [major-incident.md](major-incident.md) |
 | Knowledge *VPN disconnect* | `/knowledge` | Hint appears when creating a ticket titled with `VPN` |
 | SLA Gold INC P1 | `/sla` on Bank | 15m response / 4h resolve |
 | Catalog **Install software** | `/catalog` | Record producer — state badge is **Published** / **Draf**. Walkthrough for a new item (Antivirus) is in [catalog-guidance.md](catalog-guidance.md) |
@@ -113,7 +113,7 @@ Add after lunch:
 
 **CMDB.** Always demo on **Bank Nusantara**. Internal is a different graph; **All** mixes accounts. Impact uses the linked asset, not a ticket→CI field. Do not let the class rewrite seeded topology.
 
-**Major vs RCA.** *Backup gagal* / *AC ruang server* is **Problem RCA**. Lab 4b uses two **new** Bank incidents. Procedure: [major-incident.md](major-incident.md).
+**Major vs RCA.** *Backup gagal* / *AC ruang server* is **Problem RCA** (Internal). Major lab is Bank *WAN Bank Nusantara putus* + children. Do not resolve the parent on the shared tenant. Procedure: [major-incident.md](major-incident.md).
 
 **WFM.** Occupancy/forecast follow the account filter. Team roster and the seeded staff review are **shared** — do not let the class rewrite them unless the tenant is isolated. Own **Clock in** + **Roster saya** is the agent lab (`sari.l1@novacrm.app`, Pagi). **Tukar shift** is optional (Sari ↔ Budi, trainer as SPV). Login ≠ attendance. Only **Tersedia** is auto-assigned. Auto-assign needs Redis + `npm run worker`. Reviews are 1–5 human scores plus advisory AI — not CSAT-on-person and not an HR pack.
 

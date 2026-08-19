@@ -1458,4 +1458,97 @@ where not exists (
     and lower(s.name) = lower(d.name)
 );
 
+-- Major incident lab (Bank Nusantara). Distinct from RCA *Backup gagal* / *AC ruang server*.
+-- Idempotent: safe on hosted demo (do not db reset).
+insert into public.tickets (
+  id, tenant_id, account_id, title, description, type, status, priority, category, due_date,
+  requester_name, requester_email, requester_id, assignee_id, assignee_name, group_id, created_by
+)
+values
+  (
+    '55555555-1001-4001-8001-000000000001',
+    '11111111-1111-1111-1111-111111111111',
+    '55555555-0001-0001-0001-000000000002',
+    'WAN Bank Nusantara putus',
+    '{"type":"plain","text":"Circuit Indosat HQ down. War room: satu INC payung, tiket cabang sebagai child. Bukan Problem RCA."}',
+    'incident', 'in_progress', 'critical', 'network', now() + interval '4 hours',
+    'Nova Customer', 'customer@novacrm.app', '44444444-4444-4444-4444-444444444444',
+    '33333333-3333-3333-3333-333333333333', 'Nova Agent',
+    '99999999-0001-0001-0001-000000000004',
+    '33333333-3333-3333-3333-333333333333'
+  ),
+  (
+    '55555555-1001-4001-8001-000000000002',
+    '11111111-1111-1111-1111-111111111111',
+    '55555555-0001-0001-0001-000000000002',
+    'ATM cabang Senayan offline',
+    '{"type":"plain","text":"ATM tidak bisa transaksi. Gejala cabang dari outage WAN HQ."}',
+    'incident', 'open', 'high', 'network', now() + interval '8 hours',
+    'Nova Customer', 'customer@novacrm.app', '44444444-4444-4444-4444-444444444444',
+    null, null,
+    '99999999-0001-0001-0001-000000000004',
+    '33333333-3333-3333-3333-333333333333'
+  ),
+  (
+    '55555555-1001-4001-8001-000000000003',
+    '11111111-1111-1111-1111-111111111111',
+    '55555555-0001-0001-0001-000000000002',
+    'Internet teller cabang Kelapa Gading down',
+    '{"type":"plain","text":"Counter teller tidak bisa core banking. Child dari major WAN."}',
+    'incident', 'open', 'high', 'network', now() + interval '8 hours',
+    'Nova Customer', 'customer@novacrm.app', '44444444-4444-4444-4444-444444444444',
+    null, null,
+    '99999999-0001-0001-0001-000000000004',
+    '33333333-3333-3333-3333-333333333333'
+  ),
+  (
+    '55555555-1001-4001-8001-000000000004',
+    '11111111-1111-1111-1111-111111111111',
+    '55555555-0001-0001-0001-000000000002',
+    'Reset VPN cabang BSD',
+    '{"type":"plain","text":"Request reconnect VPN cabang setelah WAN HQ down. Boleh jadi child major."}',
+    'request', 'open', 'medium', 'network', now() + interval '2 days',
+    'Nova Customer', 'customer@novacrm.app', '44444444-4444-4444-4444-444444444444',
+    null, null,
+    '99999999-0001-0001-0001-000000000004',
+    '33333333-3333-3333-3333-333333333333'
+  )
+on conflict (id) do nothing;
+
+update public.tickets
+set parent_ticket_id = '55555555-1001-4001-8001-000000000001'
+where id in (
+  '55555555-1001-4001-8001-000000000002',
+  '55555555-1001-4001-8001-000000000003',
+  '55555555-1001-4001-8001-000000000004'
+)
+  and tenant_id = '11111111-1111-1111-1111-111111111111'
+  and parent_ticket_id is distinct from '55555555-1001-4001-8001-000000000001';
+
+insert into public.ticket_comments (
+  id, tenant_id, ticket_id, author_id, created_by, message, kind, meta
+)
+values
+  (
+    '55555555-1001-4001-8001-000000000011',
+    '11111111-1111-1111-1111-111111111111',
+    '55555555-1001-4001-8001-000000000001',
+    '33333333-3333-3333-3333-333333333333',
+    '33333333-3333-3333-3333-333333333333',
+    'War room dibuka. Tiket cabang Senayan, Kelapa Gading, dan request VPN BSD ditautkan sebagai child. Jangan campur dengan panel RCA.',
+    'comment',
+    '{}'::jsonb
+  ),
+  (
+    '55555555-1001-4001-8001-000000000012',
+    '11111111-1111-1111-1111-111111111111',
+    '55555555-1001-4001-8001-000000000002',
+    '33333333-3333-3333-3333-333333333333',
+    '33333333-3333-3333-3333-333333333333',
+    'ATM Senayan mati. Terkait major WAN HQ, bukan problem terpisah.',
+    'comment',
+    '{}'::jsonb
+  )
+on conflict (id) do nothing;
+
 

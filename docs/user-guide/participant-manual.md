@@ -206,14 +206,14 @@ The badge counts down **response** and **resolve** targets copied from the accou
 
 ## Lab 4b — Major incident (optional)
 
-Do **not** use the RCA panel (*Backup gagal* / *AC ruang server*). That is Problem linking.
+Do **not** use *Backup gagal* / *AC ruang server*. That is Problem RCA (Internal).
 
-1. Account **Bank Nusantara**. Create two incidents, e.g. `Lab — WAN cabang A` and `Lab — WAN cabang B`.
-2. Open A. Right panel **Major incident** → **Link a child…** / **Tautkan anak…** → pick B.
-3. Open B: badge **Child** / **Anak**, parent number links back to A. A shows badge **Major**.
-4. On A, **Update status** → Resolved. Check **Also resolve open children** / **Selesaikan juga tiket anak**. Save.
+1. Account **Bank Nusantara**. Open *WAN Bank Nusantara putus*.
+2. Badge **Major**. Right panel lists *ATM cabang Senayan offline*, *Internet teller cabang Kelapa Gading down*, and request *Reset VPN cabang BSD*.
+3. Open the ATM ticket: badge **Child** / **Anak**, parent number links back.
+4. On the parent, show **Also resolve open children** — **do not Save** on the shared demo tenant.
 
-**Pass:** B is resolved with a comment that it closed with the major incident. Full procedure: [major-incident.md](major-incident.md).
+**Pass:** parent/child visible without using the RCA panel. Procedure: [major-incident.md](major-incident.md).
 
 ---
 
