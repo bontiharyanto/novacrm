@@ -703,7 +703,7 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
                 parentTitle={ticket.parentTitle}
                 childTickets={ticket.childTickets ?? []}
                 parents={parentOptions}
-                children={childOptions}
+                linkableChildren={childOptions}
                 disabled={isSaving}
                 onParentId={setParentTicketId}
                 onSaveParent={() => void patchTicket({ parentTicketId: parentTicketId || null })}

@@ -18,7 +18,7 @@ export function TicketMajor({
   parentTitle,
   childTickets,
   parents,
-  children,
+  linkableChildren,
   disabled,
   onParentId,
   onSaveParent,
@@ -31,7 +31,7 @@ export function TicketMajor({
   parentTitle?: string;
   childTickets: ChildTicket[];
   parents: MajorOption[];
-  children: MajorOption[];
+  linkableChildren: MajorOption[];
   disabled?: boolean;
   onParentId: (id: string) => void;
   onSaveParent: () => void;
@@ -106,7 +106,7 @@ export function TicketMajor({
             }}
           >
             <option value="">{t.tickets.linkChild}</option>
-            {children.map((item) => (
+            {linkableChildren.map((item) => (
               <option key={item.id} value={item.id}>
                 {item.number} · {item.title}
               </option>
