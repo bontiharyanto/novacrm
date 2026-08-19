@@ -64,6 +64,7 @@ CASL on the frontend; RLS on the backend. Sidebar account filter: one customer a
 | [Demo E2E](docs/DEMO-E2E.md) | Presenter: skrip 35–70 menit |
 | [Simulasi major incident](docs/DEMO-MAJOR-INCIDENT.md) | Parent/child Bank Nusantara — 2 menit, bukan RCA |
 | [Go-to-market](docs/GTM.md) | Talk track, outreach, discovery, keberatan — penjualan |
+| [Flyer www](docs/FLYER.md) | Landing publik `www.novacrm.click` (bukan desk) |
 | [Bisnis & campaign](docs/BUSINESS.md) | Model sewa tenant, paket, campaign 90 hari, SWOT |
 | [Retensi log](docs/LOG-RETENTION.md) | Tabel Supabase + log Docker/VPS yang boleh dipangkas |
 

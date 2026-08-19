@@ -155,7 +155,8 @@ Gagal trial: mereka hanya menonton lab Bank. Ulangi onboarding di tenant mereka.
 | [user-guide/major-incident.md](user-guide/major-incident.md) | SPV setelah demo |
 | [BUSINESS.md](BUSINESS.md) | Harga internal, 90 hari |
 | [OPERATIONS.md](OPERATIONS.md) | Satu slide kapasitas jujur |
-| Landing | `https://novacrm.click` — login klien, bukan lab |
+| Landing | `https://www.novacrm.click` — flyer GTM |
+| Desk | `https://novacrm.click` — login klien, bukan lab |
 
 Kanal: demo live, WA/email hangat, 1 post LinkedIn/minggu. Bukan iklan massal.
 
@@ -166,6 +167,7 @@ Kanal: demo live, WA/email hangat, 1 post LinkedIn/minggu. Bukan iklan massal.
 - [ ] Password lab produksi sudah diganti atau lab tidak dipakai klien
 - [ ] Demo laptop atau klik baca-only di click
 - [ ] Image web punya panel Major (VPS pull jika Actions skip SSH)
+- [ ] Flyer `www.novacrm.click` hidup ([FLYER.md](FLYER.md)); DNS `www` sudah A ke VPS
 - [ ] Tiket *WAN Bank Nusantara putus* masih terbuka (jangan resolve di lab)
 - [ ] SOW 1 halaman siap (paket, cap, WA add-on, grace)
 - [ ] Setiap prospek → tenant baru di `/tenants`, bukan `novacrm-demo`

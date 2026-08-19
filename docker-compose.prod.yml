@@ -57,6 +57,24 @@ services:
       - traefik.http.services.novacrm.loadbalancer.healthcheck.path=/api/health
     restart: unless-stopped
 
+  flyer:
+    image: nginx:1.27-alpine
+    volumes:
+      - ./flyer/public:/usr/share/nginx/html:ro
+      - ./flyer/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.flyer.rule=Host(`${FLYER_HOST:-www.novacrm.click}`)
+      - traefik.http.routers.flyer.entrypoints=websecure
+      - traefik.http.routers.flyer.tls.certresolver=le
+      - traefik.http.services.flyer.loadbalancer.server.port=80
+    healthcheck:
+      test: ['CMD-SHELL', 'wget -qO- http://127.0.0.1/health >/dev/null || exit 1']
+      interval: 20s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
   worker:
     image: ghcr.io/bontiharyanto/novacrm:${IMAGE_TAG:-latest}
     command: npm run worker

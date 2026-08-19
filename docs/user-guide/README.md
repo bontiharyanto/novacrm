@@ -45,6 +45,7 @@ Item katalog: [Catalog & record producer](catalog-guidance.md). Major incident (
 | [Demo E2E](../DEMO-E2E.md) | Presenter: skrip klik 35–70 menit |
 | [Simulasi major incident](../DEMO-MAJOR-INCIDENT.md) | Parent/child Bank — 2 menit, bukan RCA |
 | [Go-to-market](../GTM.md) | Penjualan: pesan, demo, trial |
+| [Flyer www](../FLYER.md) | Landing `www.novacrm.click` |
 | [Retensi log](../LOG-RETENTION.md) | Engineer: prune log Supabase + Docker |
 | [Bisnis & campaign](../BUSINESS.md) | Owner: paket, funnel, analisis |
 

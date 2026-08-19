@@ -110,7 +110,7 @@ Bukti: demo 35 menit [DEMO-E2E.md](DEMO-E2E.md) (Bank Nusantara, hold vendor, CS
 | Kelas kecil | Trainer pack | Upsell setup tenant terisolasi |
 | Jangan dulu | Iklan massal, App Store, klaim ISO di landing | — |
 
-Landing cukup: `novacrm.click` + `/login?tenant={slug}` klien. Jangan unggah password lab ke materi publik.
+Landing cukup: [www.novacrm.click](https://www.novacrm.click) (flyer) + desk `novacrm.click/login?tenant={slug}` klien. Jangan unggah password lab ke materi publik.
 
 ### 3.3 Kalender 90 hari
 

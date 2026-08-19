@@ -55,6 +55,7 @@ sh scripts/check-prod-env.sh
 | Item | Nilai |
 | --- | --- |
 | App | https://novacrm.click |
+| Flyer (GTM) | https://www.novacrm.click |
 | File (S3 / presign) | https://files.novacrm.click |
 | Health | https://novacrm.click/api/health |
 | Tenant lab (API) | https://novacrm.click/api/v1/t/novacrm-demo |
@@ -71,6 +72,7 @@ DNS A (keduanya ke **`43.133.133.151`**):
 | Nama record | Hostname |
 | --- | --- |
 | `@` | `novacrm.click` |
+| `www` | `www.novacrm.click` |
 | `files` | `files.novacrm.click` |
 
 Firewall VPS: TCP **22**, **80**, **443** dari internet. Jangan buka 3000, 3100, 5432, 6379, 9000, **9001**.
