@@ -33,6 +33,7 @@ import { dispatchTicketAction } from '@/lib/wfm/actions';
 import { useI18n } from '@/components/layout/preferences-provider';
 import { toastError, toastSuccess } from '@/components/ui/toast';
 import { TicketRca, type ProblemOption, type RelatedIncident } from '@/components/tickets/ticket-rca';
+import { TicketMajor, type ChildTicket, type MajorOption } from '@/components/tickets/ticket-major';
 import { formatGroupQueueLabel } from '@/lib/org/schema';
 
 type TicketItem = {
@@ -79,6 +80,10 @@ type TicketItem = {
   createdAt: string;
   comments: ActivityComment[];
   problemId?: string;
+  parentTicketId?: string;
+  parentNumber?: string;
+  parentTitle?: string;
+  childTickets?: ChildTicket[];
   problemNumber?: string;
   problemTitle?: string;
   problemWorkaround?: string;
@@ -148,8 +153,12 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
   const [workaround, setWorkaround] = useState('');
   const [knownError, setKnownError] = useState(false);
   const [problemId, setProblemId] = useState('');
+  const [parentTicketId, setParentTicketId] = useState('');
+  const [resolveChildren, setResolveChildren] = useState(false);
   const [problems, setProblems] = useState<ProblemOption[]>([]);
   const [linkableIncidents, setLinkableIncidents] = useState<ProblemOption[]>([]);
+  const [parentOptions, setParentOptions] = useState<MajorOption[]>([]);
+  const [childOptions, setChildOptions] = useState<MajorOption[]>([]);
 
   const loadTicket = useCallback(async () => {
     const response = await fetch(`/api/tickets/${ticketId}`);
@@ -168,6 +177,7 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
       setWorkaround(nextTicket.workaround ?? '');
       setKnownError(Boolean(nextTicket.knownError));
       setProblemId(nextTicket.problemId ?? '');
+      setParentTicketId(nextTicket.parentTicketId ?? '');
     }
   }, [ticketId]);
 
@@ -195,6 +205,17 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
       .then((response) => response.json())
       .then((payload) => setProblems(payload.data ?? []))
       .catch(() => setProblems([]));
+    const relatedQuery = new URLSearchParams();
+    if (accountId) relatedQuery.set('accountId', accountId);
+    relatedQuery.set('excludeId', ticketId);
+    void fetch(`/api/tickets/related?kind=parents&${relatedQuery.toString()}`)
+      .then((response) => response.json())
+      .then((payload) => setParentOptions(payload.data ?? []))
+      .catch(() => setParentOptions([]));
+    void fetch(`/api/tickets/related?kind=children&${relatedQuery.toString()}`)
+      .then((response) => response.json())
+      .then((payload) => setChildOptions(payload.data ?? []))
+      .catch(() => setChildOptions([]));
     void fetch('/api/tickets')
       .then((response) => response.json())
       .then((payload) => {
@@ -206,7 +227,7 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
         );
       })
       .catch(() => setLinkableIncidents([]));
-  }, [ticket?.accountId]);
+  }, [ticket?.accountId, ticketId]);
 
   useEffect(() => {
     const accountId = ticket?.accountId;
@@ -239,6 +260,17 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
         return;
       }
       await loadTicket();
+      const relatedQuery = new URLSearchParams();
+      if (ticket?.accountId) relatedQuery.set('accountId', ticket.accountId);
+      relatedQuery.set('excludeId', ticketId);
+      void fetch(`/api/tickets/related?kind=parents&${relatedQuery.toString()}`)
+        .then((response) => response.json())
+        .then((next) => setParentOptions(next.data ?? []))
+        .catch(() => undefined);
+      void fetch(`/api/tickets/related?kind=children&${relatedQuery.toString()}`)
+        .then((response) => response.json())
+        .then((next) => setChildOptions(next.data ?? []))
+        .catch(() => undefined);
       toastSuccess(t.tickets.updated);
     } catch {
       toastError(t.common.saveFailed);
@@ -323,6 +355,8 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
             ) : null}
             <Badge tone={statusTone[ticket.status]}>{ticket.status.replace('_', ' ')}</Badge>
             <Badge tone={priorityTone[ticket.priority]}>{ticket.priority}</Badge>
+            {(ticket.childTickets?.length ?? 0) > 0 ? <Badge tone="danger">{t.tickets.majorBadge}</Badge> : null}
+            {ticket.parentTicketId ? <Badge tone="neutral">{t.tickets.childBadge}</Badge> : null}
           </div>
           <h2 className="mt-1 text-2xl font-semibold text-zinc-50">{ticket.title}</h2>
         </div>
@@ -660,6 +694,36 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
                 <p className="mt-1 text-zinc-200">{new Date(ticket.dueDate).toLocaleString('id-ID')}</p>
               </div>
             ) : null}
+            {type === 'incident' || type === 'request' ? (
+              <TicketMajor
+                canBeParent={type === 'incident'}
+                canBeChild={type === 'incident' || type === 'request'}
+                parentTicketId={parentTicketId}
+                parentNumber={ticket.parentNumber}
+                parentTitle={ticket.parentTitle}
+                childTickets={ticket.childTickets ?? []}
+                parents={parentOptions}
+                children={childOptions}
+                disabled={isSaving}
+                onParentId={setParentTicketId}
+                onSaveParent={() => void patchTicket({ parentTicketId: parentTicketId || null })}
+                onLinkChild={(childId) => {
+                  void fetch(`/api/tickets/${childId}`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ parentTicketId: ticket.id }),
+                  }).then(async (response) => {
+                    const payload = await response.json().catch(() => ({}));
+                    if (!response.ok) {
+                      toastError(payload.error ?? t.common.saveFailed);
+                      return;
+                    }
+                    toastSuccess(t.tickets.updated);
+                    await loadTicket();
+                  });
+                }}
+              />
+            ) : null}
             {type === 'problem' || type === 'incident' ? (
               <TicketRca
                 isProblem={type === 'problem'}
@@ -785,6 +849,17 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
                 </div>
               </>
             ) : null}
+            {(ticket.childTickets?.length ?? 0) > 0 && (status === 'resolved' || status === 'closed') ? (
+              <label className="flex items-start gap-2 text-xs text-zinc-400">
+                <input
+                  type="checkbox"
+                  className="mt-0.5"
+                  checked={resolveChildren}
+                  onChange={(event) => setResolveChildren(event.target.checked)}
+                />
+                <span>{t.tickets.resolveChildren}</span>
+              </label>
+            ) : null}
             <Button
               className="w-full"
               onClick={() =>
@@ -792,6 +867,10 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
                   status,
                   pendingReason: isPauseStatus(status) ? pendingReason : null,
                   pendingNote: isPauseStatus(status) ? pendingNote.trim() || null : null,
+                  resolveChildren:
+                    (ticket.childTickets?.length ?? 0) > 0 &&
+                    (status === 'resolved' || status === 'closed') &&
+                    resolveChildren,
                 })
               }
               disabled={isSaving}

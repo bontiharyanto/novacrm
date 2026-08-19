@@ -49,6 +49,8 @@ export const ticketUpdateSchema = z.object({
   pendingNote: z.string().max(200).nullable().optional(),
   escalate: z.boolean().optional(),
   problemId: nullableUuidSchema,
+  parentTicketId: nullableUuidSchema,
+  resolveChildren: z.boolean().optional(),
   workaround: z.string().max(4000).nullable().optional(),
   knownError: z.boolean().optional(),
 });

@@ -53,6 +53,7 @@ Setiap shift, urutan ini:
 4. **Requests** menumpuk — cek item katalog lengkap; assign fulfiller.
 5. **Changes** di **CAB Review** (`/cab`) — jangan biarkan window terlewat tanpa keputusan.
 6. **Problems** terbuka lama — isi panel **RCA** (workaround + Known error), tautkan incident. Jangan hanya komentar. Lab: *Backup gagal semalam*.
+6b. **Major incident** — satu incident induk, tautkan incident/request anak (satu tingkat). Saat resolve induk, centang **Selesaikan juga tiket anak**. Jangan campur dengan tautan Problem RCA.
 7. **OLA** — sidebar **Organization** (`/org`) → buka group → field **OLA response / resolve** dan **Party**. Jam antrian group internal. Bukan matriks customer.
 8. **UC** — `/sla` → **Underpinning contracts**. Kontrak vendor/principal (nomor, masa berlaku, penalty, matriks type × priority). Ikat ke group vendor di `/org`. Escalate ke group itu memakai jam UC, bukan menit datar group. Lab: `Fortinet TAC Gold` (`UC-FTNT-2026`) pada `L2 Vendor Fortinet`; `Indosat Circuit Principal` pada `L3 Principal Indosat`.
 9. **Audit** `/audit` — siapa mengubah status/group. **Reports** memuat hold/wait (vendor vs customer), scorecard group, **CSAT**, dan **Vendor / UC queue** (open, breach OLA/UC, antrian, kredit Fortinet vs Indosat). Field **Party**: Internal / Vendor / Principal + nama (Fortinet, Indosat). Badge **OLA** / **UC** di detail tiket. Kredit breach tercatat di `/sla/uc/{id}`. Default internal: L1 30m/4h, L2 60m/8h, L3 2h/16h. Tanpa UC, group vendor tetap menit datar (Fortinet 4h/24h, Indosat 2h/8h).

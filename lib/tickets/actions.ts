@@ -126,6 +126,32 @@ async function loadTicket(client: SupabaseClient, ticketId: string, tenantId?: s
     }));
   }
 
+  if (ticket.parentTicketId) {
+    const { data: parent } = await client
+      .from('tickets')
+      .select('id, number, title')
+      .eq('id', ticket.parentTicketId)
+      .eq('tenant_id', ticket.tenantId)
+      .maybeSingle();
+    if (parent) {
+      ticket.parentNumber = parent.number ?? undefined;
+      ticket.parentTitle = parent.title;
+    }
+  }
+
+  const { data: majorChildren } = await client
+    .from('tickets')
+    .select('id, number, title, status')
+    .eq('parent_ticket_id', ticket.id)
+    .eq('tenant_id', ticket.tenantId)
+    .order('created_at', { ascending: false });
+  ticket.childTickets = (majorChildren ?? []).map((row) => ({
+    id: row.id,
+    number: row.number || row.id.slice(0, 8),
+    title: row.title,
+    status: row.status,
+  }));
+
   const comments = (data.ticket_comments ?? []) as Array<{
     id: string;
     author_id?: string | null;
@@ -514,6 +540,34 @@ export async function updateTicket(ticketId: string, input: unknown) {
     }
   }
 
+  const parentTicketIdRaw =
+    parsed.parentTicketId === undefined ? existing.data.parentTicketId ?? null : parsed.parentTicketId;
+  const parentTicketId =
+    nextType === 'incident' || nextType === 'request' ? parentTicketIdRaw : null;
+  if ((existing.data.childTickets?.length ?? 0) > 0 && nextType !== 'incident') {
+    return { data: null, error: 'A parent ticket must remain an incident' };
+  }
+  if (parentTicketId) {
+    if (parentTicketId === ticketId) {
+      return { data: null, error: 'A ticket cannot be its own parent' };
+    }
+    const { data: parent } = await supabase
+      .from('tickets')
+      .select('id, type, parent_ticket_id')
+      .eq('id', parentTicketId)
+      .eq('tenant_id', session.profile.tenantId)
+      .maybeSingle();
+    if (!parent || parent.type !== 'incident') {
+      return { data: null, error: 'Parent must be an incident' };
+    }
+    if (parent.parent_ticket_id) {
+      return { data: null, error: 'Parent ticket cannot itself be a child' };
+    }
+    if (existing.data.childTickets && existing.data.childTickets.length > 0) {
+      return { data: null, error: 'A parent ticket cannot become a child' };
+    }
+  }
+
   const resolvedAt =
     nextStatus === 'resolved' || nextStatus === 'closed'
       ? existing.data.resolvedAt ?? new Date().toISOString()
@@ -540,6 +594,7 @@ export async function updateTicket(ticketId: string, input: unknown) {
       pending_reason: pendingReason,
       pending_note: pendingNote,
       problem_id: problemId,
+      parent_ticket_id: parentTicketId,
       workaround: parsed.workaround === undefined ? existing.data.workaround ?? null : parsed.workaround,
       known_error: parsed.knownError ?? existing.data.knownError ?? false,
       resolved_at: resolvedAt,
@@ -611,8 +666,51 @@ export async function updateTicket(ticketId: string, input: unknown) {
       { field: 'group', oldValue: existing.data.groupName ?? previousGroup, newValue: ticket.groupName ?? nextGroupId },
       { field: 'asset', oldValue: existing.data.assetId, newValue: ticket.assetId },
       { field: 'problem', oldValue: existing.data.problemId, newValue: ticket.problemId },
+      { field: 'parent', oldValue: existing.data.parentTicketId, newValue: ticket.parentTicketId },
     ],
   });
+
+  if (
+    parsed.resolveChildren &&
+    (nextStatus === 'resolved' || nextStatus === 'closed') &&
+    (existing.data.childTickets?.length ?? 0) > 0
+  ) {
+    const resolvedIso = new Date().toISOString();
+    const { data: openChildren } = await supabase
+      .from('tickets')
+      .select('id, status, number, title')
+      .eq('parent_ticket_id', ticketId)
+      .eq('tenant_id', session.profile.tenantId)
+      .in('status', ['open', 'in_progress', 'waiting', 'hold']);
+    for (const child of openChildren ?? []) {
+      await supabase
+        .from('tickets')
+        .update({ status: 'resolved', resolved_at: resolvedIso })
+        .eq('id', child.id)
+        .eq('tenant_id', session.profile.tenantId);
+      await supabase.from('ticket_comments').insert({
+        tenant_id: session.profile.tenantId,
+        ticket_id: child.id,
+        author_id: session.userId,
+        created_by: session.userId,
+        message: `Resolved with major incident ${ticket.number || ticket.id.slice(0, 8)}.`,
+        kind: 'comment',
+        meta: {},
+      });
+      await recordTicketAuditDiff(supabase, {
+        tenantId: session.profile.tenantId,
+        ticketId: child.id,
+        actorId: session.userId,
+        actorName: session.profile.fullName,
+        changes: [{ field: 'status', oldValue: child.status, newValue: 'resolved' }],
+      });
+    }
+    if ((openChildren ?? []).length > 0) {
+      messages.push(`Resolved ${(openChildren ?? []).length} child ticket(s)`);
+      const reloaded = await loadTicket(supabase, ticketId, session.profile.tenantId);
+      if (reloaded.data) hydrated = reloaded.data;
+    }
+  }
 
   await maybeRecordUcCredit(supabase, hydrated, session.userId);
   const assigneeChanged = parsed.assigneeId !== undefined && nextAssignee !== previousAssignee;

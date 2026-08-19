@@ -111,6 +111,7 @@ Layout **70 / 30**: percakapan kiri, properti kanan. Process strip di atas = sik
 | **Hold** | Tunggu vendor/customer. Wajib alasan, mis. `Pending vendor` + nomor case. SLA **berhenti** |
 | **Escalate L2 / L3** | Antri ke group Internal `L2 Network` / `L3 Infra`. Jam SLA **tetap jalan** |
 | **RCA** (Problem / Incident) | Problem: isi workaround + **Known error**, tautkan incident. Incident: pilih problem terkait. Lab: *Backup gagal semalam* ↔ *AC ruang server panas* |
+| **Major incident** (Incident / Request) | Satu induk, banyak anak. Panel kanan: pilih tiket induk, atau dari induk tautkan anak. Saat resolve induk, centang **Selesaikan juga tiket anak**. Bukan RCA (`problem_id`). Satu tingkat saja. |
 | **Summarize** | Ringkas 3 baris (butuh plugin AI). Simpan di tiket |
 | **Publish to knowledge** | Setelah **resolved** / **closed**. Artikel muncul di `/knowledge` |
 | **Audit** | Kartu di bawah Activity, atau halaman `/audit` untuk semua tiket |

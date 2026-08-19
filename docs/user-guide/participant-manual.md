@@ -396,7 +396,7 @@ Repeat alerts within 24 hours update the **same** ticket (correlation).
 
 **Reports** (`/reports`) — range 7 / 30 / 90 days or custom. **Tickets:** preview, then export CSV / Excel / PDF. KPIs include **FRT**, **MTTR**, **backlog 7d+**, **OLA/UC breached**, and **CSAT**. The **Vendor / UC queue** table compares Fortinet vs Indosat (open, breach, avg queue, service credit). **Ask assistant** jumps to chat with that snapshot. **Workforce** (SPV+): coverage gaps + clock-in vs roster, CSV / Excel only, no preview (the gap sheet is one row per group × day).
 
-**Knowledge** (`/knowledge`) — articles from **Publish to knowledge** on a resolved ticket. Creating a ticket with title `VPN` should hint the seeded article. Problem *Backup gagal semalam* has RCA + a linked incident.
+**Knowledge** (`/knowledge`) — articles from **Publish to knowledge** on a resolved ticket. Creating a ticket with title `VPN` should hint the seeded article. Problem *Backup gagal semalam* has RCA + a linked incident. **Major incident** is a separate parent/child link on the ticket (not RCA).
 
 **Assistant** — **Tanya AI** on the top bar (or the floating button) opens Nova Agent. Full page remains `/assistant`. Staff only. Reads the last 7 days of ticket facts. It **does not** change tickets. If it is disconnected, admin must set AI on **Integrations** (Groq free key) and **Test connection**.
 

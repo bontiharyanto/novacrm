@@ -102,3 +102,81 @@ export async function listProblemOptions(accountId?: string) {
     status: row.status,
   }));
 }
+
+export type MajorLinkOption = { id: string; number: string; title: string; status: string };
+
+export async function listMajorParentOptions(accountId?: string, excludeId?: string) {
+  const session = await getSessionProfile();
+  if (!session || !canRole(session.profile.role, 'read', 'Ticket')) {
+    return [];
+  }
+
+  const supabase = await createSupabaseServerClient();
+  let query = supabase
+    .from('tickets')
+    .select('id, number, title, status')
+    .eq('tenant_id', session.profile.tenantId)
+    .eq('type', 'incident')
+    .is('parent_ticket_id', null)
+    .order('created_at', { ascending: false })
+    .limit(40);
+  if (accountId) {
+    query = query.eq('account_id', accountId);
+  }
+  if (excludeId) {
+    query = query.neq('id', excludeId);
+  }
+  const { data } = await query;
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    number: row.number || row.id.slice(0, 8),
+    title: row.title,
+    status: row.status,
+  })) satisfies MajorLinkOption[];
+}
+
+export async function listMajorChildOptions(accountId?: string, excludeId?: string) {
+  const session = await getSessionProfile();
+  if (!session || !canRole(session.profile.role, 'read', 'Ticket')) {
+    return [];
+  }
+
+  const supabase = await createSupabaseServerClient();
+  let query = supabase
+    .from('tickets')
+    .select('id, number, title, status')
+    .eq('tenant_id', session.profile.tenantId)
+    .in('type', ['incident', 'request'])
+    .is('parent_ticket_id', null)
+    .order('created_at', { ascending: false })
+    .limit(60);
+  if (accountId) {
+    query = query.eq('account_id', accountId);
+  }
+  if (excludeId) {
+    query = query.neq('id', excludeId);
+  }
+
+  const [{ data }, { data: usedAsParent }] = await Promise.all([
+    query,
+    supabase
+      .from('tickets')
+      .select('parent_ticket_id')
+      .eq('tenant_id', session.profile.tenantId)
+      .not('parent_ticket_id', 'is', null),
+  ]);
+
+  const parentIds = new Set(
+    (usedAsParent ?? []).map((row) => row.parent_ticket_id).filter((id): id is string => Boolean(id)),
+  );
+
+  return (data ?? [])
+    .filter((row) => !parentIds.has(row.id))
+    .slice(0, 40)
+    .map((row) => ({
+      id: row.id,
+      number: row.number || row.id.slice(0, 8),
+      title: row.title,
+      status: row.status,
+    })) satisfies MajorLinkOption[];
+}

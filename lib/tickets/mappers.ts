@@ -73,6 +73,10 @@ export type TicketRecord = {
   implementationPlan?: string;
   backoutPlan?: string;
   problemId?: string;
+  parentTicketId?: string;
+  parentNumber?: string;
+  parentTitle?: string;
+  childTickets?: Array<{ id: string; number: string; title: string; status: TicketStatus }>;
   problemNumber?: string;
   problemTitle?: string;
   problemWorkaround?: string;
@@ -149,6 +153,7 @@ type TicketRow = {
   implementation_plan?: string | null;
   backout_plan?: string | null;
   problem_id?: string | null;
+  parent_ticket_id?: string | null;
   workaround?: string | null;
   known_error?: boolean | null;
   resolved_at?: string | null;
@@ -242,6 +247,8 @@ export function mapTicketRow(row: TicketRow): TicketRecord {
     implementationPlan: row.implementation_plan ?? undefined,
     backoutPlan: row.backout_plan ?? undefined,
     problemId: row.problem_id ?? undefined,
+    parentTicketId: row.parent_ticket_id ?? undefined,
+    childTickets: [],
     workaround: row.workaround ?? undefined,
     knownError: Boolean(row.known_error),
     resolvedAt: row.resolved_at ?? undefined,
