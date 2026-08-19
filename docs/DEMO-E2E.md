@@ -77,7 +77,7 @@ Tulis di papan: URL + tiga akun (admin/agent/customer).
 2. **Tiket baru** (`⌘N`): judul `Laptop Finance lemot`, tipe Insiden, prioritas Medium, account Bank, tautkan `AST-1001` jika ada.
 3. Assign ke diri sendiri. Komentar singkat. Lampiran (screenshot) — file ke **MinIO**, bukan disk Supabase.
 4. Opsional 30 detik: **Escalate L2** pada tiket lain (*Backup gagal* di Internal) — clock SLA tetap jalan.
-5. Opsional 30 detik: panel **Major incident** — tautkan dua incident (induk + anak). Bukan panel RCA.
+5. Opsional 60 detik: panel **Major incident** (kanan, bukan RCA). Buat/ tautkan dua incident Bank: induk + anak. Badge **Major** / **Anak**. Langkah: [user-guide/major-incident.md](user-guide/major-incident.md).
 
 Jangan tutup *WiFi lantai 2* milik seed jika kelas masih butuh contoh hold.
 

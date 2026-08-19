@@ -1,7 +1,7 @@
 # NovaCRM Participant Manual
 
 **Document type:** end-user procedures for classroom and self-study  
-**Companion:** [Trainer guide](trainer-guide.md) · role playbooks: [Admin](admin-system.md) · [User](user-operator.md) · [Team Lead / SPV](lead-spv.md) · [Manager](manager-ops.md) · [Superadmin](superadmin.md)  
+**Companion:** [Trainer guide](trainer-guide.md) · [Major incident](major-incident.md) · role playbooks: [Admin](admin-system.md) · [User](user-operator.md) · [Team Lead / SPV](lead-spv.md) · [Manager](manager-ops.md) · [Superadmin](superadmin.md)  
 **UI:** default chrome is **ID**. Switch `EN | ID` on the top bar. Ticket *body* stays as typed. Email/WA and Assistant follow the same locale.
 
 ---
@@ -149,6 +149,7 @@ Typical agent actions:
 | Link asset / CI | Impact and history |
 | **Hold** | Pause SLA (waiting on vendor/customer). Needs a reason, e.g. `Pending vendor` + case number |
 | **Escalate L2 / L3** | Queue to Internal `L2 Network` / `L3 Infra`. Clock **keeps running** |
+| **Major incident** | Parent incident + child incidents/requests. Not RCA. See [major-incident.md](major-incident.md) |
 
 Priorities: `low`, `medium`, `high`, `critical`.  
 Statuses (incident): `open` → `in_progress` → `waiting` / `hold` → `resolved` → `closed`.
@@ -202,6 +203,17 @@ The badge counts down **response** and **resolve** targets copied from the accou
 4. **Escalate L2**. Confirm group is `L2 Network` (Internal).
 
 **Pass:** hold pauses SLA; escalate does **not** pause SLA.
+
+## Lab 4b — Major incident (optional)
+
+Do **not** use the RCA panel (*Backup gagal* / *AC ruang server*). That is Problem linking.
+
+1. Account **Bank Nusantara**. Create two incidents, e.g. `Lab — WAN cabang A` and `Lab — WAN cabang B`.
+2. Open A. Right panel **Major incident** → **Link a child…** / **Tautkan anak…** → pick B.
+3. Open B: badge **Child** / **Anak**, parent number links back to A. A shows badge **Major**.
+4. On A, **Update status** → Resolved. Check **Also resolve open children** / **Selesaikan juga tiket anak**. Save.
+
+**Pass:** B is resolved with a comment that it closed with the major incident. Full procedure: [major-incident.md](major-incident.md).
 
 ---
 
@@ -396,7 +408,7 @@ Repeat alerts within 24 hours update the **same** ticket (correlation).
 
 **Reports** (`/reports`) — range 7 / 30 / 90 days or custom. **Tickets:** preview, then export CSV / Excel / PDF. KPIs include **FRT**, **MTTR**, **backlog 7d+**, **OLA/UC breached**, and **CSAT**. The **Vendor / UC queue** table compares Fortinet vs Indosat (open, breach, avg queue, service credit). **Ask assistant** jumps to chat with that snapshot. **Workforce** (SPV+): coverage gaps + clock-in vs roster, CSV / Excel only, no preview (the gap sheet is one row per group × day).
 
-**Knowledge** (`/knowledge`) — articles from **Publish to knowledge** on a resolved ticket. Creating a ticket with title `VPN` should hint the seeded article. Problem *Backup gagal semalam* has RCA + a linked incident. **Major incident** is a separate parent/child link on the ticket (not RCA).
+**Knowledge** (`/knowledge`) — articles from **Publish to knowledge** on a resolved ticket. Creating a ticket with title `VPN` should hint the seeded article. Problem *Backup gagal semalam* has RCA + a linked incident. **Major incident** is a separate parent/child link — Lab 4b and [major-incident.md](major-incident.md).
 
 **Assistant** — **Tanya AI** on the top bar (or the floating button) opens Nova Agent. Full page remains `/assistant`. Staff only. Reads the last 7 days of ticket facts. It **does not** change tickets. If it is disconnected, admin must set AI on **Integrations** (Groq free key) and **Test connection**.
 
@@ -504,6 +516,7 @@ If Redis is down, realtime and workflows fail. Ask the trainer to open `/api/hea
 | DSAR | Data subject access request (UU PDP) |
 | Hold | Status that **pauses** SLA |
 | Escalate | Move to L2/L3 group; SLA **continues** |
+| Major incident | Parent incident with child tickets for one event — not RCA (`problem_id`) |
 | Tenant | Isolation key `tenant_id` — you do not switch this in the UI |
 
 ---

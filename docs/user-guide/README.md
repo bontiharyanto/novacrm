@@ -22,7 +22,7 @@ Tujuh role produk. Pilih dokumen sesuai login.
 | `superadmin` | [Superadmin platform](superadmin.md) | `/dashboard` | `superadmin@novacrm.app` |
 
 Password lab semua: `NovaCRM!2026`.  
-Item katalog: [Catalog & record producer](catalog-guidance.md). Matriks hak: [RBAC](../RBAC.md).
+Item katalog: [Catalog & record producer](catalog-guidance.md). Major incident (induk–anak, bukan RCA): [Major incident](major-incident.md). Matriks hak: [RBAC](../RBAC.md).
 
 ## Classroom pack
 
@@ -30,6 +30,7 @@ Item katalog: [Catalog & record producer](catalog-guidance.md). Matriks hak: [RB
 | --- | --- |
 | [Trainer guide](trainer-guide.md) | Facilitator: agenda, demo data, timing, pass criteria |
 | [Participant manual](participant-manual.md) | Learners: procedures, labs, expected results |
+| [Major incident](major-incident.md) | Agent/SPV: parent/child tickets, not RCA |
 | [Local setup](../LOCAL.md) | Engineer: run the app on a laptop |
 | [Sysadmin Ops](../OPS.md) | Engineer: health and queues on `:3100` |
 | [Workers](../WORKERS.md) | Engineer: scale BullMQ workers |

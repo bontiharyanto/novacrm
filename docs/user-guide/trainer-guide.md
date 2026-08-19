@@ -63,6 +63,7 @@ Portal  customer@novacrm.app / NovaCRM!2026
 | CMDB Bank | CMDB graph | WAN Indosat → firewall → core → Lt.2 AP, VLAN 50 |
 | Ticket *WiFi lantai 2* | Bank incidents | Vendor hold (SLA paused) |
 | Ticket *Backup gagal* | Internal | Problem RCA: workaround + Known error; linked from *AC ruang server panas* |
+| Major incident (Lab 4b) | Bank — two new INC | Parent/child on the ticket panel, **not** RCA. [major-incident.md](major-incident.md) |
 | Knowledge *VPN disconnect* | `/knowledge` | Hint appears when creating a ticket titled with `VPN` |
 | SLA Gold INC P1 | `/sla` on Bank | 15m response / 4h resolve |
 | Catalog **Install software** | `/catalog` | Record producer — state badge is **Published** / **Draf**. Walkthrough for a new item (Antivirus) is in [catalog-guidance.md](catalog-guidance.md) |
@@ -81,7 +82,7 @@ If a participant “cannot see the graph”, they are still on **Internal**. Swi
 | 0:00–0:20 | Product map, roles, login, Appearance | Lab 1 |
 | 0:20–1:10 | Service desk, filters, new ticket, SLA | Labs 2–3 |
 | 1:10–1:20 | Break | — |
-| 1:20–2:10 | Hold, escalate, comments, attach | Lab 4 |
+| 1:20–2:10 | Hold, escalate, comments, attach; optional major | Labs 4–4b |
 | 2:10–2:50 | Assets + CMDB (Bank Nusantara) | Labs 5–6 |
 | 2:50–3:20 | Customer portal + CSAT | Lab 7 |
 | 3:20–3:35 | Recap + quiz | — |
@@ -111,6 +112,8 @@ Add after lunch:
 **Keyboard.** `⌘K` / `Ctrl+K` command palette, `⌘N` / `Ctrl+N` new ticket. Show once; many agents will use it daily.
 
 **CMDB.** Always demo on **Bank Nusantara**. Internal is a different graph; **All** mixes accounts. Impact uses the linked asset, not a ticket→CI field. Do not let the class rewrite seeded topology.
+
+**Major vs RCA.** *Backup gagal* / *AC ruang server* is **Problem RCA**. Lab 4b uses two **new** Bank incidents. Procedure: [major-incident.md](major-incident.md).
 
 **WFM.** Occupancy/forecast follow the account filter. Team roster and the seeded staff review are **shared** — do not let the class rewrite them unless the tenant is isolated. Own **Clock in** + **Roster saya** is the agent lab (`sari.l1@novacrm.app`, Pagi). **Tukar shift** is optional (Sari ↔ Budi, trainer as SPV). Login ≠ attendance. Only **Tersedia** is auto-assigned. Auto-assign needs Redis + `npm run worker`. Reviews are 1–5 human scores plus advisory AI — not CSAT-on-person and not an HR pack.
 
