@@ -51,8 +51,7 @@ CASL on the frontend; RLS on the backend. Sidebar account filter: one customer a
 | [Manager operasi](docs/user-guide/manager-ops.md) | Accounts, org, import, workflows |
 | [Superadmin](docs/user-guide/superadmin.md) | Platform tenant record and break-glass |
 | [Catalog & record producer](docs/user-guide/catalog-guidance.md) | Supervisor / admin — design catalog items, variables, worked examples |
-| [Local laptop setup](docs/LOCAL.md) | Engineers running the demo |
-| [NETMON NMS](docs/NETMON.md) | Alert webhook from netmon.click (Other card, not a plugin) |
+| [NETMON NMS](docs/NETMON.md) | Tickets + CMDB sync from netmon.click |
 | [Sysadmin Ops](docs/OPS.md) | Health, queues, retries on `:3100` |
 | [Workers (BullMQ)](docs/WORKERS.md) | How many workers, how to scale laptop and VPS |
 | [RBAC](docs/RBAC.md) | Roles vs CASL vs RLS |

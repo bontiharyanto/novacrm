@@ -48,9 +48,11 @@ export async function GET(request: NextRequest, { params }: { params: { slug: st
               name: 'channel',
               in: 'path',
               required: true,
-              schema: { type: 'string', enum: ['generic', 'whatsapp', 'telegram', 'email', 'alerts'] },
+              schema: { type: 'string', enum: ['generic', 'whatsapp', 'telegram', 'email', 'alerts', 'cmdb'] },
             },
           ],
+          description:
+            'alerts/generic/email/chat create tickets. cmdb upserts a NETMON configuration item as an asset + CI (same Alert webhook secret).',
           security: [{ webhookSecret: [] }],
           responses: { '200': { description: 'Accepted' }, '401': { description: 'Unauthorized' } },
         },

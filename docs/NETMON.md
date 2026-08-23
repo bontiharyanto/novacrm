@@ -1,8 +1,10 @@
 # NETMON → NovaCRM
 
-**NETMON** ([netmon.click](https://netmon.click)) is the NMS. **NovaCRM** is the operations desk. NETMON opens incidents here over the tenant **alert webhook**. There is no NovaCRM plugin named “NETMON” or “REST API”.
+**NETMON** ([netmon.click](https://netmon.click)) is the NMS. **NovaCRM** is the operations desk.
 
 Lab tenant: `novacrm-demo`. Production NETMON: `https://demo.netmon.click` (and other `{slug}.netmon.click`).
+
+There is no NovaCRM plugin named “NETMON” or “REST API”. Both tickets and CMDB reuse the **Alert secret** on the **Other** integrations card.
 
 ## 1. Secret on NovaCRM
 
@@ -17,47 +19,68 @@ Keep the plaintext. NETMON encrypts it with its own `ENCRYPT_KEY`; a value copie
 
 ## 2. Connector on NETMON
 
-In NETMON: **Settings → Ticketing** → **Add NovaCRM** (new row). Do not rename **NETMON Helpdesk**.
+In NETMON: **Settings → Ticketing** → **Add NovaCRM**.
 
 | Field | Value |
 | --- | --- |
 | Base URL | `https://novacrm.click` |
-| Tenant slug | this NovaCRM tenant (`novacrm-demo` in lab) |
-| Alert webhook secret | the same Alert secret |
+| Tenant slug | NovaCRM tenant (`novacrm-demo` in lab) |
+| Alert webhook secret | The same Alert secret |
+| Sync CMDB | On (default). CI create/update in NETMON upserts asset + CI here |
+| NovaCRM account UUID | Optional. Empty = Internal account |
 
-**Save**, then **Test connection**. “Tenant reachable” only means the slug exists. A wrong secret still looks reachable; ticket create then fails with `Unauthorized webhook`.
+Enable the connector, **Save**, then **Test connection**.
 
-Enable the connector. Optional: auto-open on firing alerts.
+## 3. Tickets (alerts)
 
-## 3. What NETMON calls
+`POST /api/v1/t/{slug}/webhooks/alerts`
 
+Headers: `x-webhook-secret`, `X-Tenant-Id: {slug}`.
+
+Repeat alerts within 24 hours update the same ticket (`fingerprint`).
+
+## 4. CMDB (assets + CI)
+
+`POST /api/v1/t/{slug}/webhooks/cmdb`
+
+Same headers and Alert secret as tickets. Does **not** open a ticket.
+
+NETMON is the source of truth for this path (outbound only). Payload:
+
+```json
+{
+  "source": "NETMON",
+  "op": "upsert",
+  "fingerprint": "netmon:{netmonTenantId}:{ciId}",
+  "accountId": null,
+  "ci": {
+    "id": "clxxxxxxxx",
+    "name": "Core switch HQ",
+    "type": "hardware",
+    "assetTag": "SW-HQ-01",
+    "serial": "SN123",
+    "location": "Jakarta",
+    "owner": "NOC",
+    "status": "in_service"
+  },
+  "device": { "hostname": "sw-hq-01", "ip": "10.1.1.1" }
+}
 ```
-POST https://novacrm.click/api/v1/t/{slug}/webhooks/alerts
-```
 
-Headers: `x-webhook-secret`, `X-Tenant-Id: {slug}` (`Authorization: Bearer` is also sent). Body includes `source: NETMON`, title, severity, host, fingerprint.
-
-Repeat alerts within 24 hours update the **same** ticket.
-
-Health (no secret required): `GET /api/v1/t/{slug}/health`.
-
-## 4. Desk work
-
-- New NETMON alerts appear as tickets (`INC…`) on the NovaCRM board.
-- A reply from NETMON (**Tickets** → open the record → **Send response**) lands as a **comment** on that ticket. **Respond and resolve** also closes it.
-- Agents work the ticket in NovaCRM as usual (assign, hold, escalate).
-
-## 5. Optional: NovaCRM → NETMON
-
-NETMON shows an **Inbound webhook** URL (`https://netmon.click/api/tickets/inbound/nm_…`). Paste it into a NovaCRM **workflow** webhook if comments made in NovaCRM must sync back.
-
-`localhost` inbound URLs are not reachable from this cloud. Laptop NETMON can **create** tickets here; it cannot **receive** updates unless `APP_URL` is public.
-
-## 6. Checklist
-
-| Check | OK when |
+| `op` | Effect |
 | --- | --- |
-| Alert secret ≥ 16 | Saved on **Other**, not a new plugin |
-| NETMON connector | Provider label **NovaCRM**, not Helpdesk |
-| Test + open ticket | NETMON ticket shows `INC…` and a link to `/tickets/{id}` |
-| Reply | Comment visible on the NovaCRM ticket thread |
+| `ping` | Auth check. No write. |
+| `upsert` | Create or update an **asset** and a linked **CI**. Idempotent on `fingerprint`. |
+| `retire` | Set the asset `retired`. Keep the CI so ticket history stays. |
+
+Default account is the tenant **Internal** account. Status map: `in_service` → `active`, `maintenance` → `in_repair`, `retired` / delete in NETMON → `retired`, `outage` → `active` plus a note.
+
+Response: `{ "data": { "assetId", "ciId", "assetTag" }, "error": null }`.
+
+## Laptop vs cloud
+
+| From | To | Result |
+| --- | --- | --- |
+| NETMON `localhost:3000` | NovaCRM cloud | Ticket and CMDB push **work** |
+| NETMON `https://demo.netmon.click` | NovaCRM cloud | Works after the secret is saved on the VPS |
+| NovaCRM cloud | NETMON `localhost` inbound URL | Does not work |

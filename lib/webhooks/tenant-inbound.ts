@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { ingestNetmonCmdb } from '@/lib/cmdb/ingest-netmon';
 import { ingestInbound, mapAlertSeverity } from '@/lib/inbound/ingest';
 import { sendTelegram } from '@/lib/integrations/telegram';
 import { sendWhatsApp } from '@/lib/integrations/whatsapp';
@@ -16,12 +17,12 @@ function envSecret(channel: TenantWebhookChannel) {
   if (channel === 'whatsapp') return process.env.WHATSAPP_WEBHOOK_SECRET;
   if (channel === 'telegram') return process.env.TELEGRAM_WEBHOOK_SECRET;
   if (channel === 'email') return process.env.EMAIL_WEBHOOK_SECRET ?? process.env.WEBHOOK_SECRET;
-  if (channel === 'alerts') return process.env.ALERT_WEBHOOK_SECRET ?? process.env.WEBHOOK_SECRET;
+  if (channel === 'alerts' || channel === 'cmdb') return process.env.ALERT_WEBHOOK_SECRET ?? process.env.WEBHOOK_SECRET;
   return process.env.WEBHOOK_SECRET ?? process.env.ALERT_WEBHOOK_SECRET;
 }
 
 function dbKind(channel: TenantWebhookChannel) {
-  if (channel === 'alerts') return 'alert' as const;
+  if (channel === 'alerts' || channel === 'cmdb') return 'alert' as const;
   return channel;
 }
 
@@ -52,6 +53,7 @@ export async function handleTenantWebhook(request: NextRequest, slug: string, ch
     if (channel === 'telegram') return handleTelegram(tenant.id, payload);
     if (channel === 'email') return handleEmail(tenant.id, payload);
     if (channel === 'alerts') return handleAlerts(tenant.id, payload);
+    if (channel === 'cmdb') return handleCmdb(tenant.id, payload);
     return handleGeneric(tenant.id, payload);
   } catch (error) {
     return NextResponse.json(
@@ -59,6 +61,14 @@ export async function handleTenantWebhook(request: NextRequest, slug: string, ch
       { status: 500 },
     );
   }
+}
+
+async function handleCmdb(tenantId: string, payload: unknown) {
+  const result = await ingestNetmonCmdb(tenantId, payload);
+  if (result.error || !result.data) {
+    return NextResponse.json({ data: null, error: result.error }, { status: result.status });
+  }
+  return NextResponse.json({ data: result.data, error: null });
 }
 
 async function handleGeneric(tenantId: string, payload: unknown) {

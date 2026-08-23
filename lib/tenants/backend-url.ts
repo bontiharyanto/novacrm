@@ -8,7 +8,7 @@ export const TENANT_HEALTH_TEMPLATE = '{+origin}/api/v1/t/{tenant}/health';
 export const TENANT_WEBHOOK_TEMPLATE = '{+origin}/api/v1/t/{tenant}/webhooks/{channel}';
 export const TENANT_OPENAPI_TEMPLATE = '{+origin}/api/v1/t/{tenant}/openapi.json';
 
-export const TENANT_WEBHOOK_CHANNELS = ['generic', 'whatsapp', 'telegram', 'email', 'alerts'] as const;
+export const TENANT_WEBHOOK_CHANNELS = ['generic', 'whatsapp', 'telegram', 'email', 'alerts', 'cmdb'] as const;
 export type TenantWebhookChannel = (typeof TENANT_WEBHOOK_CHANNELS)[number];
 
 export function tenantOrigin(publicUrl?: string | null) {
@@ -39,6 +39,7 @@ export function tenantBackendUrls(slug: string, publicUrl?: string | null) {
       telegram: `${base}/webhooks/telegram`,
       email: `${base}/webhooks/email`,
       alerts: `${base}/webhooks/alerts`,
+      cmdb: `${base}/webhooks/cmdb`,
     },
   };
 }

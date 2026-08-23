@@ -460,8 +460,6 @@ The page renders a **plugin catalog** (global + tenant-custom). Built-in kinds i
 
 For each card: paste configuration → **Save** → **Test connection**. Badge: `connected` / `failed` / `saved`. Google / Microsoft / Okta also drive the login buttons on `/login` (enable the provider in Supabase Auth). SAML: paste SSO URL + IdP cert, then **Continue with SAML** on `/login`. ACS `/api/auth/saml/acs`. App MFA stays off in the lab.
 
-**NETMON** (network monitoring at netmon.click) does not use **Tambah plugin**. Set **Alert secret** on the existing **Other** card, then pair it in NETMON Settings → Ticketing → Add NovaCRM. Full runbook: [NETMON.md](../NETMON.md).
-
 AI classroom default: **Groq (free)**, model `openai/gpt-oss-20b`. Key prefix `gsk_`. Endpoint must stay `https://api.groq.com/openai/v1` — do not use `gpt-4o-mini` on Groq. `llama-3.1-8b-instant` was retired 16 Aug 2026.
 
 Email on the laptop lands in **Mailpit**, not Gmail.

@@ -32,7 +32,6 @@ Item katalog: [Catalog & record producer](catalog-guidance.md). Major incident (
 | [Participant manual](participant-manual.md) | Learners: procedures, labs, expected results |
 | [Major incident](major-incident.md) | Agent/SPV: parent/child tickets, not RCA |
 | [Local setup](../LOCAL.md) | Engineer: run the app on a laptop |
-| [NETMON](../NETMON.md) | Engineer/admin: NMS alert webhook from netmon.click |
 | [Sysadmin Ops](../OPS.md) | Engineer: health and queues on `:3100` |
 | [Workers](../WORKERS.md) | Engineer: scale BullMQ workers |
 | [MFA](../MFA.md) | TOTP toggle — off until production |

@@ -144,8 +144,6 @@ Hanya **Published** yang muncul di combo tiket dan portal.
 
 Jangan paste production key di kelas bersama.
 
-**NETMON** (NMS di [netmon.click](https://netmon.click)) memakai kartu **Other** + **Alert secret**, bukan plugin baru. Runbook: [NETMON.md](../NETMON.md).
-
 **Settings → Notifications** — channel `whatsapp` / `telegram` / `email`, API key, tombol **Kirim Test**.  
 Log: worker BullMQ. Gagal → Ops `:3100` → Retry (bukan rewrite tiket).
 
@@ -170,9 +168,11 @@ Webhook inbound (header secret, bukan `?secret=`):
 | WhatsApp | `POST /api/webhooks/whatsapp` |
 | Telegram | `POST /api/webhooks/telegram` |
 | Email | `POST /api/webhooks/email` |
-| Alerts | `POST /api/webhooks/alerts` or tenant `POST /api/v1/t/{slug}/webhooks/alerts` |
+| Alerts | `POST /api/webhooks/alerts` |
+| CMDB (NETMON) | `POST /api/v1/t/{slug}/webhooks/cmdb` — same Alert secret; upserts asset + CI, no ticket |
+| Generic | `POST /api/webhooks/generic` |
 
-Alert berulang dalam 24 jam meng-update tiket yang sama. **NETMON** memakai rute tenant + header `x-webhook-secret` — lihat [NETMON.md](../NETMON.md). Pesan WA / Telegram / email (bukan alert) bisa otomatis mengisi catalog item + variabel — lihat [catalog-guidance.md](catalog-guidance.md) §13.
+Alert berulang dalam 24 jam meng-update tiket yang sama. Pesan WA / Telegram / email (bukan alert) bisa otomatis mengisi catalog item + variabel — lihat [catalog-guidance.md](catalog-guidance.md) §13.
 
 ---
 
