@@ -33,7 +33,7 @@ export function AccountSwitcher({
 
   return (
     <div className="px-3 pb-2">
-      <label className="relative flex h-8 items-center gap-2 rounded-md border border-zinc-800 bg-zinc-900/70 px-2 transition-colors duration-200 ease-out hover:border-zinc-700">
+      <label className="relative flex h-8 items-center gap-2 rounded-md border border-zinc-800/80 bg-zinc-900/40 px-2 transition-colors duration-200 ease-out hover:border-zinc-700 hover:bg-zinc-900/70">
         <Building2 className="h-3.5 w-3.5 shrink-0 text-zinc-500" />
         <select
           value={value}

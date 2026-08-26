@@ -70,7 +70,7 @@ export function SsoButtons({ tenantSlug, nextPath }: { tenantSlug?: string; next
         <div className="absolute inset-0 flex items-center">
           <span className="w-full border-t border-zinc-800" />
         </div>
-        <p className="relative mx-auto w-fit bg-zinc-900 px-2 text-[11px] uppercase tracking-[0.14em] text-zinc-500">
+        <p className="relative mx-auto w-fit bg-zinc-950 px-2 text-[11px] uppercase tracking-[0.14em] text-zinc-500">
           {t.login.ssoOr}
         </p>
       </div>

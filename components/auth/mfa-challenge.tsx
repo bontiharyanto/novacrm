@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { verifyMfaLogin } from '@/lib/auth/mfa';
@@ -23,27 +22,35 @@ export function MfaChallenge({ factorId, nextPath }: { factorId: string; nextPat
       setError(result.error);
       return;
     }
-    router.replace(nextPath && nextPath.startsWith('/') ? `${nextPath}${nextPath.includes('?') ? '&' : '?'}welcome=1` : '/dashboard?welcome=1');
+    router.replace(
+      nextPath && nextPath.startsWith('/')
+        ? `${nextPath}${nextPath.includes('?') ? '&' : '?'}welcome=1`
+        : '/dashboard?welcome=1',
+    );
     router.refresh();
   }
 
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader>
-        <CardTitle className="text-center">Authenticator</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form className="space-y-4" onSubmit={(event) => void submit(event)}>
-          <div className="space-y-1.5">
-            <Label htmlFor="totp">6-digit code</Label>
-            <Input id="totp" inputMode="numeric" autoComplete="one-time-code" value={code} onChange={(event) => setCode(event.target.value)} />
-          </div>
-          {error ? <p className="text-sm text-rose-400">{error}</p> : null}
-          <Button type="submit" className="w-full" disabled={pending || code.trim().length < 6}>
-            {pending ? 'Verifying…' : 'Continue'}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
+    <div className="space-y-4 rounded-xl border border-zinc-800/90 bg-zinc-900/30 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+      <form className="space-y-4" onSubmit={(event) => void submit(event)}>
+        <div className="space-y-2">
+          <Label htmlFor="totp">6-digit code</Label>
+          <Input
+            id="totp"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            value={code}
+            onChange={(event) => setCode(event.target.value)}
+            className="h-10 font-mono tracking-[0.2em]"
+          />
+        </div>
+        {error ? (
+          <p className="rounded-md border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-300">{error}</p>
+        ) : null}
+        <Button type="submit" className="h-10 w-full" disabled={pending || code.trim().length < 6}>
+          {pending ? 'Verifying…' : 'Continue'}
+        </Button>
+      </form>
+    </div>
   );
 }

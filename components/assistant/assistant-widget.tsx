@@ -31,7 +31,12 @@ export function AskAiButton({ onClick }: { onClick: () => void }) {
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex h-9 w-9 shrink-0 items-center justify-center gap-1.5 rounded-md border border-[color:color-mix(in_srgb,var(--accent)_45%,transparent)] text-[13px] text-zinc-200 transition-colors hover:bg-zinc-900 sm:w-auto sm:px-2.5"
+      className={cn(
+        'inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-md border border-[color:color-mix(in_srgb,var(--accent)_45%,transparent)] px-0 text-[13px] text-zinc-200',
+        'transition-colors duration-200 hover:bg-zinc-900 sm:px-2.5',
+        'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[color-mix(in_srgb,var(--accent)_55%,transparent)]',
+        'w-8 sm:w-auto',
+      )}
       aria-label={t.nav.askAi}
     >
       <Sparkles className="h-3.5 w-3.5 nova-accent-icon" />
@@ -170,31 +175,18 @@ export function AssistantWidget({
 
   return (
     <>
-      {open ? null : (
-        <button
-          type="button"
-          onClick={() => onOpenChange(true)}
-          className="nova-accent-btn fixed bottom-[max(1.25rem,env(safe-area-inset-bottom))] right-[max(1.25rem,env(safe-area-inset-right))] z-[60] flex h-12 w-12 items-center justify-center rounded-full text-white shadow-lg md:bottom-6 md:right-6"
-          aria-label={t.nav.askAi}
-        >
-          <Sparkles className="h-5 w-5" />
-        </button>
-      )}
       {open ? (
         <div
           className={cn(
-            'z-[60] flex flex-col overflow-hidden border-zinc-800 bg-zinc-950',
-            variant === 'portal'
-              ? 'fixed inset-y-0 right-0 h-dvh w-full border-l sm:w-[400px]'
-              : 'fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] h-[min(85dvh,640px)] w-auto rounded-2xl border shadow-2xl sm:inset-x-auto sm:right-4 sm:h-[min(640px,calc(100dvh-5.5rem))] sm:w-[min(400px,calc(100vw-2rem))] md:bottom-6 md:right-6',
+            'fixed inset-y-0 right-0 z-[60] flex h-dvh w-full flex-col overflow-hidden border-l border-zinc-800 bg-zinc-950 shadow-[-24px_0_48px_rgba(0,0,0,0.35)] sm:w-[400px]',
           )}
         >
-          <header className="flex h-12 shrink-0 items-center gap-2 border-b border-zinc-800 px-3">
+          <header className="flex h-12 shrink-0 items-center gap-2 border-b border-zinc-800/80 bg-zinc-950/90 px-3 backdrop-blur-md">
             {variant === 'desk' ? (
             <button
               type="button"
               onClick={() => void (view === 'history' ? setView(messages.length ? 'chat' : 'home') : openHistory())}
-              className="rounded-md p-1.5 text-zinc-400 hover:bg-zinc-900 hover:text-zinc-50"
+              className="rounded-md p-1.5 text-zinc-400 transition-colors hover:bg-zinc-900 hover:text-zinc-50"
               aria-label={t.assistant.history}
             >
               {view === 'history' ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
@@ -204,22 +196,22 @@ export function AssistantWidget({
             )}
             <div className="flex min-w-0 flex-1 items-center justify-center gap-2">
               <NovaMark size={22} />
-              <p className="truncate text-[13px] font-medium text-zinc-100">Nova Agent</p>
+              <p className="truncate text-[13px] font-medium tracking-tight text-zinc-100">Nova Agent</p>
             </div>
             {variant === 'desk' ? (
-              <a
+              <Link
                 href="/assistant"
-                className="rounded-md p-1.5 text-zinc-400 hover:bg-zinc-900 hover:text-zinc-50"
+                className="rounded-md p-1.5 text-zinc-400 transition-colors hover:bg-zinc-900 hover:text-zinc-50"
                 aria-label={t.assistant.expand}
                 onClick={() => onOpenChange(false)}
               >
                 <Maximize2 className="h-3.5 w-3.5" />
-              </a>
+              </Link>
             ) : null}
             <button
               type="button"
               onClick={closeWidget}
-              className="rounded-md p-1.5 text-zinc-400 hover:bg-zinc-900 hover:text-zinc-50"
+              className="rounded-md p-1.5 text-zinc-400 transition-colors hover:bg-zinc-900 hover:text-zinc-50"
               aria-label={t.assistant.close}
             >
               <X className="h-4 w-4" />
