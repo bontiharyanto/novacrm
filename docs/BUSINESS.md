@@ -2,7 +2,7 @@
 
 Dokumen komersial internal. Bukan SLA ke klien. Harga di sini **usulan** — belum ada billing otomatis di app (field tenant: `trial` / `standard` / `enterprise` di `/tenants`).
 
-Kesiapan teknis membatasi apa yang boleh dijual: [OPERATIONS.md](OPERATIONS.md). Demo klik: [DEMO-E2E.md](DEMO-E2E.md). Playbook penjualan: [GTM.md](GTM.md).
+Kesiapan teknis membatasi apa yang boleh dijual: [OPERATIONS.md](OPERATIONS.md). Demo klik: [DEMO-E2E.md](DEMO-E2E.md). Playbook penjualan: [GTM.md](GTM.md). Ringkasan brainstorm: [BUSINESS-SUMMARY.md](BUSINESS-SUMMARY.md).
 
 ---
 

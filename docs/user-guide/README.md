@@ -48,6 +48,7 @@ Item katalog: [Catalog & record producer](catalog-guidance.md). Major incident (
 | [Flyer www](../FLYER.md) | Landing `www.novacrm.click` |
 | [Retensi log](../LOG-RETENTION.md) | Engineer: prune log Supabase + Docker |
 | [Bisnis & campaign](../BUSINESS.md) | Owner: paket, funnel, analisis |
+| [Ringkasan bisnis SaaS](../BUSINESS-SUMMARY.md) | Verdict jual cloud + paket MSP |
 
 ## Demo logins
 

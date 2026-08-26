@@ -66,6 +66,7 @@ CASL on the frontend; RLS on the backend. Sidebar account filter: one customer a
 | [Go-to-market](docs/GTM.md) | Talk track, outreach, discovery, keberatan — penjualan |
 | [Flyer www](docs/FLYER.md) | Landing publik `www.novacrm.click` (bukan desk) |
 | [Bisnis & campaign](docs/BUSINESS.md) | Model sewa tenant, paket, campaign 90 hari, SWOT |
+| [Ringkasan bisnis SaaS](docs/BUSINESS-SUMMARY.md) | Verdict + paket MSP + SOW + fase jual (brainstorm) |
 | [Retensi log](docs/LOG-RETENTION.md) | Tabel Supabase + log Docker/VPS yang boleh dipangkas |
 
 ## Getting started (laptop)
