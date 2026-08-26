@@ -1,14 +1,19 @@
 import { STAFF_ROLES } from '@/lib/rbac/roles';
-import { quotasForPlan, type TenantQuotaLimits } from '@/lib/tenants/quotas';
+import { quotasForPlan } from '@/lib/tenants/quotas';
 import type { TenantPlan } from '@/lib/tenants/lifecycle';
+import type { TenantMeterSnapshot } from '@/lib/tenants/meter-view';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { createSupabaseAdminClient, hasServiceRole } from '@/lib/supabase/admin';
 
-export type TenantMeterSnapshot = TenantQuotaLimits & {
-  accountsUsed: number;
-  agentsUsed: number;
-  ticketsUsedThisMonth: number;
-};
+export type { TenantMeterSnapshot } from '@/lib/tenants/meter-view';
+export {
+  meterDimensions,
+  meterLevel,
+  meterPercent,
+  worstMeterLevel,
+  type MeterDimension,
+  type MeterLevel,
+} from '@/lib/tenants/meter-view';
 
 const TZ_OFFSET: Record<string, string> = {
   'Asia/Jakarta': '+07:00',
@@ -144,46 +149,4 @@ export async function assertTicketQuota(tenantId: string, additional = 1): Promi
     return `Monthly ticket limit reached (${used}/${row.maxTicketsPerMonth}). Ask the platform admin to raise the quota on /tenants.`;
   }
   return null;
-}
-
-export type MeterLevel = 'ok' | 'warn' | 'critical';
-
-export function meterLevel(used: number, max: number): MeterLevel {
-  if (max <= 0) return 'critical';
-  const ratio = used / max;
-  if (ratio >= 1) return 'critical';
-  if (ratio >= 0.8) return 'warn';
-  return 'ok';
-}
-
-export function meterPercent(used: number, max: number) {
-  if (max <= 0) return 100;
-  return Math.min(100, Math.round((used / max) * 100));
-}
-
-export type MeterDimension = {
-  key: 'accounts' | 'agents' | 'tickets';
-  used: number;
-  max: number;
-  level: MeterLevel;
-  percent: number;
-};
-
-export function meterDimensions(snapshot: TenantMeterSnapshot): MeterDimension[] {
-  const rows: Array<{ key: MeterDimension['key']; used: number; max: number }> = [
-    { key: 'accounts', used: snapshot.accountsUsed, max: snapshot.maxAccounts },
-    { key: 'agents', used: snapshot.agentsUsed, max: snapshot.maxAgents },
-    { key: 'tickets', used: snapshot.ticketsUsedThisMonth, max: snapshot.maxTicketsPerMonth },
-  ];
-  return rows.map((row) => ({
-    ...row,
-    level: meterLevel(row.used, row.max),
-    percent: meterPercent(row.used, row.max),
-  }));
-}
-
-export function worstMeterLevel(dims: MeterDimension[]): MeterLevel {
-  if (dims.some((d) => d.level === 'critical')) return 'critical';
-  if (dims.some((d) => d.level === 'warn')) return 'warn';
-  return 'ok';
 }

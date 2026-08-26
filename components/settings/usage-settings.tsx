@@ -11,7 +11,7 @@ import {
   type MeterDimension,
   type MeterLevel,
   type TenantMeterSnapshot,
-} from '@/lib/tenants/meter';
+} from '@/lib/tenants/meter-view';
 
 function barClass(level: MeterLevel) {
   if (level === 'critical') return 'bg-rose-500';

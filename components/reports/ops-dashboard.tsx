@@ -12,7 +12,7 @@ import { TypeBadge } from '@/components/tickets/type-badge';
 import { UsageWarnBanner } from '@/components/settings/usage-settings';
 import { useRealtimeTable } from '@/lib/supabase/realtime';
 import type { ReportSnapshot } from '@/lib/reports/schema';
-import type { TenantMeterSnapshot } from '@/lib/tenants/meter';
+import type { TenantMeterSnapshot } from '@/lib/tenants/meter-view';
 import { formatDurationMinutes } from '@/lib/reports/labels';
 import { formatRelativeId } from '@/lib/utils/dates';
 import { isTicketType } from '@/lib/tickets/process';
