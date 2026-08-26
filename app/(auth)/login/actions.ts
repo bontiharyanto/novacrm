@@ -1,13 +1,12 @@
 'use server';
 
 import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { ACCOUNT_ALL, ACCOUNT_COOKIE } from '@/lib/accounts/schema';
 import { homePathForRole, isCustomerRole, parseAppRole } from '@/lib/rbac/roles';
 import { setWelcomeCookie, withWelcomeQuery } from '@/lib/auth/welcome';
 
-export type SignInState = { error: string } | null;
+export type SignInState = { error: string } | { redirectTo: string } | null;
 
 function safeNextPath(value: string) {
   if (value.startsWith('/') && !value.startsWith('//')) {
@@ -46,7 +45,7 @@ export async function signInAction(_prev: SignInState, formData: FormData): Prom
   if (isCustomerRole(role)) {
     setWelcomeCookie();
     const dest = next && next.startsWith('/portal') && next !== '/portal' ? next : '/portal';
-    redirect(withWelcomeQuery(dest));
+    return { redirectTo: withWelcomeQuery(dest) };
   }
 
   if (profile?.tenant_id) {
@@ -58,7 +57,7 @@ export async function signInAction(_prev: SignInState, formData: FormData): Prom
     if (tenant?.mfa_required && tenant.slug !== 'novacrm-demo') {
       const factors = await supabase.auth.mfa.listFactors();
       const enrolled = factors.data?.totp.some((item) => item.status === 'verified');
-      redirect(enrolled ? '/login/mfa' : '/settings/security?enroll=1');
+      return { redirectTo: enrolled ? '/login/mfa' : '/settings/security?enroll=1' };
     }
   }
 
@@ -70,5 +69,5 @@ export async function signInAction(_prev: SignInState, formData: FormData): Prom
   });
   const dest = next && !next.startsWith('/portal') ? next : homePathForRole(role);
   setWelcomeCookie();
-  redirect(withWelcomeQuery(dest));
+  return { redirectTo: withWelcomeQuery(dest) };
 }

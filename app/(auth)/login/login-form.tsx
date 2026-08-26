@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useFormState, useFormStatus } from 'react-dom';
 import { useSearchParams } from 'next/navigation';
@@ -52,6 +52,13 @@ export function LoginForm() {
               : ssoError === 'idle'
                 ? t.login.idleTimeout
                 : '';
+
+  // Full document navigation so auth cookies from the Server Action are present on /dashboard.
+  useEffect(() => {
+    if (state && 'redirectTo' in state && state.redirectTo) {
+      window.location.assign(state.redirectTo);
+    }
+  }, [state]);
 
   const points = [
     { icon: Workflow, text: t.login.points.desk },
@@ -170,9 +177,9 @@ export function LoginForm() {
                     </button>
                   </div>
                 </div>
-                {state?.error || ssoMessage ? (
+                {(state && 'error' in state && state.error) || ssoMessage ? (
                   <p className="rounded-md border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-300">
-                    {state?.error ?? ssoMessage}
+                    {(state && 'error' in state ? state.error : null) ?? ssoMessage}
                   </p>
                 ) : null}
                 <SubmitButton />

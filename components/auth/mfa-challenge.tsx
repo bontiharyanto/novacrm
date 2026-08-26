@@ -1,14 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { verifyMfaLogin } from '@/lib/auth/mfa';
 
 export function MfaChallenge({ factorId, nextPath }: { factorId: string; nextPath?: string }) {
-  const router = useRouter();
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [pending, setPending] = useState(false);
@@ -22,12 +20,11 @@ export function MfaChallenge({ factorId, nextPath }: { factorId: string; nextPat
       setError(result.error);
       return;
     }
-    router.replace(
+    const dest =
       nextPath && nextPath.startsWith('/')
         ? `${nextPath}${nextPath.includes('?') ? '&' : '?'}welcome=1`
-        : '/dashboard?welcome=1',
-    );
-    router.refresh();
+        : '/dashboard?welcome=1';
+    window.location.assign(dest);
   }
 
   return (
