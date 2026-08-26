@@ -2,19 +2,20 @@ export function DistributionList({
   rows,
   empty = 'No data in this window.',
 }: {
-  rows: Array<{ id: string; label: string; value: number }>;
+  rows?: Array<{ id: string; label: string; value: number }>;
   empty?: string;
 }) {
-  const total = rows.reduce((sum, row) => sum + row.value, 0);
-  const max = Math.max(...rows.map((row) => row.value), 1);
+  const safeRows = rows ?? [];
+  const total = safeRows.reduce((sum, row) => sum + row.value, 0);
+  const max = Math.max(...safeRows.map((row) => row.value), 1);
 
-  if (rows.length === 0) {
+  if (safeRows.length === 0) {
     return <p className="py-6 text-sm text-zinc-500">{empty}</p>;
   }
 
   return (
     <div className="space-y-3">
-      {rows.map((row) => {
+      {safeRows.map((row) => {
         const share = total === 0 ? 0 : Math.round((row.value / total) * 100);
         return (
           <div key={row.id}>

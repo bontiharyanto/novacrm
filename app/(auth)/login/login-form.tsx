@@ -1,12 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
-import { useFormState, useFormStatus } from 'react-dom';
 import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, Lock, ShieldCheck, Workflow } from 'lucide-react';
-import { signInAction, type SignInState } from './actions';
+import { clientSignIn } from '@/lib/auth/client-sign-in';
 import { NovaMark, NovaWordmark } from '@/components/brand/nova-mark';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,16 +16,6 @@ import { SsoButtons } from '@/components/auth/sso-buttons';
 import { usePublicPrivacyEnabled } from '@/components/portal/privacy-module';
 import { cn } from '@/lib/utils';
 
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  const { t } = useI18n();
-  return (
-    <Button type="submit" disabled={pending} className="h-10 w-full text-[13px] font-medium">
-      {pending ? t.login.pending : t.login.submit}
-    </Button>
-  );
-}
-
 export function LoginForm() {
   const { t } = useI18n();
   const { enabled: privacyEnabled } = usePublicPrivacyEnabled();
@@ -34,7 +23,8 @@ export function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [state, formAction] = useFormState(signInAction, null as SignInState);
+  const [error, setError] = useState('');
+  const [pending, setPending] = useState(false);
   const tenantSlug = searchParams.get('tenant')?.trim() || '';
   const nextPath = searchParams.get('next')?.trim() || '';
   const ssoError = searchParams.get('error');
@@ -53,12 +43,18 @@ export function LoginForm() {
                 ? t.login.idleTimeout
                 : '';
 
-  // Full document navigation so auth cookies from the Server Action are present on /dashboard.
-  useEffect(() => {
-    if (state && 'redirectTo' in state && state.redirectTo) {
-      window.location.assign(state.redirectTo);
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setPending(true);
+    setError('');
+    const result = await clientSignIn(email, password, nextPath);
+    if ('error' in result) {
+      setError(result.error);
+      setPending(false);
+      return;
     }
-  }, [state]);
+    window.location.assign(result.redirectTo);
+  }
 
   const points = [
     { icon: Workflow, text: t.login.points.desk },
@@ -137,8 +133,7 @@ export function LoginForm() {
 
             <div className="space-y-4 rounded-xl border border-zinc-800/90 bg-zinc-900/30 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
               <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-zinc-500">{t.login.continueEmail}</p>
-              <form className="space-y-4" action={formAction}>
-                <input type="hidden" name="next" value={searchParams.get('next') || ''} />
+              <form className="space-y-4" onSubmit={(event) => void onSubmit(event)}>
                 <div className="space-y-2">
                   <Label htmlFor="email">{t.login.email}</Label>
                   <Input
@@ -177,12 +172,14 @@ export function LoginForm() {
                     </button>
                   </div>
                 </div>
-                {(state && 'error' in state && state.error) || ssoMessage ? (
+                {error || ssoMessage ? (
                   <p className="rounded-md border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-300">
-                    {(state && 'error' in state ? state.error : null) ?? ssoMessage}
+                    {error || ssoMessage}
                   </p>
                 ) : null}
-                <SubmitButton />
+                <Button type="submit" disabled={pending} className="h-10 w-full text-[13px] font-medium">
+                  {pending ? t.login.pending : t.login.submit}
+                </Button>
               </form>
 
               <SsoButtons tenantSlug={tenantSlug || undefined} nextPath={nextPath || undefined} />

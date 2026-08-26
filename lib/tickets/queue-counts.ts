@@ -4,16 +4,11 @@ import { isCustomerRole } from '@/lib/rbac/roles';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-const OPEN_STATUSES = ['open', 'in_progress', 'waiting', 'hold'] as const;
+import type { QueueCounts } from '@/lib/tickets/queue-counts-types';
 
-export type QueueCounts = {
-  incident: number;
-  problem: number;
-  change: number;
-  request: number;
-  all: number;
-  cab: number;
-};
+export type { QueueCounts } from '@/lib/tickets/queue-counts-types';
+
+const OPEN_STATUSES = ['open', 'in_progress', 'waiting', 'hold'] as const;
 
 const EMPTY: QueueCounts = {
   incident: 0,

@@ -8,7 +8,13 @@ function dateFnsLocale(locale: Locale) {
 
 export function formatRelativeId(value?: string | Date | null, locale: Locale = 'id') {
   if (!value) return '—';
-  return formatDistanceToNow(new Date(value), { addSuffix: true, locale: dateFnsLocale(locale) });
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '—';
+  try {
+    return formatDistanceToNow(date, { addSuffix: true, locale: dateFnsLocale(locale) });
+  } catch {
+    return '—';
+  }
 }
 
 export function formatDateLong(value?: string | Date | null, locale: Locale = 'id') {

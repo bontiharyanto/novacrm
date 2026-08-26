@@ -41,12 +41,13 @@ function ChartTooltip({
   );
 }
 
-export function TrendChart({ data }: { data: TrendPoint[] }) {
-  const interval = data.length > 40 ? 13 : data.length > 14 ? 3 : 0;
+export function TrendChart({ data }: { data?: TrendPoint[] }) {
+  const rows = data ?? [];
+  const interval = rows.length > 40 ? 13 : rows.length > 14 ? 3 : 0;
   return (
     <div className="h-56">
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+        <AreaChart data={rows} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id="openedFill" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.28} />
@@ -82,14 +83,15 @@ export function TrendChart({ data }: { data: TrendPoint[] }) {
   );
 }
 
-export function VolumeBars({ data }: { data: NamedCount[] }) {
-  if (data.length === 0) {
+export function VolumeBars({ data }: { data?: NamedCount[] }) {
+  const rows = data ?? [];
+  if (rows.length === 0) {
     return <p className="flex h-56 items-center justify-center text-sm text-zinc-500">No tickets in this window.</p>;
   }
   return (
     <div className="h-56">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} layout="vertical" margin={{ top: 8, right: 12, left: 8, bottom: 0 }}>
+        <BarChart data={rows} layout="vertical" margin={{ top: 8, right: 12, left: 8, bottom: 0 }}>
           <CartesianGrid stroke="#27272a" strokeDasharray="3 3" horizontal={false} />
           <XAxis
             type="number"

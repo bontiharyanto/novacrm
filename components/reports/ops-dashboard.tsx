@@ -17,6 +17,12 @@ import { formatDurationMinutes } from '@/lib/reports/labels';
 import { formatRelativeId } from '@/lib/utils/dates';
 import { isTicketType } from '@/lib/tickets/process';
 
+function isReportSnapshot(value: unknown): value is ReportSnapshot {
+  if (!value || typeof value !== 'object') return false;
+  const row = value as Partial<ReportSnapshot>;
+  return Boolean(row.kpis && Array.isArray(row.trend) && Array.isArray(row.aging) && Array.isArray(row.assignees));
+}
+
 export function OpsDashboard() {
   const [report, setReport] = useState<ReportSnapshot | null>(null);
   const [meter, setMeter] = useState<TenantMeterSnapshot | null>(null);
@@ -29,7 +35,7 @@ export function OpsDashboard() {
     ]);
     const reportPayload = await reportRes.json();
     const meterPayload = await meterRes.json().catch(() => ({}));
-    setReport(reportPayload.data);
+    setReport(isReportSnapshot(reportPayload.data) ? reportPayload.data : null);
     setMeter(meterPayload.data ?? null);
     setLoading(false);
   }, []);
@@ -50,6 +56,9 @@ export function OpsDashboard() {
           ))}
         </div>
         <Skeleton className="h-64 w-full rounded-xl" />
+        {!loading && !report ? (
+          <p className="text-sm text-zinc-500">Unable to load dashboard metrics. Refresh or open Reports.</p>
+        ) : null}
       </div>
     );
   }

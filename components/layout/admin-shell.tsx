@@ -63,7 +63,7 @@ import { IdleSessionGuard } from '@/components/layout/idle-session-guard';
 import { BrandWelcome } from '@/components/brand/brand-welcome';
 import { NovaWordmark, BrandMark } from '@/components/brand/nova-mark';
 import { NAV_PINS_COOKIE, parseNavPins, serializeNavPins, type NavPin } from '@/lib/nav/pins';
-import type { QueueCounts } from '@/lib/tickets/queue-counts';
+import type { QueueCounts } from '@/lib/tickets/queue-counts-types';
 import { useRealtimeTable } from '@/lib/supabase/realtime';
 import { cn } from '@/lib/utils';
 
