@@ -39,6 +39,8 @@ export const tenantAdminSchema = z.object({
   isProtected: z.boolean().optional(),
   passwordRotationEnabled: z.boolean().optional(),
   passwordMaxAgeDays: z.coerce.number().int().min(7).max(365).optional(),
+  /** MinIO object key under this tenant; null clears the logo. */
+  logoObjectKey: z.string().trim().max(400).nullable().optional(),
 });
 
 export const createTenantSchema = tenantFieldsSchema.extend({
@@ -76,6 +78,7 @@ export type TenantRecord = {
   publicUrl: string;
   backendUrl: string;
   loginUrl: string;
+  logoObjectKey?: string;
   createdAt: string;
   adminCount: number;
   userCount: number;

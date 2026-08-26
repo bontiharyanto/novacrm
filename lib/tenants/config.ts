@@ -14,6 +14,7 @@ export type TenantConfig = {
   supportEmail: string;
   status: 'active' | 'paused' | 'archived';
   idleTimeoutMinutes: number;
+  logoObjectKey?: string;
 };
 
 function mapTenant(row: {
@@ -25,6 +26,7 @@ function mapTenant(row: {
   support_email?: string | null;
   status: TenantConfig['status'];
   idle_timeout_minutes?: number | null;
+  logo_object_key?: string | null;
 }): TenantConfig {
   return {
     id: row.id,
@@ -35,6 +37,7 @@ function mapTenant(row: {
     supportEmail: row.support_email ?? '',
     status: row.status,
     idleTimeoutMinutes: parseIdleMinutes(row.idle_timeout_minutes ?? DEFAULT_IDLE_MINUTES),
+    logoObjectKey: row.logo_object_key ?? undefined,
   };
 }
 

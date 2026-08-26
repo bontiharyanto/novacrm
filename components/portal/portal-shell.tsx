@@ -10,7 +10,7 @@ import { PreferenceControls } from '@/components/layout/preference-controls';
 import { NotificationBell } from '@/components/layout/notification-bell';
 import { AskAiButton, AssistantWidget } from '@/components/assistant/assistant-widget';
 import { useI18n } from '@/components/layout/preferences-provider';
-import { NovaMark } from '@/components/brand/nova-mark';
+import { BrandMark } from '@/components/brand/nova-mark';
 import { PortalWelcome } from '@/components/portal/portal-welcome';
 import { IdleSessionGuard } from '@/components/layout/idle-session-guard';
 import { PrivacyModuleProvider, usePrivacyEnabled } from '@/components/portal/privacy-module';
@@ -43,6 +43,8 @@ export function PortalShell({
   privacyEnabled = false,
   pendingCsat = [],
   idleTimeoutMinutes = 30,
+  logoUrl,
+  tenantName,
 }: {
   children: React.ReactNode;
   fullName: string;
@@ -50,10 +52,19 @@ export function PortalShell({
   privacyEnabled?: boolean;
   pendingCsat?: PendingCsatTicket[];
   idleTimeoutMinutes?: number;
+  logoUrl?: string | null;
+  tenantName?: string;
 }) {
   return (
     <PrivacyModuleProvider enabled={privacyEnabled}>
-      <PortalShellInner fullName={fullName} userId={userId} pendingCsat={pendingCsat} idleTimeoutMinutes={idleTimeoutMinutes}>
+      <PortalShellInner
+        fullName={fullName}
+        userId={userId}
+        pendingCsat={pendingCsat}
+        idleTimeoutMinutes={idleTimeoutMinutes}
+        logoUrl={logoUrl}
+        tenantName={tenantName}
+      >
         {children}
       </PortalShellInner>
     </PrivacyModuleProvider>
@@ -66,12 +77,16 @@ function PortalShellInner({
   userId,
   pendingCsat,
   idleTimeoutMinutes,
+  logoUrl,
+  tenantName,
 }: {
   children: React.ReactNode;
   fullName: string;
   userId?: string;
   pendingCsat: PendingCsatTicket[];
   idleTimeoutMinutes: number;
+  logoUrl?: string | null;
+  tenantName?: string;
 }) {
   const pathname = usePathname();
   const { t } = useI18n();
@@ -105,7 +120,7 @@ function PortalShellInner({
         <div className="mx-auto flex max-w-6xl flex-col gap-1 px-4 md:h-14 md:flex-row md:items-center md:gap-6 md:px-6">
           <div className="flex h-12 items-center justify-between gap-3 md:h-auto md:flex-1">
             <Link href={rateHref} className="flex min-w-0 items-center gap-2.5">
-              <NovaMark size={26} />
+              <BrandMark size={26} logoUrl={logoUrl} logoAlt={tenantName ?? t.brand.name} />
               <span className="min-w-0">
                 <span className="block truncate text-[13px] font-medium tracking-tight text-zinc-50">{firstName}</span>
                 <span className="block font-mono text-[10px] uppercase tracking-[0.18em] text-zinc-500">

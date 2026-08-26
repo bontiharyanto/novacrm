@@ -235,11 +235,17 @@ function ItemSection({
   );
 }
 
-function SidebarBrand({ onClose }: { onClose?: () => void }) {
+function SidebarBrand({ onClose, logoUrl }: { onClose?: () => void; logoUrl?: string | null }) {
   const { t } = useI18n();
   return (
     <div className="flex h-14 shrink-0 items-center justify-between gap-2 px-3">
-      <NovaWordmark subtitle={t.brand.operations} size={28} className="gap-2.5" />
+      <NovaWordmark
+        subtitle={t.brand.operations}
+        size={28}
+        className="gap-2.5"
+        logoUrl={logoUrl}
+        logoAlt={t.brand.name}
+      />
       {onClose ? (
         <button
           type="button"
@@ -403,6 +409,7 @@ function SidebarPanel({
   onNavigate,
   onSignOut,
   onClose,
+  logoUrl,
 }: {
   role: AppRole;
   fullName: string;
@@ -412,11 +419,12 @@ function SidebarPanel({
   onNavigate?: () => void;
   onSignOut: () => void | Promise<void>;
   onClose?: () => void;
+  logoUrl?: string | null;
 }) {
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="shrink-0 border-b border-zinc-800/80">
-        <SidebarBrand onClose={onClose} />
+        <SidebarBrand onClose={onClose} logoUrl={logoUrl} />
         <AccountSwitcher accounts={accounts} activeAccountId={activeAccountId} />
         <NewTicketButton onNavigate={onNavigate} />
       </div>
@@ -440,6 +448,7 @@ export function AgentShell({
   accounts,
   activeAccountId,
   idleTimeoutMinutes = 30,
+  logoUrl,
 }: {
   children: ReactNode;
   role: AppRole;
@@ -448,6 +457,7 @@ export function AgentShell({
   accounts: AccountRecord[];
   activeAccountId?: string | null;
   idleTimeoutMinutes?: number;
+  logoUrl?: string | null;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -484,6 +494,7 @@ export function AgentShell({
     activeAccountId,
     pathname,
     onSignOut: signOutAction,
+    logoUrl,
   };
 
   return (

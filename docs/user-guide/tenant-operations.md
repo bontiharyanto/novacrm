@@ -43,6 +43,7 @@ Platform NovaCRM
 | Tugas | Role minimum |
 | --- | --- |
 | Buat / pause / archive **tenant** | `superadmin` |
+| Upload **logo brand** tenant (sidebar + portal) | `superadmin` → `/tenants/{id}` |
 | Integrasi, notifikasi, Appearance | `admin` |
 | Account, org (divisi/unit/group), import | `manager` |
 | User `customer` / `agent` | `supervisor` |
@@ -83,8 +84,9 @@ Kerjakan sebagai **admin atau manager tenant itu** (setelah superadmin selesai l
 2. Isi: nama klien, slug, accent, timezone, support email, plan, tanggal kontrak, grace.
 3. Isi **admin pertama** (nama, email, password). Ini **bukan** user portal.
 4. Yang ikut dibuat: account **Internal**, group **Service Desk** L1, SLA office hours.
-5. Lab `novacrm-demo` biarkan **Protected**.
-6. **Sign out**. Jangan pakai superadmin untuk kerja harian.
+5. Buka `/tenants/{id}` → **Brand logo** (opsional): upload PNG/JPEG/WebP/SVG ≤1 MB. Muncul di sidebar desk + header portal; nama NovaCRM tetap (co-brand).
+6. Lab `novacrm-demo` biarkan **Protected**.
+7. **Sign out**. Jangan pakai superadmin untuk kerja harian.
 
 ### 4.2 Masuk sebagai admin klien
 

@@ -33,18 +33,47 @@ export function NovaMark({ className, size = 32 }: { className?: string; size?: 
   );
 }
 
+export function BrandMark({
+  size,
+  logoUrl,
+  logoAlt,
+}: {
+  size: number;
+  logoUrl?: string | null;
+  logoAlt?: string;
+}) {
+  if (logoUrl) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element -- MinIO presigned URL
+      <img
+        src={logoUrl}
+        alt={logoAlt ?? ''}
+        width={size}
+        height={size}
+        className="shrink-0 object-contain"
+        style={{ height: size, width: 'auto', maxWidth: Math.max(size * 2.5, 96) }}
+      />
+    );
+  }
+  return <NovaMark size={size} />;
+}
+
 export function NovaWordmark({
   subtitle,
   size = 40,
   className,
+  logoUrl,
+  logoAlt,
 }: {
   subtitle?: string;
   size?: number;
   className?: string;
+  logoUrl?: string | null;
+  logoAlt?: string;
 }) {
   return (
     <div className={cn('flex items-center gap-3', className)}>
-      <NovaMark size={size} />
+      <BrandMark size={size} logoUrl={logoUrl} logoAlt={logoAlt} />
       <div className="min-w-0">
         <p className="truncate text-[15px] font-semibold tracking-tight text-zinc-50">NovaCRM</p>
         {subtitle ? (

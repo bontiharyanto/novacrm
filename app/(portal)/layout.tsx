@@ -3,6 +3,7 @@ import { getSessionProfile } from '@/lib/auth/session';
 import { PortalShell } from '@/components/portal/portal-shell';
 import { PortalCsatGate } from '@/components/portal/portal-csat-gate';
 import { getTenantConfig } from '@/lib/tenants/config';
+import { resolveTenantLogoUrl } from '@/lib/tenants/logo';
 import { accentCss } from '@/lib/tenants/accent';
 import { AccentProvider } from '@/components/layout/accent-provider';
 import { getPrivacySettings } from '@/lib/governance/actions';
@@ -22,6 +23,9 @@ export default async function PortalLayout({ children }: { children: React.React
     getPrivacySettings(),
     listPendingCsatTickets(),
   ]);
+  const logoUrl = tenant
+    ? await resolveTenantLogoUrl(tenant.id, tenant.logoObjectKey)
+    : null;
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: accentCss(tenant?.accentColor) }} />
@@ -32,6 +36,8 @@ export default async function PortalLayout({ children }: { children: React.React
         privacyEnabled={Boolean(privacy?.isPublished)}
         pendingCsat={pendingCsat}
         idleTimeoutMinutes={tenant?.idleTimeoutMinutes ?? 30}
+        logoUrl={logoUrl}
+        tenantName={tenant?.name}
       >
         <PortalCsatGate pending={pendingCsat}>{children}</PortalCsatGate>
       </PortalShell>

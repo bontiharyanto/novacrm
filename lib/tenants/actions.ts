@@ -17,6 +17,7 @@ import {
 } from '@/lib/tenants/schema';
 import { formatZodError } from '@/lib/validation/zod-error';
 import { defaultShiftInsertRows } from '@/lib/wfm/default-shifts';
+import { isTenantObjectKey } from '@/lib/tickets/activity';
 
 type TenantRow = {
   id: string;
@@ -35,6 +36,7 @@ type TenantRow = {
   password_rotation_enabled?: boolean | null;
   password_max_age_days?: number | null;
   public_url?: string | null;
+  logo_object_key?: string | null;
   created_at: string;
 };
 
@@ -61,6 +63,7 @@ function mapTenant(row: TenantRow, counts?: { adminCount: number; userCount: num
     publicUrl: row.public_url ?? '',
     backendUrl: tenantBackendBase(row.slug, row.public_url),
     loginUrl: tenantLoginUrl(row.slug, row.public_url),
+    logoObjectKey: row.logo_object_key ?? undefined,
     createdAt: row.created_at,
     adminCount: counts?.adminCount ?? 0,
     userCount: counts?.userCount ?? 0,
@@ -424,6 +427,15 @@ export async function updateTenant(tenantId: string, input: unknown) {
     patch.password_rotation_enabled = parsed.data.passwordRotationEnabled;
   }
   if (parsed.data.passwordMaxAgeDays !== undefined) patch.password_max_age_days = parsed.data.passwordMaxAgeDays;
+  if (parsed.data.logoObjectKey !== undefined) {
+    if (parsed.data.logoObjectKey === null || parsed.data.logoObjectKey === '') {
+      patch.logo_object_key = null;
+    } else if (!isTenantObjectKey(tenantId, parsed.data.logoObjectKey)) {
+      return { data: null, error: 'Invalid logo object key' };
+    } else {
+      patch.logo_object_key = parsed.data.logoObjectKey;
+    }
+  }
 
   const { data, error } = await admin.from('tenants').update(patch).eq('id', tenantId).select('*').single();
   if (error || !data) {

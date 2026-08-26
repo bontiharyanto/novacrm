@@ -2,6 +2,7 @@ import { notFound, redirect } from 'next/navigation';
 import { getSessionProfile } from '@/lib/auth/session';
 import { canRole } from '@/lib/rbac/ability';
 import { getTenantById } from '@/lib/tenants/actions';
+import { resolveTenantLogoUrl } from '@/lib/tenants/logo';
 import { TenantDetail } from '@/components/tenants/tenant-detail';
 
 export default async function TenantDetailPage({ params }: { params: { id: string } }) {
@@ -11,5 +12,8 @@ export default async function TenantDetailPage({ params }: { params: { id: strin
   }
   const tenant = await getTenantById(params.id);
   if (!tenant) notFound();
-  return <TenantDetail tenant={tenant} currentTenantId={session.profile.tenantId} />;
+  const logoUrl = await resolveTenantLogoUrl(tenant.id, tenant.logoObjectKey);
+  return (
+    <TenantDetail tenant={tenant} currentTenantId={session.profile.tenantId} logoUrl={logoUrl} />
+  );
 }

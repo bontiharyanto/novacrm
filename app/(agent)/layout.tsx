@@ -7,6 +7,7 @@ import { getAccountScope } from '@/lib/accounts/scope';
 import { isCustomerRole } from '@/lib/rbac/roles';
 import { setActiveAccount } from '@/lib/accounts/actions';
 import { getTenantConfig } from '@/lib/tenants/config';
+import { resolveTenantLogoUrl } from '@/lib/tenants/logo';
 import { accentCss } from '@/lib/tenants/accent';
 import { AccentProvider } from '@/components/layout/accent-provider';
 
@@ -26,6 +27,9 @@ export default async function AgentLayout({ children }: { children: React.ReactN
   }
 
   const tenant = await getTenantConfig();
+  const logoUrl = tenant
+    ? await resolveTenantLogoUrl(tenant.id, tenant.logoObjectKey)
+    : null;
 
   return (
     <AbilityProvider role={session.profile.role}>
@@ -38,6 +42,7 @@ export default async function AgentLayout({ children }: { children: React.ReactN
         accounts={scope.accounts}
         activeAccountId={scope.account?.id ?? (scope.accounts.length > 0 ? ACCOUNT_ALL : null)}
         idleTimeoutMinutes={tenant?.idleTimeoutMinutes ?? 30}
+        logoUrl={logoUrl}
       >
         <div key={scope.account?.id ?? ACCOUNT_ALL}>{children}</div>
       </AgentShell>

@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ImageIcon, Trash2, Upload } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,8 +12,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { toastError, toastSuccess } from '@/components/ui/toast';
+import { BrandMark } from '@/components/brand/nova-mark';
 import { expiryToDateInput, tenantAccessState } from '@/lib/tenants/lifecycle';
 import { setTenantStatus, updateTenant } from '@/lib/tenants/actions';
+import { uploadTenantLogo } from '@/lib/tenants/upload-logo';
 import {
   TENANT_PLAN_LABEL,
   TENANT_PLANS,
@@ -31,8 +33,17 @@ const statusTone: Record<TenantStatus, 'success' | 'warning' | 'neutral'> = {
   archived: 'neutral',
 };
 
-export function TenantDetail({ tenant, currentTenantId }: { tenant: TenantRecord; currentTenantId: string }) {
+export function TenantDetail({
+  tenant,
+  currentTenantId,
+  logoUrl: initialLogoUrl,
+}: {
+  tenant: TenantRecord;
+  currentTenantId: string;
+  logoUrl?: string | null;
+}) {
   const router = useRouter();
+  const fileRef = useRef<HTMLInputElement>(null);
   const [name, setName] = useState(tenant.name);
   const [slug, setSlug] = useState(tenant.slug);
   const [accentColor, setAccentColor] = useState(tenant.accentColor);
@@ -45,12 +56,18 @@ export function TenantDetail({ tenant, currentTenantId }: { tenant: TenantRecord
   const [isProtected, setIsProtected] = useState(tenant.isProtected);
   const [passwordRotationEnabled, setPasswordRotationEnabled] = useState(tenant.passwordRotationEnabled);
   const [passwordMaxAgeDays, setPasswordMaxAgeDays] = useState(String(tenant.passwordMaxAgeDays));
+  const [logoPreview, setLogoPreview] = useState<string | null>(initialLogoUrl ?? null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLogoBusy, setIsLogoBusy] = useState(false);
   const [isStatusBusy, setIsStatusBusy] = useState(false);
   const [error, setError] = useState('');
 
   const locked = tenant.isProtected || tenant.id === currentTenantId;
   const access = tenantAccessState(tenant);
+
+  useEffect(() => {
+    setLogoPreview(initialLogoUrl ?? null);
+  }, [initialLogoUrl]);
 
   async function handleSave(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -94,6 +111,41 @@ export function TenantDetail({ tenant, currentTenantId }: { tenant: TenantRecord
     router.refresh();
   }
 
+  async function handleLogoFile(file: File | undefined) {
+    if (!file) return;
+    setIsLogoBusy(true);
+    const uploaded = await uploadTenantLogo(tenant.id, file);
+    if (uploaded.error || !uploaded.data) {
+      toastError(uploaded.error ?? 'Upload failed');
+      setIsLogoBusy(false);
+      return;
+    }
+    const result = await updateTenant(tenant.id, { logoObjectKey: uploaded.data.key });
+    if (result.error) {
+      toastError(result.error);
+      setIsLogoBusy(false);
+      return;
+    }
+    setLogoPreview(URL.createObjectURL(file));
+    toastSuccess('Logo updated');
+    setIsLogoBusy(false);
+    router.refresh();
+  }
+
+  async function handleClearLogo() {
+    setIsLogoBusy(true);
+    const result = await updateTenant(tenant.id, { logoObjectKey: null });
+    if (result.error) {
+      toastError(result.error);
+      setIsLogoBusy(false);
+      return;
+    }
+    setLogoPreview(null);
+    toastSuccess('Logo cleared');
+    setIsLogoBusy(false);
+    router.refresh();
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -115,6 +167,45 @@ export function TenantDetail({ tenant, currentTenantId }: { tenant: TenantRecord
             {access === 'grace' ? <Badge tone="warning">Grace</Badge> : null}
           </div>
           <p className="mt-1 font-mono text-xs text-zinc-500">{tenant.slug}</p>
+        </div>
+
+        <div className="space-y-3 rounded-lg border border-zinc-800 p-4">
+          <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Brand logo</p>
+          <p className="text-xs leading-5 text-zinc-500">
+            Shown in the desk sidebar and customer portal. PNG, JPEG, WebP, or SVG · max 1 MB. Co-brand with NovaCRM —
+            not a full white-label wipe.
+          </p>
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex h-14 w-28 items-center justify-center rounded-md border border-zinc-800 bg-zinc-950/80 px-2">
+              <BrandMark size={36} logoUrl={logoPreview} logoAlt={tenant.name} />
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                className="hidden"
+                onChange={(event) => {
+                  void handleLogoFile(event.target.files?.[0]);
+                  event.target.value = '';
+                }}
+              />
+              <Button type="button" variant="outline" disabled={isLogoBusy} onClick={() => fileRef.current?.click()}>
+                <Upload className="mr-1.5 h-3.5 w-3.5" />
+                {isLogoBusy ? 'Uploading…' : 'Upload'}
+              </Button>
+              {logoPreview || tenant.logoObjectKey ? (
+                <Button type="button" variant="outline" disabled={isLogoBusy} onClick={() => void handleClearLogo()}>
+                  <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+                  Clear
+                </Button>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 text-xs text-zinc-500">
+                  <ImageIcon className="h-3.5 w-3.5" /> Default Nova mark
+                </span>
+              )}
+            </div>
+          </div>
         </div>
 
         <div className="grid gap-5 sm:grid-cols-2">
