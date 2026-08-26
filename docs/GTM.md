@@ -154,6 +154,9 @@ Gagal trial: mereka hanya menonton lab Bank. Ulangi onboarding di tenant mereka.
 | [DEMO-MAJOR-INCIDENT.md](DEMO-MAJOR-INCIDENT.md) | Proof war room 2' |
 | [user-guide/major-incident.md](user-guide/major-incident.md) | SPV setelah demo |
 | [BUSINESS.md](BUSINESS.md) | Harga internal, 90 hari |
+| [SOW-TEMPLATE.md](SOW-TEMPLATE.md) | SOW sewa tenant siap tempel |
+| [PRICING-MATRIX.md](PRICING-MATRIX.md) | Matriks Starter / MSP / Enterprise |
+| [OUTREACH-14D.md](OUTREACH-14D.md) | Sequence 14 hari + copy WA |
 | [OPERATIONS.md](OPERATIONS.md) | Satu slide kapasitas jujur |
 | Landing | `https://www.novacrm.click` — flyer GTM |
 | Desk | `https://novacrm.click` — login klien, bukan lab |

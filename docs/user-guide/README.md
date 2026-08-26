@@ -49,6 +49,7 @@ Item katalog: [Catalog & record producer](catalog-guidance.md). Major incident (
 | [Retensi log](../LOG-RETENTION.md) | Engineer: prune log Supabase + Docker |
 | [Bisnis & campaign](../BUSINESS.md) | Owner: paket, funnel, analisis |
 | [Ringkasan bisnis SaaS](../BUSINESS-SUMMARY.md) | Verdict jual cloud + paket MSP |
+| [SOW / harga / outreach](../SOW-TEMPLATE.md) | SOW · [PRICING-MATRIX](../PRICING-MATRIX.md) · [OUTREACH-14D](../OUTREACH-14D.md) |
 
 ## Demo logins
 

@@ -99,9 +99,9 @@ Jangan loncat A → C.
 
 ## Agenda founder (tanpa coding)
 
-1. 10 kontak MSP nyata → copy GTM + flyer.
+1. 10 kontak MSP nyata → copy GTM + flyer ([OUTREACH-14D.md](OUTREACH-14D.md)).
 2. 2 demo terjadwal.
-3. SOW draft dari kerangka di atas.
+3. SOW dari [SOW-TEMPLATE.md](SOW-TEMPLATE.md); harga [PRICING-MATRIX.md](PRICING-MATRIX.md).
 4. Kunci harga internal paket MSP.
 5. Ops: password lab, restore scratch, sadar trigger Pro.
 

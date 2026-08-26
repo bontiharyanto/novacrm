@@ -206,5 +206,9 @@ Tolak trial di tenant `novacrm-demo` bersama: merusak seed + isolasi demo kelas.
 | Field plan / pause | [superadmin](user-guide/superadmin.md) |
 | Demo | [DEMO-E2E.md](DEMO-E2E.md), [DEMO-MAJOR-INCIDENT.md](DEMO-MAJOR-INCIDENT.md) |
 | Penjualan / GTM | [GTM.md](GTM.md) |
+| SOW siap tempel | [SOW-TEMPLATE.md](SOW-TEMPLATE.md) |
+| Harga internal | [PRICING-MATRIX.md](PRICING-MATRIX.md) |
+| Outreach 14 hari | [OUTREACH-14D.md](OUTREACH-14D.md) |
+| Ringkasan brainstorm | [BUSINESS-SUMMARY.md](BUSINESS-SUMMARY.md) |
 | Kapasitas | [OPERATIONS.md](OPERATIONS.md) |
 | Backup / restore | [BACKUP.md](BACKUP.md), [RESTORE.md](RESTORE.md) |
