@@ -13,6 +13,8 @@ import { textToDescription } from '@/lib/tickets/mappers';
 import { ticketPrioritySchema, ticketStatusSchema, ticketTypeSchema } from '@/lib/tickets/schema';
 import { createUserSchema } from '@/lib/users/schema';
 import { normalizePhone, safeNotificationText } from '@/lib/notifications/helpers';
+import { isStaffRole } from '@/lib/rbac/roles';
+import { assertAccountQuota, assertAgentQuota, assertTicketQuota } from '@/lib/tenants/meter';
 
 type AccountRef = { id: string; type: string; name: string; slug: string; code?: string | null; status: string };
 
@@ -125,6 +127,11 @@ async function importAccounts(rows: Record<string, string>[], tenantId: string, 
       result.updated += 1;
       continue;
     }
+    const quotaError = await assertAccountQuota(tenantId);
+    if (quotaError) {
+      result.errors.push({ row: index + 2, message: quotaError });
+      continue;
+    }
     const { data, error } = await supabase
       .from('accounts')
       .insert({
@@ -210,6 +217,19 @@ async function importUsers(
     }
 
     if (existing) {
+      const { data: current } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', existing.id)
+        .eq('tenant_id', tenantId)
+        .maybeSingle();
+      if (isStaffRole(parsed.data.role) && current && !isStaffRole(current.role)) {
+        const quotaError = await assertAgentQuota(tenantId);
+        if (quotaError) {
+          result.errors.push({ row: index + 2, message: quotaError });
+          continue;
+        }
+      }
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -225,6 +245,14 @@ async function importUsers(
       }
       result.updated += 1;
       continue;
+    }
+
+    if (isStaffRole(parsed.data.role)) {
+      const quotaError = await assertAgentQuota(tenantId);
+      if (quotaError) {
+        result.errors.push({ row: index + 2, message: quotaError });
+        continue;
+      }
     }
 
     const created = await admin.auth.admin.createUser({
@@ -571,6 +599,11 @@ async function importTickets(
       status: status.data,
       assigned: false,
     });
+    const quotaError = await assertTicketQuota(tenantId);
+    if (quotaError) {
+      result.errors.push({ row: index + 2, message: quotaError });
+      continue;
+    }
     const { error } = await supabase.from('tickets').insert({
       tenant_id: tenantId,
       account_id: account.id,

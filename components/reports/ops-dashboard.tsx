@@ -9,20 +9,28 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { TrendChart, VolumeBars } from '@/components/reports/report-charts';
 import { DistributionList } from '@/components/reports/distribution-list';
 import { TypeBadge } from '@/components/tickets/type-badge';
+import { UsageWarnBanner } from '@/components/settings/usage-settings';
 import { useRealtimeTable } from '@/lib/supabase/realtime';
 import type { ReportSnapshot } from '@/lib/reports/schema';
+import type { TenantMeterSnapshot } from '@/lib/tenants/meter';
 import { formatDurationMinutes } from '@/lib/reports/labels';
 import { formatRelativeId } from '@/lib/utils/dates';
 import { isTicketType } from '@/lib/tickets/process';
 
 export function OpsDashboard() {
   const [report, setReport] = useState<ReportSnapshot | null>(null);
+  const [meter, setMeter] = useState<TenantMeterSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
-    const response = await fetch('/api/reports?range=7');
-    const payload = await response.json();
-    setReport(payload.data);
+    const [reportRes, meterRes] = await Promise.all([
+      fetch('/api/reports?range=7'),
+      fetch('/api/tenants/meter'),
+    ]);
+    const reportPayload = await reportRes.json();
+    const meterPayload = await meterRes.json().catch(() => ({}));
+    setReport(reportPayload.data);
+    setMeter(meterPayload.data ?? null);
     setLoading(false);
   }, []);
 
@@ -64,6 +72,7 @@ export function OpsDashboard() {
       transition={{ duration: 0.2, ease: 'easeOut' }}
       className="space-y-5 p-6"
     >
+      {meter ? <UsageWarnBanner snapshot={meter} /> : null}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Operations</p>

@@ -96,10 +96,11 @@ Waive setup = hanya jika annual dibayar penuh di muka **atau** pilot strategis t
 
 ## 7. Mapping ke field app `/tenants`
 
-| Plan di app | Paket komersial default |
-| --- | --- |
-| `trial` | 14 hari, meter Starter diperketat (≤ 8 agen) |
-| `standard` | Starter atau MSP (beda di SOW meter) |
-| `enterprise` | Enterprise |
+| Plan di app | Paket komersial default | Default kuota (`max_*`) |
+| --- | --- | --- |
+| `trial` | Starter / 14 hari | 1 account · 8 agen · 800 tiket/bln |
+| `standard` | **MSP (utama)** | 5 · 15 · 2.000 |
+| `enterprise` | Enterprise | 20 · 40 · 5.000 |
 
-Label plan ≠ invoice otomatis.
+Sumber kode default: `lib/tenants/quotas.ts`. Override per tenant di `/tenants/{id}` → **Usage quotas**.  
+Label plan ≠ invoice otomatis. Kuota di DB; create di-enforce (`lib/tenants/meter.ts`). Desk: `/settings/usage` + banner soft-warn di dashboard (≥80%).

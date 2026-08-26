@@ -5,6 +5,7 @@ import { getSessionProfile } from '@/lib/auth/session';
 import { canRole } from '@/lib/rbac/ability';
 import { tenantBackendBase, tenantLoginUrl } from '@/lib/tenants/backend-url';
 import { dateInputToExpiry, trialExpiresAt, type TenantPlan } from '@/lib/tenants/lifecycle';
+import { quotasForPlan } from '@/lib/tenants/quotas';
 import { createSupabaseAdminClient, hasServiceRole } from '@/lib/supabase/admin';
 import {
   createTenantSchema,
@@ -37,6 +38,9 @@ type TenantRow = {
   password_max_age_days?: number | null;
   public_url?: string | null;
   logo_object_key?: string | null;
+  max_accounts?: number | null;
+  max_agents?: number | null;
+  max_tickets_per_month?: number | null;
   created_at: string;
 };
 
@@ -44,6 +48,7 @@ function mapTenant(row: TenantRow, counts?: { adminCount: number; userCount: num
   const plan = (['trial', 'standard', 'enterprise'] as const).includes(row.subscription_plan as TenantPlan)
     ? (row.subscription_plan as TenantPlan)
     : 'standard';
+  const defaults = quotasForPlan(plan);
   return {
     id: row.id,
     name: row.name,
@@ -64,6 +69,9 @@ function mapTenant(row: TenantRow, counts?: { adminCount: number; userCount: num
     backendUrl: tenantBackendBase(row.slug, row.public_url),
     loginUrl: tenantLoginUrl(row.slug, row.public_url),
     logoObjectKey: row.logo_object_key ?? undefined,
+    maxAccounts: Number(row.max_accounts ?? defaults.maxAccounts),
+    maxAgents: Number(row.max_agents ?? defaults.maxAgents),
+    maxTicketsPerMonth: Number(row.max_tickets_per_month ?? defaults.maxTicketsPerMonth),
     createdAt: row.created_at,
     adminCount: counts?.adminCount ?? 0,
     userCount: counts?.userCount ?? 0,
@@ -183,6 +191,9 @@ export async function createTenant(input: unknown) {
     return { data: null, error: 'That admin email is already used' };
   }
 
+  const plan = parsed.data.subscriptionPlan ?? 'standard';
+  const quotas = quotasForPlan(plan);
+
   const { data: tenant, error: tenantError } = await admin
     .from('tenants')
     .insert({
@@ -192,13 +203,16 @@ export async function createTenant(input: unknown) {
       timezone: parsed.data.timezone,
       support_email: parsed.data.supportEmail ?? null,
       status: 'active',
-      subscription_plan: parsed.data.subscriptionPlan ?? 'standard',
+      subscription_plan: plan,
       expires_at:
         dateInputToExpiry(parsed.data.expiresAt) ??
-        (parsed.data.subscriptionPlan === 'trial' ? trialExpiresAt() : null),
+        (plan === 'trial' ? trialExpiresAt() : null),
       grace_days: parsed.data.graceDays ?? 7,
       auto_pause_on_expiry: true,
       is_protected: false,
+      max_accounts: parsed.data.maxAccounts ?? quotas.maxAccounts,
+      max_agents: parsed.data.maxAgents ?? quotas.maxAgents,
+      max_tickets_per_month: parsed.data.maxTicketsPerMonth ?? quotas.maxTicketsPerMonth,
       created_by: gate.session.userId,
     })
     .select('*')
@@ -427,6 +441,9 @@ export async function updateTenant(tenantId: string, input: unknown) {
     patch.password_rotation_enabled = parsed.data.passwordRotationEnabled;
   }
   if (parsed.data.passwordMaxAgeDays !== undefined) patch.password_max_age_days = parsed.data.passwordMaxAgeDays;
+  if (parsed.data.maxAccounts !== undefined) patch.max_accounts = parsed.data.maxAccounts;
+  if (parsed.data.maxAgents !== undefined) patch.max_agents = parsed.data.maxAgents;
+  if (parsed.data.maxTicketsPerMonth !== undefined) patch.max_tickets_per_month = parsed.data.maxTicketsPerMonth;
   if (parsed.data.logoObjectKey !== undefined) {
     if (parsed.data.logoObjectKey === null || parsed.data.logoObjectKey === '') {
       patch.logo_object_key = null;

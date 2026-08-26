@@ -45,7 +45,8 @@ Untuk plugin Groq/WA, user biasa, SLA, katalog: pakai **admin** atau **manager**
 | Timezone | Jam SLA / laporan |
 | Support email | Alamat support yang tampil ke operasi |
 | Status | `active` · `paused` · `archived` |
-| Plan | `trial` (default +14 hari jika tanggal kosong) · `standard` · `enterprise` — usulan harga/campaign: [BUSINESS.md](../BUSINESS.md) |
+| Plan | `trial` · `standard` · `enterprise` — usulan harga: [PRICING-MATRIX.md](../PRICING-MATRIX.md) |
+| Usage quotas | `max_accounts` · `max_agents` · `max_tickets_per_month` — default dari plan; override di detail. Create agen/account/tiket di-block saat cap. Monitor: `/settings/usage` |
 | Contract end | Tanggal akhir kontrak. Kosong = tidak kedaluwarsa |
 | Grace days | Hari setelah kontrak berakhir sebelum login diblok (default 7) |
 | Auto-pause | Worker menjeda tenant setelah grace. Data **tidak** dihapus |

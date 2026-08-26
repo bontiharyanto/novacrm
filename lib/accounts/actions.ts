@@ -8,6 +8,7 @@ import { getSessionProfile } from '@/lib/auth/session';
 import { canRole } from '@/lib/rbac/ability';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { formatZodError } from '@/lib/validation/zod-error';
+import { assertAccountQuota } from '@/lib/tenants/meter';
 
 function slugify(value: string) {
   const slug = value
@@ -126,6 +127,9 @@ export async function createAccount(input: unknown) {
   if (parsed.type === 'internal') {
     return { data: null, error: 'Internal account already exists for this tenant' };
   }
+
+  const quotaError = await assertAccountQuota(session.profile.tenantId);
+  if (quotaError) return { data: null, error: quotaError };
 
   const supabase = await createSupabaseServerClient();
   const slug = parsed.slug?.trim() || slugify(parsed.name);

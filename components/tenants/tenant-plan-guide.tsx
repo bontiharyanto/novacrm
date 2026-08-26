@@ -40,8 +40,8 @@ export function TenantPlanGuide({ plan }: { plan: TenantPlan }) {
         ))}
       </div>
       <p className="text-[11px] leading-4 text-zinc-600">
-        Prices are a proposal (manual invoice). This dropdown only stores the plan label — it does not meter tickets
-        or charge a card.
+        Prices are a proposal (manual invoice). Quotas above are defaults you can override on this tenant. Creating
+        agents, accounts, or tickets is blocked at the cap.
       </p>
     </div>
   );

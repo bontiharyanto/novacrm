@@ -16,6 +16,7 @@ import { BrandMark } from '@/components/brand/nova-mark';
 import { expiryToDateInput, tenantAccessState } from '@/lib/tenants/lifecycle';
 import { setTenantStatus, updateTenant } from '@/lib/tenants/actions';
 import { uploadTenantLogo } from '@/lib/tenants/upload-logo';
+import { quotasForPlan } from '@/lib/tenants/quotas';
 import {
   TENANT_PLAN_LABEL,
   TENANT_PLANS,
@@ -56,6 +57,9 @@ export function TenantDetail({
   const [isProtected, setIsProtected] = useState(tenant.isProtected);
   const [passwordRotationEnabled, setPasswordRotationEnabled] = useState(tenant.passwordRotationEnabled);
   const [passwordMaxAgeDays, setPasswordMaxAgeDays] = useState(String(tenant.passwordMaxAgeDays));
+  const [maxAccounts, setMaxAccounts] = useState(String(tenant.maxAccounts));
+  const [maxAgents, setMaxAgents] = useState(String(tenant.maxAgents));
+  const [maxTicketsPerMonth, setMaxTicketsPerMonth] = useState(String(tenant.maxTicketsPerMonth));
   const [logoPreview, setLogoPreview] = useState<string | null>(initialLogoUrl ?? null);
   const [isSaving, setIsSaving] = useState(false);
   const [isLogoBusy, setIsLogoBusy] = useState(false);
@@ -86,6 +90,9 @@ export function TenantDetail({
       isProtected,
       passwordRotationEnabled,
       passwordMaxAgeDays: Number(passwordMaxAgeDays),
+      maxAccounts: Number(maxAccounts),
+      maxAgents: Number(maxAgents),
+      maxTicketsPerMonth: Number(maxTicketsPerMonth),
     });
     if (result.error) {
       setError(result.error);
@@ -263,7 +270,10 @@ export function TenantDetail({
               <Select
                 id="subscriptionPlan"
                 value={subscriptionPlan}
-                onChange={(event) => setSubscriptionPlan(event.target.value as typeof subscriptionPlan)}
+                onChange={(event) => {
+                  const next = event.target.value as typeof subscriptionPlan;
+                  setSubscriptionPlan(next);
+                }}
               >
                 {TENANT_PLANS.map((item) => (
                   <option key={item} value={item}>
@@ -278,6 +288,57 @@ export function TenantDetail({
             </div>
           </div>
           <TenantPlanGuide plan={subscriptionPlan} />
+          <div className="space-y-3 rounded-md border border-zinc-800/80 bg-zinc-950/50 p-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Usage quotas</p>
+              <Button
+                type="button"
+                variant="outline"
+                className="h-7 px-2 text-[11px]"
+                onClick={() => {
+                  const next = quotasForPlan(subscriptionPlan);
+                  setMaxAccounts(String(next.maxAccounts));
+                  setMaxAgents(String(next.maxAgents));
+                  setMaxTicketsPerMonth(String(next.maxTicketsPerMonth));
+                }}
+              >
+                Apply plan defaults
+              </Button>
+            </div>
+            <p className="text-xs leading-5 text-zinc-500">
+              Stored caps for this tenant (not invoice amounts). Create user / account / ticket enforce these limits.
+              Soft-warn UI comes later.
+            </p>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div className="space-y-2">
+                <Label htmlFor="maxAccounts">Max accounts</Label>
+                <Input
+                  id="maxAccounts"
+                  inputMode="numeric"
+                  value={maxAccounts}
+                  onChange={(event) => setMaxAccounts(event.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="maxAgents">Max agents</Label>
+                <Input
+                  id="maxAgents"
+                  inputMode="numeric"
+                  value={maxAgents}
+                  onChange={(event) => setMaxAgents(event.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="maxTicketsPerMonth">Max tickets / month</Label>
+                <Input
+                  id="maxTicketsPerMonth"
+                  inputMode="numeric"
+                  value={maxTicketsPerMonth}
+                  onChange={(event) => setMaxTicketsPerMonth(event.target.value)}
+                />
+              </div>
+            </div>
+          </div>
           <div className="grid gap-5 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="graceDays">Grace days</Label>
@@ -327,6 +388,18 @@ export function TenantDetail({
       </form>
 
       <aside className="space-y-4 border-t border-zinc-800 p-6 lg:border-l lg:border-t-0">
+        <Card>
+          <CardContent className="space-y-3 p-4">
+            <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Quotas</p>
+            <p className="font-mono text-xs text-zinc-300">
+              {tenant.maxAccounts} accounts · {tenant.maxAgents} agents · {tenant.maxTicketsPerMonth} tickets/mo
+            </p>
+            <p className="text-xs leading-5 text-zinc-500">
+              Stored caps for this tenant (not invoice amounts). Create user / account / ticket paths enforce these
+              limits.
+            </p>
+          </CardContent>
+        </Card>
         <Card>
           <CardContent className="space-y-3 p-4">
             <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Access</p>

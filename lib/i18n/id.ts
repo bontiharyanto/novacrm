@@ -39,6 +39,7 @@ export const id: Dictionary = {
     notifications: 'Notifikasi',
     reportSchedule: 'Email laporan',
     appearance: 'Tampilan',
+    usage: 'Kuota',
     security: 'Keamanan',
     import: 'Impor',
     wfm: 'WFM',
@@ -205,6 +206,29 @@ export const id: Dictionary = {
     howTitle: 'Cara kerja',
     howBody:
       'Tema dan bahasa adalah cookie (`novacrm_theme`, `novacrm_locale`). Replica web stateless membacanya di setiap request. Ganti di sini atau dari sidebar.',
+  },
+  usage: {
+    kicker: 'Ruang kerja',
+    title: 'Kuota pemakaian',
+    subtitle:
+      'Tampilan read-only kuota plan tenant ini. Batas diatur superadmin di /tenants — bukan angka invoice.',
+    metersTitle: 'Periode berjalan',
+    accounts: 'Account',
+    agents: 'Agen desk',
+    tickets: 'Tiket bulan ini',
+    accountsHint: 'Account aktif dan paused (arsip tidak dihitung).',
+    agentsHint: 'Hanya role staf — customer portal tidak dihitung.',
+    ticketsHint: 'Dibuat bulan kalender ini menurut timezone tenant.',
+    levelOk: 'Aman',
+    levelWarn: 'Mendekati',
+    levelCritical: 'Penuh',
+    asideTitle: 'Tentang kuota',
+    asideBody:
+      'Saat cap tercapai, membuat account, agen desk, atau tiket baru ditolak sampai platform admin menaikkan kuota.',
+    warnHint: 'Peringatan soft mulai 80% di dashboard. Critical = create berikutnya akan gagal.',
+    bannerWarn: 'Pemakaian workspace mendekati batas plan',
+    bannerCritical: 'Workspace sudah mencapai batas plan',
+    viewUsage: 'Lihat kuota',
   },
   portal: {
     home: 'Beranda',

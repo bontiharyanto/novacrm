@@ -41,6 +41,9 @@ export const tenantAdminSchema = z.object({
   passwordMaxAgeDays: z.coerce.number().int().min(7).max(365).optional(),
   /** MinIO object key under this tenant; null clears the logo. */
   logoObjectKey: z.string().trim().max(400).nullable().optional(),
+  maxAccounts: z.coerce.number().int().min(1).max(500).optional(),
+  maxAgents: z.coerce.number().int().min(1).max(2000).optional(),
+  maxTicketsPerMonth: z.coerce.number().int().min(1).max(500_000).optional(),
 });
 
 export const createTenantSchema = tenantFieldsSchema.extend({
@@ -50,6 +53,9 @@ export const createTenantSchema = tenantFieldsSchema.extend({
   subscriptionPlan: tenantPlanSchema.optional(),
   expiresAt: z.preprocess(emptyToUndefined, z.string().trim().max(40).optional()),
   graceDays: z.coerce.number().int().min(0).max(90).optional(),
+  maxAccounts: z.coerce.number().int().min(1).max(500).optional(),
+  maxAgents: z.coerce.number().int().min(1).max(2000).optional(),
+  maxTicketsPerMonth: z.coerce.number().int().min(1).max(500_000).optional(),
 });
 
 export const updateTenantSchema = tenantFieldsSchema.partial().extend({
@@ -79,6 +85,9 @@ export type TenantRecord = {
   backendUrl: string;
   loginUrl: string;
   logoObjectKey?: string;
+  maxAccounts: number;
+  maxAgents: number;
+  maxTicketsPerMonth: number;
   createdAt: string;
   adminCount: number;
   userCount: number;
@@ -123,24 +132,24 @@ export const TENANT_PLAN_LABEL: Record<TenantPlan, string> = {
   enterprise: 'Enterprise',
 };
 
-/** Commercial proposal — invoice is manual; see docs/BUSINESS.md */
+/** Commercial proposal — invoice is manual; see docs/BUSINESS.md. Quotas: lib/tenants/quotas.ts */
 export const TENANT_PLAN_GUIDE: Record<
   TenantPlan,
   { price: string; includes: string; excludes: string }
 > = {
   trial: {
     price: '14 days · Rp 0',
-    includes: 'Desk, portal, CSAT. Up to ~8 agents. Empty workspace — not the shared lab.',
+    includes: 'Desk, portal, CSAT. Default caps: 1 account · 8 agents · 800 tickets/mo.',
     excludes: 'Production WhatsApp, heavy custom SLA, mass roster apply.',
   },
   standard: {
-    price: 'About Rp 3–8 jt / month (invoice)',
-    includes: 'Tickets, portal, CSAT, assets/CMDB, ticket Reports, email notifications. ~15 agents / ~2,000 tickets per month.',
+    price: 'About Rp 5–8 jt / month (invoice · MSP)',
+    includes: 'Tickets, portal, CSAT, assets/CMDB, reports. Default caps: 5 accounts · 15 agents · 2,000 tickets/mo.',
     excludes: 'Full WFM + Workforce export unless sold as Standard+.',
   },
   enterprise: {
-    price: 'About Rp 12–25 jt / month · 12-month contract',
-    includes: 'All modules, WFM, UC/vendor, SSO test, accent, grace / auto-pause, onboarding.',
+    price: 'About Rp 12–20 jt / month · 12-month contract',
+    includes: 'All modules, WFM, UC/vendor, SSO. Default caps: 20 accounts · 40 agents · 5,000 tickets/mo.',
     excludes: 'ITOM Discovery, HR payroll, multi-region HA.',
   },
 };
@@ -152,6 +161,9 @@ export const TENANT_PLAN_FEATURES: Array<{
   enterprise: string;
 }> = [
   { label: 'Desk + portal + CSAT', trial: 'Yes', standard: 'Yes', enterprise: 'Yes' },
+  { label: 'Accounts (default cap)', trial: '1', standard: '5', enterprise: '20' },
+  { label: 'Agents (default cap)', trial: '8', standard: '15', enterprise: '40' },
+  { label: 'Tickets / month (default)', trial: '800', standard: '2,000', enterprise: '5,000' },
   { label: 'Assets / CMDB', trial: 'Read demo', standard: 'Yes', enterprise: 'Yes' },
   { label: 'Ticket Reports', trial: 'Yes', standard: 'Yes', enterprise: 'Yes' },
   { label: 'WFM + Workforce export', trial: 'No', standard: 'Add-on', enterprise: 'Yes' },

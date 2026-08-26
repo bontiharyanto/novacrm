@@ -16,6 +16,7 @@ import {
   GitBranch,
   History,
   CalendarClock,
+  Gauge,
   LayoutDashboard,
   LayoutGrid,
   LogOut,
@@ -321,12 +322,14 @@ function SidebarFooter({
   const { t } = useI18n();
   const appearanceActive = pathname === '/settings/appearance';
   const securityActive = pathname.startsWith('/settings/security');
+  const usageActive = pathname.startsWith('/settings/usage');
   const notificationsActive = pathname.startsWith('/settings/notifications');
   const reportScheduleActive = pathname.startsWith('/settings/reports');
   const integrationsActive =
     pathname.startsWith('/settings') &&
     !appearanceActive &&
     !securityActive &&
+    !usageActive &&
     !notificationsActive &&
     !reportScheduleActive;
   const roleLabel = t.roles[role] ?? ROLE_LABEL[role] ?? role;
@@ -346,6 +349,13 @@ function SidebarFooter({
           label={t.nav.security}
           icon={ShieldCheck}
           active={securityActive}
+          onNavigate={onNavigate}
+        />
+        <NavLink
+          href="/settings/usage"
+          label={t.nav.usage}
+          icon={Gauge}
+          active={usageActive}
           onNavigate={onNavigate}
         />
         {isTenantAdminRole(role) ? (

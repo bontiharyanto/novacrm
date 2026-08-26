@@ -28,6 +28,7 @@ import {
 import { evaluateWorkflow } from '@/lib/workflows/actions';
 import { requireAccountId } from '@/lib/accounts/scope';
 import { applyTicketSlaChange, snapshotSla } from '@/lib/sla/engine';
+import { assertTicketQuota } from '@/lib/tenants/meter';
 import { snapshotOla } from '@/lib/ola/engine';
 import { recordTicketAudit, recordTicketAuditDiff } from '@/lib/tickets/audit';
 import { defaultPendingReason, isPauseStatus } from '@/lib/tickets/pending';
@@ -262,6 +263,9 @@ export async function createTicket(input: unknown) {
   if (session.profile.role !== 'customer' && !parsed.accountId) {
     return { data: null, error: 'Select the customer account for this ticket' };
   }
+
+  const quotaError = await assertTicketQuota(session.profile.tenantId);
+  if (quotaError) return { data: null, error: quotaError };
 
   const supabase = await createSupabaseServerClient();
   const requesterId = session.profile.role === 'customer' ? session.userId : parsed.requesterId ?? null;

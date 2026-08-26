@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { getSessionProfile } from '@/lib/auth/session';
 import { canRole, canAssignRole, isCustomerRole, isTenantAdminRole } from '@/lib/rbac/ability';
+import { isStaffRole } from '@/lib/rbac/roles';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { isSupportTier, type SupportTier } from '@/lib/tickets/pending';
 import { createUserSchema, highestSupportLevel, userAccessSchema, type DirectoryUser } from '@/lib/users/schema';
@@ -12,6 +13,7 @@ import { formatZodError } from '@/lib/validation/zod-error';
 import { requireAccountId } from '@/lib/accounts/scope';
 import { getPasswordPolicy } from '@/lib/auth/password-actions';
 import { passwordStatus } from '@/lib/auth/password-policy';
+import { assertAgentQuota } from '@/lib/tenants/meter';
 
 type ProfileRow = {
   id: string;
@@ -270,6 +272,11 @@ export async function createDirectoryUser(input: unknown) {
     return { data: null, error: 'Portal users must join a customer account' };
   }
 
+  if (isStaffRole(parsed.role)) {
+    const quotaError = await assertAgentQuota(session.profile.tenantId);
+    if (quotaError) return { data: null, error: quotaError };
+  }
+
   const admin = createSupabaseAdminClient();
   const created = await admin.auth.admin.createUser({
     email,
@@ -375,9 +382,23 @@ export async function updateUserAccess(userId: string, input: unknown) {
     return { data: null, error: 'You cannot assign that role' };
   }
 
+  const supabase = await createSupabaseServerClient();
+
+  if (parsed.role && isStaffRole(parsed.role)) {
+    const { data: existing } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', userId)
+      .eq('tenant_id', session.profile.tenantId)
+      .maybeSingle();
+    if (existing && !isStaffRole(existing.role)) {
+      const quotaError = await assertAgentQuota(session.profile.tenantId);
+      if (quotaError) return { data: null, error: quotaError };
+    }
+  }
+
   if (parsed.role && !isTenantAdminRole(parsed.role) && userId === session.userId && isTenantAdminRole(session.profile.role)) {
-    const supabaseCount = await createSupabaseServerClient();
-    const { count } = await supabaseCount
+    const { count } = await supabase
       .from('profiles')
       .select('id', { count: 'exact', head: true })
       .eq('tenant_id', session.profile.tenantId)
@@ -391,7 +412,6 @@ export async function updateUserAccess(userId: string, input: unknown) {
   if (parsed.role !== undefined) patch.role = parsed.role;
   if (parsed.orgUnitId !== undefined) patch.org_unit_id = parsed.orgUnitId;
 
-  const supabase = await createSupabaseServerClient();
   const { error } = await supabase
     .from('profiles')
     .update(patch)
