@@ -1,9 +1,13 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import { createSupabaseBrowserClient } from '@/lib/supabase/browser';
 
 export function useRealtimeTable(table: string, onChange: () => void) {
+  const reactId = useId().replace(/:/g, '');
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+
   useEffect(() => {
     let client: ReturnType<typeof createSupabaseBrowserClient> | null = null;
 
@@ -13,10 +17,11 @@ export function useRealtimeTable(table: string, onChange: () => void) {
       return;
     }
 
+    // Unique topic per hook instance — shared names throw after the first subscribe().
     const channel = client
-      .channel(`realtime:${table}`)
+      .channel(`realtime:${table}:${reactId}`)
       .on('postgres_changes', { event: '*', schema: 'public', table }, () => {
-        onChange();
+        onChangeRef.current();
       })
       .subscribe();
 
@@ -25,5 +30,5 @@ export function useRealtimeTable(table: string, onChange: () => void) {
         void client.removeChannel(channel);
       }
     };
-  }, [table, onChange]);
+  }, [table, reactId]);
 }
