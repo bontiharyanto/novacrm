@@ -521,6 +521,8 @@ export const id: Dictionary = {
     addComment: 'Tambah komentar',
     attachFile: 'Lampirkan file',
     uploading: 'Mengunggah…',
+    insertImage: 'Gambar',
+    pasteImageHint: 'Tempel atau drop screenshot (PNG/JPEG · maks 8 MB)',
     agentName: 'Nama agen',
     saveAssignee: 'Simpan petugas',
     me: 'Saya',

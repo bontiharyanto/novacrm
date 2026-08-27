@@ -10,7 +10,7 @@ export const ticketPendingReasonSchema = z.enum(TICKET_PENDING_REASONS);
 export const ticketSchema = z.object({
   tenantId: optionalUuidSchema,
   title: z.string().min(3).max(200),
-  description: z.string().max(5000).optional().default(''),
+  description: z.string().max(20000).optional().default(''),
   type: ticketTypeSchema.default('incident'),
   status: ticketStatusSchema.default('open'),
   priority: ticketPrioritySchema.default('medium'),

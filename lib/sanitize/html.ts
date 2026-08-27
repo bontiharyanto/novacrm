@@ -1,9 +1,15 @@
-const ALLOWED_TAGS = new Set(['p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'b', 'i']);
-const VOID_TAGS = new Set(['br']);
+import { looksLikeObjectKey, objectKeyFromImageSrc, ticketObjectImageSrc } from '@/lib/tickets/object-image';
+
+const ALLOWED_TAGS = new Set(['p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'b', 'i', 'img']);
+const VOID_TAGS = new Set(['br', 'img']);
 const DROP_WITH_CONTENT = new Set(['script', 'style', 'iframe', 'object', 'embed', 'link', 'meta', 'noscript']);
 
 function escapeText(value: string) {
   return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function escapeAttr(value: string) {
+  return escapeText(value).replace(/'/g, '&#39;');
 }
 
 function decodeEntities(value: string) {
@@ -13,6 +19,18 @@ function decodeEntities(value: string) {
     .replace(/&quot;/gi, '"')
     .replace(/&#39;|&apos;/gi, "'")
     .replace(/&amp;/gi, '&');
+}
+
+function serializeImage(element: Element) {
+  const dataKey = element.getAttribute('data-novacrm-key')?.trim() ?? '';
+  const fromData = looksLikeObjectKey(dataKey) ? dataKey : null;
+  const fromSrc = objectKeyFromImageSrc(element.getAttribute('src'));
+  const key = fromData ?? fromSrc;
+  if (!key) return '';
+
+  const alt = (element.getAttribute('alt') ?? '').slice(0, 180);
+  const src = ticketObjectImageSrc(key);
+  return `<img src="${escapeAttr(src)}" data-novacrm-key="${escapeAttr(key)}" alt="${escapeAttr(alt)}" class="ticket-inline-image">`;
 }
 
 function serializeAllowed(node: ParentNode): string {
@@ -29,6 +47,9 @@ function serializeAllowed(node: ParentNode): string {
       if (DROP_WITH_CONTENT.has(tag)) {
         return '';
       }
+      if (tag === 'img') {
+        return serializeImage(element);
+      }
       const inner = serializeAllowed(element);
       if (!ALLOWED_TAGS.has(tag)) {
         return inner;
@@ -44,6 +65,16 @@ function serializeAllowed(node: ParentNode): string {
 function sanitizeWithDom(html: string) {
   const doc = new DOMParser().parseFromString(html, 'text/html');
   return serializeAllowed(doc.body);
+}
+
+function parseImgAttrs(raw: string) {
+  const attrs: Record<string, string> = {};
+  const re = /([a-zA-Z_:][-a-zA-Z0-9:_]*)\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/g;
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(raw))) {
+    attrs[match[1].toLowerCase()] = match[2] ?? match[3] ?? match[4] ?? '';
+  }
+  return attrs;
 }
 
 function sanitizeWithWalker(html: string) {
@@ -93,6 +124,18 @@ function sanitizeWithWalker(html: string) {
         const match = rest.match(closer);
         index = match?.index != null ? index + match.index + match[0].length : length;
       }
+      continue;
+    }
+
+    if (tag === 'img') {
+      if (isClose) continue;
+      const attrs = parseImgAttrs(raw);
+      const dataKey = (attrs['data-novacrm-key'] ?? '').trim();
+      const key =
+        (looksLikeObjectKey(dataKey) ? dataKey : null) ?? objectKeyFromImageSrc(attrs.src ?? '');
+      if (!key) continue;
+      const alt = (attrs.alt ?? '').slice(0, 180);
+      out += `<img src="${escapeAttr(ticketObjectImageSrc(key))}" data-novacrm-key="${escapeAttr(key)}" alt="${escapeAttr(alt)}" class="ticket-inline-image">`;
       continue;
     }
 

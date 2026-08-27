@@ -518,6 +518,8 @@ export const en = {
     addComment: 'Add comment',
     attachFile: 'Attach file',
     uploading: 'Uploading…',
+    insertImage: 'Image',
+    pasteImageHint: 'Paste or drop a screenshot (PNG/JPEG · max 8 MB)',
     agentName: 'Agent name',
     saveAssignee: 'Save assignee',
     me: 'Me',
