@@ -4,26 +4,38 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 function getMinioConfig() {
   const endpoint = process.env.MINIO_ENDPOINT ?? 'http://127.0.0.1:9000';
+  const publicEndpoint = process.env.MINIO_PUBLIC_ENDPOINT ?? endpoint;
   const accessKey = process.env.MINIO_ACCESS_KEY ?? process.env.MINIO_ROOT_USER ?? 'minioadmin';
   const secretKey = process.env.MINIO_SECRET_KEY ?? process.env.MINIO_ROOT_PASSWORD ?? 'minioadmin';
   const bucket = process.env.MINIO_BUCKET ?? 'novacrm';
   const region = process.env.MINIO_REGION ?? 'us-east-1';
 
-  return { endpoint, accessKey, secretKey, bucket, region };
+  return { endpoint, publicEndpoint, accessKey, secretKey, bucket, region };
 }
 
-function toPublicMinioUrl(url: string) {
-  const { endpoint } = getMinioConfig();
-  const publicEndpoint = process.env.MINIO_PUBLIC_ENDPOINT ?? endpoint;
-  if (!publicEndpoint || publicEndpoint === endpoint) return url;
-  return url.replace(endpoint.replace(/\/$/, ''), publicEndpoint.replace(/\/$/, ''));
-}
-
+/** Internal client for server→MinIO (Docker network). */
 function createMinioClient() {
   const { endpoint, accessKey, secretKey, region } = getMinioConfig();
   return new S3Client({
     region,
     endpoint,
+    forcePathStyle: true,
+    credentials: {
+      accessKeyId: accessKey,
+      secretAccessKey: secretKey,
+    },
+  });
+}
+
+/**
+ * Sign URLs with the public host the browser will call.
+ * Rewriting a URL after signing breaks SigV4 (Host is part of the signature).
+ */
+function createPublicMinioClient() {
+  const { publicEndpoint, accessKey, secretKey, region } = getMinioConfig();
+  return new S3Client({
+    region,
+    endpoint: publicEndpoint,
     forcePathStyle: true,
     credentials: {
       accessKeyId: accessKey,
@@ -45,11 +57,10 @@ export async function createPresignedUpload(input: {
   expiresIn?: number;
 }) {
   const { bucket } = getMinioConfig();
-  const client = createMinioClient();
   const key = buildObjectKey(input.tenantId, input.filename);
 
   try {
-    await client.send(new HeadBucketCommand({ Bucket: bucket }));
+    await createMinioClient().send(new HeadBucketCommand({ Bucket: bucket }));
   } catch {
     return { data: null, error: `MinIO bucket "${bucket}" is not available` };
   }
@@ -60,13 +71,18 @@ export async function createPresignedUpload(input: {
     ContentType: input.contentType || 'application/octet-stream',
   });
 
-  const url = await getSignedUrl(client, command, { expiresIn: input.expiresIn ?? 300 });
-  return { data: { url: toPublicMinioUrl(url), key, bucket, method: 'PUT' as const }, error: null };
+  const url = await getSignedUrl(createPublicMinioClient(), command, {
+    expiresIn: input.expiresIn ?? 300,
+  });
+  return { data: { url, key, bucket, method: 'PUT' as const }, error: null };
 }
 
 export async function createPresignedDownload(key: string, expiresIn = 300) {
   const { bucket } = getMinioConfig();
-  const client = createMinioClient();
-  const url = await getSignedUrl(client, new GetObjectCommand({ Bucket: bucket, Key: key }), { expiresIn });
-  return { data: { url: toPublicMinioUrl(url), key, bucket }, error: null };
+  const url = await getSignedUrl(
+    createPublicMinioClient(),
+    new GetObjectCommand({ Bucket: bucket, Key: key }),
+    { expiresIn },
+  );
+  return { data: { url, key, bucket }, error: null };
 }
