@@ -147,6 +147,8 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
   const [ticketType, setTicketType] = useState<TicketType>('incident');
   const [comment, setComment] = useState('');
   const [editorKey, setEditorKey] = useState(0);
+  const [detailTab, setDetailTab] = useState<'activity' | 'tasks'>('activity');
+  const [taskStats, setTaskStats] = useState({ total: 0, done: 0, sequential: false });
   const [author, setAuthor] = useState('Agent');
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -385,12 +387,107 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
           </CardContent>
         </Card>
 
-        <TicketTasksPanel
-          ticketId={ticketId}
-          ticketType={type}
-          accountId={ticket.accountId}
-          groups={groups}
-        />
+        <Card>
+          <CardHeader className="space-y-3">
+            <div
+              role="tablist"
+              aria-label={t.tickets.details}
+              className="flex flex-wrap items-center gap-1 border-b border-zinc-800 pb-3"
+            >
+              {(
+                [
+                  { id: 'activity' as const, label: t.tickets.activity },
+                  {
+                    id: 'tasks' as const,
+                    label: t.tickets.tasks.title,
+                    badge:
+                      taskStats.total > 0
+                        ? `${taskStats.done}/${taskStats.total}`
+                        : undefined,
+                  },
+                ] as const
+              ).map((tab) => {
+                const active = detailTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => setDetailTab(tab.id)}
+                    className={`inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-[12px] font-medium transition-colors ${
+                      active
+                        ? 'nova-accent-chip'
+                        : 'text-zinc-500 hover:bg-zinc-900 hover:text-zinc-200'
+                    }`}
+                  >
+                    {tab.label}
+                    {'badge' in tab && tab.badge ? (
+                      <span
+                        className={`rounded-full px-1.5 py-0.5 font-mono text-[10px] ${
+                          active ? 'bg-black/20 text-inherit' : 'bg-zinc-800 text-zinc-400'
+                        }`}
+                      >
+                        {tab.badge}
+                      </span>
+                    ) : null}
+                  </button>
+                );
+              })}
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className={detailTab === 'tasks' ? 'block' : 'hidden'}>
+              <TicketTasksPanel
+                ticketId={ticketId}
+                ticketType={type}
+                accountId={ticket.accountId}
+                groups={groups}
+                embedded
+                onStatsChange={setTaskStats}
+              />
+            </div>
+            {detailTab === 'activity' ? (
+              <>
+                <div className="rounded-lg border border-zinc-800 bg-zinc-950/60 p-3 text-xs text-zinc-500">
+                  Opened {formatRelativeId(ticket.createdAt)} by {ticket.requesterName}
+                </div>
+                {ticket.comments.map((item) => (
+                  <ActivityEntry key={item.id} item={item} />
+                ))}
+                <div className="space-y-3 border-t border-zinc-800 pt-4">
+                  <input
+                    value={author}
+                    onChange={(event) => setAuthor(event.target.value)}
+                    className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100"
+                    placeholder={t.tickets.agentName}
+                  />
+                  <CommentEditor key={editorKey} value={comment} onChange={setComment} />
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Button size="sm" onClick={() => void handleAddComment()} disabled={!comment.trim()}>
+                      {t.tickets.addComment}
+                    </Button>
+                    <label className="inline-flex cursor-pointer items-center gap-1.5 text-xs text-blue-300">
+                      <Paperclip className="h-3.5 w-3.5" />
+                      {isUploading ? t.tickets.uploading : t.tickets.attachFile}
+                      <input
+                        type="file"
+                        className="hidden"
+                        disabled={isUploading}
+                        onChange={(event) => {
+                          const file = event.target.files?.[0];
+                          if (file) void handleUpload(file);
+                          event.target.value = '';
+                        }}
+                      />
+                    </label>
+                  </div>
+                  <VisitReportForm ticketId={ticketId} author={author} onSaved={() => loadTicket()} />
+                </div>
+              </>
+            ) : null}
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>
@@ -424,49 +521,6 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
             {ticket.aiSummaryAt ? (
               <p className="mt-2 text-[11px] text-zinc-600">{formatRelativeId(ticket.aiSummaryAt)}</p>
             ) : null}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm text-zinc-400">{t.tickets.activity}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="rounded-lg border border-zinc-800 bg-zinc-950/60 p-3 text-xs text-zinc-500">
-              Opened {formatRelativeId(ticket.createdAt)} by {ticket.requesterName}
-            </div>
-            {ticket.comments.map((item) => (
-              <ActivityEntry key={item.id} item={item} />
-            ))}
-            <div className="space-y-3 border-t border-zinc-800 pt-4">
-              <input
-                value={author}
-                onChange={(event) => setAuthor(event.target.value)}
-                className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100"
-                placeholder={t.tickets.agentName}
-              />
-              <CommentEditor key={editorKey} value={comment} onChange={setComment} />
-              <div className="flex flex-wrap items-center gap-2">
-                <Button size="sm" onClick={() => void handleAddComment()} disabled={!comment.trim()}>
-                  {t.tickets.addComment}
-                </Button>
-                <label className="inline-flex cursor-pointer items-center gap-1.5 text-xs text-blue-300">
-                  <Paperclip className="h-3.5 w-3.5" />
-                  {isUploading ? t.tickets.uploading : t.tickets.attachFile}
-                  <input
-                    type="file"
-                    className="hidden"
-                    disabled={isUploading}
-                    onChange={(event) => {
-                      const file = event.target.files?.[0];
-                      if (file) void handleUpload(file);
-                      event.target.value = '';
-                    }}
-                  />
-                </label>
-              </div>
-              <VisitReportForm ticketId={ticketId} author={author} onSaved={() => loadTicket()} />
-            </div>
           </CardContent>
         </Card>
 

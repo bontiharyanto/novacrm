@@ -35,11 +35,16 @@ export function TicketTasksPanel({
   ticketType,
   accountId,
   groups,
+  embedded = false,
+  onStatsChange,
 }: {
   ticketId: string;
   ticketType: TicketType;
   accountId?: string;
   groups: GroupOption[];
+  /** Render without outer Card — for use inside a parent tab panel. */
+  embedded?: boolean;
+  onStatsChange?: (stats: { total: number; done: number; sequential: boolean }) => void;
 }) {
   const { t } = useI18n();
   const [tasks, setTasks] = useState<TicketTask[]>([]);
@@ -64,6 +69,12 @@ export function TicketTasksPanel({
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    onStatsChange?.({ total: tasks.length, done: doneCount, sequential });
+    // Intentionally omit onStatsChange to avoid re-render loops from inline parent callbacks.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tasks.length, doneCount, sequential]);
 
   useRealtimeTable('ticket_tasks', load);
 
@@ -131,147 +142,158 @@ export function TicketTasksPanel({
     return t.tickets.tasks.status[value] ?? value;
   }
 
+  const badges = (
+    <div className="flex items-center gap-2">
+      {sequential ? (
+        <Badge tone="info">{t.tickets.tasks.sequential}</Badge>
+      ) : (
+        <Badge tone="neutral">{t.tickets.tasks.parallel}</Badge>
+      )}
+      <Badge tone={doneCount === tasks.length && tasks.length > 0 ? 'success' : 'neutral'}>
+        {t.tickets.tasks.progress.replace('{{done}}', String(doneCount)).replace('{{total}}', String(tasks.length))}
+      </Badge>
+    </div>
+  );
+
+  const body = (
+    <div className="space-y-4">
+      {embedded ? <div className="flex justify-end">{badges}</div> : null}
+      {tasks.length === 0 ? (
+        <p className="text-sm text-zinc-500">{t.tickets.tasks.empty}</p>
+      ) : (
+        <div className="overflow-hidden rounded-lg border border-zinc-800">
+          <div className="hidden grid-cols-[88px_minmax(0,1.4fr)_100px_120px_120px_100px_88px] gap-2 border-b border-zinc-800 px-3 py-2 text-[10px] uppercase tracking-[0.14em] text-zinc-500 md:grid">
+            <span>{t.tickets.tasks.colNumber}</span>
+            <span>{t.tickets.tasks.colTitle}</span>
+            <span>{t.tickets.tasks.colStatus}</span>
+            <span>{t.tickets.tasks.colGroup}</span>
+            <span>{t.tickets.tasks.colOwner}</span>
+            <span>{t.tickets.tasks.colType}</span>
+            <span>{t.tickets.tasks.colActions}</span>
+          </div>
+          {tasks.map((task) => (
+            <div
+              key={task.id}
+              className="grid gap-2 border-b border-zinc-800/80 px-3 py-2.5 last:border-b-0 md:grid-cols-[88px_minmax(0,1.4fr)_100px_120px_120px_100px_88px] md:items-center"
+            >
+              <div className="flex items-center gap-1.5 font-mono text-[11px] text-zinc-500">
+                {task.locked ? <Lock className="h-3 w-3 text-amber-400" /> : null}
+                {task.number}
+              </div>
+              <div>
+                <p className="text-sm text-zinc-100">{task.title}</p>
+                {(task.startedAt || task.completedAt) && (
+                  <p className="mt-0.5 text-[11px] text-zinc-600">
+                    {task.startedAt ? formatRelativeId(task.startedAt) : '—'}
+                    {' → '}
+                    {task.completedAt ? formatRelativeId(task.completedAt) : '—'}
+                  </p>
+                )}
+              </div>
+              <Badge tone={statusTone(task.status)}>{statusLabel(task.status)}</Badge>
+              <p className="truncate text-xs text-zinc-400">{task.groupName ?? '—'}</p>
+              <p className="truncate text-xs text-zinc-400">{task.assigneeName ?? '—'}</p>
+              <p className="truncate text-xs text-zinc-500">{typeLabel(task.taskType)}</p>
+              <div className="flex flex-wrap gap-1">
+                {task.status === 'open' ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={busy || task.locked}
+                    onClick={() => void patchTask(task.id, { status: 'in_progress' })}
+                  >
+                    {t.tickets.tasks.start}
+                  </Button>
+                ) : null}
+                {task.status === 'in_progress' ? (
+                  <Button
+                    size="sm"
+                    disabled={busy || task.locked}
+                    onClick={() => void patchTask(task.id, { status: 'done' })}
+                  >
+                    {t.tickets.tasks.complete}
+                  </Button>
+                ) : null}
+                {task.status !== 'done' && task.status !== 'cancelled' ? (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    disabled={busy}
+                    onClick={() => void patchTask(task.id, { status: 'cancelled' })}
+                  >
+                    {t.tickets.tasks.cancel}
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="space-y-2 rounded-lg border border-zinc-800 bg-zinc-950/50 p-3">
+        <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">{t.tickets.tasks.add}</p>
+        <div className="grid gap-2 sm:grid-cols-2">
+          <div className="space-y-1 sm:col-span-2">
+            <Label htmlFor="task-title">{t.tickets.tasks.colTitle}</Label>
+            <Input
+              id="task-title"
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              placeholder={t.tickets.tasks.titlePlaceholder}
+            />
+          </div>
+          <div className="space-y-1">
+            <Label>{t.tickets.tasks.colType}</Label>
+            <Select value={taskType} onChange={(event) => setTaskType(event.target.value as TicketTaskType)}>
+              {typeOptions.map((value) => (
+                <option key={value} value={value}>
+                  {typeLabel(value)}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label>{t.tickets.tasks.colGroup}</Label>
+            <Select value={groupId} onChange={(event) => setGroupId(event.target.value)}>
+              <option value="">{t.tickets.none}</option>
+              {groups.map((group) => (
+                <option key={group.id} value={group.id}>
+                  {group.name}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div className="space-y-1 sm:col-span-2">
+            <Label>{t.tickets.tasks.colOwner}</Label>
+            <Select value={assigneeId} onChange={(event) => setAssigneeId(event.target.value)}>
+              <option value="">{t.tickets.none}</option>
+              {agents.map((agent) => (
+                <option key={agent.id} value={agent.id}>
+                  {agent.fullName}
+                </option>
+              ))}
+            </Select>
+          </div>
+        </div>
+        <Button size="sm" disabled={busy || !title.trim()} onClick={() => void addTask()}>
+          <Plus className="mr-1 h-3.5 w-3.5" />
+          {t.tickets.tasks.add}
+        </Button>
+      </div>
+    </div>
+  );
+
+  if (embedded) return body;
+
   return (
     <Card>
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle className="text-sm text-zinc-400">{t.tickets.tasks.title}</CardTitle>
-          <div className="flex items-center gap-2">
-            {sequential ? (
-              <Badge tone="info">{t.tickets.tasks.sequential}</Badge>
-            ) : (
-              <Badge tone="neutral">{t.tickets.tasks.parallel}</Badge>
-            )}
-            <Badge tone={doneCount === tasks.length && tasks.length > 0 ? 'success' : 'neutral'}>
-              {t.tickets.tasks.progress.replace('{{done}}', String(doneCount)).replace('{{total}}', String(tasks.length))}
-            </Badge>
-          </div>
+          {badges}
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {tasks.length === 0 ? (
-          <p className="text-sm text-zinc-500">{t.tickets.tasks.empty}</p>
-        ) : (
-          <div className="overflow-hidden rounded-lg border border-zinc-800">
-            <div className="hidden grid-cols-[88px_minmax(0,1.4fr)_100px_120px_120px_100px_88px] gap-2 border-b border-zinc-800 px-3 py-2 text-[10px] uppercase tracking-[0.14em] text-zinc-500 md:grid">
-              <span>{t.tickets.tasks.colNumber}</span>
-              <span>{t.tickets.tasks.colTitle}</span>
-              <span>{t.tickets.tasks.colStatus}</span>
-              <span>{t.tickets.tasks.colGroup}</span>
-              <span>{t.tickets.tasks.colOwner}</span>
-              <span>{t.tickets.tasks.colType}</span>
-              <span>{t.tickets.tasks.colActions}</span>
-            </div>
-            {tasks.map((task) => (
-              <div
-                key={task.id}
-                className="grid gap-2 border-b border-zinc-800/80 px-3 py-2.5 last:border-b-0 md:grid-cols-[88px_minmax(0,1.4fr)_100px_120px_120px_100px_88px] md:items-center"
-              >
-                <div className="flex items-center gap-1.5 font-mono text-[11px] text-zinc-500">
-                  {task.locked ? <Lock className="h-3 w-3 text-amber-400" /> : null}
-                  {task.number}
-                </div>
-                <div>
-                  <p className="text-sm text-zinc-100">{task.title}</p>
-                  {(task.startedAt || task.completedAt) && (
-                    <p className="mt-0.5 text-[11px] text-zinc-600">
-                      {task.startedAt ? formatRelativeId(task.startedAt) : '—'}
-                      {' → '}
-                      {task.completedAt ? formatRelativeId(task.completedAt) : '—'}
-                    </p>
-                  )}
-                </div>
-                <Badge tone={statusTone(task.status)}>{statusLabel(task.status)}</Badge>
-                <p className="truncate text-xs text-zinc-400">{task.groupName ?? '—'}</p>
-                <p className="truncate text-xs text-zinc-400">{task.assigneeName ?? '—'}</p>
-                <p className="truncate text-xs text-zinc-500">{typeLabel(task.taskType)}</p>
-                <div className="flex flex-wrap gap-1">
-                  {task.status === 'open' ? (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={busy || task.locked}
-                      onClick={() => void patchTask(task.id, { status: 'in_progress' })}
-                    >
-                      {t.tickets.tasks.start}
-                    </Button>
-                  ) : null}
-                  {task.status === 'in_progress' ? (
-                    <Button
-                      size="sm"
-                      disabled={busy || task.locked}
-                      onClick={() => void patchTask(task.id, { status: 'done' })}
-                    >
-                      {t.tickets.tasks.complete}
-                    </Button>
-                  ) : null}
-                  {task.status !== 'done' && task.status !== 'cancelled' ? (
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      disabled={busy}
-                      onClick={() => void patchTask(task.id, { status: 'cancelled' })}
-                    >
-                      {t.tickets.tasks.cancel}
-                    </Button>
-                  ) : null}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div className="space-y-2 rounded-lg border border-zinc-800 bg-zinc-950/50 p-3">
-          <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">{t.tickets.tasks.add}</p>
-          <div className="grid gap-2 sm:grid-cols-2">
-            <div className="space-y-1 sm:col-span-2">
-              <Label htmlFor="task-title">{t.tickets.tasks.colTitle}</Label>
-              <Input
-                id="task-title"
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                placeholder={t.tickets.tasks.titlePlaceholder}
-              />
-            </div>
-            <div className="space-y-1">
-              <Label>{t.tickets.tasks.colType}</Label>
-              <Select value={taskType} onChange={(event) => setTaskType(event.target.value as TicketTaskType)}>
-                {typeOptions.map((value) => (
-                  <option key={value} value={value}>
-                    {typeLabel(value)}
-                  </option>
-                ))}
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label>{t.tickets.tasks.colGroup}</Label>
-              <Select value={groupId} onChange={(event) => setGroupId(event.target.value)}>
-                <option value="">{t.tickets.none}</option>
-                {groups.map((group) => (
-                  <option key={group.id} value={group.id}>
-                    {group.name}
-                  </option>
-                ))}
-              </Select>
-            </div>
-            <div className="space-y-1 sm:col-span-2">
-              <Label>{t.tickets.tasks.colOwner}</Label>
-              <Select value={assigneeId} onChange={(event) => setAssigneeId(event.target.value)}>
-                <option value="">{t.tickets.none}</option>
-                {agents.map((agent) => (
-                  <option key={agent.id} value={agent.id}>
-                    {agent.fullName}
-                  </option>
-                ))}
-              </Select>
-            </div>
-          </div>
-          <Button size="sm" disabled={busy || !title.trim()} onClick={() => void addTask()}>
-            <Plus className="mr-1 h-3.5 w-3.5" />
-            {t.tickets.tasks.add}
-          </Button>
-        </div>
-      </CardContent>
+      <CardContent>{body}</CardContent>
     </Card>
   );
 }
