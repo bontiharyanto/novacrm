@@ -41,7 +41,15 @@ function ChartTooltip({
   );
 }
 
-export function TrendChart({ data }: { data?: TrendPoint[] }) {
+export function TrendChart({
+  data,
+  openedLabel = 'Opened',
+  closedLabel = 'Closed',
+}: {
+  data?: TrendPoint[];
+  openedLabel?: string;
+  closedLabel?: string;
+}) {
   const rows = data ?? [];
   const interval = rows.length > 40 ? 13 : rows.length > 14 ? 3 : 0;
   return (
@@ -75,18 +83,26 @@ export function TrendChart({ data }: { data?: TrendPoint[] }) {
             width={28}
           />
           <Tooltip content={<ChartTooltip />} cursor={{ stroke: '#3f3f46' }} />
-          <Area type="monotone" dataKey="opened" stroke="#3b82f6" strokeWidth={2} fill="url(#openedFill)" name="Opened" />
-          <Area type="monotone" dataKey="closed" stroke="#10b981" strokeWidth={2} fill="url(#closedFill)" name="Closed" />
+          <Area type="monotone" dataKey="opened" stroke="#3b82f6" strokeWidth={2} fill="url(#openedFill)" name={openedLabel} />
+          <Area type="monotone" dataKey="closed" stroke="#10b981" strokeWidth={2} fill="url(#closedFill)" name={closedLabel} />
         </AreaChart>
       </ResponsiveContainer>
     </div>
   );
 }
 
-export function VolumeBars({ data }: { data?: NamedCount[] }) {
+export function VolumeBars({
+  data,
+  emptyLabel = 'No tickets in this window.',
+  ticketsLabel = 'Tickets',
+}: {
+  data?: NamedCount[];
+  emptyLabel?: string;
+  ticketsLabel?: string;
+}) {
   const rows = data ?? [];
   if (rows.length === 0) {
-    return <p className="flex h-56 items-center justify-center text-sm text-zinc-500">No tickets in this window.</p>;
+    return <p className="flex h-56 items-center justify-center text-sm text-zinc-500">{emptyLabel}</p>;
   }
   return (
     <div className="h-56">
@@ -109,7 +125,7 @@ export function VolumeBars({ data }: { data?: NamedCount[] }) {
             width={78}
           />
           <Tooltip content={<ChartTooltip />} cursor={{ fill: '#18181b' }} />
-          <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} name="Tickets" barSize={18} />
+          <Bar dataKey="value" fill="#3b82f6" radius={[0, 4, 4, 0]} name={ticketsLabel} barSize={18} />
         </BarChart>
       </ResponsiveContainer>
     </div>

@@ -10,6 +10,7 @@ import { TrendChart, VolumeBars } from '@/components/reports/report-charts';
 import { DistributionList } from '@/components/reports/distribution-list';
 import { TypeBadge } from '@/components/tickets/type-badge';
 import { UsageWarnBanner } from '@/components/settings/usage-settings';
+import { useI18n } from '@/components/layout/preferences-provider';
 import { useRealtimeTable } from '@/lib/supabase/realtime';
 import type { ReportSnapshot } from '@/lib/reports/schema';
 import type { TenantMeterSnapshot } from '@/lib/tenants/meter-view';
@@ -24,6 +25,8 @@ function isReportSnapshot(value: unknown): value is ReportSnapshot {
 }
 
 export function OpsDashboard() {
+  const { t, locale } = useI18n();
+  const d = t.opsDashboard;
   const [report, setReport] = useState<ReportSnapshot | null>(null);
   const [meter, setMeter] = useState<TenantMeterSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
@@ -57,21 +60,21 @@ export function OpsDashboard() {
         </div>
         <Skeleton className="h-64 w-full rounded-xl" />
         {!loading && !report ? (
-          <p className="text-sm text-zinc-500">Unable to load dashboard metrics. Refresh or open Reports.</p>
+          <p className="text-sm text-zinc-500">{d.loadFailed}</p>
         ) : null}
       </div>
     );
   }
 
   const kpis = [
-    { label: 'Open', value: report.kpis.open, href: '/tickets' },
-    { label: 'Unassigned', value: report.kpis.unassigned, href: '/tickets?queue=unassigned' },
-    { label: 'SLA breached', value: report.kpis.slaBreached, href: '/tickets', danger: true },
-    { label: 'CAB review', value: report.kpis.cabReview, href: '/cab' },
-    { label: 'Warranty risk', value: report.kpis.warrantySoon, href: '/assets' },
-    { label: 'Catalog live', value: report.kpis.catalogPublished, href: '/catalog' },
-    { label: 'FRT', value: formatDurationMinutes(report.kpis.frtMinutes), href: '/reports' },
-    { label: 'MTTR', value: formatDurationMinutes(report.kpis.mttrMinutes), href: '/reports' },
+    { label: d.kpi.open, value: report.kpis.open, href: '/tickets' },
+    { label: d.kpi.unassigned, value: report.kpis.unassigned, href: '/tickets?queue=unassigned' },
+    { label: d.kpi.slaBreached, value: report.kpis.slaBreached, href: '/tickets', danger: true },
+    { label: d.kpi.cabReview, value: report.kpis.cabReview, href: '/cab' },
+    { label: d.kpi.warrantySoon, value: report.kpis.warrantySoon, href: '/assets' },
+    { label: d.kpi.catalogPublished, value: report.kpis.catalogPublished, href: '/catalog' },
+    { label: d.kpi.frt, value: formatDurationMinutes(report.kpis.frtMinutes), href: '/reports' },
+    { label: d.kpi.mttr, value: formatDurationMinutes(report.kpis.mttrMinutes), href: '/reports' },
   ];
 
   return (
@@ -84,15 +87,17 @@ export function OpsDashboard() {
       {meter ? <UsageWarnBanner snapshot={meter} /> : null}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Operations</p>
-          <h1 className="text-2xl font-semibold text-zinc-50">Dashboard</h1>
-          <p className="mt-1 text-sm text-zinc-500">Last 7 days · updated {formatRelativeId(report.generatedAt)}</p>
+          <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">{d.kicker}</p>
+          <h1 className="text-2xl font-semibold text-zinc-50">{d.title}</h1>
+          <p className="mt-1 text-sm text-zinc-500">
+            {d.last7Days.replace('{{time}}', formatRelativeId(report.generatedAt, locale))}
+          </p>
         </div>
         <Link
           href="/reports"
           className="rounded-md border border-zinc-800 px-3 py-1.5 text-xs text-zinc-300 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-zinc-700 hover:text-zinc-50"
         >
-          Open reports
+          {d.openReports}
         </Link>
       </div>
 
@@ -115,25 +120,25 @@ export function OpsDashboard() {
         <Card className="lg:col-span-8">
           <CardContent className="p-4">
             <div className="mb-3 flex items-center justify-between gap-3">
-              <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Volume · 7 days</p>
+              <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{d.volume7d}</p>
               <div className="flex gap-3 text-[11px] text-zinc-500">
                 <span className="inline-flex items-center gap-1.5">
                   <span className="h-1.5 w-1.5 rounded-full bg-blue-500" />
-                  Opened
+                  {d.opened}
                 </span>
                 <span className="inline-flex items-center gap-1.5">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                  Closed
+                  {d.closed}
                 </span>
               </div>
             </div>
-            <TrendChart data={report.trend} />
+            <TrendChart data={report.trend} openedLabel={d.opened} closedLabel={d.closed} />
           </CardContent>
         </Card>
         <Card className="lg:col-span-4">
           <CardContent className="p-4">
-            <p className="mb-3 text-[11px] uppercase tracking-[0.16em] text-zinc-500">By process</p>
-            <VolumeBars data={report.byType} />
+            <p className="mb-3 text-[11px] uppercase tracking-[0.16em] text-zinc-500">{d.byProcess}</p>
+            <VolumeBars data={report.byType} emptyLabel={d.noTicketsWindow} ticketsLabel={d.tickets} />
           </CardContent>
         </Card>
       </div>
@@ -141,9 +146,9 @@ export function OpsDashboard() {
       <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_320px]">
         <Card>
           <CardContent className="p-4">
-            <p className="mb-3 text-[11px] uppercase tracking-[0.16em] text-zinc-500">Aging open tickets</p>
+            <p className="mb-3 text-[11px] uppercase tracking-[0.16em] text-zinc-500">{d.agingTitle}</p>
             {report.aging.length === 0 ? (
-              <p className="text-sm text-zinc-500">No tickets older than 2 days.</p>
+              <p className="text-sm text-zinc-500">{d.agingEmpty}</p>
             ) : (
               <div className="overflow-hidden rounded-lg border border-zinc-800">
                 {report.aging.map((row) => (
@@ -168,11 +173,11 @@ export function OpsDashboard() {
         </Card>
         <Card>
           <CardContent className="space-y-3 p-4">
-            <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Load</p>
-            <DistributionList rows={report.assignees} empty="No assignees in range." />
+            <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{d.load}</p>
+            <DistributionList rows={report.assignees} empty={d.assigneesEmpty} />
             {report.kpis.emergencyChanges > 0 ? (
               <Link href="/cab" className="block text-xs text-rose-300 hover:text-rose-200">
-                {report.kpis.emergencyChanges} emergency change open
+                {d.emergencyOpen.replace('{{count}}', String(report.kpis.emergencyChanges))}
               </Link>
             ) : null}
           </CardContent>
