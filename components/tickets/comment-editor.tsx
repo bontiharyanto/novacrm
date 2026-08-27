@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useEditor, EditorContent, type Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
@@ -141,6 +141,14 @@ export function CommentEditor({
       onChange(isEmptyHtml(html) ? '' : html);
     },
   });
+
+  useEffect(() => {
+    if (!editor) return;
+    const next = value || '<p></p>';
+    if (editor.getHTML() === next) return;
+    if (isEmptyHtml(editor.getHTML()) && isEmptyHtml(value)) return;
+    editor.commands.setContent(next, { emitUpdate: false });
+  }, [editor, value]);
 
   return (
     <div className="rounded-md border border-zinc-700 bg-zinc-950">

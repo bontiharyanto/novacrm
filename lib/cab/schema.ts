@@ -9,8 +9,8 @@ export const changePlanSchema = z.object({
   riskLevel: riskLevelSchema.optional(),
   plannedStart: z.string().optional().nullable(),
   plannedEnd: z.string().optional().nullable(),
-  implementationPlan: z.string().max(8000).optional(),
-  backoutPlan: z.string().max(8000).optional(),
+  implementationPlan: z.string().max(20000).optional(),
+  backoutPlan: z.string().max(20000).optional(),
 });
 
 export const cabDecisionInputSchema = z.object({

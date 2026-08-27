@@ -32,8 +32,8 @@ export const ticketSchema = z.object({
   riskLevel: z.enum(['low', 'medium', 'high', 'critical']).optional(),
   plannedStart: z.string().optional(),
   plannedEnd: z.string().optional(),
-  implementationPlan: z.string().max(8000).optional(),
-  backoutPlan: z.string().max(8000).optional(),
+  implementationPlan: z.string().max(20000).optional(),
+  backoutPlan: z.string().max(20000).optional(),
 });
 
 export const ticketUpdateSchema = z.object({

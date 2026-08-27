@@ -13,6 +13,11 @@ export function submitStatusForChange(changeType?: ChangeType): TicketStatus {
   return 'waiting';
 }
 
+function hasPlanText(value?: string | null) {
+  if (!value?.trim()) return false;
+  return value.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ').trim().length > 0;
+}
+
 export function changeReadyForCab(ticket: {
   changeType?: ChangeType | null;
   riskLevel?: string | null;
@@ -24,8 +29,8 @@ export function changeReadyForCab(ticket: {
   }
   const missing: string[] = [];
   if (!ticket.riskLevel) missing.push('risk');
-  if (!ticket.implementationPlan?.trim()) missing.push('implementation plan');
-  if (!ticket.backoutPlan?.trim()) missing.push('backout plan');
+  if (!hasPlanText(ticket.implementationPlan)) missing.push('implementation plan');
+  if (!hasPlanText(ticket.backoutPlan)) missing.push('backout plan');
   return { ok: missing.length === 0, missing };
 }
 

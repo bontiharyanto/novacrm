@@ -13,6 +13,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TypeBadge } from '@/components/tickets/type-badge';
 import { ProcessStrip } from '@/components/tickets/process-strip';
+import { CommentEditor } from '@/components/tickets/comment-editor';
 import { CHANGE_TYPES, RISK_LEVELS, type CabApproval, type ChangeType, type RiskLevel } from '@/lib/cab/schema';
 import { changeReadyForCab } from '@/lib/cab/flow';
 import { useI18n } from '@/components/layout/preferences-provider';
@@ -159,10 +160,10 @@ export function CabRecord({ ticketId }: { ticketId: string }) {
 
         <Card>
           <CardContent className="space-y-3 p-4">
-            <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Implementation plan</p>
-            <Textarea rows={6} value={implementationPlan} onChange={(event) => setImplementationPlan(event.target.value)} />
-            <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Backout plan</p>
-            <Textarea rows={4} value={backoutPlan} onChange={(event) => setBackoutPlan(event.target.value)} />
+            <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{t.tickets.implementationPlan}</p>
+            <CommentEditor value={implementationPlan} onChange={setImplementationPlan} minHeightClass="min-h-40" />
+            <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{t.tickets.backoutPlan}</p>
+            <CommentEditor value={backoutPlan} onChange={setBackoutPlan} minHeightClass="min-h-32" />
           </CardContent>
         </Card>
 

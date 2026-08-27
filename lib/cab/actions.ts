@@ -7,6 +7,7 @@ import { getSessionProfile } from '@/lib/auth/session';
 import { canRole } from '@/lib/rbac/ability';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getTicketById, listTickets, updateTicket } from '@/lib/tickets/actions';
+import { sanitizeCommentHtml } from '@/lib/sanitize/html';
 
 type ApprovalRow = {
   id: string;
@@ -80,8 +81,12 @@ export async function saveChangePlan(ticketId: string, input: unknown) {
       risk_level: parsed.riskLevel ?? existing.riskLevel ?? existing.priority,
       planned_start: parsed.plannedStart === undefined ? existing.plannedStart ?? null : parsed.plannedStart,
       planned_end: parsed.plannedEnd === undefined ? existing.plannedEnd ?? null : parsed.plannedEnd,
-      implementation_plan: parsed.implementationPlan ?? existing.implementationPlan ?? null,
-      backout_plan: parsed.backoutPlan ?? existing.backoutPlan ?? null,
+      implementation_plan: parsed.implementationPlan
+        ? sanitizeCommentHtml(parsed.implementationPlan)
+        : (existing.implementationPlan ?? null),
+      backout_plan: parsed.backoutPlan
+        ? sanitizeCommentHtml(parsed.backoutPlan)
+        : (existing.backoutPlan ?? null),
     })
     .eq('id', ticketId)
     .eq('tenant_id', session.profile.tenantId)

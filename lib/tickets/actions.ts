@@ -329,8 +329,10 @@ export async function createTicket(input: unknown) {
       risk_level: parsed.type === 'change' ? parsed.riskLevel ?? parsed.priority : null,
       planned_start: parsed.plannedStart || null,
       planned_end: parsed.plannedEnd || null,
-      implementation_plan: parsed.implementationPlan ?? null,
-      backout_plan: parsed.backoutPlan ?? null,
+      implementation_plan: parsed.implementationPlan
+        ? sanitizeCommentHtml(parsed.implementationPlan)
+        : null,
+      backout_plan: parsed.backoutPlan ? sanitizeCommentHtml(parsed.backoutPlan) : null,
       created_by: session.userId,
     })
     .select(TICKET_SELECT)

@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { TypeBadge } from '@/components/tickets/type-badge';
 import { ProcessStrip } from '@/components/tickets/process-strip';
@@ -196,8 +195,9 @@ export function TicketCreate({
         riskLevel: ticketType === 'change' ? riskLevel : undefined,
         plannedStart: ticketType === 'change' && plannedStart ? new Date(plannedStart).toISOString() : undefined,
         plannedEnd: ticketType === 'change' && plannedEnd ? new Date(plannedEnd).toISOString() : undefined,
-        implementationPlan: ticketType === 'change' ? implementationPlan.trim() || undefined : undefined,
-        backoutPlan: ticketType === 'change' ? backoutPlan.trim() || undefined : undefined,
+        implementationPlan:
+          ticketType === 'change' && htmlToText(implementationPlan) ? implementationPlan : undefined,
+        backoutPlan: ticketType === 'change' && htmlToText(backoutPlan) ? backoutPlan : undefined,
         catalogItemId: selectedCatalog?.id,
         category: selectedCatalog?.categoryName ?? selectedCatalog?.slug,
         catalogAnswers: selectedCatalog
@@ -386,7 +386,7 @@ export function TicketCreate({
             <div className="mt-3">
               <KnowledgeHints title={title} browseHref="/knowledge" />
             </div>
-            <p className="mb-2 mt-5 text-[11px] uppercase tracking-[0.16em] text-zinc-500">Details</p>
+            <p className="mb-2 mt-5 text-[11px] uppercase tracking-[0.16em] text-zinc-500">{t.tickets.details}</p>
             <CommentEditor value={description} onChange={setDescription} minHeightClass="min-h-56" />
             {selectedCatalog ? (
               <CatalogVariableFields
@@ -398,24 +398,14 @@ export function TicketCreate({
             {ticketType === 'change' ? (
               <div className="mt-5 space-y-4 border-t border-zinc-800 pt-5">
                 <div className="space-y-1.5">
-                  <Label htmlFor="implementationPlan">{t.tickets.implementationPlan}</Label>
-                  <Textarea
-                    id="implementationPlan"
-                    rows={5}
-                    value={implementationPlan}
-                    onChange={(event) => setImplementationPlan(event.target.value)}
-                    placeholder={t.tickets.implementationPlanHint}
-                  />
+                  <Label>{t.tickets.implementationPlan}</Label>
+                  <p className="text-[11px] text-zinc-500">{t.tickets.implementationPlanHint}</p>
+                  <CommentEditor value={implementationPlan} onChange={setImplementationPlan} minHeightClass="min-h-40" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="backoutPlan">{t.tickets.backoutPlan}</Label>
-                  <Textarea
-                    id="backoutPlan"
-                    rows={4}
-                    value={backoutPlan}
-                    onChange={(event) => setBackoutPlan(event.target.value)}
-                    placeholder={t.tickets.backoutPlanHint}
-                  />
+                  <Label>{t.tickets.backoutPlan}</Label>
+                  <p className="text-[11px] text-zinc-500">{t.tickets.backoutPlanHint}</p>
+                  <CommentEditor value={backoutPlan} onChange={setBackoutPlan} minHeightClass="min-h-32" />
                 </div>
               </div>
             ) : null}
