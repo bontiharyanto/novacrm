@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { ticketPrioritySchema, ticketTypeSchema } from '@/lib/tickets/schema';
+import { catalogFulfillmentStepSchema } from '@/lib/tickets/tasks-schema';
 import { nullableUuidSchema } from '@/lib/validation/id';
 
 export const catalogVariableTypeSchema = z.enum(['text', 'textarea', 'select', 'checkbox']);
@@ -40,6 +41,8 @@ export const catalogItemSchema = z.object({
   ticketType: ticketTypeSchema.default('request'),
   priority: ticketPrioritySchema.default('medium'),
   variables: z.array(catalogVariableSchema).default([]),
+  fulfillmentSteps: z.array(catalogFulfillmentStepSchema).default([]),
+  fulfillmentSequential: z.boolean().optional().default(true),
   isActive: z.boolean().optional().default(true),
 });
 
@@ -85,6 +88,8 @@ export type CatalogItem = {
   priority: z.infer<typeof ticketPrioritySchema>;
   variables: CatalogVariable[];
   mergedVariables: CatalogVariable[];
+  fulfillmentSteps: z.infer<typeof catalogFulfillmentStepSchema>[];
+  fulfillmentSequential: boolean;
   isActive: boolean;
   createdAt: string;
 };

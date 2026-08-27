@@ -12,6 +12,7 @@ import {
   type CatalogVariableSet,
 } from '@/lib/catalog/schema';
 import { formatAnswers, mergeVariables, missingRequired, parseVariables, slugify } from '@/lib/catalog/variables';
+import { parseFulfillmentSteps } from '@/lib/tickets/tasks-schema';
 import { getSessionProfile } from '@/lib/auth/session';
 import { formatZodError } from '@/lib/validation/zod-error';
 import { canRole } from '@/lib/rbac/ability';
@@ -50,6 +51,8 @@ type ItemRow = {
   ticket_type: CatalogItem['ticketType'];
   priority: CatalogItem['priority'];
   variables: unknown;
+  fulfillment_steps?: unknown;
+  fulfillment_sequential?: boolean | null;
   is_active: boolean;
   created_at: string;
 };
@@ -97,6 +100,8 @@ function mapItem(row: ItemRow, categories: CatalogCategory[], sets: CatalogVaria
     priority: row.priority,
     variables,
     mergedVariables: mergeVariables(set?.variables, variables),
+    fulfillmentSteps: parseFulfillmentSteps(row.fulfillment_steps),
+    fulfillmentSequential: row.fulfillment_sequential !== false,
     isActive: row.is_active,
     createdAt: row.created_at,
   };
@@ -267,6 +272,8 @@ export async function createCatalogItem(input: unknown) {
       ticket_type: parsed.ticketType,
       priority: parsed.priority,
       variables: parsed.variables,
+      fulfillment_steps: parsed.fulfillmentSteps ?? [],
+      fulfillment_sequential: parsed.fulfillmentSequential ?? true,
       is_active: parsed.isActive ?? true,
       created_by: session.userId,
     })
@@ -298,6 +305,8 @@ export async function updateCatalogItem(itemId: string, input: unknown) {
   if (parsed.ticketType !== undefined) patch.ticket_type = parsed.ticketType;
   if (parsed.priority !== undefined) patch.priority = parsed.priority;
   if (parsed.variables !== undefined) patch.variables = parsed.variables;
+  if (parsed.fulfillmentSteps !== undefined) patch.fulfillment_steps = parsed.fulfillmentSteps;
+  if (parsed.fulfillmentSequential !== undefined) patch.fulfillment_sequential = parsed.fulfillmentSequential;
   if (parsed.isActive !== undefined) patch.is_active = parsed.isActive;
 
   const supabase = await createSupabaseServerClient();

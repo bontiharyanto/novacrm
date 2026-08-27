@@ -14,6 +14,12 @@ import { Card, CardContent } from '@/components/ui/card';
 import { VariableBuilder } from '@/components/catalog/variable-builder';
 import { CATALOG_ICONS } from '@/lib/catalog/schema';
 import type { CatalogCategory, CatalogItem, CatalogVariable, CatalogVariableSet } from '@/lib/catalog/schema';
+import {
+  DEFAULT_REQUEST_PIPELINE,
+  REQUEST_TASK_TYPES,
+  type CatalogFulfillmentStep,
+  type TicketTaskType,
+} from '@/lib/tickets/tasks-schema';
 import { TICKET_TYPES } from '@/lib/tickets/process';
 import { useI18n } from '@/components/layout/preferences-provider';
 import { localizedType } from '@/lib/i18n/labels';
@@ -31,6 +37,8 @@ export function CatalogItemEditor({ itemId }: { itemId?: string }) {
   const [priority, setPriority] = useState('medium');
   const [isActive, setIsActive] = useState(true);
   const [variables, setVariables] = useState<CatalogVariable[]>([]);
+  const [fulfillmentSteps, setFulfillmentSteps] = useState<CatalogFulfillmentStep[]>([]);
+  const [fulfillmentSequential, setFulfillmentSequential] = useState(true);
   const [categories, setCategories] = useState<CatalogCategory[]>([]);
   const [sets, setSets] = useState<CatalogVariableSet[]>([]);
   const [newCategory, setNewCategory] = useState('');
@@ -63,6 +71,8 @@ export function CatalogItemEditor({ itemId }: { itemId?: string }) {
         setPriority(item.priority);
         setIsActive(item.isActive);
         setVariables(item.variables ?? []);
+        setFulfillmentSteps(item.fulfillmentSteps ?? []);
+        setFulfillmentSequential(item.fulfillmentSequential !== false);
       });
   }, [itemId]);
 
@@ -96,6 +106,8 @@ export function CatalogItemEditor({ itemId }: { itemId?: string }) {
       priority,
       isActive,
       variables,
+      fulfillmentSteps: fulfillmentSteps.map((step, index) => ({ ...step, sortOrder: index })),
+      fulfillmentSequential,
     };
     const response = await fetch(itemId ? `/api/catalog/${itemId}` : '/api/catalog', {
       method: itemId ? 'PATCH' : 'POST',
@@ -162,6 +174,93 @@ export function CatalogItemEditor({ itemId }: { itemId?: string }) {
           <div>
             <p className="mb-2 text-[11px] uppercase tracking-[0.16em] text-zinc-500">{t.catalog.itemVariables}</p>
             <VariableBuilder variables={variables} onChange={setVariables} />
+          </div>
+          <div className="space-y-3 rounded-xl border border-zinc-800 p-4">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{t.catalog.fulfillmentSteps}</p>
+                <p className="mt-1 text-xs text-zinc-500">{t.catalog.fulfillmentStepsHint}</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setFulfillmentSteps(DEFAULT_REQUEST_PIPELINE.map((step, index) => ({ ...step, sortOrder: index })))
+                  }
+                >
+                  {t.catalog.loadDefaultPipeline}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setFulfillmentSteps((current) => [
+                      ...current,
+                      { title: '', taskType: 'other', sortOrder: current.length },
+                    ])
+                  }
+                >
+                  {t.catalog.addFulfillmentStep}
+                </Button>
+              </div>
+            </div>
+            <label className="flex items-center gap-2 text-xs text-zinc-300">
+              <input
+                type="checkbox"
+                checked={fulfillmentSequential}
+                onChange={(event) => setFulfillmentSequential(event.target.checked)}
+              />
+              {t.catalog.fulfillmentSequential}
+            </label>
+            {fulfillmentSteps.length === 0 ? (
+              <p className="text-sm text-zinc-500">{t.tickets.tasks.empty}</p>
+            ) : (
+              <div className="space-y-2">
+                {fulfillmentSteps.map((step, index) => (
+                  <div
+                    key={index}
+                    className="grid gap-2 rounded-lg border border-zinc-800 p-3 sm:grid-cols-[minmax(0,1fr)_160px_auto]"
+                  >
+                    <Input
+                      value={step.title}
+                      placeholder={t.catalog.stepTitle}
+                      onChange={(event) =>
+                        setFulfillmentSteps((current) =>
+                          current.map((row, i) => (i === index ? { ...row, title: event.target.value } : row)),
+                        )
+                      }
+                    />
+                    <Select
+                      value={step.taskType}
+                      onChange={(event) =>
+                        setFulfillmentSteps((current) =>
+                          current.map((row, i) =>
+                            i === index ? { ...row, taskType: event.target.value as TicketTaskType } : row,
+                          ),
+                        )
+                      }
+                    >
+                      {REQUEST_TASK_TYPES.map((value) => (
+                        <option key={value} value={value}>
+                          {t.tickets.tasks.types[value]}
+                        </option>
+                      ))}
+                    </Select>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setFulfillmentSteps((current) => current.filter((_, i) => i !== index))}
+                    >
+                      {t.common.cancel}
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

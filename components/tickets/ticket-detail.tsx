@@ -17,6 +17,7 @@ import { TypeBadge } from '@/components/tickets/type-badge';
 import { ProcessStrip } from '@/components/tickets/process-strip';
 import { formatRelativeId } from '@/lib/utils/dates';
 import { useRealtimeTable } from '@/lib/supabase/realtime';
+import { TicketTasksPanel } from '@/components/tickets/ticket-tasks';
 import { CommentEditor, CommentHtml } from '@/components/tickets/comment-editor';
 import { ActivityEntry, type ActivityComment } from '@/components/tickets/activity-entry';
 import { VisitReportForm } from '@/components/tickets/visit-report-form';
@@ -383,6 +384,13 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
             {ticket.description ? <CommentHtml html={ticket.description} /> : 'No description provided.'}
           </CardContent>
         </Card>
+
+        <TicketTasksPanel
+          ticketId={ticketId}
+          ticketType={type}
+          accountId={ticket.accountId}
+          groups={groups}
+        />
 
         <Card>
           <CardHeader>

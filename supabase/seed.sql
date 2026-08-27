@@ -540,7 +540,7 @@ on conflict (id) do nothing;
 
 insert into public.catalog_items (
   id, tenant_id, category_id, variable_set_id, name, slug, short_description, description,
-  icon, ticket_type, priority, variables, is_active
+  icon, ticket_type, priority, variables, fulfillment_steps, fulfillment_sequential, is_active
 )
 values
   (
@@ -556,6 +556,16 @@ values
     'request',
     'medium',
     '[{"key":"model","label":"Preferred model","type":"select","required":true,"options":["ThinkPad T14","Latitude 5440"]},{"key":"justification","label":"Business justification","type":"textarea","required":true}]'::jsonb,
+    '[
+      {"title":"Determine customer order feasibility (survey)","taskType":"feasibility","sortOrder":0},
+      {"title":"Allocate resource & service","taskType":"allocate","sortOrder":1},
+      {"title":"Install & activate resource","taskType":"install","sortOrder":2},
+      {"title":"Service provisioning","taskType":"provision","sortOrder":3},
+      {"title":"Test service end-to-end","taskType":"test","sortOrder":4},
+      {"title":"CI verification & validation","taskType":"validate_ci","sortOrder":5},
+      {"title":"Handover to operation","taskType":"handover","sortOrder":6}
+    ]'::jsonb,
+    true,
     true
   ),
   (
@@ -571,6 +581,8 @@ values
     'request',
     'medium',
     '[{"key":"duration","label":"Duration","type":"select","required":true,"options":["30 days","90 days","Permanent"]},{"key":"manager","label":"Manager email","type":"text","required":true}]'::jsonb,
+    '[]'::jsonb,
+    true,
     true
   ),
   (
@@ -586,6 +598,8 @@ values
     'request',
     'low',
     '[{"key":"application","label":"Application","type":"text","required":true},{"key":"reason","label":"Why you need it","type":"textarea","required":true}]'::jsonb,
+    '[]'::jsonb,
+    true,
     true
   ),
   (
@@ -601,6 +615,8 @@ values
     'request',
     'high',
     '[{"key":"account","label":"Account / email","type":"text","required":true},{"key":"verified","label":"I can verify identity","type":"checkbox","required":true}]'::jsonb,
+    '[]'::jsonb,
+    true,
     true
   ),
   (
@@ -616,6 +632,8 @@ values
     'incident',
     'high',
     '[{"key":"service","label":"Service","type":"select","required":true,"options":["Email","VPN","ERP","Internet"]},{"key":"impact","label":"Who is affected","type":"textarea","required":true}]'::jsonb,
+    '[]'::jsonb,
+    true,
     true
   ),
   (
@@ -634,6 +652,8 @@ values
     'change',
     'low',
     '[{"key":"service","label":"Service / CI","type":"text","required":true},{"key":"window","label":"Maintenance window","type":"select","required":true,"options":["Tonight 22:00-23:00","Sunday 06:00-08:00","Next approved window"]}]'::jsonb,
+    '[]'::jsonb,
+    true,
     true
   ),
   (
@@ -652,6 +672,8 @@ values
     'change',
     'medium',
     '[{"key":"source","label":"Source CIDR / host","type":"text","required":true},{"key":"destination","label":"Destination","type":"text","required":true},{"key":"port","label":"Port / protocol","type":"text","required":true,"placeholder":"443/tcp"}]'::jsonb,
+    '[]'::jsonb,
+    true,
     true
   ),
   (
@@ -670,6 +692,8 @@ values
     'change',
     'medium',
     '[{"key":"hostname","label":"Hostname","type":"text","required":true},{"key":"expiry","label":"Current expiry","type":"text","required":false}]'::jsonb,
+    '[]'::jsonb,
+    true,
     true
   ),
   (
@@ -685,6 +709,8 @@ values
     'incident',
     'high',
     '[{"key":"location","label":"Floor / site","type":"text","required":true},{"key":"symptom","label":"What failed","type":"textarea","required":true}]'::jsonb,
+    '[]'::jsonb,
+    true,
     true
   ),
   (
@@ -700,6 +726,8 @@ values
     'incident',
     'critical',
     '[{"key":"site","label":"Site","type":"text","required":true},{"key":"provider","label":"ISP / circuit","type":"text","required":false}]'::jsonb,
+    '[]'::jsonb,
+    true,
     true
   ),
   (
@@ -715,6 +743,8 @@ values
     'incident',
     'high',
     '[{"key":"user_count","label":"Who is affected","type":"text","required":true}]'::jsonb,
+    '[]'::jsonb,
+    true,
     true
   ),
   (
@@ -730,6 +760,8 @@ values
     'incident',
     'high',
     '[{"key":"application","label":"Application / CI","type":"text","required":true},{"key":"error","label":"Error or behaviour","type":"textarea","required":true}]'::jsonb,
+    '[]'::jsonb,
+    true,
     true
   ),
   (
@@ -745,6 +777,8 @@ values
     'request',
     'medium',
     '[{"key":"application","label":"Application","type":"text","required":true}]'::jsonb,
+    '[]'::jsonb,
+    true,
     true
   ),
   (
@@ -760,6 +794,8 @@ values
     'incident',
     'critical',
     '[{"key":"database","label":"Database / CI","type":"text","required":true},{"key":"error","label":"Error message","type":"textarea","required":false}]'::jsonb,
+    '[]'::jsonb,
+    true,
     true
   ),
   (
@@ -775,6 +811,8 @@ values
     'request',
     'medium',
     '[{"key":"database","label":"Database / CI","type":"text","required":true},{"key":"access","label":"Access needed","type":"select","required":true,"options":["Read","Read/write","Owner"]}]'::jsonb,
+    '[]'::jsonb,
+    true,
     true
   ),
   (
@@ -790,6 +828,8 @@ values
     'incident',
     'high',
     '[{"key":"hall","label":"Hall / rack","type":"text","required":true},{"key":"symptom","label":"Symptom","type":"textarea","required":true}]'::jsonb,
+    '[]'::jsonb,
+    true,
     true
   ),
   (
@@ -805,6 +845,8 @@ values
     'request',
     'medium',
     '[{"key":"server","label":"Server / asset tag","type":"text","required":true},{"key":"window","label":"Preferred window","type":"text","required":false}]'::jsonb,
+    '[]'::jsonb,
+    true,
     true
   ),
   (
@@ -820,6 +862,8 @@ values
     'incident',
     'high',
     '[{"key":"location","label":"Location / camera name","type":"text","required":true},{"key":"symptom","label":"What failed","type":"textarea","required":true}]'::jsonb,
+    '[]'::jsonb,
+    true,
     true
   ),
   (
@@ -835,6 +879,8 @@ values
     'incident',
     'medium',
     '[{"key":"location","label":"Location / camera name","type":"text","required":true},{"key":"symptom","label":"Quality issue","type":"textarea","required":true}]'::jsonb,
+    '[]'::jsonb,
+    true,
     true
   ),
   (
@@ -850,6 +896,8 @@ values
     'incident',
     'critical',
     '[{"key":"recorder","label":"NVR / site","type":"text","required":true},{"key":"symptom","label":"Symptom","type":"textarea","required":true}]'::jsonb,
+    '[]'::jsonb,
+    true,
     true
   ),
   (
@@ -865,6 +913,8 @@ values
     'request',
     'medium',
     '[{"key":"location","label":"Camera / site","type":"text","required":true},{"key":"window","label":"Date and time window","type":"text","required":true},{"key":"reason","label":"Business reason","type":"textarea","required":true}]'::jsonb,
+    '[]'::jsonb,
+    true,
     true
   ),
   (
@@ -880,6 +930,8 @@ values
     'request',
     'medium',
     '[{"key":"location","label":"Proposed location","type":"text","required":true},{"key":"reason","label":"Why it is needed","type":"textarea","required":true}]'::jsonb,
+    '[]'::jsonb,
+    true,
     true
   )
 on conflict (id) do nothing;

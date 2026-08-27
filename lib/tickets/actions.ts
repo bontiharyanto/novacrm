@@ -360,6 +360,15 @@ export async function createTicket(input: unknown) {
     action: 'created',
   });
   await afterTicketMutation('ticket.create', ticket);
+  const { maybeCreateTasksForNewTicket } = await import('@/lib/tickets/tasks-actions');
+  await maybeCreateTasksForNewTicket({
+    id: ticket.id,
+    tenantId: ticket.tenantId,
+    type: ticket.type,
+    catalogItemId: ticket.catalogItemId,
+    groupId: ticket.groupId,
+    createdBy: session.userId,
+  });
   return { data: ticket, error: null };
 }
 
@@ -434,6 +443,15 @@ export async function createInboundTicket(tenantId: string, input: unknown) {
     newValue: parsed.catalogItemId ?? parsed.category ?? 'inbound',
   });
   await afterTicketMutation('ticket.create', ticket);
+  const { maybeCreateTasksForNewTicket } = await import('@/lib/tickets/tasks-actions');
+  await maybeCreateTasksForNewTicket({
+    id: ticket.id,
+    tenantId: ticket.tenantId,
+    type: ticket.type,
+    catalogItemId: ticket.catalogItemId,
+    groupId: ticket.groupId,
+    createdBy: ticket.createdBy,
+  });
   return { data: ticket, error: null };
 }
 

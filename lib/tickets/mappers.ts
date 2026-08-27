@@ -66,6 +66,7 @@ export type TicketRecord = {
   category?: string;
   catalogItemId?: string;
   catalogAnswers?: Record<string, string>;
+  taskSequential?: boolean;
   changeType?: 'standard' | 'normal' | 'emergency';
   riskLevel?: 'low' | 'medium' | 'high' | 'critical';
   plannedStart?: string;
@@ -146,6 +147,7 @@ type TicketRow = {
   category?: string | null;
   catalog_item_id?: string | null;
   catalog_answers?: Record<string, string> | null;
+  task_sequential?: boolean | null;
   change_type?: 'standard' | 'normal' | 'emergency' | null;
   risk_level?: 'low' | 'medium' | 'high' | 'critical' | null;
   planned_start?: string | null;
@@ -240,6 +242,7 @@ export function mapTicketRow(row: TicketRow): TicketRecord {
     category: row.category ?? undefined,
     catalogItemId: row.catalog_item_id ?? undefined,
     catalogAnswers: row.catalog_answers ?? undefined,
+    taskSequential: Boolean(row.task_sequential),
     changeType: row.change_type ?? undefined,
     riskLevel: row.risk_level ?? undefined,
     plannedStart: row.planned_start ?? undefined,
