@@ -18,17 +18,21 @@ import { PdpConsentField } from '@/components/shared/pdp-consent-field';
 import { usePrivacyEnabled } from '@/components/portal/privacy-module';
 
 type Proposal = { type: string; title: string; description: string };
+type TicketKind = 'incident' | 'request';
 
 export function CatalogOtherForm({
   className,
   compact,
+  defaultType = 'request',
 }: {
   className?: string;
   compact?: boolean;
+  defaultType?: TicketKind;
 }) {
   const router = useRouter();
   const { t } = useI18n();
   const privacyEnabled = usePrivacyEnabled();
+  const [ticketType, setTicketType] = useState<TicketKind>(defaultType);
   const [title, setTitle] = useState('');
   const [location, setLocation] = useState('');
   const [impact, setImpact] = useState('');
@@ -48,22 +52,24 @@ export function CatalogOtherForm({
     impact.trim().length >= 2 &&
     contact.trim().length >= 8;
   const canSubmit = complete && (!privacyEnabled || consented) && !busy && !ticketId;
+  const isIncident = ticketType === 'incident';
 
-  async function submitTicket() {
-    if (!canSubmit) return;
-    setBusy(true);
-    setError('');
-    const issue = formatIssueFromForm({ title, location, impact, contact, details });
+  async function createTicketDirect(input: {
+    type: TicketKind;
+    title: string;
+    description: string;
+    contact?: string;
+  }) {
     const response = await fetch('/api/tickets', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        title: title.trim().slice(0, 200),
-        description: issue,
-        type: 'incident',
+        title: input.title.trim().slice(0, 200),
+        description: input.description,
+        type: input.type,
         status: 'open',
-        priority: 'medium',
-        requesterPhone: contact.trim(),
+        priority: input.type === 'incident' ? 'high' : 'medium',
+        requesterPhone: input.contact?.trim() || undefined,
       }),
     });
     const payload = await response.json().catch(() => ({}));
@@ -71,12 +77,27 @@ export function CatalogOtherForm({
       const message = payload.error ?? t.portal.submitFailed;
       setError(message);
       toastError(message);
-      setBusy(false);
-      return;
+      return null;
     }
+    return payload.data.id as string;
+  }
+
+  async function submitTicket() {
+    if (!canSubmit) return;
+    setBusy(true);
+    setError('');
+    const issue = formatIssueFromForm({ title, location, impact, contact, details }, ticketType);
+    const id = await createTicketDirect({
+      type: ticketType,
+      title: title.trim(),
+      description: issue,
+      contact,
+    });
+    setBusy(false);
+    if (!id) return;
     emitTicketsChanged();
     toastSuccess(t.tickets.created);
-    router.push(`/portal/${payload.data.id}`);
+    router.push(`/portal/${id}`);
   }
 
   async function callAssistant(next: AssistantMessage[]) {
@@ -116,13 +137,27 @@ export function CatalogOtherForm({
 
   async function startReview() {
     if (!canSubmit) return;
-    const issue = formatIssueFromForm({ title, location, impact, contact, details });
+    const issue = formatIssueFromForm({ title, location, impact, contact, details }, ticketType);
     await callAssistant([{ role: 'user', content: issue }]);
   }
 
   async function handleApprove() {
     if (!proposal || busy) return;
-    await callAssistant([...messages, { role: 'user', content: t.assistant.confirmTicket }]);
+    setBusy(true);
+    setError('');
+    const kind: TicketKind = proposal.type === 'request' ? 'request' : 'incident';
+    const id = await createTicketDirect({
+      type: kind,
+      title: proposal.title,
+      description: proposal.description || proposal.title,
+      contact,
+    });
+    setBusy(false);
+    if (!id) return;
+    setTicketId(id);
+    emitTicketsChanged();
+    toastSuccess(t.tickets.created);
+    router.push(`/portal/${id}`);
   }
 
   function handleEdit() {
@@ -166,28 +201,51 @@ export function CatalogOtherForm({
       ) : (
         <form onSubmit={handleSubmit} className="mt-5 space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="catalog-other-title">{t.catalog.fieldSymptom}</Label>
+            <Label>{t.portal.ticketKind}</Label>
             <div className="flex flex-wrap gap-1.5">
-              {SYMPTOM_CHIPS.map((chip) => (
+              {(['incident', 'request'] as const).map((kind) => (
                 <button
-                  key={chip.id}
+                  key={kind}
                   type="button"
-                  onClick={() => setTitle(chip.prompt)}
-                  className={`rounded-full border px-2.5 py-1 text-[12px] transition-colors ${
-                    title === chip.prompt
+                  onClick={() => setTicketType(kind)}
+                  className={`rounded-md border px-2.5 py-1 text-[12px] transition-colors ${
+                    ticketType === kind
                       ? 'nova-accent-chip'
                       : 'border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'
                   }`}
                 >
-                  {chip.label}
+                  {t.tickets.type[kind]}
                 </button>
               ))}
             </div>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="catalog-other-title">
+              {isIncident ? t.catalog.fieldSymptom : t.catalog.fieldNeed}
+            </Label>
+            {isIncident ? (
+              <div className="flex flex-wrap gap-1.5">
+                {SYMPTOM_CHIPS.map((chip) => (
+                  <button
+                    key={chip.id}
+                    type="button"
+                    onClick={() => setTitle(chip.prompt)}
+                    className={`rounded-full border px-2.5 py-1 text-[12px] transition-colors ${
+                      title === chip.prompt
+                        ? 'nova-accent-chip'
+                        : 'border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'
+                    }`}
+                  >
+                    {chip.label}
+                  </button>
+                ))}
+              </div>
+            ) : null}
             <Input
               id="catalog-other-title"
               value={title}
               onChange={(event) => setTitle(event.target.value)}
-              placeholder={t.catalog.fieldSymptomHint}
+              placeholder={isIncident ? t.catalog.fieldSymptomHint : t.catalog.fieldNeedHint}
               required
               autoFocus={!compact}
               className="h-11 text-base"
@@ -246,7 +304,11 @@ export function CatalogOtherForm({
           {error ? <p className="text-sm text-rose-400">{error}</p> : null}
           <div className="flex flex-wrap gap-2">
             <Button type="submit" disabled={!canSubmit}>
-              {busy ? t.portal.submitting : t.portal.submitRequest}
+              {busy
+                ? t.portal.submitting
+                : isIncident
+                  ? t.portal.submitIncident
+                  : t.portal.submitRequest}
             </Button>
             <Button type="button" variant="ghost" disabled={!canSubmit} onClick={() => void startReview()}>
               {busy ? t.catalog.reviewing : t.catalog.reviewWithAi}

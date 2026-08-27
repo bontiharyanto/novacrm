@@ -41,7 +41,13 @@ export async function listPortalTicketSuggestions(locale: 'en' | 'id' = 'id'): P
     })
     .sort((a, b) => b.score - a.score || a.label.localeCompare(b.label));
 
-  const picked = ranked.slice(0, 10).map(({ id, label, prompt, domain }) => ({ id, label, prompt, domain }));
+  const picked = ranked.slice(0, 10).map(({ id, label, prompt, domain }) => ({
+    id,
+    label,
+    prompt,
+    domain,
+    href: `/portal/catalog/${id}`,
+  }));
   if (picked.length > 0) return picked;
 
   return SYMPTOM_CHIPS.slice(0, 8).map((chip) => ({

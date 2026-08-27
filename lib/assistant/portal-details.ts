@@ -386,15 +386,19 @@ export function hasCompleteDetails(text: string) {
   return missingDetails(text).length === 0;
 }
 
-export function formatIssueFromForm(fields: {
-  title: string;
-  location: string;
-  impact: string;
-  contact: string;
-  details: string;
-}) {
+export function formatIssueFromForm(
+  fields: {
+    title: string;
+    location: string;
+    impact: string;
+    contact: string;
+    details: string;
+  },
+  type: 'incident' | 'request' = 'incident',
+) {
+  const head = type === 'request' ? 'Permintaan' : 'Masalah';
   return [
-    `Masalah: ${fields.title.trim()}`,
+    `${head}: ${fields.title.trim()}`,
     `Lokasi: ${fields.location.trim()}`,
     `Terdampak: ${fields.impact.trim()}`,
     `Kontak: ${fields.contact.trim()}`,

@@ -151,7 +151,7 @@ function PortalShellInner({
               </form>
               {!csatLocked ? (
                 <Link
-                  href="/portal/new"
+                  href="/portal/catalog"
                   className="nova-accent-btn inline-flex h-8 items-center gap-1 rounded-md px-2.5 text-[12px] font-medium text-white transition-all duration-200 ease-out hover:-translate-y-px"
                 >
                   <Plus className="h-3.5 w-3.5" />

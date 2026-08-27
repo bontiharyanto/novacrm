@@ -18,6 +18,7 @@ import { displayTicketNumber, isTicketType, type TicketType } from '@/lib/ticket
 import type { TicketPriority, TicketStatus } from '@/lib/tickets/schema';
 import { CsatSurvey } from '@/components/csat/csat-survey';
 import type { CsatResponse } from '@/lib/csat/schema';
+import { PortalTasksProgress } from '@/components/portal/portal-tasks-progress';
 
 type TicketItem = {
   id: string;
@@ -160,6 +161,8 @@ export function PortalTicket({
             {ticket.description ? <CommentHtml html={ticket.description} /> : t.portal.noDescription}
           </div>
         </section>
+
+        <PortalTasksProgress ticketId={ticket.id} />
 
         {!csatRequired ? survey : null}
 

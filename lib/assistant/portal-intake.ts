@@ -71,15 +71,22 @@ export function looksLikeIssue(text: string) {
 }
 
 export function inferType(text: string): 'incident' | 'request' {
+  if (/^permintaan\s*:/im.test(text) || /\bpermintaan\s*:/i.test(text)) return 'request';
+  if (/^masalah\s*:/im.test(text) || /\bmasalah\s*:/i.test(text)) return 'incident';
+  // Fulfillment / access intents before breakage heuristics (password reset, install, etc.).
+  if (
+    /(request|permintaan|akses|reset|password|lupa password|unlock|install|instal|lisensi|license|footage|rekaman|new (account|user)|buat (akun|user))/i.test(
+      text,
+    )
+  ) {
+    return 'request';
+  }
   if (
     /(insiden|incident|gangguan|rusak|putus|down|offline|blur|buram|error|gagal|hang|crash|bsod|lambat|lemot|mati|timeout|unavailable|cannot connect|can'?t connect|tidak connect|tidak terhubung|tidak bisa|tidak merekam|tidak nyala|tidak jalan|tidak masuk)/i.test(
       text,
     )
   ) {
     return 'incident';
-  }
-  if (/(request|reques|permintaan|akses|reset|password|install|instal|lisensi|footage|rekaman|akses)/i.test(text)) {
-    return 'request';
   }
   return 'request';
 }
@@ -122,7 +129,7 @@ export function collectIssueContext(messages: AssistantMessage[]) {
     if (!title) {
       const line = text
         .split('\n')
-        .map((item) => item.replace(/^masalah\s*:\s*/i, '').trim())
+        .map((item) => item.replace(/^(masalah|permintaan)\s*:\s*/i, '').trim())
         .find(Boolean);
       title = stripCreateIntent(line ?? text).slice(0, 200);
       type = inferType(text);
@@ -138,7 +145,18 @@ export function collectIssueContext(messages: AssistantMessage[]) {
 export function lastProposedIssue(messages: AssistantMessage[]) {
   const context = collectIssueContext(messages);
   if (!context?.ready) return null;
-  return { type: context.type, title: context.title, description: context.description };
+
+  // Prefer the type label from the last assistant proposal when present.
+  const lastAssistant = [...messages].reverse().find((item) => item.role === 'assistant')?.content ?? '';
+  const typed = lastAssistant.match(/\b(Incident|Request)\b/);
+  const type =
+    typed?.[1]?.toLowerCase() === 'incident'
+      ? 'incident'
+      : typed?.[1]?.toLowerCase() === 'request'
+        ? 'request'
+        : context.type;
+
+  return { type, title: context.title, description: context.description };
 }
 
 export function resolvePortalIntake(messages: AssistantMessage[]): PortalIntake | null {

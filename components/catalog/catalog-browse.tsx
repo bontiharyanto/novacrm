@@ -108,7 +108,7 @@ export function CatalogBrowse() {
         </div>
       )}
 
-      <CatalogOtherForm compact />
+      <CatalogOtherForm compact defaultType="request" />
     </div>
   );
 }
