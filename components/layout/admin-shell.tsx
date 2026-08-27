@@ -962,16 +962,16 @@ function SidebarFooter({
         onNavigate={onNavigate}
         rail={rail}
       />
-      <NavLink
-        href="/settings/usage"
-        label={t.nav.usage}
-        icon={Gauge}
-        active={usageActive}
-        onNavigate={onNavigate}
-        rail={rail}
-      />
       {isTenantAdminRole(role) ? (
         <>
+          <NavLink
+            href="/settings/usage"
+            label={t.nav.usage}
+            icon={Gauge}
+            active={usageActive}
+            onNavigate={onNavigate}
+            rail={rail}
+          />
           <NavLink
             href="/settings"
             label={t.nav.integrations}
