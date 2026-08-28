@@ -38,7 +38,6 @@ export function CatalogOtherForm({
   const [impact, setImpact] = useState('');
   const [contact, setContact] = useState('');
   const [details, setDetails] = useState('');
-  const [messages, setMessages] = useState<AssistantMessage[]>([]);
   const [review, setReview] = useState('');
   const [proposal, setProposal] = useState<Proposal | null>(null);
   const [ticketId, setTicketId] = useState<string | null>(null);
@@ -117,7 +116,6 @@ export function CatalogOtherForm({
       return;
     }
     const reply = String(payload.data?.content ?? '');
-    setMessages([...next, { role: 'assistant', content: reply }]);
     setReview(reply);
     setProposal(payload.data?.proposal ?? null);
     if (payload.data?.ticketId) {
@@ -161,7 +159,6 @@ export function CatalogOtherForm({
   }
 
   function handleEdit() {
-    setMessages([]);
     setReview('');
     setProposal(null);
     setError('');
