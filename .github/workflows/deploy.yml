@@ -158,15 +158,15 @@ jobs:
             echo "IMAGE_TAG=$IMAGE_TAG" >> .env.tmp
             mv .env.tmp .env
             echo "$GITHUB_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
-            docker compose -f docker-compose.prod.yml pull
-            docker compose -f docker-compose.prod.yml up -d --remove-orphans --scale web=3
+            docker compose --env-file .env.production -f docker-compose.prod.yml pull
+            docker compose --env-file .env.production -f docker-compose.prod.yml up -d --remove-orphans --scale web=1
             chmod +x scripts/*.sh
             DATABASE_URL="$DATABASE_URL" ./scripts/migrate.sh
             tries=0
-            until docker compose -f docker-compose.prod.yml exec -T web node -e "fetch('http://127.0.0.1:3000/api/health').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"; do
+            until docker compose --env-file .env.production -f docker-compose.prod.yml exec -T web node -e "fetch('http://127.0.0.1:3000/api/health').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"; do
               tries=$((tries + 1))
               if [ "$tries" -ge 20 ]; then
-                docker compose -f docker-compose.prod.yml logs web --tail 80
+                docker compose --env-file .env.production -f docker-compose.prod.yml logs web --tail 80
                 exit 1
               fi
               sleep 3
