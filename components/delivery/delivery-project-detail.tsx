@@ -136,11 +136,11 @@ export function DeliveryProjectDetail({
             <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{t.common.deliveryPhases}</p>
             {readOnly ? <LockKeyhole className="h-3.5 w-3.5 text-zinc-600" aria-label={t.common.deliveryReadOnly} /> : null}
           </div>
-          <ol className="mt-5 space-y-1">
+          <ol className="mt-5 space-y-2">
             {project.phases.map((phase, index) => {
               const Icon = phaseIcon(phase.status);
               return (
-                <li key={phase.id} className="relative flex gap-3 pb-4 last:pb-0">
+                <li key={phase.id} className="relative flex gap-3 pb-3 last:pb-0">
                   {index < project.phases.length - 1 ? (
                     <span className="absolute left-[7px] top-5 h-[calc(100%-8px)] w-px bg-zinc-800" />
                   ) : null}
@@ -149,9 +149,17 @@ export function DeliveryProjectDetail({
                   }`}>
                     <Icon className="h-3 w-3" />
                   </span>
-                  <div className="min-w-0 flex-1 rounded-lg border border-zinc-800/80 px-3 py-2">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="text-sm text-zinc-100">{phase.title}</p>
+                  <div className={`min-w-0 flex-1 rounded-lg border border-zinc-800/80 border-l-2 px-3 py-2.5 ${
+                    phase.status === 'completed'
+                      ? 'border-l-emerald-500/70'
+                      : phase.status === 'in_progress'
+                        ? 'border-l-blue-500/70'
+                        : phase.status === 'blocked'
+                          ? 'border-l-rose-500/70'
+                          : 'border-l-zinc-700'
+                  }`}>
+                    <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(132px,160px)] sm:items-center">
+                      <p className="min-w-0 text-sm leading-5 text-zinc-100">{phase.title}</p>
                       {readOnly ? (
                         <Badge tone={statusTone(phase.status)}>{t.common.deliveryStatus[phase.status]}</Badge>
                       ) : (
@@ -159,7 +167,7 @@ export function DeliveryProjectDetail({
                           value={phase.status}
                           disabled={savingPhase === phase.id}
                           onChange={(event) => void updatePhase(phase.id, event.target.value as DeliveryPhaseStatus)}
-                          className="h-7 w-auto min-w-[130px] text-[11px]"
+                          className="h-9 w-full min-w-[132px] px-2.5 py-1 text-xs"
                         >
                           {(['planned', 'in_progress', 'blocked', 'completed', 'cancelled'] as const).map((value) => (
                             <option key={value} value={value}>{t.common.deliveryStatus[value]}</option>
