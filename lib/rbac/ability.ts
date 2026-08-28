@@ -35,6 +35,7 @@ export type Subjects =
   | 'Tenant'
   | 'Import'
   | 'Knowledge'
+  | 'Capability'
   | 'all';
 
 export type AppAbility = MongoAbility<[Actions, Subjects]>;
@@ -168,6 +169,7 @@ export const CONFIG_MODULES = {
   sla: { action: 'update', subject: 'Sla' },
   catalog: { action: 'update', subject: 'Catalog' },
   governance: { action: 'update', subject: 'Governance' },
+  capabilities: { action: 'update', subject: 'Capability' },
   workflows: { action: 'read', subject: 'Workflow' },
   import: { action: 'create', subject: 'Import' },
   tenants: { action: 'read', subject: 'Tenant' },

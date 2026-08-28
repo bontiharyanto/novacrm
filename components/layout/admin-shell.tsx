@@ -167,6 +167,7 @@ const platformItems: NavItem[] = [
   { href: '/knowledge', labelKey: 'knowledge', icon: BookMarked, action: 'read', subject: 'Knowledge' },
   { href: '/workflows', labelKey: 'automation', icon: Workflow, action: 'read', subject: 'Workflow' },
   { href: '/governance', labelKey: 'governance', icon: Scale, action: 'update', subject: 'Governance' },
+  { href: '/settings/capabilities', labelKey: 'capabilities', icon: ShieldCheck, action: 'update', subject: 'Capability' },
 ];
 
 const pinCatalog: NavItem[] = [

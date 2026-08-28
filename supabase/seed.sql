@@ -98,6 +98,11 @@ values
   ('88888888-0001-0001-0001-000000000002', '11111111-1111-1111-1111-111111111111', '55555555-0001-0001-0001-000000000001', null, 'division', 'Divisi Layanan', 'layanan', '22222222-2222-2222-2222-222222222222', '22222222-2222-2222-2222-222222222222')
 on conflict (id) do nothing;
 
+insert into public.role_capabilities (tenant_id, role, action, subject, allowed, created_by)
+values
+  ('11111111-1111-1111-1111-111111111111', 'agent', 'read', 'Ticket', true, '22222222-2222-2222-2222-222222222222'),
+  ('11111111-1111-1111-1111-111111111111', 'customer', 'read', 'Capability', false, '22222222-2222-2222-2222-222222222222')
+on conflict (tenant_id, role, action, subject) do update set allowed = excluded.allowed;
 -- Delivery demo: mirrors a closed-won project from an external Work Order CRM.
 insert into public.accounts (
   id, tenant_id, type, name, slug, code, status, external_provider, external_id, created_by
