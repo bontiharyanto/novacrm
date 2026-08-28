@@ -1,6 +1,6 @@
 # Server migration checklist
 
-Prepare accounts and secrets first: [MIGRATE-SERVER.md](MIGRATE-SERVER.md). Then use this page to cut over. Live VPS runbook: [VPS.md](VPS.md). Laptop: [LOCAL.md](LOCAL.md). Secrets/Compose: [DEPLOYMENT.md](DEPLOYMENT.md). Roles: [RBAC.md](RBAC.md).
+Prepare accounts and secrets first: [MIGRATE-SERVER.md](MIGRATE-SERVER.md). Then use this page to cut over. Live VPS runbook: [VPS.md](VPS.md). Laptop: [LOCAL.md](LOCAL.md). Secrets/Compose: [DEPLOYMENT.md](DEPLOYMENT.md). Roles: [RBAC.md](RBAC.md). User SQL: [SERVER-USER-ACCESS.md](SERVER-USER-ACCESS.md).
 
 ## What goes where
 

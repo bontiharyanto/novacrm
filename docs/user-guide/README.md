@@ -37,6 +37,7 @@ Item katalog: [Catalog & record producer](catalog-guidance.md). Major incident (
 | [Task activity & WBS](task-activities.md) | DCO/agent: activity timeline, visibility, sequential dependencies |
 | [Capability Matrix](capability-matrix.md) | Admin/superadmin: tenant capability configuration |
 | [Delivery access model](../DELIVERY-ACCESS-MODEL.md) | Owner/admin/security: access PM Delivery, DCO, partner, portal, and CRM service |
+| [SQL server — user access](../SERVER-USER-ACCESS.md) | Admin/engineer: inspect and update user role and account membership from the VPS |
 | [Local setup](../LOCAL.md) | Engineer: run the app on a laptop |
 | [Sysadmin Ops](../OPS.md) | Engineer: health and queues on `:3100` |
 | [Workers](../WORKERS.md) | Engineer: scale BullMQ workers |

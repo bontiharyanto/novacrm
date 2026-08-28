@@ -57,6 +57,7 @@ CASL on the frontend; RLS on the backend. Sidebar account filter: one customer a
 | [Task activity & WBS](docs/user-guide/task-activities.md) | DCO/agent — task activity, visibility, dependencies |
 | [Capability Matrix](docs/user-guide/capability-matrix.md) | Admin/superadmin — tenant capability configuration |
 | [Delivery access model](docs/DELIVERY-ACCESS-MODEL.md) | Owner/admin/security — PM Delivery, DCO, partner, portal, and CRM service access |
+| [SQL server — user access](docs/SERVER-USER-ACCESS.md) | Admin/engineer — inspect users, roles, and account membership from the VPS |
 | [Delivery ↔ Work Order CRM](docs/DELIVERY-CRM-INTEGRATION.md) | Integration owner — webhook contract, account mapping, idempotency |
 | [NETMON NMS](docs/NETMON.md) | Tickets + CMDB sync from netmon.click |
 | [Sysadmin Ops](docs/OPS.md) | Health, queues, retries on `:3100` |
