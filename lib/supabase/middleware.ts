@@ -273,7 +273,7 @@ export async function updateSession(request: NextRequest) {
 
   if (user && role && !isCustomerRole(role) && pathname.startsWith('/portal')) {
     const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = '/dashboard';
+    redirectUrl.pathname = homePathForRole(role);
     return NextResponse.redirect(redirectUrl);
   }
 
@@ -286,7 +286,7 @@ export async function updateSession(request: NextRequest) {
     pathname !== '/settings/security'
   ) {
     const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = '/dashboard';
+    redirectUrl.pathname = homePathForRole(role);
     return NextResponse.redirect(redirectUrl);
   }
 

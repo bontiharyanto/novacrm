@@ -61,7 +61,9 @@ export function isTenantAdminRole(role: string | null | undefined): boolean {
 }
 
 export function homePathForRole(role: string | null | undefined): string {
-  return isCustomerRole(role) ? '/portal' : '/dashboard';
+  if (isCustomerRole(role)) return '/portal';
+  if (role === 'pm_delivery' || role === 'dco') return '/delivery/dashboard';
+  return '/dashboard';
 }
 
 export function canAssignRole(actor: AppRole, target: AppRole): boolean {

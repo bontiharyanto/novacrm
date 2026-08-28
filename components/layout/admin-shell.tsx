@@ -126,7 +126,7 @@ function formatBadge(count: number) {
 }
 
 const overviewItems: NavItem[] = [
-  { href: '/dashboard', labelKey: 'dashboard', icon: LayoutDashboard, action: 'read', subject: 'Ticket' },
+  { href: '/dashboard', labelKey: 'dashboard', icon: LayoutDashboard, action: 'read', subject: 'OperationsDashboard' },
   { href: '/delivery/dashboard', labelKey: 'delivery', icon: BriefcaseBusiness, action: 'read', subject: 'DeliveryProject' },
   { href: '/wfm', labelKey: 'wfm', icon: CalendarClock, action: 'read', subject: 'Wfm' },
   { href: '/reports', labelKey: 'reports', icon: BarChart3, action: 'read', subject: 'Ticket' },

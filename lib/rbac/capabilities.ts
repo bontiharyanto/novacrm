@@ -20,6 +20,7 @@ export const CAPABILITY_SUBJECTS = [
   'StaffReview',
   'NotificationSettings',
   'NotificationLog',
+  'OperationsDashboard',
   'Tenant',
   'Import',
   'Knowledge',
