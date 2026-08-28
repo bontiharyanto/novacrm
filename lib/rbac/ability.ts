@@ -44,6 +44,8 @@ export type Subjects =
   | 'TaskDependency'
   | 'DeliveryReport'
   | 'DeliveryPublish'
+  | 'DeliveryHandover'
+  | 'OperationalAcceptance'
   | 'all';
 
 export type AppAbility = MongoAbility<[Actions, Subjects]>;
@@ -83,6 +85,8 @@ function grantDeskOps(can: AbilityBuilder<AppAbility>['can']) {
   can('create', 'TaskDependency');
   can('update', 'TaskDependency');
   can('read', 'DeliveryReport');
+  can('read', 'DeliveryHandover');
+  can('read', 'OperationalAcceptance');
 }
 
 function grantDeliveryRead(can: AbilityBuilder<AppAbility>['can']) {
@@ -121,6 +125,9 @@ export function defineAbilityFor(role: AppRole): AppAbility {
     can('update', 'DeliveryPhase');
     can('create', 'DeliveryWorkOrder');
     can('update', 'DeliveryWorkOrder');
+    can('create', 'DeliveryHandover');
+    can('update', 'DeliveryHandover');
+    can('update', 'OperationalAcceptance');
     can('create', 'Account');
     can('update', 'Account');
     can('create', 'Org');
@@ -154,6 +161,8 @@ export function defineAbilityFor(role: AppRole): AppAbility {
     can('update', 'DeliveryProject');
     can('update', 'DeliveryPhase');
     can('update', 'DeliveryPublish');
+    can('create', 'DeliveryHandover');
+    can('update', 'DeliveryHandover');
     return build();
   }
 
@@ -173,6 +182,8 @@ export function defineAbilityFor(role: AppRole): AppAbility {
     can('create', 'TaskDependency');
     can('update', 'TaskDependency');
     can('read', 'DeliveryPublish');
+    can('create', 'DeliveryHandover');
+    can('update', 'DeliveryHandover');
     return build();
   }
 
@@ -187,6 +198,7 @@ export function defineAbilityFor(role: AppRole): AppAbility {
     can('update', 'Catalog');
     can('read', 'Workflow');
     can('update', 'Governance');
+    can('update', 'OperationalAcceptance');
     can('create', 'Wfm');
     can('manage', 'Wfm');
     can('create', 'StaffReview');

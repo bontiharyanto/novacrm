@@ -16,6 +16,16 @@ export type DeliveryExecutionMode = z.infer<typeof deliveryExecutionModeSchema>;
 export const deliveryPhaseStatusSchema = deliveryProjectStatusSchema;
 export type DeliveryPhaseStatus = z.infer<typeof deliveryPhaseStatusSchema>;
 
+export const deliveryHandoverStatusSchema = z.enum([
+  'not_started',
+  'in_progress',
+  'under_review',
+  'accepted',
+  'accepted_with_conditions',
+  'rejected',
+]);
+export type DeliveryHandoverStatus = z.infer<typeof deliveryHandoverStatusSchema>;
+
 export const deliveryProjectInputSchema = z.object({
   accountId: z.string().uuid(),
   externalProvider: z.string().trim().min(2).max(80).default('work_order_crm'),
@@ -58,6 +68,61 @@ export type DeliveryProjectInput = z.infer<typeof deliveryProjectInputSchema>;
 export type DeliveryProjectUpdate = z.infer<typeof deliveryProjectUpdateSchema>;
 export type DeliveryPhaseUpdate = z.infer<typeof deliveryPhaseUpdateSchema>;
 export type DeliveryWorkOrderInput = z.infer<typeof deliveryWorkOrderInputSchema>;
+
+export const handoverItemUpdateSchema = z.object({
+  itemId: z.string().uuid(),
+  completed: z.boolean(),
+  notes: z.string().max(2000).optional(),
+});
+
+export const handoverReviewSchema = z.object({
+  action: z.enum(['submit', 'accept', 'accept_with_conditions', 'reject']),
+  notes: z.string().max(4000).optional().default(''),
+});
+
+export type HandoverItemUpdate = z.infer<typeof handoverItemUpdateSchema>;
+export type HandoverReviewInput = z.infer<typeof handoverReviewSchema>;
+
+export type DeliveryHandoverItem = {
+  id: string;
+  projectId: string;
+  itemKey: string;
+  title: string;
+  required: boolean;
+  completed: boolean;
+  notes?: string;
+  completedAt?: string;
+  completedBy?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type DeliveryHandoverReview = {
+  id: string;
+  projectId: string;
+  action: HandoverReviewInput['action'];
+  notes: string;
+  reviewerId?: string;
+  reviewerName?: string;
+  createdAt: string;
+};
+
+export type DeliveryHandover = {
+  id: string;
+  tenantId: string;
+  projectId: string;
+  status: DeliveryHandoverStatus;
+  operationalAcceptedBy?: string;
+  operationalAcceptedByName?: string;
+  operationalAcceptedAt?: string;
+  hypercareStart?: string;
+  hypercareEnd?: string;
+  items: DeliveryHandoverItem[];
+  reviews: DeliveryHandoverReview[];
+  requiredCount: number;
+  completedCount: number;
+  progress: number;
+};
 
 export type DeliveryPhase = {
   id: string;

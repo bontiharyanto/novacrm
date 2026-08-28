@@ -11,6 +11,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useI18n } from '@/components/layout/preferences-provider';
 import { useRealtimeTable } from '@/lib/supabase/realtime';
 import type { DeliveryPhaseStatus, DeliveryProject } from '@/lib/delivery/schema';
+import { DeliveryHandoverPanel } from '@/components/delivery/delivery-handover-panel';
 
 function statusTone(status: DeliveryPhaseStatus): 'neutral' | 'info' | 'success' | 'warning' | 'danger' {
   if (status === 'completed') return 'success';
@@ -31,11 +32,15 @@ export function DeliveryProjectDetail({
   readOnly = false,
   canManagePhases = !readOnly,
   canCreateWorkOrder = !readOnly,
+  canManageHandover = !readOnly,
+  canAcceptHandover = false,
 }: {
   projectId: string;
   readOnly?: boolean;
   canManagePhases?: boolean;
   canCreateWorkOrder?: boolean;
+  canManageHandover?: boolean;
+  canAcceptHandover?: boolean;
 }) {
   const { t } = useI18n();
   const [project, setProject] = useState<DeliveryProject | null>(null);
@@ -133,6 +138,15 @@ export function DeliveryProjectDetail({
           <div className="h-full rounded-full bg-blue-500 transition-all" style={{ width: `${project.progress}%` }} />
         </div>
       </section>
+
+      {!readOnly ? (
+        <DeliveryHandoverPanel
+          projectId={projectId}
+          projectStatus={project.status}
+          canManageChecklist={canManageHandover}
+          canAccept={canAcceptHandover}
+        />
+      ) : null}
 
       <div className={`grid gap-6 ${readOnly ? '' : 'lg:grid-cols-[minmax(0,1fr)_280px]'}`}>
         <section className="nova-surface rounded-xl border p-5">

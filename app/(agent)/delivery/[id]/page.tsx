@@ -10,6 +10,8 @@ export default async function DeliveryProjectPage({ params }: { params: { id: st
       projectId={params.id}
       canManagePhases={Boolean(role && canRole(role, 'update', 'DeliveryPhase'))}
       canCreateWorkOrder={Boolean(role && canRole(role, 'create', 'DeliveryWorkOrder'))}
+      canManageHandover={Boolean(role && canRole(role, 'update', 'DeliveryHandover'))}
+      canAcceptHandover={Boolean(role && canRole(role, 'update', 'OperationalAcceptance'))}
     />
   );
 }

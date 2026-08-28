@@ -35,6 +35,12 @@ Pembagian tanggung jawab:
 7. Buka project, lalu buat **delivery request** dari panel Work Order.
 8. Sistem membuat Request ticket, menghubungkannya ke project, membuat task
    dari 7 phase standar, dan membuat dependency untuk mode sequential.
+9. Setelah phase **Handover to Operation** selesai, PM/DCO melengkapi
+   **Handover Checklist** lalu memilih **Kirim untuk review**.
+10. Supervisor/Manager Operation mengisi **Operational Acceptance Record** dan
+    memilih **Terima**, **Terima dengan kondisi**, atau **Tolak**.
+11. Project masuk masa **Hypercare** selama 14 hari setelah acceptance. Project
+    tidak dapat ditutup sebelum acceptance Operation dan hypercare selesai.
 
 Untuk demo cepat, klik **Load sample project**. Tombol ini membuat project
 contoh hanya untuk account yang dipilih dan tidak membutuhkan CRM eksternal.
@@ -51,6 +57,27 @@ contoh hanya untuk account yang dipilih dan tidak membutuhkan CRM eksternal.
 
 Status phase: `planned`, `in_progress`, `blocked`, `completed`, `cancelled`.
 Progress project dihitung dari phase completed/cancelled dibagi total phase.
+
+## Handover to Operation
+
+Checklist standar yang perlu dibuktikan oleh PM/DCO:
+
+- scope dan acceptance criteria;
+- CMDB dan asset record;
+- runbook serta support guide;
+- monitoring, alerting, dan escalation;
+- production access dan ownership;
+- backup serta rollback;
+- known issue dan workaround;
+- komunikasi customer serta support window.
+
+Handover memiliki status `not_started`, `in_progress`, `under_review`,
+`accepted`, `accepted_with_conditions`, atau `rejected`. Acceptance disimpan
+sebagai review record dengan reviewer, waktu, dan catatan agar dapat diaudit.
+
+Segregation of duties diterapkan: PM Delivery/DCO menyiapkan dan mengirim
+checklist, sedangkan Operations (`supervisor`, `manager`, `admin`) memberikan
+acceptance. Customer tidak melihat checklist internal atau catatan acceptance.
 
 ## Activity dan WBS
 
@@ -107,3 +134,6 @@ Jangan mengatasi masalah ini dengan menghapus RLS.
 - [ ] Activity internal tidak muncul di portal.
 - [ ] Activity `customer_visible` muncul di portal.
 - [ ] Customer dari account berbeda tidak dapat melihat project.
+- [ ] Checklist handover otomatis tersedia pada project delivery.
+- [ ] Project tidak dapat ditutup sebelum Operations acceptance dan hypercare.
+- [ ] Review record menyimpan reviewer, keputusan, waktu, dan catatan.

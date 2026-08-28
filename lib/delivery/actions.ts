@@ -249,6 +249,24 @@ export async function updateDeliveryProject(projectId: string, input: unknown) {
   if (!session || !canRole(session.profile.role, 'update', 'DeliveryProject')) {
     return { data: null, error: 'Unauthorized' };
   }
+  const client = await createSupabaseServerClient();
+  if (parsed.data.status === 'completed') {
+    const handover = await client
+      .from('delivery_handovers')
+      .select('status, hypercare_end')
+      .eq('project_id', projectId)
+      .eq('tenant_id', session.profile.tenantId)
+      .maybeSingle();
+    const hypercareComplete = !handover.data?.hypercare_end || handover.data.hypercare_end <= new Date().toISOString().slice(0, 10);
+    if (
+      handover.error ||
+      !handover.data ||
+      !['accepted', 'accepted_with_conditions'].includes(handover.data.status) ||
+      !hypercareComplete
+    ) {
+      return { data: null, error: 'Project can only be closed after Operations acceptance and hypercare completion.' };
+    }
+  }
   const patch: Record<string, unknown> = {};
   const values = parsed.data;
   if (values.name !== undefined) patch.name = values.name;
@@ -259,7 +277,6 @@ export async function updateDeliveryProject(projectId: string, input: unknown) {
   if (values.dcoId !== undefined) patch.dco_id = values.dcoId ?? null;
   if (values.plannedStart !== undefined) patch.planned_start = values.plannedStart;
   if (values.plannedEnd !== undefined) patch.planned_end = values.plannedEnd;
-  const client = await createSupabaseServerClient();
   const result = await client
     .from('delivery_projects')
     .update(patch)
@@ -300,6 +317,14 @@ export async function updateDeliveryPhase(projectId: string, phaseId: string, in
 
   const phasesResult = await client.from('delivery_phases').select('status').eq('project_id', projectId);
   const status = deriveProjectStatus((phasesResult.data ?? []) as Array<{ status: DeliveryPhaseStatus }>);
+  const handoverResult = await client
+    .from('delivery_handovers')
+    .select('status')
+    .eq('project_id', projectId)
+    .eq('tenant_id', session.profile.tenantId)
+    .maybeSingle();
+  const handoverAccepted = ['accepted', 'accepted_with_conditions'].includes(handoverResult.data?.status ?? '');
+  const effectiveStatus = status === 'completed' && !handoverAccepted ? 'in_progress' : status;
   const taskStatus =
     parsed.data.status === 'completed' || parsed.data.status === 'cancelled'
       ? 'done'
@@ -338,7 +363,7 @@ export async function updateDeliveryPhase(projectId: string, phaseId: string, in
   }
   await client
     .from('delivery_projects')
-    .update({ status, completed_at: status === 'completed' ? new Date().toISOString() : null })
+    .update({ status: effectiveStatus, completed_at: effectiveStatus === 'completed' ? new Date().toISOString() : null })
     .eq('id', projectId)
     .eq('tenant_id', session.profile.tenantId);
   void pushDeliveryEvent({

@@ -202,6 +202,32 @@ values
   ('77777777-0001-4001-8001-000000000017', '11111111-1111-1111-1111-111111111111', '77777777-0001-4001-8001-000000000001', 'handover', 'Handover to Operation', 'planned', 6, true, '22222222-2222-2222-2222-222222222222')
 on conflict (id) do nothing;
 
+insert into public.delivery_handovers (
+  id, tenant_id, project_id, status, created_by
+)
+values (
+  '77777777-0001-4001-8001-000000000100',
+  '11111111-1111-1111-1111-111111111111',
+  '77777777-0001-4001-8001-000000000001',
+  'in_progress',
+  '22222222-2222-2222-2222-222222222222'
+)
+on conflict (id) do nothing;
+
+insert into public.delivery_handover_items (
+  id, tenant_id, project_id, item_key, title, required, completed, completed_at, completed_by, created_by
+)
+values
+  ('77777777-0001-4001-8001-000000000101', '11111111-1111-1111-1111-111111111111', '77777777-0001-4001-8001-000000000001', 'scope_accepted', 'Scope and acceptance criteria confirmed', true, true, now(), '33333333-3333-3333-3333-333333333340', '22222222-2222-2222-2222-222222222222'),
+  ('77777777-0001-4001-8001-000000000102', '11111111-1111-1111-1111-111111111111', '77777777-0001-4001-8001-000000000001', 'cmdb_updated', 'CMDB and asset records updated', true, false, null, null, '22222222-2222-2222-2222-222222222222'),
+  ('77777777-0001-4001-8001-000000000103', '11111111-1111-1111-1111-111111111111', '77777777-0001-4001-8001-000000000001', 'runbook_ready', 'Operations runbook and support guide delivered', true, true, now(), '33333333-3333-3333-3333-333333333340', '22222222-2222-2222-2222-222222222222'),
+  ('77777777-0001-4001-8001-000000000104', '11111111-1111-1111-1111-111111111111', '77777777-0001-4001-8001-000000000001', 'monitoring_ready', 'Monitoring, alerting, and escalation configured', true, false, null, null, '22222222-2222-2222-2222-222222222222'),
+  ('77777777-0001-4001-8001-000000000105', '11111111-1111-1111-1111-111111111111', '77777777-0001-4001-8001-000000000001', 'access_verified', 'Production access and ownership verified', true, false, null, null, '22222222-2222-2222-2222-222222222222'),
+  ('77777777-0001-4001-8001-000000000106', '11111111-1111-1111-1111-111111111111', '77777777-0001-4001-8001-000000000001', 'backup_rollback_ready', 'Backup and rollback procedure tested', true, false, null, null, '22222222-2222-2222-2222-222222222222'),
+  ('77777777-0001-4001-8001-000000000107', '11111111-1111-1111-1111-111111111111', '77777777-0001-4001-8001-000000000001', 'known_issues_logged', 'Known issues and workarounds documented', true, false, null, null, '22222222-2222-2222-2222-222222222222'),
+  ('77777777-0001-4001-8001-000000000108', '11111111-1111-1111-1111-111111111111', '77777777-0001-4001-8001-000000000001', 'customer_communication', 'Customer communication and support window agreed', true, false, null, null, '22222222-2222-2222-2222-222222222222')
+on conflict (id) do nothing;
+
 insert into public.delivery_work_orders (
   id, tenant_id, project_id, external_provider, external_id, number, title, status, created_by
 )
