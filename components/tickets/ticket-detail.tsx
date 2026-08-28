@@ -131,7 +131,15 @@ const priorityTone: Record<TicketPriority, 'success' | 'warning' | 'danger' | 'n
   critical: 'danger',
 };
 
-export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; currentUserId: string }) {
+export function TicketDetail({
+  ticketId,
+  currentUserId,
+  currentUserName,
+}: {
+  ticketId: string;
+  currentUserId: string;
+  currentUserName: string;
+}) {
   const { t } = useI18n();
   const [ticket, setTicket] = useState<TicketItem | null>(null);
   const [agents, setAgents] = useState<AgentOption[]>([]);
@@ -149,7 +157,6 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
   const [editorKey, setEditorKey] = useState(0);
   const [detailTab, setDetailTab] = useState<'activity' | 'tasks'>('activity');
   const [taskStats, setTaskStats] = useState({ total: 0, done: 0, sequential: false });
-  const [author, setAuthor] = useState('Agent');
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isSummarizing, setIsSummarizing] = useState(false);
@@ -287,7 +294,7 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
     const response = await fetch(`/api/tickets/${ticketId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ author, comment }),
+      body: JSON.stringify({ comment }),
     });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
@@ -313,7 +320,6 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          author,
           kind: 'attachment',
           attachment: uploaded.data,
         }),
@@ -456,12 +462,12 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
                   <ActivityEntry key={item.id} item={item} />
                 ))}
                 <div className="space-y-3 border-t border-zinc-800 pt-4">
-                  <input
-                    value={author}
-                    onChange={(event) => setAuthor(event.target.value)}
-                    className="w-full rounded-md border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100"
-                    placeholder={t.tickets.agentName}
-                  />
+                  <div className="rounded-md border border-zinc-800 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-300">
+                    <span className="text-zinc-500">{t.tickets.commentAuthorLabel}: </span>
+                    <span className="font-medium text-zinc-100">
+                      {currentUserName || t.tickets.commentAuthorFallback}
+                    </span>
+                  </div>
                   <CommentEditor key={editorKey} value={comment} onChange={setComment} />
                   <div className="flex flex-wrap items-center gap-2">
                     <Button size="sm" onClick={() => void handleAddComment()} disabled={!comment.trim()}>
@@ -482,7 +488,7 @@ export function TicketDetail({ ticketId, currentUserId }: { ticketId: string; cu
                       />
                     </label>
                   </div>
-                  <VisitReportForm ticketId={ticketId} author={author} onSaved={() => loadTicket()} />
+                  <VisitReportForm ticketId={ticketId} author={currentUserName} onSaved={() => loadTicket()} />
                 </div>
               </>
             ) : null}

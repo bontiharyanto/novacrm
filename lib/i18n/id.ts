@@ -571,6 +571,8 @@ export const id: Dictionary = {
     process: 'Proses',
     requester: 'Pemohon',
     assignee: 'Petugas',
+    commentAuthorLabel: 'Dikirim sebagai',
+    commentAuthorFallback: 'Pengguna saat ini',
     properties: 'Properti',
     addComment: 'Tambah komentar',
     attachFile: 'Lampirkan file',

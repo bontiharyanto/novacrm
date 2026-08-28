@@ -48,12 +48,10 @@ const statusTone: Record<TicketStatus, 'info' | 'warning' | 'success' | 'neutral
 
 export function PortalTicket({
   ticketId,
-  authorName,
   csatRemaining = 0,
   nextCsatId,
 }: {
   ticketId: string;
-  authorName: string;
   csatRemaining?: number;
   nextCsatId?: string;
 }) {
@@ -82,7 +80,7 @@ export function PortalTicket({
     const response = await fetch(`/api/tickets/${ticketId}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ author: authorName, comment }),
+      body: JSON.stringify({ comment }),
     });
     if (response.ok) {
       setComment('');

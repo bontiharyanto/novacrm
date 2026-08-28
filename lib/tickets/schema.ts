@@ -65,7 +65,7 @@ const ticketFileSchema = z.object({
 
 export const ticketCommentSchema = z
   .object({
-    author: z.string().min(1),
+    author: z.string().min(1).optional(),
     comment: z.string().max(20000).optional().default(''),
     kind: z.enum(['comment', 'attachment', 'visit']).optional().default('comment'),
     attachment: ticketFileSchema.optional(),

@@ -568,6 +568,8 @@ export const en = {
     process: 'Process',
     requester: 'Requester',
     assignee: 'Assignee',
+    commentAuthorLabel: 'Posting as',
+    commentAuthorFallback: 'Current user',
     properties: 'Properties',
     addComment: 'Add comment',
     attachFile: 'Attach file',

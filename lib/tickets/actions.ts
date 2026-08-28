@@ -848,7 +848,16 @@ export async function addTicketComment(ticketId: string, input: unknown) {
   });
   await afterTicketMutation('ticket.comment_add', reloaded.data, notifyText);
   const comment = reloaded.data.comments.at(-1);
-  return { data: comment ?? { id: ticketId, author: parsed.author, comment: notifyText, createdAt: new Date().toISOString() }, error: null };
+  return {
+    data:
+      comment ?? {
+        id: ticketId,
+        author: session.profile.fullName,
+        comment: notifyText,
+        createdAt: new Date().toISOString(),
+      },
+    error: null,
+  };
 }
 
 async function afterTicketMutation(
