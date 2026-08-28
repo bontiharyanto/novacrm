@@ -18,21 +18,28 @@ import { PdpConsentField } from '@/components/shared/pdp-consent-field';
 import { usePrivacyEnabled } from '@/components/portal/privacy-module';
 
 type Proposal = { type: string; title: string; description: string };
-type TicketKind = 'incident' | 'request';
+export type TicketKind = 'incident' | 'request';
 
 export function CatalogOtherForm({
   className,
   compact,
   defaultType = 'request',
+  ticketType: controlledType,
+  onTicketTypeChange,
+  showTypeToggle = true,
 }: {
   className?: string;
   compact?: boolean;
   defaultType?: TicketKind;
+  ticketType?: TicketKind;
+  onTicketTypeChange?: (type: TicketKind) => void;
+  showTypeToggle?: boolean;
 }) {
   const router = useRouter();
   const { t } = useI18n();
   const privacyEnabled = usePrivacyEnabled();
-  const [ticketType, setTicketType] = useState<TicketKind>(defaultType);
+  const [localTicketType, setLocalTicketType] = useState<TicketKind>(defaultType);
+  const ticketType = controlledType ?? localTicketType;
   const [title, setTitle] = useState('');
   const [location, setLocation] = useState('');
   const [impact, setImpact] = useState('');
@@ -52,6 +59,11 @@ export function CatalogOtherForm({
     contact.trim().length >= 8;
   const canSubmit = complete && (!privacyEnabled || consented) && !busy && !ticketId;
   const isIncident = ticketType === 'incident';
+
+  function selectTicketType(kind: TicketKind) {
+    setLocalTicketType(kind);
+    onTicketTypeChange?.(kind);
+  }
 
   async function createTicketDirect(input: {
     type: TicketKind;
@@ -197,25 +209,27 @@ export function CatalogOtherForm({
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="mt-5 space-y-4">
-          <div className="space-y-2">
-            <Label>{t.portal.ticketKind}</Label>
-            <div className="flex flex-wrap gap-1.5">
-              {(['incident', 'request'] as const).map((kind) => (
-                <button
-                  key={kind}
-                  type="button"
-                  onClick={() => setTicketType(kind)}
-                  className={`rounded-md border px-2.5 py-1 text-[12px] transition-colors ${
-                    ticketType === kind
-                      ? 'nova-accent-chip'
-                      : 'border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'
-                  }`}
-                >
-                  {t.tickets.type[kind]}
-                </button>
-              ))}
+          {showTypeToggle ? (
+            <div className="space-y-2">
+              <Label>{t.portal.ticketKind}</Label>
+              <div className="flex flex-wrap gap-1.5">
+                {(['incident', 'request'] as const).map((kind) => (
+                  <button
+                    key={kind}
+                    type="button"
+                    onClick={() => selectTicketType(kind)}
+                    className={`rounded-md border px-2.5 py-1 text-[12px] transition-colors ${
+                      ticketType === kind
+                        ? 'nova-accent-chip'
+                        : 'border-zinc-800 text-zinc-400 hover:border-zinc-600 hover:text-zinc-200'
+                    }`}
+                  >
+                    {t.tickets.type[kind]}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          ) : null}
           <div className="space-y-2">
             <Label htmlFor="catalog-other-title">
               {isIncident ? t.catalog.fieldSymptom : t.catalog.fieldNeed}
