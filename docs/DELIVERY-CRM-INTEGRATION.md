@@ -19,6 +19,9 @@ CRM Closed Won
     → NovaCRM delivery_projects + delivery_phases
     → DCO creates Request / Work Order ticket
     → ticket_tasks + WBS dependencies + activities
+    → Handover Checklist + Operations acceptance
+    → 14-day Hypercare
+    → formal project closure
     → customer-visible progress in /portal/projects
 ```
 
@@ -100,7 +103,8 @@ to prevent data landing in the wrong tenant/customer.
 ## Outbound event envelope
 
 When NovaCRM creates a delivery request or changes a phase, the generic
-adapter can send:
+adapter can send. An approved handover milestone can be added to this outbound
+contract when the external CRM needs to receive the Operations decision:
 
 ```json
 {

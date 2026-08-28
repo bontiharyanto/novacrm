@@ -53,7 +53,7 @@ CASL on the frontend; RLS on the backend. Sidebar account filter: one customer a
 | [Manager operasi](docs/user-guide/manager-ops.md) | Accounts, org, import, workflows |
 | [Superadmin](docs/user-guide/superadmin.md) | Platform tenant record and break-glass |
 | [Catalog & record producer](docs/user-guide/catalog-guidance.md) | Supervisor / admin — design catalog items, variables, worked examples |
-| [Delivery Project](docs/user-guide/delivery.md) | PM/DCO/agent/customer — project, phases, work orders, portal progress |
+| [Delivery Project](docs/user-guide/delivery.md) + [Alur proses](docs/user-guide/delivery-process.md) | PM/DCO/agent/customer — project, phases, WBS, handover, hypercare, portal progress |
 | [Task activity & WBS](docs/user-guide/task-activities.md) | DCO/agent — task activity, visibility, dependencies |
 | [Capability Matrix](docs/user-guide/capability-matrix.md) | Admin/superadmin — tenant capability configuration |
 | [Delivery access model](docs/DELIVERY-ACCESS-MODEL.md) | Owner/admin/security — PM Delivery, DCO, partner, portal, and CRM service access |

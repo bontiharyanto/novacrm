@@ -132,7 +132,8 @@ Subject capability yang tersedia untuk role delivery:
 
 ```text
 DeliveryProject, DeliveryPhase, WorkOrder, DeliveryTask,
-TaskActivity, TaskDependency, DeliveryReport, DeliveryPublish
+TaskActivity, TaskDependency, DeliveryReport, DeliveryPublish,
+DeliveryHandover, OperationalAcceptance
 ```
 
 Capability matrix mengatur baseline action per role, tetapi belum menggantikan
@@ -146,12 +147,16 @@ Rekomendasi pemisahan:
 - PM Delivery menyetujui scope dan publikasi customer.
 - DCO mengontrol eksekusi dan assignment.
 - Delivery team menjalankan task.
+- PM Delivery/DCO menyiapkan Handover Checklist dan submit untuk review.
+- Supervisor/Manager Operation membuat Operational Acceptance Record dan
+  memutuskan accept, accept with conditions, atau reject.
 - Admin mengelola user, policy, dan integrasi.
 - Customer hanya membaca hasil yang dipublikasikan.
 
 Untuk project berisiko tinggi, orang yang membuat Work Order tidak menjadi
-satu-satunya approver closure. Semua perubahan penting harus tercatat pada
-audit/activity.
+satu-satunya approver closure. Project juga tidak boleh ditutup sebelum
+Operations acceptance dan masa Hypercare selesai. Semua perubahan penting
+harus tercatat pada audit/activity.
 
 ## Lifecycle akses
 

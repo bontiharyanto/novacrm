@@ -4,6 +4,7 @@
 **Status:** manual mode tersedia; CRM eksternal adalah tahap berikutnya  
 **UI internal:** `/delivery/dashboard` (command center), `/delivery` (project list)
 **UI customer:** `/portal/projects`
+**Alur resmi:** [Delivery Project Process](delivery-process.md)
 
 ## Tujuan
 

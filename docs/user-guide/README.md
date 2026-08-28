@@ -33,7 +33,7 @@ Item katalog: [Catalog & record producer](catalog-guidance.md). Major incident (
 | [Trainer guide](trainer-guide.md) | Facilitator: agenda, demo data, timing, pass criteria |
 | [Participant manual](participant-manual.md) | Learners: procedures, labs, expected results |
 | [Major incident](major-incident.md) | Agent/SPV: parent/child tickets, not RCA |
-| [Delivery Project](delivery.md) | PM/DCO/agent/customer: project, phases, work order, portal progress |
+| [Delivery Project](delivery.md) · [Alur proses](delivery-process.md) | PM/DCO/agent/customer: project, phases, work order, handover, hypercare, portal progress |
 | [Task activity & WBS](task-activities.md) | DCO/agent: activity timeline, visibility, sequential dependencies |
 | [Capability Matrix](capability-matrix.md) | Admin/superadmin: tenant capability configuration |
 | [Delivery access model](../DELIVERY-ACCESS-MODEL.md) | Owner/admin/security: access PM Delivery, DCO, partner, portal, and CRM service |
