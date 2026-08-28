@@ -297,6 +297,11 @@ export async function updateDeliveryPhase(projectId: string, phaseId: string, in
         ? 'in_progress'
         : 'open';
   if (parsed.data.status) {
+    const linkedTasks = await client
+      .from('ticket_tasks')
+      .select('id')
+      .eq('delivery_phase_id', phaseId)
+      .eq('tenant_id', session.profile.tenantId);
     await client
       .from('ticket_tasks')
       .update({
@@ -306,6 +311,20 @@ export async function updateDeliveryPhase(projectId: string, phaseId: string, in
       })
       .eq('delivery_phase_id', phaseId)
       .eq('tenant_id', session.profile.tenantId);
+    if (linkedTasks.data?.length) {
+      await client.from('task_activities').insert(
+        linkedTasks.data.map((task) => ({
+          tenant_id: session.profile.tenantId,
+          task_id: task.id,
+          actor_id: session.userId,
+          kind: 'status_change',
+          body: `Delivery phase changed to ${parsed.data.status}.`,
+          status_to: parsed.data.status,
+          customer_visible: Boolean(result.data.customer_visible),
+          created_by: session.userId,
+        })),
+      );
+    }
   }
   await client
     .from('delivery_projects')
@@ -397,8 +416,37 @@ export async function createDeliveryWorkOrder(projectId: string, input: unknown)
       sort_order: phase.sortOrder,
       created_by: session.userId,
     })),
-  );
+  ).select('id, delivery_phase_id');
   if (taskResult.error) return { data: null, error: taskResult.error.message };
+  const taskRows = (taskResult.data ?? []) as Array<{ id: string; delivery_phase_id: string }>;
+  if (taskRows.length) {
+    await client.from('task_activities').insert(
+      taskRows.map((task) => ({
+        tenant_id: session.profile.tenantId,
+        task_id: task.id,
+        actor_id: session.userId,
+        kind: 'progress',
+        body: 'Task created from the delivery phase template.',
+        customer_visible: false,
+        created_by: session.userId,
+      })),
+    );
+  }
+  if (project.data.executionMode === 'sequential') {
+    const phaseOrder = new Map(project.data.phases.map((phase) => [phase.id, phase.sortOrder]));
+    const sortedTasks = [...taskRows].sort((a, b) => (phaseOrder.get(a.delivery_phase_id) ?? 0) - (phaseOrder.get(b.delivery_phase_id) ?? 0));
+    if (sortedTasks.length > 1) {
+      await client.from('task_dependencies').insert(
+        sortedTasks.slice(1).map((task, index) => ({
+          tenant_id: session.profile.tenantId,
+          predecessor_task_id: sortedTasks[index].id,
+          successor_task_id: task.id,
+          dependency_type: 'finish_to_start',
+          created_by: session.userId,
+        })),
+      );
+    }
+  }
   void pushDeliveryEvent({
     tenantId: session.profile.tenantId,
     provider: 'work_order_crm',

@@ -1,16 +1,19 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { MessageSquare } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useI18n } from '@/components/layout/preferences-provider';
 import { useRealtimeTable } from '@/lib/supabase/realtime';
 import type { TicketTask } from '@/lib/tickets/tasks-schema';
+import { TaskActivityThread } from '@/components/tickets/task-activity-thread';
 
 /** Read-only fulfillment progress for the customer portal. */
 export function PortalTasksProgress({ ticketId }: { ticketId: string }) {
   const { t } = useI18n();
   const [tasks, setTasks] = useState<TicketTask[]>([]);
   const [sequential, setSequential] = useState(false);
+  const [activityTaskId, setActivityTaskId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     const response = await fetch(`/api/tickets/${ticketId}/tasks`);
@@ -47,29 +50,44 @@ export function PortalTasksProgress({ ticketId }: { ticketId: string }) {
           return (
             <li
               key={task.id}
-              className={`flex items-start justify-between gap-3 rounded-lg border px-3 py-2 ${
+              className={`rounded-lg border px-3 py-2 ${
                 active ? 'border-zinc-600 bg-zinc-900/80' : 'border-zinc-800/80'
               }`}
             >
-              <div className="min-w-0">
-                <p className={`text-sm ${task.status === 'done' ? 'text-zinc-500 line-through' : 'text-zinc-100'}`}>
-                  {task.title}
-                </p>
-                <p className="mt-0.5 font-mono text-[11px] text-zinc-600">{task.number}</p>
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className={`text-sm ${task.status === 'done' ? 'text-zinc-500 line-through' : 'text-zinc-100'}`}>
+                    {task.title}
+                  </p>
+                  <p className="mt-0.5 font-mono text-[11px] text-zinc-600">{task.number}</p>
+                </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  <Badge
+                    tone={
+                      task.status === 'done'
+                        ? 'success'
+                        : task.status === 'in_progress'
+                          ? 'info'
+                          : task.status === 'cancelled'
+                            ? 'neutral'
+                            : 'warning'
+                    }
+                  >
+                    {t.tickets.tasks.status[task.status]}
+                  </Badge>
+                  <button
+                    type="button"
+                    aria-label={t.tickets.tasks.activities}
+                    onClick={() => setActivityTaskId((current) => (current === task.id ? null : task.id))}
+                    className="rounded-md p-1.5 text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-zinc-200"
+                  >
+                    <MessageSquare className="h-3.5 w-3.5" />
+                  </button>
+                </div>
               </div>
-              <Badge
-                tone={
-                  task.status === 'done'
-                    ? 'success'
-                    : task.status === 'in_progress'
-                      ? 'info'
-                      : task.status === 'cancelled'
-                        ? 'neutral'
-                        : 'warning'
-                }
-              >
-                {t.tickets.tasks.status[task.status]}
-              </Badge>
+              {activityTaskId === task.id ? (
+                <TaskActivityThread ticketId={ticketId} taskId={task.id} readOnly />
+              ) : null}
             </li>
           );
         })}

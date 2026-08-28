@@ -71,6 +71,7 @@ export type TicketTask = {
   sortOrder: number;
   startedAt?: string;
   completedAt?: string;
+  customerVisible?: boolean;
   createdAt: string;
   updatedAt: string;
   createdBy?: string;

@@ -5,6 +5,7 @@ import { canRole } from '@/lib/rbac/ability';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { createSupabaseAdminClient, hasServiceRole } from '@/lib/supabase/admin';
 import { getTicketById } from '@/lib/tickets/actions';
+import { createTaskActivity } from '@/lib/tickets/task-activities-actions';
 import {
   DEFAULT_CHANGE_STEPS,
   isTaskTerminal,
@@ -30,6 +31,7 @@ type TaskRow = {
   sort_order: number;
   started_at?: string | null;
   completed_at?: string | null;
+  customer_visible?: boolean | null;
   created_at: string;
   updated_at: string;
   created_by?: string | null;
@@ -53,6 +55,7 @@ function mapTask(row: TaskRow, locked = false): TicketTask {
     sortOrder: row.sort_order,
     startedAt: row.started_at ?? undefined,
     completedAt: row.completed_at ?? undefined,
+    customerVisible: row.customer_visible ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     createdBy: row.created_by ?? undefined,
@@ -205,9 +208,22 @@ export async function updateTicketTask(ticketId: string, taskId: string, input: 
   if (!ticket) return { data: null, error: 'Ticket not found' };
 
   const listed = await listTicketTasks(ticketId);
+  const supabase = await createSupabaseServerClient();
   if (parsed.status && ticket.taskSequential) {
     const gate = assertSequentialAllowed(listed.data, taskId, parsed.status);
     if (gate) return { data: null, error: gate };
+  }
+  if (parsed.status && (parsed.status === 'in_progress' || parsed.status === 'done')) {
+    const dependencies = await supabase
+      .from('task_dependencies')
+      .select('predecessor_task_id')
+      .eq('successor_task_id', taskId)
+      .eq('tenant_id', session.profile.tenantId);
+    const predecessorIds = (dependencies.data ?? []).map((row) => row.predecessor_task_id as string);
+    const blockedBy = listed.data.find((row) => predecessorIds.includes(row.id) && !isTaskTerminal(row.status));
+    if (blockedBy) {
+      return { data: null, error: `This task depends on ${blockedBy.number} (${blockedBy.title}) first.` };
+    }
   }
 
   const patch: Record<string, unknown> = {};
@@ -237,7 +253,6 @@ export async function updateTicketTask(ticketId: string, taskId: string, input: 
     }
   }
 
-  const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase
     .from('ticket_tasks')
     .update(patch)
@@ -248,6 +263,16 @@ export async function updateTicketTask(ticketId: string, taskId: string, input: 
     .single();
 
   if (error || !data) return { data: null, error: error?.message ?? 'Unable to update task' };
+  if (parsed.status) {
+    const current = listed.data.find((row) => row.id === taskId);
+    void createTaskActivity(ticketId, taskId, {
+      kind: 'status_change',
+      body: `Task status changed from ${current?.status ?? 'unknown'} to ${parsed.status}.`,
+      statusFrom: current?.status,
+      statusTo: parsed.status,
+      customerVisible: false,
+    }).catch(() => undefined);
+  }
   const [task] = await hydrateTasks(supabase, [data as TaskRow], ticket.taskSequential ?? false);
   return { data: task, error: null };
 }

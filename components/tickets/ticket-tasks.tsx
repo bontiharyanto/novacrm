@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Lock, Plus } from 'lucide-react';
+import { Lock, MessageSquare, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +19,7 @@ import {
 } from '@/lib/tickets/tasks-schema';
 import type { TicketType } from '@/lib/tickets/schema';
 import { toastError, toastSuccess } from '@/components/ui/toast';
+import { TaskActivityThread } from '@/components/tickets/task-activity-thread';
 
 type GroupOption = { id: string; name: string };
 type AgentOption = { id: string; fullName: string };
@@ -55,6 +56,7 @@ export function TicketTasksPanel({
   const [assigneeId, setAssigneeId] = useState('');
   const [agents, setAgents] = useState<AgentOption[]>([]);
   const [busy, setBusy] = useState(false);
+  const [activityTaskId, setActivityTaskId] = useState<string | null>(null);
 
   const typeOptions = useMemo(() => taskTypesForTicketType(ticketType), [ticketType]);
   const doneCount = tasks.filter((row) => row.status === 'done').length;
@@ -224,7 +226,17 @@ export function TicketTasksPanel({
                     {t.tickets.tasks.cancel}
                   </Button>
                 ) : null}
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={busy}
+                  onClick={() => setActivityTaskId((current) => (current === task.id ? null : task.id))}
+                >
+                  <MessageSquare className="mr-1 h-3.5 w-3.5" />
+                  {t.tickets.tasks.activities}
+                </Button>
               </div>
+              {activityTaskId === task.id ? <TaskActivityThread ticketId={ticketId} taskId={task.id} /> : null}
             </div>
           ))}
         </div>

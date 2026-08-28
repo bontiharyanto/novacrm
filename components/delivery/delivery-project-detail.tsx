@@ -130,7 +130,7 @@ export function DeliveryProjectDetail({
         </div>
       </section>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+      <div className={`grid gap-6 ${readOnly ? '' : 'lg:grid-cols-[minmax(0,1fr)_280px]'}`}>
         <section className="nova-surface rounded-xl border p-5">
           <div className="flex items-center justify-between gap-3">
             <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{t.common.deliveryPhases}</p>
@@ -185,7 +185,7 @@ export function DeliveryProjectDetail({
           </ol>
         </section>
 
-        <aside className="space-y-4">
+        {!readOnly ? <aside className="space-y-4">
           <section className="nova-surface rounded-xl border p-5">
             <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{t.common.deliveryPeople}</p>
             <dl className="mt-4 space-y-3 text-sm">
@@ -233,7 +233,7 @@ export function DeliveryProjectDetail({
               </div>
             ) : <p className="mt-3 text-xs text-zinc-600">{t.common.deliveryNoWorkOrders}</p>}
           </section>
-        </aside>
+        </aside> : null}
       </div>
     </div>
   );
