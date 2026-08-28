@@ -2,7 +2,7 @@
 
 **Audience:** PM Delivery, DCO, agent, supervisor, dan customer portal  
 **Status:** manual mode tersedia; CRM eksternal adalah tahap berikutnya  
-**UI internal:** `/delivery`  
+**UI internal:** `/delivery/dashboard` (command center), `/delivery` (project list)
 **UI customer:** `/portal/projects`
 
 ## Tujuan
@@ -22,9 +22,10 @@ Pembagian tanggung jawab:
 
 ## Alur manual sebelum CRM
 
-1. Login dengan akun internal (`agent`, `team_lead`, `supervisor`, `manager`,
-   `admin`, atau `superadmin`).
-2. Buka `/delivery`.
+1. Login dengan akun internal (`pm_delivery`, `dco`, `agent`, `team_lead`,
+   `supervisor`, `manager`, `admin`, atau `superadmin`).
+2. Buka `/delivery/dashboard` untuk command center, atau `/delivery` untuk
+   project list.
 3. Pilih **customer account** yang benar.
 4. Isi nama project dan referensi internal/eksternal.
 5. Pilih mode:
@@ -94,7 +95,9 @@ Jangan mengatasi masalah ini dengan menghapus RLS.
 
 ## Checklist penerimaan
 
-- [ ] Agent dapat membuat project manual.
+- [ ] PM Delivery dapat membuat project manual dari `/delivery`.
+- [ ] PM Delivery melihat Portfolio view di `/delivery/dashboard`.
+- [ ] DCO melihat Execution Control view di `/delivery/dashboard`.
 - [ ] Sample project muncul pada account yang dipilih.
 - [ ] DCO dapat membuat Request dari project.
 - [ ] Request memiliki task phase standar.
