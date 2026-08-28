@@ -1,0 +1,232 @@
+'use client';
+
+import { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
+import { ArrowLeft, Check, Circle, Clock3, ExternalLink, LockKeyhole } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useI18n } from '@/components/layout/preferences-provider';
+import { useRealtimeTable } from '@/lib/supabase/realtime';
+import type { DeliveryPhaseStatus, DeliveryProject } from '@/lib/delivery/schema';
+
+function statusTone(status: DeliveryPhaseStatus): 'neutral' | 'info' | 'success' | 'warning' | 'danger' {
+  if (status === 'completed') return 'success';
+  if (status === 'blocked') return 'danger';
+  if (status === 'in_progress') return 'info';
+  if (status === 'cancelled') return 'neutral';
+  return 'warning';
+}
+
+function phaseIcon(status: DeliveryPhaseStatus) {
+  if (status === 'completed') return Check;
+  if (status === 'in_progress') return Clock3;
+  return Circle;
+}
+
+export function DeliveryProjectDetail({
+  projectId,
+  readOnly = false,
+}: {
+  projectId: string;
+  readOnly?: boolean;
+}) {
+  const { t } = useI18n();
+  const [project, setProject] = useState<DeliveryProject | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [savingPhase, setSavingPhase] = useState('');
+  const [workOrderTitle, setWorkOrderTitle] = useState('');
+  const [savingWorkOrder, setSavingWorkOrder] = useState(false);
+
+  const load = useCallback(async () => {
+    const response = await fetch(`/api/delivery/projects/${projectId}`);
+    const payload = await response.json().catch(() => ({}));
+    setProject(payload.data ?? null);
+    setLoading(false);
+  }, [projectId]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  useRealtimeTable('delivery_projects', load);
+  useRealtimeTable('delivery_phases', load);
+
+  async function updatePhase(phaseId: string, status: DeliveryPhaseStatus) {
+    setSavingPhase(phaseId);
+    await fetch(`/api/delivery/projects/${projectId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phaseId, status }),
+    });
+    await load();
+    setSavingPhase('');
+  }
+
+  async function createWorkOrder() {
+    if (!workOrderTitle.trim()) return;
+    setSavingWorkOrder(true);
+    await fetch(`/api/delivery/projects/${projectId}/work-orders`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title: workOrderTitle }),
+    });
+    setWorkOrderTitle('');
+    await load();
+    setSavingWorkOrder(false);
+  }
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-6xl space-y-4 p-4 pb-safe md:p-8">
+        <Skeleton className="h-8 w-64" />
+        <Skeleton className="h-56 w-full" />
+      </div>
+    );
+  }
+
+  if (!project) {
+    return (
+      <div className="mx-auto max-w-6xl p-4 text-sm text-zinc-500 md:p-8">
+        {t.common.deliveryEmpty}
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto max-w-6xl space-y-6 p-4 pb-safe md:p-8">
+      <Link href={readOnly ? '/portal/projects' : '/delivery'} className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-200">
+        <ArrowLeft className="h-3.5 w-3.5" /> {readOnly ? t.portal.home : t.nav.delivery}
+      </Link>
+
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="font-mono text-[11px] text-zinc-600">{project.externalProvider} · {project.externalId}</p>
+          <h1 className="mt-2 text-[28px] font-semibold tracking-tight text-zinc-50">{project.name}</h1>
+          <p className="mt-1 text-sm text-zinc-500">{project.accountName}</p>
+        </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge tone="info">
+              {project.executionMode === 'sequential' ? t.tickets.tasks.sequential : t.tickets.tasks.parallel}
+            </Badge>
+            <Badge tone={statusTone(project.status)}>{t.common.deliveryStatus[project.status]}</Badge>
+          </div>
+      </div>
+
+      <section className="nova-surface rounded-xl border p-5">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{t.common.deliveryProgress}</p>
+            <p className="mt-1 text-3xl font-semibold text-zinc-50">{project.progress}%</p>
+          </div>
+          <p className="max-w-md text-right text-xs leading-5 text-zinc-500">
+            {readOnly ? t.common.deliveryReadOnly : project.description || t.common.deliverySubtitle}
+          </p>
+        </div>
+        <div className="mt-4 h-2 overflow-hidden rounded-full bg-zinc-800">
+          <div className="h-full rounded-full bg-blue-500 transition-all" style={{ width: `${project.progress}%` }} />
+        </div>
+      </section>
+
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+        <section className="nova-surface rounded-xl border p-5">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{t.common.deliveryPhases}</p>
+            {readOnly ? <LockKeyhole className="h-3.5 w-3.5 text-zinc-600" aria-label={t.common.deliveryReadOnly} /> : null}
+          </div>
+          <ol className="mt-5 space-y-1">
+            {project.phases.map((phase, index) => {
+              const Icon = phaseIcon(phase.status);
+              return (
+                <li key={phase.id} className="relative flex gap-3 pb-4 last:pb-0">
+                  {index < project.phases.length - 1 ? (
+                    <span className="absolute left-[7px] top-5 h-[calc(100%-8px)] w-px bg-zinc-800" />
+                  ) : null}
+                  <span className={`relative z-10 mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full ${
+                    phase.status === 'completed' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-zinc-800 text-zinc-500'
+                  }`}>
+                    <Icon className="h-3 w-3" />
+                  </span>
+                  <div className="min-w-0 flex-1 rounded-lg border border-zinc-800/80 px-3 py-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-sm text-zinc-100">{phase.title}</p>
+                      {readOnly ? (
+                        <Badge tone={statusTone(phase.status)}>{t.common.deliveryStatus[phase.status]}</Badge>
+                      ) : (
+                        <Select
+                          value={phase.status}
+                          disabled={savingPhase === phase.id}
+                          onChange={(event) => void updatePhase(phase.id, event.target.value as DeliveryPhaseStatus)}
+                          className="h-7 w-auto min-w-[130px] text-[11px]"
+                        >
+                          {(['planned', 'in_progress', 'blocked', 'completed', 'cancelled'] as const).map((value) => (
+                            <option key={value} value={value}>{t.common.deliveryStatus[value]}</option>
+                          ))}
+                        </Select>
+                      )}
+                    </div>
+                    {phase.plannedStart || phase.plannedEnd ? (
+                      <p className="mt-1 text-[11px] text-zinc-600">{phase.plannedStart ?? '—'} → {phase.plannedEnd ?? '—'}</p>
+                    ) : null}
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+        </section>
+
+        <aside className="space-y-4">
+          <section className="nova-surface rounded-xl border p-5">
+            <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{t.common.deliveryPeople}</p>
+            <dl className="mt-4 space-y-3 text-sm">
+              <div>
+                <dt className="text-[11px] text-zinc-600">{t.common.deliveryPm}</dt>
+                <dd className="mt-1 text-zinc-100">{project.pmName ?? '—'}</dd>
+              </div>
+              <div>
+                <dt className="text-[11px] text-zinc-600">{t.common.deliveryDco}</dt>
+                <dd className="mt-1 text-zinc-100">{project.dcoName ?? '—'}</dd>
+              </div>
+            </dl>
+          </section>
+          {!readOnly ? (
+            <section className="nova-surface rounded-xl border p-5">
+              <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{t.common.deliveryCreateWorkOrder}</p>
+              <p className="mt-2 text-xs leading-5 text-zinc-600">{t.common.deliveryCreateWorkOrderHint}</p>
+              <div className="mt-3 flex gap-2">
+                <Input
+                  value={workOrderTitle}
+                  onChange={(event) => setWorkOrderTitle(event.target.value)}
+                  placeholder={t.common.deliveryWorkOrderTitle}
+                  className="h-9 text-xs"
+                />
+                <Button size="sm" disabled={savingWorkOrder || !workOrderTitle.trim()} onClick={() => void createWorkOrder()}>
+                  {t.common.new}
+                </Button>
+              </div>
+            </section>
+          ) : null}
+          <section className="nova-surface rounded-xl border p-5">
+            <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{t.common.deliveryWorkOrders}</p>
+            {project.workOrders.length ? (
+              <div className="mt-3 space-y-2">
+                {project.workOrders.map((order) => (
+                  <div key={order.id} className="rounded-lg border border-zinc-800 p-3">
+                    <p className="font-mono text-[11px] text-zinc-500">{order.number}</p>
+                    <p className="mt-1 text-sm text-zinc-100">{order.title}</p>
+                    <div className="mt-2 flex items-center justify-between gap-2">
+                      <Badge tone={statusTone(order.status)}>{t.common.deliveryStatus[order.status]}</Badge>
+                      {order.ticketId ? <Link href={readOnly ? `/portal/${order.ticketId}` : `/tickets/${order.ticketId}`} className="text-zinc-500 hover:text-zinc-200"><ExternalLink className="h-3.5 w-3.5" /></Link> : null}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : <p className="mt-3 text-xs text-zinc-600">{t.common.deliveryNoWorkOrders}</p>}
+          </section>
+        </aside>
+      </div>
+    </div>
+  );
+}

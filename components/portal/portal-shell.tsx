@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BookOpen, Home, KeyRound, LogOut, Plus, Scale } from 'lucide-react';
+import { BookOpen, BriefcaseBusiness, Home, KeyRound, LogOut, Plus, Scale } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { signOutAction } from '@/lib/auth/actions';
 import { PreferenceControls } from '@/components/layout/preference-controls';
@@ -24,6 +24,7 @@ function isHomePath(pathname: string) {
     (pathname.startsWith('/portal/') &&
       !pathname.startsWith('/portal/catalog') &&
       pathname !== '/portal/new' &&
+      !pathname.startsWith('/portal/projects') &&
       !pathname.startsWith('/portal/account') &&
       !pathname.startsWith('/portal/privacy'))
   );
@@ -102,6 +103,9 @@ function PortalShellInner({
     { href: rateHref, label: t.portal.home, icon: Home, active: isHomePath(pathname) },
     ...(!csatLocked
       ? [{ href: '/portal/catalog', label: t.portal.catalog, icon: BookOpen, active: pathname.startsWith('/portal/catalog') }]
+      : []),
+    ...(!csatLocked
+      ? [{ href: '/portal/projects', label: t.common.delivery, icon: BriefcaseBusiness, active: pathname.startsWith('/portal/projects') }]
       : []),
     ...(privacyEnabled && !csatLocked
       ? [{ href: '/portal/privacy', label: t.portal.privacy, icon: Scale, active: pathname.startsWith('/portal/privacy') }]

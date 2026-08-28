@@ -8,6 +8,7 @@ import {
   BarChart3,
   BookMarked,
   BookOpen,
+  BriefcaseBusiness,
   Bug,
   Building2,
   Building,
@@ -126,6 +127,7 @@ function formatBadge(count: number) {
 
 const overviewItems: NavItem[] = [
   { href: '/dashboard', labelKey: 'dashboard', icon: LayoutDashboard, action: 'read', subject: 'Ticket' },
+  { href: '/delivery', labelKey: 'delivery', icon: BriefcaseBusiness, action: 'read', subject: 'Ticket' },
   { href: '/wfm', labelKey: 'wfm', icon: CalendarClock, action: 'read', subject: 'Wfm' },
   { href: '/reports', labelKey: 'reports', icon: BarChart3, action: 'read', subject: 'Ticket' },
   { href: '/insights', labelKey: 'insights', icon: Lightbulb, action: 'read', subject: 'Ticket' },

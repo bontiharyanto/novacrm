@@ -1,5 +1,7 @@
 -- NovaCRM seed: 1 tenant, 3 accounts, 3 users, org/groups, SLA, 10 assets, 12 CMDB items, tickets
 
+-- Delivery sample data is inserted near the end after ticket/task seed data.
+
 insert into public.tenants (id, name, slug, accent_color, timezone, support_email, status, is_protected, subscription_plan)
 values (
   '11111111-1111-1111-1111-111111111111',
@@ -94,6 +96,86 @@ insert into public.org_units (id, tenant_id, account_id, parent_id, type, name, 
 values
   ('88888888-0001-0001-0001-000000000001', '11111111-1111-1111-1111-111111111111', '55555555-0001-0001-0001-000000000001', null, 'division', 'Divisi Operasi', 'operasi', '22222222-2222-2222-2222-222222222222', '22222222-2222-2222-2222-222222222222'),
   ('88888888-0001-0001-0001-000000000002', '11111111-1111-1111-1111-111111111111', '55555555-0001-0001-0001-000000000001', null, 'division', 'Divisi Layanan', 'layanan', '22222222-2222-2222-2222-222222222222', '22222222-2222-2222-2222-222222222222')
+on conflict (id) do nothing;
+
+-- Delivery demo: mirrors a closed-won project from an external Work Order CRM.
+insert into public.accounts (
+  id, tenant_id, type, name, slug, code, status, external_provider, external_id, created_by
+)
+values (
+  '55555555-0001-0001-0001-000000000004',
+  '11111111-1111-1111-1111-111111111111',
+  'customer',
+  'PT Nusantara Delivery',
+  'nusantara-delivery',
+  'NVD',
+  'active',
+  'work_order_crm',
+  'CRM-ACCOUNT-001',
+  '22222222-2222-2222-2222-222222222222'
+)
+on conflict (id) do update set
+  external_provider = excluded.external_provider,
+  external_id = excluded.external_id;
+
+insert into public.account_members (tenant_id, account_id, user_id, role, created_by)
+values (
+  '11111111-1111-1111-1111-111111111111',
+  '55555555-0001-0001-0001-000000000004',
+  '44444444-4444-4444-4444-444444444444',
+  'portal',
+  '22222222-2222-2222-2222-222222222222'
+)
+on conflict (account_id, user_id) do nothing;
+
+insert into public.delivery_projects (
+  id, tenant_id, account_id, external_provider, external_id, name, description, status, pm_id, dco_id,
+  planned_start, planned_end, created_by
+)
+values (
+  '77777777-0001-4001-8001-000000000001',
+  '11111111-1111-1111-1111-111111111111',
+  '55555555-0001-0001-0001-000000000004',
+  'work_order_crm',
+  'CRM-PROJECT-001',
+  'Implementasi Network Cabang Jakarta',
+  'Delivery project dari Work Order Management CRM setelah status Closed Won.',
+  'in_progress',
+  '33333333-3333-3333-3333-333333333333',
+  '33333333-3333-3333-3333-333333333333',
+  current_date - 7,
+  current_date + 30,
+  '22222222-2222-2222-2222-222222222222'
+)
+on conflict (id) do nothing;
+
+insert into public.delivery_phases (
+  id, tenant_id, project_id, phase_key, title, status, sort_order, customer_visible, created_by
+)
+values
+  ('77777777-0001-4001-8001-000000000011', '11111111-1111-1111-1111-111111111111', '77777777-0001-4001-8001-000000000001', 'feasibility', 'Determine customer order feasibility (Survey)', 'completed', 0, true, '22222222-2222-2222-2222-222222222222'),
+  ('77777777-0001-4001-8001-000000000012', '11111111-1111-1111-1111-111111111111', '77777777-0001-4001-8001-000000000001', 'allocate', 'Allocate Resource & Service', 'completed', 1, true, '22222222-2222-2222-2222-222222222222'),
+  ('77777777-0001-4001-8001-000000000013', '11111111-1111-1111-1111-111111111111', '77777777-0001-4001-8001-000000000001', 'install', 'Install & Activate Resource', 'in_progress', 2, true, '22222222-2222-2222-2222-222222222222'),
+  ('77777777-0001-4001-8001-000000000014', '11111111-1111-1111-1111-111111111111', '77777777-0001-4001-8001-000000000001', 'provision', 'Service Provisioning', 'planned', 3, true, '22222222-2222-2222-2222-222222222222'),
+  ('77777777-0001-4001-8001-000000000015', '11111111-1111-1111-1111-111111111111', '77777777-0001-4001-8001-000000000001', 'test', 'Test Service End-to-End', 'planned', 4, true, '22222222-2222-2222-2222-222222222222'),
+  ('77777777-0001-4001-8001-000000000016', '11111111-1111-1111-1111-111111111111', '77777777-0001-4001-8001-000000000001', 'validate', 'CI Verification & Validation', 'planned', 5, true, '22222222-2222-2222-2222-222222222222'),
+  ('77777777-0001-4001-8001-000000000017', '11111111-1111-1111-1111-111111111111', '77777777-0001-4001-8001-000000000001', 'handover', 'Handover to Operation', 'planned', 6, true, '22222222-2222-2222-2222-222222222222')
+on conflict (id) do nothing;
+
+insert into public.delivery_work_orders (
+  id, tenant_id, project_id, external_provider, external_id, number, title, status, created_by
+)
+values (
+  '77777777-0001-4001-8001-000000000021',
+  '11111111-1111-1111-1111-111111111111',
+  '77777777-0001-4001-8001-000000000001',
+  'work_order_crm',
+  'CRM-WO-001',
+  'WO-CRM-0001',
+  'Network rollout — Jakarta branch',
+  'in_progress',
+  '22222222-2222-2222-2222-222222222222'
+)
 on conflict (id) do nothing;
 
 insert into public.org_units (id, tenant_id, account_id, parent_id, type, name, slug, manager_id, created_by)
