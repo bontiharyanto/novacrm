@@ -20,6 +20,11 @@ export const CAPABILITY_SUBJECTS = [
   'StaffReview',
   'NotificationSettings',
   'NotificationLog',
+  'OperationsReports',
+  'OperationsInsights',
+  'OperationsAudit',
+  'OperationsServiceDesk',
+  'OperationsCab',
   'OperationsDashboard',
   'Tenant',
   'Import',
@@ -37,6 +42,12 @@ export const CAPABILITY_SUBJECTS = [
   'OperationalAcceptance',
 ] as const;
 export type CapabilitySubject = (typeof CAPABILITY_SUBJECTS)[number];
+
+export type CapabilityOverride = {
+  action: CapabilityAction;
+  subject: CapabilitySubject;
+  allowed: boolean;
+};
 
 export const capabilityUpdateSchema = z.object({
   role: z.enum(APP_ROLES),
@@ -64,6 +75,16 @@ type CapabilityRow = {
 
 export function defaultCapability(role: AppRole, action: CapabilityAction, subject: CapabilitySubject) {
   return canRole(role, action as Actions, subject as Subjects);
+}
+
+export function canConfiguredCapability(
+  role: AppRole,
+  action: CapabilityAction,
+  subject: CapabilitySubject,
+  overrides: CapabilityOverride[],
+) {
+  const override = overrides.find((item) => item.action === action && item.subject === subject);
+  return override ? override.allowed : defaultCapability(role, action, subject);
 }
 
 export function buildCapabilityMatrix(overrides: CapabilityRow[]): CapabilityCell[] {

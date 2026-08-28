@@ -12,6 +12,7 @@ import { wfmReportFilename, wfmReportToCsv, wfmReportToXlsx } from '@/lib/report
 import { parseReportPeriod } from '@/lib/reports/period';
 import { listWfmAttendance, listWfmCoverage } from '@/lib/wfm/swap-actions';
 import type { ReportExportFormat } from '@/lib/reports/schema';
+import { canAccessConfiguredCapability } from '@/lib/rbac/capability-actions';
 
 function parseFormat(value: string | null): ReportExportFormat | null {
   if (value === 'csv' || value === 'xlsx' || value === 'pdf') return value;
@@ -53,8 +54,11 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  const auth = await requireApiUser('read', 'Ticket');
+  const auth = await requireApiUser();
   if (auth.error) return auth.error;
+  if (!(await canAccessConfiguredCapability('read', 'OperationsReports'))) {
+    return NextResponse.json({ data: null, error: 'Forbidden' }, { status: 403 });
+  }
 
   const report = await getReportSnapshot({
     range: request.nextUrl.searchParams.get('range'),

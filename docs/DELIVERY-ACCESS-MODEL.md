@@ -140,6 +140,22 @@ Capability matrix mengatur baseline action per role, tetapi belum menggantikan
 account membership dan project allowlist. PM Delivery dan DCO tetap harus
 memiliki membership pada account delivery yang relevan.
 
+## Modul Operations yang dipisahkan
+
+Modul Operations global memakai subject capability tersendiri:
+
+```text
+OperationsDashboard, OperationsReports, OperationsInsights,
+OperationsAudit, OperationsServiceDesk, OperationsCab
+```
+
+Subject tersebut diberikan kepada role Operations (agent, team lead,
+supervisor, manager, admin, dan superadmin) sesuai action-nya. `pm_delivery`
+dan `dco` tidak mendapat akses default ke Dashboard Operations, Reports, AI
+Insights, Audit, Service Desk umum, atau CAB. Mereka tetap dapat membuka
+ticket yang tertaut ke delivery project melalui route detail ticket yang
+terproteksi dan tetap mengikuti RLS tenant/account.
+
 ## Segregation of duties
 
 Rekomendasi pemisahan:

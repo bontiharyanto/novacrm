@@ -32,6 +32,11 @@ export type Subjects =
   | 'StaffReview'
   | 'NotificationSettings'
   | 'NotificationLog'
+  | 'OperationsReports'
+  | 'OperationsInsights'
+  | 'OperationsAudit'
+  | 'OperationsServiceDesk'
+  | 'OperationsCab'
   | 'OperationsDashboard'
   | 'Tenant'
   | 'Import'
@@ -70,6 +75,13 @@ function grantDeskOps(can: AbilityBuilder<AppAbility>['can']) {
   can('read', 'StaffReview');
   can('read', 'Governance');
   can('read', 'NotificationLog');
+  can('read', 'OperationsReports');
+  can('read', 'OperationsInsights');
+  can('read', 'OperationsAudit');
+  can('read', 'OperationsServiceDesk');
+  can('create', 'OperationsServiceDesk');
+  can('read', 'OperationsCab');
+  can('update', 'OperationsCab');
   can('read', 'OperationsDashboard');
   can('read', 'Knowledge');
   can('create', 'Knowledge');

@@ -56,6 +56,7 @@ import type { Dictionary } from '@/lib/i18n';
 import type { AccountRecord } from '@/lib/accounts/schema';
 import type { AppRole, Actions, Subjects } from '@/lib/rbac/ability';
 import { canRole } from '@/lib/rbac/ability';
+import { canConfiguredCapability, type CapabilityOverride, type CapabilitySubject } from '@/lib/rbac/capabilities';
 import { isTenantAdminRole, ROLE_LABEL } from '@/lib/rbac/roles';
 import { PresenceControl } from '@/components/layout/presence-control';
 import { ShiftBanner } from '@/components/layout/shift-banner';
@@ -80,6 +81,7 @@ type ProcessItem = {
   labelKey: NavKey;
   icon: typeof Ticket;
   badgeKey?: keyof QueueCounts;
+  subject: CapabilitySubject;
 };
 type SectionId = 'overview' | 'serviceDesk' | 'configuration' | 'platform' | 'favorites';
 type FolderId = 'people' | 'inventory';
@@ -129,18 +131,18 @@ const overviewItems: NavItem[] = [
   { href: '/dashboard', labelKey: 'dashboard', icon: LayoutDashboard, action: 'read', subject: 'OperationsDashboard' },
   { href: '/delivery/dashboard', labelKey: 'delivery', icon: BriefcaseBusiness, action: 'read', subject: 'DeliveryProject' },
   { href: '/wfm', labelKey: 'wfm', icon: CalendarClock, action: 'read', subject: 'Wfm' },
-  { href: '/reports', labelKey: 'reports', icon: BarChart3, action: 'read', subject: 'Ticket' },
-  { href: '/insights', labelKey: 'insights', icon: Lightbulb, action: 'read', subject: 'Ticket' },
-  { href: '/audit', labelKey: 'audit', icon: History, action: 'read', subject: 'Ticket' },
+  { href: '/reports', labelKey: 'reports', icon: BarChart3, action: 'read', subject: 'OperationsReports' },
+  { href: '/insights', labelKey: 'insights', icon: Lightbulb, action: 'read', subject: 'OperationsInsights' },
+  { href: '/audit', labelKey: 'audit', icon: History, action: 'read', subject: 'OperationsAudit' },
 ];
 
 const processItems: ProcessItem[] = [
-  { href: '/tickets?type=incident', type: 'incident', labelKey: 'incidents', icon: AlertTriangle, badgeKey: 'incident' },
-  { href: '/tickets?type=problem', type: 'problem', labelKey: 'problems', icon: Bug, badgeKey: 'problem' },
-  { href: '/tickets?type=change', type: 'change', labelKey: 'changes', icon: GitBranch, badgeKey: 'change' },
-  { href: '/cab', type: 'cab', labelKey: 'cab', icon: ShieldCheck, badgeKey: 'cab' },
-  { href: '/tickets?type=request', type: 'request', labelKey: 'requests', icon: ClipboardList, badgeKey: 'request' },
-  { href: '/tickets', type: null, labelKey: 'allTickets', icon: Ticket, badgeKey: 'all' },
+  { href: '/tickets?type=incident', type: 'incident', labelKey: 'incidents', icon: AlertTriangle, badgeKey: 'incident', subject: 'OperationsServiceDesk' },
+  { href: '/tickets?type=problem', type: 'problem', labelKey: 'problems', icon: Bug, badgeKey: 'problem', subject: 'OperationsServiceDesk' },
+  { href: '/tickets?type=change', type: 'change', labelKey: 'changes', icon: GitBranch, badgeKey: 'change', subject: 'OperationsServiceDesk' },
+  { href: '/cab', type: 'cab', labelKey: 'cab', icon: ShieldCheck, badgeKey: 'cab', subject: 'OperationsCab' },
+  { href: '/tickets?type=request', type: 'request', labelKey: 'requests', icon: ClipboardList, badgeKey: 'request', subject: 'OperationsServiceDesk' },
+  { href: '/tickets', type: null, labelKey: 'allTickets', icon: Ticket, badgeKey: 'all', subject: 'OperationsServiceDesk' },
 ];
 
 const peopleItems: NavItem[] = [
@@ -172,7 +174,7 @@ const platformItems: NavItem[] = [
 
 const pinCatalog: NavItem[] = [
   ...overviewItems,
-  ...processItems.map((item) => ({ href: item.href, labelKey: item.labelKey, icon: item.icon })),
+  ...processItems.map((item) => ({ href: item.href, labelKey: item.labelKey, icon: item.icon, action: 'read' as const, subject: item.subject })),
   ...configurationItems,
   ...platformItems,
 ];
@@ -384,6 +386,8 @@ function useNavPins() {
 }
 
 function ProcessNav({
+  role,
+  capabilityOverrides,
   onNavigate,
   rail,
   collapsed,
@@ -391,6 +395,8 @@ function ProcessNav({
   pins,
   accountKey,
 }: {
+  role: AppRole;
+  capabilityOverrides: CapabilityOverride[];
   onNavigate?: () => void;
   rail?: boolean;
   collapsed?: boolean;
@@ -404,6 +410,11 @@ function ProcessNav({
   const counts = useQueueCounts(accountKey);
   const activeType = searchParams.get('type');
   const onDesk = pathname === '/tickets';
+  const visibleItems = processItems.filter((item) =>
+    canConfiguredCapability(role, 'read', item.subject, capabilityOverrides),
+  );
+
+  if (visibleItems.length === 0) return null;
 
   return (
     <NavSection
@@ -414,7 +425,7 @@ function ProcessNav({
       collapsed={collapsed}
       onToggle={onToggle}
     >
-      {processItems.map((item) => {
+      {visibleItems.map((item) => {
         const active =
           item.type === 'cab'
             ? pathname.startsWith('/cab')
@@ -618,12 +629,16 @@ function ConfigurationNav({
 
 function FavoritesNav({
   pins,
+  role,
+  capabilityOverrides,
   onNavigate,
   rail,
   collapsed,
   onToggle,
 }: {
   pins: ReturnType<typeof useNavPins>;
+  role: AppRole;
+  capabilityOverrides: CapabilityOverride[];
   onNavigate?: () => void;
   rail?: boolean;
   collapsed?: boolean;
@@ -632,8 +647,20 @@ function FavoritesNav({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { t } = useI18n();
+  const visiblePins = pins.pins.filter((pin) => {
+    const item = pinCatalog.find((candidate) => candidate.href === pin.href);
+    return (
+      !item?.subject ||
+      canConfiguredCapability(
+        role,
+        item.action ?? 'read',
+        item.subject as CapabilitySubject,
+        capabilityOverrides,
+      )
+    );
+  });
 
-  if (pins.pins.length === 0) return null;
+  if (visiblePins.length === 0) return null;
 
   return (
     <NavSection
@@ -644,7 +671,7 @@ function FavoritesNav({
       collapsed={collapsed}
       onToggle={onToggle}
     >
-      {pins.pins.map((pin) => {
+      {visiblePins.map((pin) => {
         const Icon = resolvePinIcon(pin.href);
         const labelKey = pin.labelKey as NavKey;
         const label = (t.nav[labelKey] as string | undefined) ?? pin.labelKey;
@@ -681,6 +708,7 @@ function ItemSection({
   items,
   pathname,
   role,
+  capabilityOverrides,
   onNavigate,
   divided = true,
   rail = false,
@@ -693,6 +721,7 @@ function ItemSection({
   items: NavItem[];
   pathname: string;
   role: AppRole;
+  capabilityOverrides: CapabilityOverride[];
   onNavigate?: () => void;
   divided?: boolean;
   rail?: boolean;
@@ -701,7 +730,11 @@ function ItemSection({
   pins?: ReturnType<typeof useNavPins>;
 }) {
   const { t } = useI18n();
-  const visible = items.filter((item) => !item.subject || canRole(role, item.action ?? 'read', item.subject));
+  const visible = items.filter(
+    (item) =>
+      !item.subject ||
+      canConfiguredCapability(role, item.action ?? 'read', item.subject as CapabilitySubject, capabilityOverrides),
+  );
   if (visible.length === 0) return null;
 
   return (
@@ -794,8 +827,20 @@ function SidebarBrand({
   );
 }
 
-function NewTicketButton({ onNavigate, rail }: { onNavigate?: () => void; rail?: boolean }) {
+function NewTicketButton({
+  role,
+  capabilityOverrides,
+  onNavigate,
+  rail,
+}: {
+  role: AppRole;
+  capabilityOverrides: CapabilityOverride[];
+  onNavigate?: () => void;
+  rail?: boolean;
+}) {
   const { t } = useI18n();
+  if (!canConfiguredCapability(role, 'create', 'OperationsServiceDesk', capabilityOverrides)) return null;
+
   if (rail) {
     return (
       <div className="px-1.5 pb-2">
@@ -831,6 +876,7 @@ function NewTicketButton({ onNavigate, rail }: { onNavigate?: () => void; rail?:
 function SidebarNav({
   pathname,
   role,
+  capabilityOverrides,
   onNavigate,
   rail,
   collapsed,
@@ -842,6 +888,7 @@ function SidebarNav({
 }: {
   pathname: string;
   role: AppRole;
+  capabilityOverrides: CapabilityOverride[];
   onNavigate?: () => void;
   rail?: boolean;
   collapsed: Partial<Record<SectionId, boolean>>;
@@ -859,6 +906,8 @@ function SidebarNav({
         <Suspense fallback={null}>
           <FavoritesNav
             pins={pins}
+            role={role}
+            capabilityOverrides={capabilityOverrides}
             onNavigate={onNavigate}
             rail={rail}
             collapsed={collapsed.favorites}
@@ -871,6 +920,7 @@ function SidebarNav({
           items={overviewItems}
           pathname={pathname}
           role={role}
+          capabilityOverrides={capabilityOverrides}
           onNavigate={onNavigate}
           divided={pins.pins.length > 0}
           rail={rail}
@@ -880,6 +930,8 @@ function SidebarNav({
         />
         <Suspense fallback={null}>
           <ProcessNav
+            role={role}
+            capabilityOverrides={capabilityOverrides}
             onNavigate={onNavigate}
             rail={rail}
             collapsed={collapsed.serviceDesk}
@@ -905,6 +957,7 @@ function SidebarNav({
           items={platformItems}
           pathname={pathname}
           role={role}
+          capabilityOverrides={capabilityOverrides}
           onNavigate={onNavigate}
           rail={rail}
           collapsed={collapsed.platform}
@@ -1061,6 +1114,7 @@ function SidebarFooter({
 
 function SidebarPanel({
   role,
+  capabilityOverrides,
   fullName,
   accounts,
   activeAccountId,
@@ -1078,6 +1132,7 @@ function SidebarPanel({
   pins,
 }: {
   role: AppRole;
+  capabilityOverrides: CapabilityOverride[];
   fullName: string;
   accounts: AccountRecord[];
   activeAccountId?: string | null;
@@ -1099,11 +1154,17 @@ function SidebarPanel({
       <div className="shrink-0 border-b border-zinc-800/60">
         <SidebarBrand onClose={onClose} logoUrl={logoUrl} rail={rail} onToggleRail={onToggleRail} />
         {!rail ? <AccountSwitcher accounts={accounts} activeAccountId={activeAccountId} /> : null}
-        <NewTicketButton onNavigate={onNavigate} rail={rail} />
+        <NewTicketButton
+          role={role}
+          capabilityOverrides={capabilityOverrides}
+          onNavigate={onNavigate}
+          rail={rail}
+        />
       </div>
       <SidebarNav
         pathname={pathname}
         role={role}
+        capabilityOverrides={capabilityOverrides}
         onNavigate={onNavigate}
         rail={rail}
         collapsed={collapsed}
@@ -1156,6 +1217,7 @@ function TopbarIconButton({
 export function AgentShell({
   children,
   role,
+  capabilityOverrides,
   fullName,
   userId,
   accounts,
@@ -1165,6 +1227,7 @@ export function AgentShell({
 }: {
   children: ReactNode;
   role: AppRole;
+  capabilityOverrides: CapabilityOverride[];
   fullName: string;
   userId?: string;
   accounts: AccountRecord[];
@@ -1245,6 +1308,7 @@ export function AgentShell({
 
   const sidebarProps = {
     role,
+    capabilityOverrides,
     fullName,
     accounts,
     activeAccountId,

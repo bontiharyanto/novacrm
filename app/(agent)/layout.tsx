@@ -10,6 +10,7 @@ import { getTenantConfig } from '@/lib/tenants/config';
 import { resolveTenantLogoUrl } from '@/lib/tenants/logo';
 import { accentCss } from '@/lib/tenants/accent';
 import { AccentProvider } from '@/components/layout/accent-provider';
+import { getSessionCapabilityOverrides } from '@/lib/rbac/capability-actions';
 
 export default async function AgentLayout({ children }: { children: React.ReactNode }) {
   const session = await getSessionProfile();
@@ -27,6 +28,7 @@ export default async function AgentLayout({ children }: { children: React.ReactN
   }
 
   const tenant = await getTenantConfig();
+  const capabilityOverrides = await getSessionCapabilityOverrides();
   const logoUrl = tenant
     ? await resolveTenantLogoUrl(tenant.id, tenant.logoObjectKey)
     : null;
@@ -37,6 +39,7 @@ export default async function AgentLayout({ children }: { children: React.ReactN
       <AccentProvider color={tenant?.accentColor} />
       <AgentShell
         role={session.profile.role}
+        capabilityOverrides={capabilityOverrides}
         fullName={session.profile.fullName}
         userId={session.userId}
         accounts={scope.accounts}

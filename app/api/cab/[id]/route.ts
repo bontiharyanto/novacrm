@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getChangeRecord, saveChangePlan, submitChangeToCab } from '@/lib/cab/actions';
 import { requireApiUser } from '@/lib/api/require-user';
+import { canAccessConfiguredCapability } from '@/lib/rbac/capability-actions';
 
 export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
-  const auth = await requireApiUser('read', 'Ticket');
+  const auth = await requireApiUser();
   if (auth.error) return auth.error;
+  if (!(await canAccessConfiguredCapability('read', 'OperationsCab'))) {
+    return NextResponse.json({ data: null, error: 'Forbidden' }, { status: 403 });
+  }
 
   const record = await getChangeRecord(params.id);
   if (!record.ticket) {
@@ -14,8 +18,11 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
 }
 
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
-  const auth = await requireApiUser('update', 'Ticket');
+  const auth = await requireApiUser();
   if (auth.error) return auth.error;
+  if (!(await canAccessConfiguredCapability('update', 'OperationsCab'))) {
+    return NextResponse.json({ data: null, error: 'Forbidden' }, { status: 403 });
+  }
 
   try {
     const body = await request.json();

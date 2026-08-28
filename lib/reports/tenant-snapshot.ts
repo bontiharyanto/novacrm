@@ -42,7 +42,8 @@ export async function getTenantReportSnapshot(tenantId: string, period: ReportPe
     const { data: groups } = await supabase
       .from('assignment_groups')
       .select('id, name, party_kind, party_name, uc_id')
-      .in('id', groupIds);
+      .in('id', groupIds)
+      .eq('tenant_id', tenantId);
     for (const group of groups ?? []) {
       groupMeta[group.id] = {
         name: group.name,

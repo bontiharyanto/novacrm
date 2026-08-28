@@ -4,7 +4,7 @@ import { cabDecisionInputSchema, changePlanSchema, type CabApproval } from '@/li
 import { changeReadyForCab, nextStatusForDecision, submitStatusForChange } from '@/lib/cab/flow';
 import { recordTicketAudit } from '@/lib/tickets/audit';
 import { getSessionProfile } from '@/lib/auth/session';
-import { canRole } from '@/lib/rbac/ability';
+import { canAccessConfiguredCapability } from '@/lib/rbac/capability-actions';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getTicketById, listTickets, updateTicket } from '@/lib/tickets/actions';
 import { sanitizeCommentHtml } from '@/lib/sanitize/html';
@@ -32,13 +32,14 @@ function mapApproval(row: ApprovalRow): CabApproval {
 }
 
 export async function listChanges() {
+  if (!(await canAccessConfiguredCapability('read', 'OperationsCab'))) return [];
   const tickets = await listTickets();
   return tickets.filter((ticket) => ticket.type === 'change');
 }
 
 export async function getChangeRecord(ticketId: string) {
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'read', 'Ticket')) {
+  if (!session || !(await canAccessConfiguredCapability('read', 'OperationsCab'))) {
     return { ticket: null, approvals: [] as CabApproval[] };
   }
 
@@ -64,7 +65,7 @@ export async function getChangeRecord(ticketId: string) {
 export async function saveChangePlan(ticketId: string, input: unknown) {
   const parsed = changePlanSchema.parse(input);
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'update', 'Ticket')) {
+  if (!session || !(await canAccessConfiguredCapability('update', 'OperationsCab'))) {
     return { data: null, error: 'Unauthorized' };
   }
 
@@ -101,6 +102,9 @@ export async function saveChangePlan(ticketId: string, input: unknown) {
 }
 
 export async function submitChangeToCab(ticketId: string) {
+  if (!(await canAccessConfiguredCapability('update', 'OperationsCab'))) {
+    return { data: null, error: 'Unauthorized' };
+  }
   const existing = await getTicketById(ticketId);
   if (!existing || existing.type !== 'change') {
     return { data: null, error: 'Change not found' };
@@ -118,7 +122,7 @@ export async function submitChangeToCab(ticketId: string) {
 export async function decideCab(ticketId: string, input: unknown) {
   const parsed = cabDecisionInputSchema.parse(input);
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'update', 'Ticket')) {
+  if (!session || !(await canAccessConfiguredCapability('update', 'OperationsCab'))) {
     return { data: null, error: 'Unauthorized' };
   }
 

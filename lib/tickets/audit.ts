@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { getSessionProfile } from '@/lib/auth/session';
 import { canRole } from '@/lib/rbac/ability';
+import { canAccessConfiguredCapability } from '@/lib/rbac/capability-actions';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import type { TicketAuditEvent } from '@/lib/tickets/audit-types';
 
@@ -92,7 +93,7 @@ export async function listTicketAudit(ticketId: string): Promise<TicketAuditEven
 
 export async function listRecentAudit(query = ''): Promise<TicketAuditEvent[]> {
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'read', 'Ticket')) {
+  if (!session || !(await canAccessConfiguredCapability('read', 'OperationsAudit'))) {
     return [];
   }
 
@@ -108,7 +109,11 @@ export async function listRecentAudit(query = ''): Promise<TicketAuditEvent[]> {
   const ticketIds = Array.from(new Set(rows.map((row) => row.ticket_id)));
   const titles = new Map<string, { number: string; title: string }>();
   if (ticketIds.length > 0) {
-    const { data: tickets } = await supabase.from('tickets').select('id, number, title').in('id', ticketIds);
+    const { data: tickets } = await supabase
+      .from('tickets')
+      .select('id, number, title')
+      .in('id', ticketIds)
+      .eq('tenant_id', session.profile.tenantId);
     for (const ticket of tickets ?? []) {
       titles.set(ticket.id, { number: ticket.number || ticket.id.slice(0, 8), title: ticket.title });
     }

@@ -3,9 +3,16 @@ import { getSessionProfile } from '@/lib/auth/session';
 import { TicketCreate } from '@/components/tickets/ticket-create';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getAccountScope } from '@/lib/accounts/scope';
+import { redirect } from 'next/navigation';
+import { canAccessConfiguredCapability } from '@/lib/rbac/capability-actions';
+import { homePathForRole } from '@/lib/rbac/roles';
 
 export default async function NewTicketPage() {
   const session = await getSessionProfile();
+  if (!session) redirect('/login');
+  if (!(await canAccessConfiguredCapability('create', 'OperationsServiceDesk'))) {
+    redirect(homePathForRole(session.profile.role));
+  }
   const scope = await getAccountScope(session);
 
   return (

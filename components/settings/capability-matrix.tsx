@@ -29,6 +29,12 @@ function subjectLabel(subject: CapabilitySubject, t: ReturnType<typeof useI18n>[
     Wfm: t.nav.wfm,
     Knowledge: t.nav.knowledge,
     Capability: t.nav.capabilities,
+    OperationsReports: t.nav.reports,
+    OperationsInsights: t.nav.insights,
+    OperationsAudit: t.nav.audit,
+    OperationsServiceDesk: t.nav.serviceDesk,
+    OperationsCab: t.nav.cab,
+    OperationsDashboard: t.nav.dashboard,
   };
   return labels[subject] ?? subject;
 }

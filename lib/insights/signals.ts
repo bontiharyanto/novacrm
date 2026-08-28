@@ -1,5 +1,5 @@
 import { getSessionProfile } from '@/lib/auth/session';
-import { canRole } from '@/lib/rbac/ability';
+import { canAccessConfiguredCapability } from '@/lib/rbac/capability-actions';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { requireAccountId } from '@/lib/accounts/scope';
 import { getReportSnapshot } from '@/lib/reports/actions';
@@ -13,7 +13,7 @@ const OPEN = new Set(['open', 'in_progress', 'waiting', 'hold']);
 
 export async function gatherInsightSignals(): Promise<InsightSignals | null> {
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'read', 'Ticket')) return null;
+  if (!session || !(await canAccessConfiguredCapability('read', 'OperationsInsights'))) return null;
 
   const scoped = await requireAccountId(session);
   const locale = getPreferences().locale;

@@ -53,7 +53,8 @@ export async function getReportSnapshot(input?: {
     const { data: groups } = await supabase
       .from('assignment_groups')
       .select('id, name, party_kind, party_name, uc_id')
-      .in('id', groupIds);
+      .in('id', groupIds)
+      .eq('tenant_id', tenantId);
     const ucIds = Array.from(
       new Set((groups ?? []).map((row) => row.uc_id).filter((id): id is string => Boolean(id))),
     );
@@ -62,7 +63,8 @@ export async function getReportSnapshot(input?: {
       const { data: contracts } = await supabase
         .from('underpinning_contracts')
         .select('id, name')
-        .in('id', ucIds);
+        .in('id', ucIds)
+        .eq('tenant_id', tenantId);
       for (const contract of contracts ?? []) {
         ucNames[contract.id] = contract.name;
       }

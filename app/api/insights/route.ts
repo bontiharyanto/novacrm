@@ -2,17 +2,24 @@ import { NextRequest, NextResponse } from 'next/server';
 import { generateAllInsights, generateInsight, getInsightsBoard } from '@/lib/insights/actions';
 import { insightKindSchema } from '@/lib/insights/schema';
 import { requireApiUser } from '@/lib/api/require-user';
+import { canAccessConfiguredCapability } from '@/lib/rbac/capability-actions';
 
 export async function GET() {
-  const auth = await requireApiUser('read', 'Ticket');
+  const auth = await requireApiUser();
   if (auth.error) return auth.error;
+  if (!(await canAccessConfiguredCapability('read', 'OperationsInsights'))) {
+    return NextResponse.json({ data: null, error: 'Forbidden' }, { status: 403 });
+  }
   const data = await getInsightsBoard();
   return NextResponse.json({ data, error: data ? null : 'Unable to load insights' });
 }
 
 export async function POST(request: NextRequest) {
-  const auth = await requireApiUser('read', 'Ticket');
+  const auth = await requireApiUser();
   if (auth.error) return auth.error;
+  if (!(await canAccessConfiguredCapability('read', 'OperationsInsights'))) {
+    return NextResponse.json({ data: null, error: 'Forbidden' }, { status: 403 });
+  }
   try {
     const body = await request.json().catch(() => ({}));
     const locale = body.locale === 'en' || body.locale === 'id' ? body.locale : undefined;

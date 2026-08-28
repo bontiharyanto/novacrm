@@ -1,7 +1,7 @@
 'use server';
 
 import { getSessionProfile } from '@/lib/auth/session';
-import { canRole } from '@/lib/rbac/ability';
+import { canAccessConfiguredCapability } from '@/lib/rbac/capability-actions';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { requireAccountId } from '@/lib/accounts/scope';
 import { getAiConfigForTenant } from '@/lib/settings/integrations';
@@ -111,7 +111,7 @@ async function persistCard(
 
 export async function getInsightsBoard(): Promise<InsightsBoard | null> {
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'read', 'Ticket')) return null;
+  if (!session || !(await canAccessConfiguredCapability('read', 'OperationsInsights'))) return null;
 
   const signals = await gatherInsightSignals();
   if (!signals) return null;
@@ -147,7 +147,7 @@ export async function generateInsight(
 ): Promise<{ data: InsightCard | null; error: string | null }> {
   const kind = insightKindSchema.parse(kindInput);
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'read', 'Ticket')) {
+  if (!session || !(await canAccessConfiguredCapability('read', 'OperationsInsights'))) {
     return { data: null, error: 'Unauthorized' };
   }
 
@@ -236,7 +236,7 @@ export async function generateAllInsights(
   localeOverride?: 'en' | 'id',
 ): Promise<{ data: InsightCard[] | null; error: string | null }> {
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'read', 'Ticket')) {
+  if (!session || !(await canAccessConfiguredCapability('read', 'OperationsInsights'))) {
     return { data: null, error: 'Unauthorized' };
   }
   const signals = await gatherInsightSignals();
