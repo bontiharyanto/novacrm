@@ -51,6 +51,10 @@ CASL on the frontend; RLS on the backend. Sidebar account filter: one customer a
 | [Manager operasi](docs/user-guide/manager-ops.md) | Accounts, org, import, workflows |
 | [Superadmin](docs/user-guide/superadmin.md) | Platform tenant record and break-glass |
 | [Catalog & record producer](docs/user-guide/catalog-guidance.md) | Supervisor / admin — design catalog items, variables, worked examples |
+| [Delivery Project](docs/user-guide/delivery.md) | PM/DCO/agent/customer — project, phases, work orders, portal progress |
+| [Task activity & WBS](docs/user-guide/task-activities.md) | DCO/agent — task activity, visibility, dependencies |
+| [Capability Matrix](docs/user-guide/capability-matrix.md) | Admin/superadmin — tenant capability configuration |
+| [Delivery ↔ Work Order CRM](docs/DELIVERY-CRM-INTEGRATION.md) | Integration owner — webhook contract, account mapping, idempotency |
 | [NETMON NMS](docs/NETMON.md) | Tickets + CMDB sync from netmon.click |
 | [Sysadmin Ops](docs/OPS.md) | Health, queues, retries on `:3100` |
 | [Workers (BullMQ)](docs/WORKERS.md) | How many workers, how to scale laptop and VPS |

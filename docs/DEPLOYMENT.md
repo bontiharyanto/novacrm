@@ -98,9 +98,49 @@ Without `DEPLOY_HOST`, CI still publishes GHCR and skips SSH. The VPS must alrea
 
 Make the GHCR package public, or leave the deploy job’s `docker login ghcr.io` in place so the server can pull.
 
+## 4a. Manual update on the VPS
+
+Use this path when the GitHub `SSH deploy` job is skipped or when deployment is
+intentionally managed from the server. Run after the required checks on GitHub
+are green:
+
+```bash
+cd /opt/novacrm
+git fetch origin main
+git checkout main
+git pull --ff-only origin main
+
+./scripts/check-prod-env.sh
+export IMAGE_TAG="$(git rev-parse HEAD)"
+
+docker compose --env-file .env.production -f docker-compose.prod.yml pull
+docker compose --env-file .env.production -f docker-compose.prod.yml up -d --remove-orphans --scale web=1
+
+set -a
+. ./.env.production
+set +a
+DATABASE_URL="$DATABASE_URL" ./scripts/migrate.sh
+```
+
+`--env-file .env.production` is required so Traefik uses the production
+`APP_HOST` and `MINIO_PUBLIC_HOST`. `IMAGE_TAG` is exported from the checked
+out commit so the VPS does not accidentally continue running `latest`.
+
+Verify:
+
+```bash
+docker compose --env-file .env.production -f docker-compose.prod.yml ps
+curl -fsS https://novacrm.click/api/health
+```
+
+New migrations are applied once and recorded in
+`public.schema_migrations`. Never run the full `supabase/seed.sql` against a
+production tenant unless the database is a disposable demo. Use the manual
+Delivery sample button at `/delivery` for a safe demo project.
+
 ## 5. Runtime
 
-- Web: Next.js, `--scale web=3`, Traefik TLS
+- Web: Next.js, `--scale web=1` for the current VPS footprint; scale to 3+ replicas after capacity and shared limits are verified, Traefik TLS
 - Worker: BullMQ — `novacrm-notifications`, `novacrm-workflows`, `novacrm-wfm`. Default **1** replica. Add a second with `--scale worker=2` — [WORKERS.md](WORKERS.md)
 - DB: hosted Supabase (Auth + Postgres + Realtime)
 - Queue: Redis
@@ -108,7 +148,7 @@ Make the GHCR package public, or leave the deploy job’s `docker login ghcr.io`
 - Public Supabase URL/anon key come from `.env.production` (`NOVACRM_SUPABASE_*`) so one image works per environment
 - Ops (`:3100`) is **not** published by `docker-compose.prod.yml`. Use it on the laptop, or add a loopback-only service with `OPS_TOKEN` if you need it on the VPS
 
-Email in production needs `RESEND_API_KEY`. Without it, outbound mail is logged as failed (no local sink). After pull, `migrate.sh` applies only **new** SQL files (RBAC, WFM, insights, plugins, account access).
+Email in production needs `RESEND_API_KEY`. Without it, outbound mail is logged as failed (no local sink). After pull, `migrate.sh` applies only **new** SQL files (RBAC, WFM, insights, plugins, account access, delivery, task activity/WBS, capability matrix).
 
 ## 6. Backup
 

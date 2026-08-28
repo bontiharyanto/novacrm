@@ -22,7 +22,7 @@ Tujuh role produk. Pilih dokumen sesuai login.
 | `superadmin` | [Superadmin platform](superadmin.md) | `/dashboard` | `superadmin@novacrm.app` |
 
 Password lab semua: `NovaCRM!2026`.  
-Item katalog: [Catalog & record producer](catalog-guidance.md). Major incident (induk–anak, bukan RCA): [Major incident](major-incident.md). Matriks hak: [RBAC](../RBAC.md).
+Item katalog: [Catalog & record producer](catalog-guidance.md). Major incident (induk–anak, bukan RCA): [Major incident](major-incident.md). Matriks hak: [RBAC](../RBAC.md). Delivery: [Delivery Project](delivery.md).
 
 ## Classroom pack
 
@@ -31,6 +31,9 @@ Item katalog: [Catalog & record producer](catalog-guidance.md). Major incident (
 | [Trainer guide](trainer-guide.md) | Facilitator: agenda, demo data, timing, pass criteria |
 | [Participant manual](participant-manual.md) | Learners: procedures, labs, expected results |
 | [Major incident](major-incident.md) | Agent/SPV: parent/child tickets, not RCA |
+| [Delivery Project](delivery.md) | PM/DCO/agent/customer: project, phases, work order, portal progress |
+| [Task activity & WBS](task-activities.md) | DCO/agent: activity timeline, visibility, sequential dependencies |
+| [Capability Matrix](capability-matrix.md) | Admin/superadmin: tenant capability configuration |
 | [Local setup](../LOCAL.md) | Engineer: run the app on a laptop |
 | [Sysadmin Ops](../OPS.md) | Engineer: health and queues on `:3100` |
 | [Workers](../WORKERS.md) | Engineer: scale BullMQ workers |
@@ -39,6 +42,7 @@ Item katalog: [Catalog & record producer](catalog-guidance.md). Major incident (
 | [Operasi tenant](tenant-operations.md) | Admin/manager: tenant → account → org → portal → arsip |
 | [VPS go-live](../VPS.md) | Engineer: produksi `novacrm.click` |
 | [Deployment](../DEPLOYMENT.md) | Engineer: VPS / production |
+| [Delivery ↔ CRM](../DELIVERY-CRM-INTEGRATION.md) | Engineer/integration owner: webhook contract and account mapping |
 | [Backup](../BACKUP.md) | Engineer: dump 02:00 WIB |
 | [Restore](../RESTORE.md) | Engineer: latihan restore ke scratch |
 | [Kesiapan operasional](../OPERATIONS.md) | Engineer: pilot vs produksi, kuota Free |
