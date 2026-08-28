@@ -36,6 +36,14 @@ export type Subjects =
   | 'Import'
   | 'Knowledge'
   | 'Capability'
+  | 'DeliveryProject'
+  | 'DeliveryPhase'
+  | 'DeliveryWorkOrder'
+  | 'DeliveryTask'
+  | 'TaskActivity'
+  | 'TaskDependency'
+  | 'DeliveryReport'
+  | 'DeliveryPublish'
   | 'all';
 
 export type AppAbility = MongoAbility<[Actions, Subjects]>;
@@ -62,6 +70,30 @@ function grantDeskOps(can: AbilityBuilder<AppAbility>['can']) {
   can('read', 'Knowledge');
   can('create', 'Knowledge');
   can('update', 'Knowledge');
+  can('read', 'DeliveryProject');
+  can('read', 'DeliveryPhase');
+  can('read', 'DeliveryWorkOrder');
+  can('read', 'DeliveryTask');
+  can('create', 'DeliveryTask');
+  can('update', 'DeliveryTask');
+  can('read', 'TaskActivity');
+  can('create', 'TaskActivity');
+  can('update', 'TaskActivity');
+  can('read', 'TaskDependency');
+  can('create', 'TaskDependency');
+  can('update', 'TaskDependency');
+  can('read', 'DeliveryReport');
+}
+
+function grantDeliveryRead(can: AbilityBuilder<AppAbility>['can']) {
+  can('read', 'Account');
+  can('read', 'DeliveryProject');
+  can('read', 'DeliveryPhase');
+  can('read', 'DeliveryWorkOrder');
+  can('read', 'DeliveryTask');
+  can('read', 'TaskActivity');
+  can('read', 'TaskDependency');
+  can('read', 'DeliveryReport');
 }
 
 export function defineAbilityFor(role: AppRole): AppAbility {
@@ -84,6 +116,11 @@ export function defineAbilityFor(role: AppRole): AppAbility {
 
   if (role === 'manager') {
     grantDeskOps(can);
+    can('create', 'DeliveryProject');
+    can('update', 'DeliveryProject');
+    can('update', 'DeliveryPhase');
+    can('create', 'DeliveryWorkOrder');
+    can('update', 'DeliveryWorkOrder');
     can('create', 'Account');
     can('update', 'Account');
     can('create', 'Org');
@@ -107,6 +144,35 @@ export function defineAbilityFor(role: AppRole): AppAbility {
     can('update', 'StaffReview');
     can('create', 'Import');
     can('read', 'Import');
+    return build();
+  }
+
+  if (role === 'pm_delivery') {
+    grantDeliveryRead(can);
+    can('read', 'Ticket');
+    can('create', 'DeliveryProject');
+    can('update', 'DeliveryProject');
+    can('update', 'DeliveryPhase');
+    can('update', 'DeliveryPublish');
+    return build();
+  }
+
+  if (role === 'dco') {
+    grantDeliveryRead(can);
+    can('read', 'Ticket');
+    can('create', 'Ticket');
+    can('update', 'Ticket');
+    can('update', 'DeliveryProject');
+    can('update', 'DeliveryPhase');
+    can('create', 'DeliveryWorkOrder');
+    can('update', 'DeliveryWorkOrder');
+    can('create', 'DeliveryTask');
+    can('update', 'DeliveryTask');
+    can('create', 'TaskActivity');
+    can('update', 'TaskActivity');
+    can('create', 'TaskDependency');
+    can('update', 'TaskDependency');
+    can('read', 'DeliveryPublish');
     return build();
   }
 

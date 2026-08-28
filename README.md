@@ -24,6 +24,8 @@ Staff land on the desk. Customers land on the portal.
 | --- | --- | --- |
 | `customer` | `/portal` | Own tickets, catalog, privacy |
 | `agent` | `/dashboard` | Desk work on assigned accounts |
+| `pm_delivery` | `/dashboard` | Delivery projects, phases, milestones, publish approval |
+| `dco` | `/dashboard` | Delivery Work Orders, tasks, WBS, and execution |
 | `team_lead` | `/dashboard` | Assign, escalate, read users and WFM |
 | `supervisor` | `/dashboard` | SLA, WFM roster, catalog |
 | `manager` | `/dashboard` | Accounts, org, users, import, workflows |
@@ -103,7 +105,7 @@ npm run local:dev
 | agent | `agent@novacrm.app` | `NovaCRM!2026` |
 | customer | `customer@novacrm.app` | `NovaCRM!2026` |
 
-Also seeded: `superadmin@` · `manager@` · `spv@` · `lead@novacrm.app` (same password). L1/L2/L3 / on-call: [docs/LOCAL.md](docs/LOCAL.md). Role playbooks: [docs/user-guide/README.md](docs/user-guide/README.md). Demo passwords are for the lab tenant only — they are not shown on the login screen.
+Also seeded: `superadmin@` · `manager@` · `spv@` · `lead@novacrm.app` plus `pm.delivery@novacrm.app` and `dco@novacrm.app` (same password). L1/L2/L3 / on-call: [docs/LOCAL.md](docs/LOCAL.md). Role playbooks: [docs/user-guide/README.md](docs/user-guide/README.md). Demo passwords are for the lab tenant only — they are not shown on the login screen.
 
 `local:setup` starts Redis + MinIO, runs local Supabase, applies migrations/seed, and writes `.env.local`. Docker Desktop must be running.
 

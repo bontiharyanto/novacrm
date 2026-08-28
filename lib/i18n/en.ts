@@ -1245,6 +1245,8 @@ export const en = {
   roles: {
     customer: 'Customer',
     agent: 'Agent',
+    pm_delivery: 'PM Delivery',
+    dco: 'DCO',
     team_lead: 'Team lead',
     supervisor: 'Supervisor',
     manager: 'Manager',
@@ -1253,6 +1255,8 @@ export const en = {
     hint: {
       customer: 'Portal only',
       agent: 'Service desk',
+      pm_delivery: 'Delivery project manager',
+      dco: 'Delivery control officer',
       team_lead: 'Queue lead',
       supervisor: 'SLA and WFM',
       manager: 'Accounts, org, users',

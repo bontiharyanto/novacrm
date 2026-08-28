@@ -1,4 +1,4 @@
--- NovaCRM seed: 1 tenant, 3 accounts, 3 users, org/groups, SLA, 10 assets, 12 CMDB items, tickets
+-- NovaCRM seed: 1 tenant, 3 accounts, 5 users, org/groups, SLA, 10 assets, 12 CMDB items, tickets
 
 -- Delivery sample data is inserted near the end after ticket/task seed data.
 
@@ -30,6 +30,8 @@ declare
   admin_id uuid := '22222222-2222-2222-2222-222222222222';
   agent_id uuid := '33333333-3333-3333-3333-333333333333';
   customer_id uuid := '44444444-4444-4444-4444-444444444444';
+  pm_delivery_id uuid := '33333333-3333-3333-3333-333333333336';
+  dco_id uuid := '33333333-3333-3333-3333-333333333337';
 begin
   insert into auth.users (
     instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
@@ -48,6 +50,14 @@ begin
     ('00000000-0000-0000-0000-000000000000', customer_id, 'authenticated', 'authenticated',
      'customer@novacrm.app', extensions.crypt('NovaCRM!2026', extensions.gen_salt('bf')), now(),
      '{"provider":"email","providers":["email"]}', '{"full_name":"Nova Customer","role":"customer","tenant_id":"11111111-1111-1111-1111-111111111111"}',
+     now(), now(), '', '', '', ''),
+    ('00000000-0000-0000-0000-000000000000', pm_delivery_id, 'authenticated', 'authenticated',
+     'pm.delivery@novacrm.app', extensions.crypt('NovaCRM!2026', extensions.gen_salt('bf')), now(),
+     '{"provider":"email","providers":["email"]}', '{"full_name":"PM Delivery","role":"pm_delivery","tenant_id":"11111111-1111-1111-1111-111111111111"}',
+     now(), now(), '', '', '', ''),
+    ('00000000-0000-0000-0000-000000000000', dco_id, 'authenticated', 'authenticated',
+     'dco@novacrm.app', extensions.crypt('NovaCRM!2026', extensions.gen_salt('bf')), now(),
+     '{"provider":"email","providers":["email"]}', '{"full_name":"DCO Delivery","role":"dco","tenant_id":"11111111-1111-1111-1111-111111111111"}',
      now(), now(), '', '', '', '')
   on conflict (id) do nothing;
 
@@ -55,14 +65,18 @@ begin
   values
     (gen_random_uuid(), admin_id, format('{"sub":"%s","email":"admin@novacrm.app"}', admin_id)::jsonb, 'email', admin_id::text, now(), now(), now()),
     (gen_random_uuid(), agent_id, format('{"sub":"%s","email":"agent@novacrm.app"}', agent_id)::jsonb, 'email', agent_id::text, now(), now(), now()),
-    (gen_random_uuid(), customer_id, format('{"sub":"%s","email":"customer@novacrm.app"}', customer_id)::jsonb, 'email', customer_id::text, now(), now(), now())
+    (gen_random_uuid(), customer_id, format('{"sub":"%s","email":"customer@novacrm.app"}', customer_id)::jsonb, 'email', customer_id::text, now(), now(), now()),
+    (gen_random_uuid(), pm_delivery_id, format('{"sub":"%s","email":"pm.delivery@novacrm.app"}', pm_delivery_id)::jsonb, 'email', pm_delivery_id::text, now(), now(), now()),
+    (gen_random_uuid(), dco_id, format('{"sub":"%s","email":"dco@novacrm.app"}', dco_id)::jsonb, 'email', dco_id::text, now(), now(), now())
   on conflict do nothing;
 
   insert into public.profiles (id, tenant_id, role, full_name, email, phone, created_by)
   values
     (admin_id, '11111111-1111-1111-1111-111111111111', 'admin', 'Nova Admin', 'admin@novacrm.app', '628111000001', admin_id),
     (agent_id, '11111111-1111-1111-1111-111111111111', 'agent', 'Nova Agent', 'agent@novacrm.app', '628111000002', admin_id),
-    (customer_id, '11111111-1111-1111-1111-111111111111', 'customer', 'Nova Customer', 'customer@novacrm.app', '628111000003', admin_id)
+    (customer_id, '11111111-1111-1111-1111-111111111111', 'customer', 'Nova Customer', 'customer@novacrm.app', '628111000003', admin_id),
+    (pm_delivery_id, '11111111-1111-1111-1111-111111111111', 'pm_delivery', 'PM Delivery', 'pm.delivery@novacrm.app', '628111000004', admin_id),
+    (dco_id, '11111111-1111-1111-1111-111111111111', 'dco', 'DCO Delivery', 'dco@novacrm.app', '628111000005', admin_id)
   on conflict (id) do update set role = excluded.role, full_name = excluded.full_name, email = excluded.email;
 exception when others then
   raise notice 'Skipping auth.users seed (%). Create users in Supabase Auth, then re-run profile seed.', SQLERRM;
@@ -101,7 +115,13 @@ on conflict (id) do nothing;
 insert into public.role_capabilities (tenant_id, role, action, subject, allowed, created_by)
 values
   ('11111111-1111-1111-1111-111111111111', 'agent', 'read', 'Ticket', true, '22222222-2222-2222-2222-222222222222'),
-  ('11111111-1111-1111-1111-111111111111', 'customer', 'read', 'Capability', false, '22222222-2222-2222-2222-222222222222')
+  ('11111111-1111-1111-1111-111111111111', 'customer', 'read', 'Capability', false, '22222222-2222-2222-2222-222222222222'),
+  ('11111111-1111-1111-1111-111111111111', 'pm_delivery', 'create', 'DeliveryProject', true, '22222222-2222-2222-2222-222222222222'),
+  ('11111111-1111-1111-1111-111111111111', 'pm_delivery', 'update', 'DeliveryPhase', true, '22222222-2222-2222-2222-222222222222'),
+  ('11111111-1111-1111-1111-111111111111', 'dco', 'create', 'DeliveryWorkOrder', true, '22222222-2222-2222-2222-222222222222'),
+  ('11111111-1111-1111-1111-111111111111', 'dco', 'create', 'DeliveryTask', true, '22222222-2222-2222-2222-222222222222'),
+  ('11111111-1111-1111-1111-111111111111', 'dco', 'create', 'TaskActivity', true, '22222222-2222-2222-2222-222222222222'),
+  ('11111111-1111-1111-1111-111111111111', 'dco', 'create', 'TaskDependency', true, '22222222-2222-2222-2222-222222222222')
 on conflict (tenant_id, role, action, subject) do update set allowed = excluded.allowed;
 -- Delivery demo: mirrors a closed-won project from an external Work Order CRM.
 insert into public.accounts (
@@ -124,11 +144,26 @@ on conflict (id) do update set
   external_id = excluded.external_id;
 
 insert into public.account_members (tenant_id, account_id, user_id, role, created_by)
-values (
+values
+(
   '11111111-1111-1111-1111-111111111111',
   '55555555-0001-0001-0001-000000000004',
   '44444444-4444-4444-4444-444444444444',
   'portal',
+  '22222222-2222-2222-2222-222222222222'
+),
+(
+  '11111111-1111-1111-1111-111111111111',
+  '55555555-0001-0001-0001-000000000004',
+  '33333333-3333-3333-3333-333333333336',
+  'member',
+  '22222222-2222-2222-2222-222222222222'
+),
+(
+  '11111111-1111-1111-1111-111111111111',
+  '55555555-0001-0001-0001-000000000004',
+  '33333333-3333-3333-3333-333333333337',
+  'member',
   '22222222-2222-2222-2222-222222222222'
 )
 on conflict (account_id, user_id) do nothing;
@@ -146,8 +181,8 @@ values (
   'Implementasi Network Cabang Jakarta',
   'Delivery project dari Work Order Management CRM setelah status Closed Won.',
   'in_progress',
-  '33333333-3333-3333-3333-333333333333',
-  '33333333-3333-3333-3333-333333333333',
+  '33333333-3333-3333-3333-333333333336',
+  '33333333-3333-3333-3333-333333333337',
   current_date - 7,
   current_date + 30,
   '22222222-2222-2222-2222-222222222222'

@@ -29,6 +29,8 @@ const roleTone: Record<AppRole, 'danger' | 'info' | 'warning' | 'neutral'> = {
   admin: 'danger',
   manager: 'warning',
   supervisor: 'warning',
+  pm_delivery: 'info',
+  dco: 'info',
   team_lead: 'info',
   agent: 'info',
   customer: 'neutral',

@@ -2,7 +2,8 @@
 
 **Audience:** owner platform, admin, PM Delivery, DCO, security, dan
 integration owner  
-**Status:** rekomendasi desain akses; tidak mengubah code atau role production
+**Status:** baseline role sudah tersedia; project/account scoping dan governance
+tetap wajib diterapkan
 
 ## Keputusan utama
 
@@ -119,25 +120,24 @@ Role `admin` dan `manager` terlalu luas untuk diberikan permanen kepada PM
 Delivery atau DCO. `manager` mencakup account, organization, user, import, dan
 workflow; `admin` juga mencakup tenant settings serta integrasi.
 
-Sebelum production, sediakan role khusus:
+Role khusus yang tersedia:
 
-- `delivery_manager`;
-- `delivery_controller`;
-- `delivery_agent`;
-- `delivery_partner` bila vendor perlu login;
+- `pm_delivery`;
+- `dco`;
+- `agent` untuk delivery team/task executor;
+- role partner terpisah bila vendor perlu login;
 - service identity terpisah untuk CRM webhook.
 
-Subject capability yang perlu tersedia untuk role tersebut minimal:
+Subject capability yang tersedia untuk role delivery:
 
 ```text
 DeliveryProject, DeliveryPhase, WorkOrder, DeliveryTask,
 TaskActivity, TaskDependency, DeliveryReport, DeliveryPublish
 ```
 
-Sampai role khusus tersedia, jangan menganggap capability matrix saja sudah
-menyelesaikan pemisahan akses delivery. Gunakan account membership dan project
-allowlist sebagai kontrol tambahan, lalu lakukan approval admin untuk akses
-sementara.
+Capability matrix mengatur baseline action per role, tetapi belum menggantikan
+account membership dan project allowlist. PM Delivery dan DCO tetap harus
+memiliki membership pada account delivery yang relevan.
 
 ## Segregation of duties
 

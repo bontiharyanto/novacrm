@@ -1,6 +1,8 @@
 export const APP_ROLES = [
   'customer',
   'agent',
+  'pm_delivery',
+  'dco',
   'team_lead',
   'supervisor',
   'manager',
@@ -12,6 +14,8 @@ export type AppRole = (typeof APP_ROLES)[number];
 
 export const STAFF_ROLES = [
   'agent',
+  'pm_delivery',
+  'dco',
   'team_lead',
   'supervisor',
   'manager',
@@ -24,6 +28,8 @@ export type StaffRole = (typeof STAFF_ROLES)[number];
 export const ROLE_RANK: Record<AppRole, number> = {
   customer: 0,
   agent: 10,
+  pm_delivery: 25,
+  dco: 25,
   team_lead: 20,
   supervisor: 30,
   manager: 40,
@@ -62,7 +68,14 @@ export function canAssignRole(actor: AppRole, target: AppRole): boolean {
   if (actor === 'superadmin') return true;
   if (actor === 'admin') return target !== 'superadmin';
   if (actor === 'manager') {
-    return target === 'customer' || target === 'agent' || target === 'team_lead' || target === 'supervisor';
+    return (
+      target === 'customer' ||
+      target === 'agent' ||
+      target === 'pm_delivery' ||
+      target === 'dco' ||
+      target === 'team_lead' ||
+      target === 'supervisor'
+    );
   }
   if (actor === 'supervisor') {
     return target === 'customer' || target === 'agent';
@@ -78,6 +91,8 @@ export const ROLE_LABEL: Record<AppRole, string> = {
   customer: 'Customer',
   agent: 'Agent',
   team_lead: 'Team lead',
+  pm_delivery: 'PM Delivery',
+  dco: 'DCO',
   supervisor: 'Supervisor',
   manager: 'Manager',
   admin: 'Admin',
@@ -88,6 +103,8 @@ export const ROLE_HINT: Record<AppRole, string> = {
   customer: 'Portal only — own tickets and catalog',
   agent: 'Service desk — tickets, assets, CMDB on assigned accounts',
   team_lead: 'Queue lead — assign, escalate, read users and WFM',
+  pm_delivery: 'Delivery manager — project, phase, milestone and publish approval',
+  dco: 'Delivery controller — Work Orders, tasks, dependencies and execution',
   supervisor: 'SPV — SLA, WFM roster, catalog maintain',
   manager: 'Ops manager — accounts, org, users, import, workflows',
   admin: 'Tenant admin — settings, integrations, all desk modules',

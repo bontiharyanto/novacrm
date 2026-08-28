@@ -1249,6 +1249,8 @@ export const id: Dictionary = {
   roles: {
     customer: 'Pelanggan',
     agent: 'Agen',
+    pm_delivery: 'PM Delivery',
+    dco: 'DCO',
     team_lead: 'Team lead',
     supervisor: 'Supervisor',
     manager: 'Manajer',
@@ -1257,6 +1259,8 @@ export const id: Dictionary = {
     hint: {
       customer: 'Portal saja',
       agent: 'Service desk',
+      pm_delivery: 'Manajer project delivery',
+      dco: 'Delivery control officer',
       team_lead: 'Lead antrian',
       supervisor: 'SLA dan WFM',
       manager: 'Account, org, user',

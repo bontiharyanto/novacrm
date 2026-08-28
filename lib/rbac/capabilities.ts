@@ -24,6 +24,14 @@ export const CAPABILITY_SUBJECTS = [
   'Import',
   'Knowledge',
   'Capability',
+  'DeliveryProject',
+  'DeliveryPhase',
+  'DeliveryWorkOrder',
+  'DeliveryTask',
+  'TaskActivity',
+  'TaskDependency',
+  'DeliveryReport',
+  'DeliveryPublish',
 ] as const;
 export type CapabilitySubject = (typeof CAPABILITY_SUBJECTS)[number];
 

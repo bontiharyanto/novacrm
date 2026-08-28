@@ -2,7 +2,6 @@
 
 import { getSessionProfile } from '@/lib/auth/session';
 import { canRole } from '@/lib/rbac/ability';
-import { isStaffRole } from '@/lib/rbac/roles';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getTicketById } from '@/lib/tickets/actions';
 import {
@@ -114,7 +113,9 @@ export async function createTaskActivity(ticketId: string, taskId: string, input
   if (!parsed.success) return { data: null, error: parsed.error.issues[0]?.message ?? 'Invalid activity' };
   const access = await assertTaskInTicket(ticketId, taskId);
   if (!access.client || !access.session) return { data: null, error: access.error };
-  if (!isStaffRole(access.session.profile.role)) return { data: null, error: 'Unauthorized' };
+  if (!canRole(access.session.profile.role, 'create', 'TaskActivity')) {
+    return { data: null, error: 'Unauthorized' };
+  }
   const result = await access.client
     .from('task_activities')
     .insert({
@@ -137,7 +138,9 @@ export async function createTaskActivity(ticketId: string, taskId: string, input
 export async function listTaskDependencies(ticketId: string, taskId: string) {
   const access = await assertTaskInTicket(ticketId, taskId);
   if (!access.client || !access.session) return { data: [], error: access.error };
-  if (!isStaffRole(access.session.profile.role)) return { data: [], error: 'Unauthorized' };
+  if (!canRole(access.session.profile.role, 'read', 'TaskDependency')) {
+    return { data: [], error: 'Unauthorized' };
+  }
   const result = await access.client
     .from('task_dependencies')
     .select('*')
@@ -153,7 +156,9 @@ export async function createTaskDependency(ticketId: string, successorTaskId: st
   if (!parsed.success) return { data: null, error: parsed.error.issues[0]?.message ?? 'Invalid dependency' };
   const access = await assertTaskInTicket(ticketId, successorTaskId);
   if (!access.client || !access.session) return { data: null, error: access.error };
-  if (!isStaffRole(access.session.profile.role)) return { data: null, error: 'Unauthorized' };
+  if (!canRole(access.session.profile.role, 'create', 'TaskDependency')) {
+    return { data: null, error: 'Unauthorized' };
+  }
   const predecessor = await access.client
     .from('ticket_tasks')
     .select('id')

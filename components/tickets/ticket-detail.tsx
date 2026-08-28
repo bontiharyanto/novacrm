@@ -135,10 +135,14 @@ export function TicketDetail({
   ticketId,
   currentUserId,
   currentUserName,
+  canEditTicket,
+  canCreateTaskActivity,
 }: {
   ticketId: string;
   currentUserId: string;
   currentUserName: string;
+  canEditTicket: boolean;
+  canCreateTaskActivity: boolean;
 }) {
   const { t } = useI18n();
   const [ticket, setTicket] = useState<TicketItem | null>(null);
@@ -257,6 +261,7 @@ export function TicketDetail({
   useRealtimeTable('ticket_comments', loadTicket);
 
   async function patchTicket(body: Record<string, unknown>) {
+    if (!canEditTicket) return;
     setIsSaving(true);
     try {
       const response = await fetch(`/api/tickets/${ticketId}`, {
@@ -375,7 +380,11 @@ export function TicketDetail({
             <CardTitle className="text-sm text-zinc-400">{t.tickets.process}</CardTitle>
           </CardHeader>
           <CardContent>
-            <ProcessStrip type={type} status={ticket.status} onSelect={(next) => void patchTicket({ status: next })} />
+            <ProcessStrip
+              type={type}
+              status={ticket.status}
+              onSelect={canEditTicket ? (next) => void patchTicket({ status: next }) : undefined}
+            />
             {type === 'change' ? (
               <Link href={`/cab/${ticket.id}`} className="mt-3 inline-flex text-xs text-blue-300 hover:text-blue-200">
                 Open CAB record
@@ -450,6 +459,8 @@ export function TicketDetail({
                 accountId={ticket.accountId}
                 groups={groups}
                 embedded
+                canEditTasks={canEditTicket}
+                canCreateActivity={canCreateTaskActivity}
                 onStatsChange={setTaskStats}
               />
             </div>
@@ -461,7 +472,7 @@ export function TicketDetail({
                 {ticket.comments.map((item) => (
                   <ActivityEntry key={item.id} item={item} />
                 ))}
-                <div className="space-y-3 border-t border-zinc-800 pt-4">
+                {canEditTicket ? <div className="space-y-3 border-t border-zinc-800 pt-4">
                   <div className="rounded-md border border-zinc-800 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-300">
                     <span className="text-zinc-500">{t.tickets.commentAuthorLabel}: </span>
                     <span className="font-medium text-zinc-100">
@@ -489,7 +500,7 @@ export function TicketDetail({
                     </label>
                   </div>
                   <VisitReportForm ticketId={ticketId} author={currentUserName} onSaved={() => loadTicket()} />
-                </div>
+                </div> : null}
               </>
             ) : null}
           </CardContent>
@@ -623,6 +634,7 @@ export function TicketDetail({
               <Select
                 className="mt-1"
                 value={ticketType}
+                disabled={!canEditTicket}
                 onChange={(event) => {
                   const next = event.target.value as TicketType;
                   setTicketType(next);
@@ -644,7 +656,7 @@ export function TicketDetail({
             </div>
             <div>
               <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">{t.tickets.assignee}</p>
-              <Select className="mt-1" value={assigneeId} onChange={(event) => setAssigneeId(event.target.value)}>
+              <Select className="mt-1" value={assigneeId} disabled={!canEditTicket} onChange={(event) => setAssigneeId(event.target.value)}>
                 <option value="">{t.tickets.unassigned}</option>
                 {ticket.assigneeId && !agents.some((agent) => agent.id === ticket.assigneeId) ? (
                   <option value={ticket.assigneeId}>{ticket.assigneeName ?? ticket.assigneeId}</option>
@@ -662,14 +674,14 @@ export function TicketDetail({
                   size="sm"
                   className="flex-1"
                   onClick={() => void patchTicket({ assigneeId: assigneeId || null })}
-                  disabled={isSaving}
+                  disabled={isSaving || !canEditTicket}
                 >
                   {t.tickets.saveAssignee}
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
-                  disabled={isSaving}
+                  disabled={isSaving || !canEditTicket}
                   onClick={() =>
                     void dispatchTicketAction(ticketId, true).then((result) => {
                       if (result.error) toastError(result.error);
@@ -685,7 +697,7 @@ export function TicketDetail({
                     size="sm"
                     variant="outline"
                     onClick={() => void patchTicket({ assigneeId: currentUserId })}
-                    disabled={isSaving}
+                    disabled={isSaving || !canEditTicket}
                   >
                     <UserPlus className="h-3.5 w-3.5" /> {t.tickets.me}
                   </Button>
@@ -694,7 +706,7 @@ export function TicketDetail({
             </div>
             <div>
               <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">{t.tickets.assignmentGroup}</p>
-              <Select className="mt-1" value={groupId} onChange={(event) => setGroupId(event.target.value)}>
+              <Select className="mt-1" value={groupId} disabled={!canEditTicket} onChange={(event) => setGroupId(event.target.value)}>
                 <option value="">{t.tickets.none}</option>
                 {groups.map((group) => (
                   <option key={group.id} value={group.id}>
@@ -707,14 +719,14 @@ export function TicketDetail({
                 variant="outline"
                 className="mt-2 w-full"
                 onClick={() => void patchTicket({ groupId: groupId || null })}
-                disabled={isSaving}
+                disabled={isSaving || !canEditTicket}
               >
                 {t.tickets.saveGroup}
               </Button>
             </div>
             <div>
               <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">{t.tickets.configurationItem}</p>
-              <Select className="mt-1" value={linkedAssetId} onChange={(event) => setLinkedAssetId(event.target.value)}>
+              <Select className="mt-1" value={linkedAssetId} disabled={!canEditTicket} onChange={(event) => setLinkedAssetId(event.target.value)}>
                 <option value="">{t.tickets.none}</option>
                 {assets.map((asset) => (
                   <option key={asset.id} value={asset.id}>
@@ -728,7 +740,7 @@ export function TicketDetail({
                   variant="outline"
                   className="flex-1"
                   onClick={() => void patchTicket({ assetId: linkedAssetId || null })}
-                  disabled={isSaving}
+                  disabled={isSaving || !canEditTicket}
                 >
                   {t.tickets.saveCi}
                 </Button>
@@ -772,7 +784,7 @@ export function TicketDetail({
                 childTickets={ticket.childTickets ?? []}
                 parents={parentOptions}
                 linkableChildren={childOptions}
-                disabled={isSaving}
+                disabled={isSaving || !canEditTicket}
                 onParentId={setParentTicketId}
                 onSaveParent={() => void patchTicket({ parentTicketId: parentTicketId || null })}
                 onLinkChild={(childId) => {
@@ -804,7 +816,7 @@ export function TicketDetail({
                 linkableIncidents={linkableIncidents}
                 workaround={workaround}
                 knownError={knownError}
-                disabled={isSaving}
+                disabled={isSaving || !canEditTicket}
                 onProblemId={setProblemId}
                 onWorkaround={setWorkaround}
                 onKnownError={setKnownError}
@@ -923,6 +935,7 @@ export function TicketDetail({
                   type="checkbox"
                   className="mt-0.5"
                   checked={resolveChildren}
+                  disabled={!canEditTicket}
                   onChange={(event) => setResolveChildren(event.target.checked)}
                 />
                 <span>{t.tickets.resolveChildren}</span>
@@ -941,7 +954,7 @@ export function TicketDetail({
                     resolveChildren,
                 })
               }
-              disabled={isSaving}
+              disabled={isSaving || !canEditTicket}
             >
               {isSaving ? 'Saving...' : 'Save status'}
             </Button>
@@ -953,7 +966,7 @@ export function TicketDetail({
             <CardTitle className="text-sm text-zinc-400">Escalate L2 / L3</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Select value={escalateGroupId} onChange={(event) => setEscalateGroupId(event.target.value)}>
+            <Select value={escalateGroupId} disabled={!canEditTicket} onChange={(event) => setEscalateGroupId(event.target.value)}>
               <option value="">Select higher tier</option>
               {groups
                 .filter((group) => group.tier === 'l2' || group.tier === 'l3')
@@ -966,7 +979,7 @@ export function TicketDetail({
             <Button
               className="w-full"
               variant="outline"
-              disabled={isSaving || !escalateGroupId}
+              disabled={isSaving || !canEditTicket || !escalateGroupId}
               onClick={() => void patchTicket({ escalate: true, groupId: escalateGroupId })}
             >
               Escalate · SLA keeps running

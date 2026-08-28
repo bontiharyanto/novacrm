@@ -37,6 +37,8 @@ export function TicketTasksPanel({
   accountId,
   groups,
   embedded = false,
+  canEditTasks = true,
+  canCreateActivity = true,
   onStatsChange,
 }: {
   ticketId: string;
@@ -45,6 +47,8 @@ export function TicketTasksPanel({
   groups: GroupOption[];
   /** Render without outer Card — for use inside a parent tab panel. */
   embedded?: boolean;
+  canEditTasks?: boolean;
+  canCreateActivity?: boolean;
   onStatsChange?: (stats: { total: number; done: number; sequential: boolean }) => void;
 }) {
   const { t } = useI18n();
@@ -197,7 +201,7 @@ export function TicketTasksPanel({
               <p className="truncate text-xs text-zinc-400">{task.assigneeName ?? '—'}</p>
               <p className="truncate text-xs text-zinc-500">{typeLabel(task.taskType)}</p>
               <div className="flex flex-wrap gap-1">
-                {task.status === 'open' ? (
+                {canEditTasks && task.status === 'open' ? (
                   <Button
                     size="sm"
                     variant="outline"
@@ -207,7 +211,7 @@ export function TicketTasksPanel({
                     {t.tickets.tasks.start}
                   </Button>
                 ) : null}
-                {task.status === 'in_progress' ? (
+                {canEditTasks && task.status === 'in_progress' ? (
                   <Button
                     size="sm"
                     disabled={busy || task.locked}
@@ -216,7 +220,7 @@ export function TicketTasksPanel({
                     {t.tickets.tasks.complete}
                   </Button>
                 ) : null}
-                {task.status !== 'done' && task.status !== 'cancelled' ? (
+                {canEditTasks && task.status !== 'done' && task.status !== 'cancelled' ? (
                   <Button
                     size="sm"
                     variant="ghost"
@@ -236,12 +240,15 @@ export function TicketTasksPanel({
                   {t.tickets.tasks.activities}
                 </Button>
               </div>
-              {activityTaskId === task.id ? <TaskActivityThread ticketId={ticketId} taskId={task.id} /> : null}
+              {activityTaskId === task.id ? (
+                <TaskActivityThread ticketId={ticketId} taskId={task.id} readOnly={!canCreateActivity} />
+              ) : null}
             </div>
           ))}
         </div>
       )}
 
+      {canEditTasks ? (
       <div className="space-y-2 rounded-lg border border-zinc-800 bg-zinc-950/50 p-3">
         <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">{t.tickets.tasks.add}</p>
         <div className="grid gap-2 sm:grid-cols-2">
@@ -292,6 +299,7 @@ export function TicketTasksPanel({
           {t.tickets.tasks.add}
         </Button>
       </div>
+      ) : null}
     </div>
   );
 

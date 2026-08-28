@@ -2,7 +2,8 @@
 
 import { requireAccountId } from '@/lib/accounts/scope';
 import { getSessionProfile } from '@/lib/auth/session';
-import { isCustomerRole, isStaffRole } from '@/lib/rbac/roles';
+import { canRole } from '@/lib/rbac/ability';
+import { isCustomerRole } from '@/lib/rbac/roles';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { createTicket } from '@/lib/tickets/actions';
@@ -153,7 +154,10 @@ async function hydrateProjects(
 
 async function getReadableProjectsQuery() {
   const session = await getSessionProfile();
-  if (!session || (!isCustomerRole(session.profile.role) && !isStaffRole(session.profile.role))) {
+  if (
+    !session ||
+    (!isCustomerRole(session.profile.role) && !canRole(session.profile.role, 'read', 'DeliveryProject'))
+  ) {
     return { session: null, client: null, accountId: null, error: 'Unauthorized' as string | null };
   }
   const client = await createSupabaseServerClient();
@@ -198,7 +202,9 @@ export async function createDeliveryProject(input: unknown) {
   const parsed = deliveryProjectInputSchema.safeParse(input);
   if (!parsed.success) return { data: null, error: parsed.error.issues[0]?.message ?? 'Invalid delivery project' };
   const session = await getSessionProfile();
-  if (!session || !isStaffRole(session.profile.role)) return { data: null, error: 'Unauthorized' };
+  if (!session || !canRole(session.profile.role, 'create', 'DeliveryProject')) {
+    return { data: null, error: 'Unauthorized' };
+  }
   const client = await createSupabaseServerClient();
   const values = parsed.data;
   const { data, error } = await client
@@ -240,7 +246,9 @@ export async function updateDeliveryProject(projectId: string, input: unknown) {
   const parsed = deliveryProjectUpdateSchema.safeParse(input);
   if (!parsed.success) return { data: null, error: parsed.error.issues[0]?.message ?? 'Invalid project update' };
   const session = await getSessionProfile();
-  if (!session || !isStaffRole(session.profile.role)) return { data: null, error: 'Unauthorized' };
+  if (!session || !canRole(session.profile.role, 'update', 'DeliveryProject')) {
+    return { data: null, error: 'Unauthorized' };
+  }
   const patch: Record<string, unknown> = {};
   const values = parsed.data;
   if (values.name !== undefined) patch.name = values.name;
@@ -268,7 +276,9 @@ export async function updateDeliveryPhase(projectId: string, phaseId: string, in
   const parsed = deliveryPhaseUpdateSchema.safeParse(input);
   if (!parsed.success) return { data: null, error: parsed.error.issues[0]?.message ?? 'Invalid phase update' };
   const session = await getSessionProfile();
-  if (!session || !isStaffRole(session.profile.role)) return { data: null, error: 'Unauthorized' };
+  if (!session || !canRole(session.profile.role, 'update', 'DeliveryPhase')) {
+    return { data: null, error: 'Unauthorized' };
+  }
   const patch: Record<string, unknown> = {};
   if (parsed.data.status !== undefined) {
     patch.status = parsed.data.status;
@@ -346,7 +356,9 @@ export async function createDeliveryWorkOrder(projectId: string, input: unknown)
   const parsed = deliveryWorkOrderInputSchema.safeParse(input);
   if (!parsed.success) return { data: null, error: parsed.error.issues[0]?.message ?? 'Invalid work order' };
   const session = await getSessionProfile();
-  if (!session || !isStaffRole(session.profile.role)) return { data: null, error: 'Unauthorized' };
+  if (!session || !canRole(session.profile.role, 'create', 'DeliveryWorkOrder')) {
+    return { data: null, error: 'Unauthorized' };
+  }
   const project = await getDeliveryProject(projectId);
   if (!project.data) return { data: null, error: project.error ?? 'Project not found' };
 

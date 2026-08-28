@@ -29,9 +29,13 @@ function phaseIcon(status: DeliveryPhaseStatus) {
 export function DeliveryProjectDetail({
   projectId,
   readOnly = false,
+  canManagePhases = !readOnly,
+  canCreateWorkOrder = !readOnly,
 }: {
   projectId: string;
   readOnly?: boolean;
+  canManagePhases?: boolean;
+  canCreateWorkOrder?: boolean;
 }) {
   const { t } = useI18n();
   const [project, setProject] = useState<DeliveryProject | null>(null);
@@ -160,7 +164,7 @@ export function DeliveryProjectDetail({
                   }`}>
                     <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(132px,160px)] sm:items-center">
                       <p className="min-w-0 text-sm leading-5 text-zinc-100">{phase.title}</p>
-                      {readOnly ? (
+                      {readOnly || !canManagePhases ? (
                         <Badge tone={statusTone(phase.status)}>{t.common.deliveryStatus[phase.status]}</Badge>
                       ) : (
                         <Select
@@ -199,7 +203,7 @@ export function DeliveryProjectDetail({
               </div>
             </dl>
           </section>
-          {!readOnly ? (
+          {!readOnly && canCreateWorkOrder ? (
             <section className="nova-surface rounded-xl border p-5">
               <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{t.common.deliveryCreateWorkOrder}</p>
               <p className="mt-2 text-xs leading-5 text-zinc-600">{t.common.deliveryCreateWorkOrderHint}</p>
