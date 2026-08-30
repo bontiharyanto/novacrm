@@ -18,9 +18,11 @@ import {
   Timer,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
 import { useI18n } from '@/components/layout/preferences-provider';
 import { formatRelativeId } from '@/lib/utils/dates';
-import type { DeliveryReportData, DeliveryReportProject } from '@/lib/delivery/report';
+import type { DeliveryReportData, DeliveryReportFilters, DeliveryReportProject } from '@/lib/delivery/report';
 
 function statusTone(status: string): 'neutral' | 'info' | 'success' | 'warning' | 'danger' {
   if (status === 'completed' || status === 'accepted' || status === 'accepted_with_conditions' || status === 'done') {
@@ -43,10 +45,18 @@ export function DeliveryReport({ initialData }: { initialData: DeliveryReportDat
   const [data, setData] = useState(initialData);
   const [loading, setLoading] = useState(!initialData);
   const [error, setError] = useState('');
+  const [projectId, setProjectId] = useState('');
+  const [from, setFrom] = useState('');
+  const [to, setTo] = useState('');
+  const projectOptions = initialData?.projects ?? [];
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (filters: DeliveryReportFilters = {}) => {
     setError('');
-    const response = await fetch('/api/delivery/reports', { cache: 'no-store' });
+    const query = new URLSearchParams();
+    if (filters.projectId) query.set('projectId', filters.projectId);
+    if (filters.from) query.set('from', filters.from);
+    if (filters.to) query.set('to', filters.to);
+    const response = await fetch(`/api/delivery/reports${query.size ? `?${query.toString()}` : ''}`, { cache: 'no-store' });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
       setError(payload.error ?? t.common.deliveryEmpty);
@@ -60,6 +70,34 @@ export function DeliveryReport({ initialData }: { initialData: DeliveryReportDat
   useEffect(() => {
     void load();
   }, [load]);
+
+  function applyFilters() {
+    if (from && to && from > to) {
+      setError(t.common.deliveryReportInvalidPeriod);
+      return;
+    }
+    void load({
+      projectId: projectId || undefined,
+      from: from || undefined,
+      to: to || undefined,
+    });
+  }
+
+  function clearFilters() {
+    setProjectId('');
+    setFrom('');
+    setTo('');
+    void load();
+  }
+
+  function exportHref(format: 'csv' | 'xlsx' | 'pdf', preview = false) {
+    const query = new URLSearchParams({ format });
+    if (projectId) query.set('projectId', projectId);
+    if (from) query.set('from', from);
+    if (to) query.set('to', to);
+    if (preview) query.set('preview', '1');
+    return `/api/delivery/reports/export?${query.toString()}`;
+  }
 
   if (loading && !data) {
     return <div className="mx-auto max-w-7xl p-4 text-sm text-zinc-500 md:p-8">{t.common.loading}</div>;
@@ -98,7 +136,7 @@ export function DeliveryReport({ initialData }: { initialData: DeliveryReportDat
         </div>
         <div className="flex flex-wrap items-center justify-end gap-2">
           <a
-            href="/api/delivery/reports/export?format=pdf&preview=1"
+            href={exportHref('pdf', true)}
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-1.5 rounded-md border border-zinc-800 px-3 py-2 text-xs text-zinc-400 transition-colors hover:border-zinc-700 hover:text-zinc-100"
@@ -106,21 +144,21 @@ export function DeliveryReport({ initialData }: { initialData: DeliveryReportDat
             <Eye className="h-3.5 w-3.5" /> {t.common.deliveryReportPreviewPdf}
           </a>
           <a
-            href="/api/delivery/reports/export?format=csv"
+            href={exportHref('csv')}
             download
             className="inline-flex items-center gap-1.5 rounded-md border border-zinc-800 px-3 py-2 text-xs text-zinc-400 transition-colors hover:border-zinc-700 hover:text-zinc-100"
           >
             <Download className="h-3.5 w-3.5" /> CSV
           </a>
           <a
-            href="/api/delivery/reports/export?format=xlsx"
+            href={exportHref('xlsx')}
             download
             className="inline-flex items-center gap-1.5 rounded-md border border-zinc-800 px-3 py-2 text-xs text-zinc-400 transition-colors hover:border-zinc-700 hover:text-zinc-100"
           >
             <FileSpreadsheet className="h-3.5 w-3.5" /> Excel
           </a>
           <a
-            href="/api/delivery/reports/export?format=pdf"
+            href={exportHref('pdf')}
             download
             className="inline-flex items-center gap-1.5 rounded-md border border-zinc-800 px-3 py-2 text-xs text-zinc-400 transition-colors hover:border-zinc-700 hover:text-zinc-100"
           >
@@ -138,6 +176,50 @@ export function DeliveryReport({ initialData }: { initialData: DeliveryReportDat
 
       {error ? <p className="rounded-md border border-rose-900/60 bg-rose-950/20 px-3 py-2 text-xs text-rose-300">{error}</p> : null}
 
+      <section className="nova-surface rounded-xl border p-5">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{t.common.deliveryReportFilters}</p>
+            <p className="mt-1 text-xs text-zinc-600">{t.common.deliveryReportPeriodHint}</p>
+          </div>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="rounded-md border border-zinc-800 px-3 py-2 text-xs text-zinc-500 transition-colors hover:border-zinc-700 hover:text-zinc-200"
+            >
+              {t.common.deliveryReportClear}
+            </button>
+            <button
+              type="button"
+              onClick={applyFilters}
+              className="rounded-md bg-blue-600 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-blue-500"
+            >
+              {t.common.deliveryReportApply}
+            </button>
+          </div>
+        </div>
+        <div className="mt-4 grid gap-3 md:grid-cols-3">
+          <label className="space-y-1.5">
+            <span className="text-[11px] text-zinc-500">{t.common.deliveryReportProject}</span>
+            <Select value={projectId} onChange={(event) => setProjectId(event.target.value)}>
+              <option value="">{t.common.deliveryReportAllProjects}</option>
+              {projectOptions.map((project) => (
+                <option key={project.id} value={project.id}>{project.name}</option>
+              ))}
+            </Select>
+          </label>
+          <label className="space-y-1.5">
+            <span className="text-[11px] text-zinc-500">{t.common.deliveryReportFrom}</span>
+            <Input type="date" value={from} onChange={(event) => setFrom(event.target.value)} />
+          </label>
+          <label className="space-y-1.5">
+            <span className="text-[11px] text-zinc-500">{t.common.deliveryReportTo}</span>
+            <Input type="date" value={to} onChange={(event) => setTo(event.target.value)} />
+          </label>
+        </div>
+      </section>
+
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
         {metrics.map((metric) => {
           const Icon = metric.icon;
@@ -151,6 +233,33 @@ export function DeliveryReport({ initialData }: { initialData: DeliveryReportDat
             </div>
           );
         })}
+      </section>
+
+      <section className="nova-surface overflow-hidden rounded-xl border">
+        <div className="border-b border-zinc-800 px-5 py-4">
+          <h2 className="text-sm font-medium text-zinc-100">{t.common.deliveryReportProgressHistory}</h2>
+          <p className="mt-1 text-xs text-zinc-600">{t.common.deliveryReportProgressHistoryHint}</p>
+        </div>
+        {data.progressHistory.length === 0 ? (
+          <p className="px-5 py-8 text-sm text-zinc-500">{t.common.deliveryReportNoHistory}</p>
+        ) : (
+          <div className="max-h-80 overflow-auto">
+            <div className="grid min-w-[520px] grid-cols-[minmax(220px,1fr)_140px_120px_160px] gap-2 border-b border-zinc-800 px-5 py-2 text-[10px] uppercase tracking-[0.12em] text-zinc-600">
+              <span>{t.common.deliveryReportProject}</span>
+              <span>{t.common.deliveryReportDate}</span>
+              <span>{t.common.deliveryProgress}</span>
+              <span>{t.common.deliveryPhase}</span>
+            </div>
+            {data.progressHistory.map((snapshot) => (
+              <div key={`${snapshot.projectId}-${snapshot.snapshotDate}`} className="grid min-w-[520px] grid-cols-[minmax(220px,1fr)_140px_120px_160px] gap-2 border-b border-zinc-800/80 px-5 py-2.5 text-xs last:border-b-0">
+                <span className="truncate text-zinc-300">{snapshot.projectName}</span>
+                <span className="text-zinc-500">{snapshot.snapshotDate}</span>
+                <span className="text-blue-300">{snapshot.progress}%</span>
+                <span><Badge tone={statusTone(snapshot.status)}>{snapshot.status}</Badge></span>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       <section className="nova-surface overflow-hidden rounded-xl border">

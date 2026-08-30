@@ -2,6 +2,7 @@
 
 import { getSessionProfile } from '@/lib/auth/session';
 import { canRole } from '@/lib/rbac/ability';
+import { isCustomerRole } from '@/lib/rbac/roles';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { createSupabaseAdminClient, hasServiceRole } from '@/lib/supabase/admin';
 import { getTicketById } from '@/lib/tickets/actions';
@@ -114,13 +115,15 @@ export async function listTicketTasks(ticketId: string) {
   }
 
   const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
+  let query = supabase
     .from('ticket_tasks')
     .select('*')
     .eq('tenant_id', session.profile.tenantId)
     .eq('ticket_id', ticketId)
-    .order('sort_order', { ascending: true })
-    .order('created_at', { ascending: true });
+  if (isCustomerRole(session.profile.role)) {
+    query = query.eq('customer_visible', true);
+  }
+  const { data, error } = await query.order('sort_order', { ascending: true }).order('created_at', { ascending: true });
 
   if (error) return { data: [] as TicketTask[], sequential: ticket.taskSequential ?? false, error: error.message };
   const tasks = await hydrateTasks(supabase, (data ?? []) as TaskRow[], ticket.taskSequential ?? false);

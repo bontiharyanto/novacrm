@@ -6,10 +6,15 @@ import { loadTenantPublicUrl } from '@/lib/notifications/public-url';
 import { buildReportDigestHtml, buildReportDigestSubject } from '@/lib/reports/digest-email';
 import { clockInZone, parseReportRecipients } from '@/lib/reports/schedule-schema';
 import { getTenantReportSnapshot, periodForSchedule } from '@/lib/reports/tenant-snapshot';
+import { captureDeliveryProjectSnapshots } from '@/lib/delivery/snapshots';
 
 export type ReportDigestJob = {
   tenantId?: string;
   force?: boolean;
+};
+
+export type DeliverySnapshotJob = {
+  snapshotDate?: string;
 };
 
 type ScheduleRow = {
@@ -130,4 +135,8 @@ export async function processReportDigestJob(payload: ReportDigestJob = {}) {
   }
 
   return { ok: true, sent, error: null };
+}
+
+export async function processDeliveryProjectSnapshotJob(payload: DeliverySnapshotJob = {}) {
+  return captureDeliveryProjectSnapshots(payload);
 }

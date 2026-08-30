@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSessionProfile } from '@/lib/auth/session';
 import { canAccessConfiguredCapability } from '@/lib/rbac/capability-actions';
 import { isCustomerRole } from '@/lib/rbac/roles';
-import { getDeliveryReport } from '@/lib/delivery/report';
+import { getDeliveryReport, parseDeliveryReportFilters } from '@/lib/delivery/report';
 import {
   deliveryReportContentType,
   deliveryReportFilename,
@@ -27,6 +27,14 @@ export async function GET(request: NextRequest) {
   if (!format) {
     return NextResponse.json({ data: null, error: 'format must be csv, xlsx, or pdf' }, { status: 400 });
   }
+  const filters = parseDeliveryReportFilters({
+    projectId: request.nextUrl.searchParams.get('projectId') ?? undefined,
+    from: request.nextUrl.searchParams.get('from') ?? undefined,
+    to: request.nextUrl.searchParams.get('to') ?? undefined,
+  });
+  if (filters.error) {
+    return NextResponse.json({ data: null, error: filters.error }, { status: 400 });
+  }
 
   const session = await getSessionProfile();
   if (!session || isCustomerRole(session.profile.role)) {
@@ -36,7 +44,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ data: null, error: 'Forbidden' }, { status: 403 });
   }
 
-  const report = await getDeliveryReport();
+  const report = await getDeliveryReport(filters.data);
   if (!report) {
     return NextResponse.json({ data: null, error: 'Unable to load report' }, { status: 400 });
   }

@@ -2,6 +2,7 @@
 
 import { getSessionProfile } from '@/lib/auth/session';
 import { canRole } from '@/lib/rbac/ability';
+import { isCustomerRole } from '@/lib/rbac/roles';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getTicketById } from '@/lib/tickets/actions';
 import {
@@ -87,12 +88,16 @@ async function assertTaskInTicket(ticketId: string, taskId: string) {
 export async function listTaskActivities(ticketId: string, taskId: string) {
   const access = await assertTaskInTicket(ticketId, taskId);
   if (!access.client || !access.session) return { data: [], error: access.error };
-  const result = await access.client
+  let query = access.client
     .from('task_activities')
     .select('*')
     .eq('task_id', taskId)
     .eq('tenant_id', access.session.profile.tenantId)
     .order('created_at', { ascending: false });
+  if (isCustomerRole(access.session.profile.role)) {
+    query = query.eq('customer_visible', true);
+  }
+  const result = await query;
   if (result.error) return { data: [], error: result.error.message };
   const actorIds = Array.from(new Set((result.data ?? []).map((row) => row.actor_id).filter(Boolean)));
   const profiles = actorIds.length

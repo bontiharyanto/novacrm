@@ -309,6 +309,18 @@ values
   ('77777777-0001-4001-8001-000000000052', '11111111-1111-1111-1111-111111111111', '77777777-0001-4001-8001-000000000043', '33333333-3333-3333-3333-333333333333', 'progress', 'Installation is currently in progress.', true, '33333333-3333-3333-3333-333333333333')
 on conflict (id) do nothing;
 
+insert into public.delivery_project_snapshots (
+  id, tenant_id, project_id, snapshot_date, progress, status,
+  phase_count, completed_phase_count, blocked_phase_count,
+  task_count, completed_task_count, open_task_count, overdue_task_count,
+  handover_status, handover_progress, created_by
+)
+values
+  ('77777777-0001-4001-8001-000000000061', '11111111-1111-1111-1111-111111111111', '77777777-0001-4001-8001-000000000001', current_date - 2, 0, 'planned', 7, 0, 0, 7, 0, 7, 0, 'in_progress', 25, '22222222-2222-2222-2222-222222222222'),
+  ('77777777-0001-4001-8001-000000000062', '11111111-1111-1111-1111-111111111111', '77777777-0001-4001-8001-000000000001', current_date - 1, 29, 'in_progress', 7, 2, 0, 7, 2, 5, 0, 'in_progress', 25, '22222222-2222-2222-2222-222222222222'),
+  ('77777777-0001-4001-8001-000000000063', '11111111-1111-1111-1111-111111111111', '77777777-0001-4001-8001-000000000001', current_date, 29, 'in_progress', 7, 2, 0, 7, 2, 5, 0, 'in_progress', 25, '22222222-2222-2222-2222-222222222222')
+on conflict (id) do nothing;
+
 insert into public.org_units (id, tenant_id, account_id, parent_id, type, name, slug, manager_id, created_by)
 values
   ('88888888-0001-0001-0001-000000000011', '11111111-1111-1111-1111-111111111111', '55555555-0001-0001-0001-000000000001', '88888888-0001-0001-0001-000000000001', 'unit', 'Unit Network', 'network', '22222222-2222-2222-2222-222222222222', '22222222-2222-2222-2222-222222222222'),

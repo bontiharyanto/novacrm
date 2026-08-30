@@ -92,6 +92,26 @@ export function deliveryReportToCsv(report: DeliveryReportData) {
         '',
       ]),
     ]),
+    ...report.progressHistory.map((snapshot) => [
+      'progress_snapshot',
+      snapshot.projectName,
+      '',
+      snapshot.status,
+      snapshot.progress,
+      snapshot.snapshotDate,
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+      '',
+    ]),
     ...report.overdueTasks.map((task) => [
       'overdue_task',
       task.projectName,
@@ -186,6 +206,9 @@ export async function deliveryReportToXlsx(report: DeliveryReportData) {
     ],
     [
       { metric: 'Generated', value: report.generatedAt },
+      { metric: 'Project filter', value: report.filters.projectId ?? 'All projects' },
+      { metric: 'From', value: report.filters.from ?? '—' },
+      { metric: 'To', value: report.filters.to ?? '—' },
       { metric: 'Total projects', value: report.metrics.totalProjects },
       { metric: 'Average progress (%)', value: report.metrics.averageProgress },
       { metric: 'Open Work Orders', value: report.metrics.openWorkOrders },
@@ -289,6 +312,23 @@ export async function deliveryReportToXlsx(report: DeliveryReportData) {
         openTasks: workOrder.openTasks,
       })),
     ),
+  );
+
+  addRowsSheet(
+    workbook,
+    'Progress history',
+    [
+      { header: 'Project', key: 'project', width: 30 },
+      { header: 'Snapshot date', key: 'snapshotDate', width: 18 },
+      { header: 'Progress (%)', key: 'progress', width: 14 },
+      { header: 'Status', key: 'status', width: 18 },
+    ],
+    report.progressHistory.map((snapshot) => ({
+      project: snapshot.projectName,
+      snapshotDate: snapshot.snapshotDate,
+      progress: snapshot.progress,
+      status: snapshot.status,
+    })),
   );
 
   addRowsSheet(
@@ -407,6 +447,15 @@ function overdueRows(tasks: DeliveryReportOverdueTask[]) {
   ]);
 }
 
+function historyRows(report: DeliveryReportData) {
+  return report.progressHistory.slice(-100).map((snapshot) => [
+    snapshot.projectName,
+    snapshot.snapshotDate,
+    `${snapshot.progress}%`,
+    snapshot.status,
+  ]);
+}
+
 function activityRows(activities: DeliveryReportActivity[]) {
   return activities.map((activity) => [
     activity.projectName,
@@ -436,7 +485,7 @@ export async function deliveryReportToPdf(report: DeliveryReportData) {
     doc.font('Helvetica-Bold').fontSize(20).fillColor('#18181b').text('Delivery report', MARGIN, y);
     y += 26;
     doc.font('Helvetica').fontSize(9).fillColor('#71717a').text(
-      `NovaCRM · Generated ${report.generatedAt.slice(0, 16).replace('T', ' ')}`,
+      `NovaCRM · Project ${report.filters.projectId ?? 'all'} · Period ${report.filters.from ?? 'all'} to ${report.filters.to ?? 'all'} · Generated ${report.generatedAt.slice(0, 16).replace('T', ' ')}`,
       MARGIN,
       y,
       { width: CONTENT_WIDTH },
@@ -487,6 +536,15 @@ export async function deliveryReportToPdf(report: DeliveryReportData) {
       75,
       75,
       CONTENT_WIDTH - 565,
+    ]);
+
+    y += 14;
+    section('Progress history');
+    y = drawTable(doc, y, ['Project', 'Snapshot date', 'Progress', 'Status'], historyRows(report), [
+      340,
+      150,
+      120,
+      CONTENT_WIDTH - 610,
     ]);
 
     y += 14;

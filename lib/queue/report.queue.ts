@@ -1,12 +1,18 @@
 import { Queue } from 'bullmq';
 import { createRedisConnection, reportQueueName } from '@/lib/queue/connection';
-import { processReportDigestJob, type ReportDigestJob } from '@/lib/queue/report.processor';
+import {
+  processReportDigestJob,
+  type DeliverySnapshotJob,
+  type ReportDigestJob,
+} from '@/lib/queue/report.processor';
 
-let queue: Queue<ReportDigestJob> | null = null;
+type ReportJob = ReportDigestJob | DeliverySnapshotJob;
+
+let queue: Queue<ReportJob> | null = null;
 
 function getQueue() {
   if (!queue) {
-    queue = new Queue<ReportDigestJob>(reportQueueName, {
+    queue = new Queue<ReportJob>(reportQueueName, {
       connection: createRedisConnection(),
       defaultJobOptions: {
         attempts: 2,
@@ -25,6 +31,11 @@ export async function scheduleReportDigest() {
     { every: 15 * 60 * 1000 },
     { name: 'digest', data: {} },
   );
+  await getQueue().upsertJobScheduler(
+    'delivery-project-snapshot-daily',
+    { every: 24 * 60 * 60 * 1000 },
+    { name: 'delivery-snapshot', data: {} },
+  );
 }
 
 export async function enqueueReportDigest(payload: ReportDigestJob = {}) {
@@ -40,4 +51,11 @@ export async function enqueueReportDigest(payload: ReportDigestJob = {}) {
       error: fallback.error ?? (error instanceof Error ? error.message : 'queue unavailable'),
     };
   }
+}
+
+export async function enqueueDeliveryProjectSnapshot(payload: DeliverySnapshotJob = {}) {
+  const job = await getQueue().add('delivery-snapshot', payload, {
+    jobId: payload.snapshotDate ? `delivery-snapshot:${payload.snapshotDate}` : undefined,
+  });
+  return { ok: true, id: job.id };
 }

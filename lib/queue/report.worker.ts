@@ -1,12 +1,20 @@
 import { Worker } from 'bullmq';
 import { createRedisConnection, reportQueueName } from '@/lib/queue/connection';
-import { processReportDigestJob, type ReportDigestJob } from '@/lib/queue/report.processor';
-import { scheduleReportDigest } from '@/lib/queue/report.queue';
+import {
+  processDeliveryProjectSnapshotJob,
+  processReportDigestJob,
+  type DeliverySnapshotJob,
+  type ReportDigestJob,
+} from '@/lib/queue/report.processor';
+import { enqueueDeliveryProjectSnapshot, scheduleReportDigest } from '@/lib/queue/report.queue';
 
 export function startReportWorker() {
-  const worker = new Worker<ReportDigestJob>(
+  const worker = new Worker<ReportDigestJob | DeliverySnapshotJob>(
     reportQueueName,
-    async (job) => processReportDigestJob(job.data ?? {}),
+    async (job) =>
+      job.name === 'delivery-snapshot'
+        ? processDeliveryProjectSnapshotJob(job.data as DeliverySnapshotJob)
+        : processReportDigestJob(job.data as ReportDigestJob),
     {
       connection: createRedisConnection(),
       concurrency: 1,
@@ -25,6 +33,9 @@ export function startReportWorker() {
 
   void scheduleReportDigest().catch((error: unknown) => {
     console.error('[report-worker] schedule failed', error instanceof Error ? error.message : error);
+  });
+  void enqueueDeliveryProjectSnapshot().catch((error: unknown) => {
+    console.error('[report-worker] initial delivery snapshot failed', error instanceof Error ? error.message : error);
   });
 
   return worker;

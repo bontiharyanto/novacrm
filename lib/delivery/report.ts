@@ -39,6 +39,13 @@ type ReportHandoverItemRow = {
   completed: boolean;
 };
 
+type ReportSnapshotRow = {
+  project_id: string;
+  snapshot_date: string;
+  progress: number;
+  status: string;
+};
+
 export type DeliveryReportPhase = {
   id: string;
   title: string;
@@ -108,8 +115,21 @@ export type DeliveryReportOverdueTask = {
   assigneeName?: string;
 };
 
+export type DeliveryReportProgressSnapshot = {
+  projectId: string;
+  projectName: string;
+  snapshotDate: string;
+  progress: number;
+  status: string;
+};
+
 export type DeliveryReportData = {
   generatedAt: string;
+  filters: {
+    projectId?: string;
+    from?: string;
+    to?: string;
+  };
   metrics: {
     totalProjects: number;
     averageProgress: number;
@@ -124,6 +144,7 @@ export type DeliveryReportData = {
   projects: DeliveryReportProject[];
   overdueTasks: DeliveryReportOverdueTask[];
   recentActivities: DeliveryReportActivity[];
+  progressHistory: DeliveryReportProgressSnapshot[];
 };
 
 function isTerminal(status: string) {
@@ -134,7 +155,44 @@ function percentage(done: number, total: number) {
   return total > 0 ? Math.round((done / total) * 100) : 0;
 }
 
-export async function getDeliveryReport(): Promise<DeliveryReportData | null> {
+export type DeliveryReportFilters = {
+  projectId?: string;
+  from?: string;
+  to?: string;
+};
+
+function isValidDate(value?: string) {
+  if (!value || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const date = new Date(`${value}T00:00:00.000Z`);
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
+
+export function parseDeliveryReportFilters(input: DeliveryReportFilters): {
+  data: Required<Pick<DeliveryReportFilters, 'from' | 'to'>> & Omit<DeliveryReportFilters, 'from' | 'to'>;
+  error: string | null;
+} {
+  const projectId = input.projectId?.trim() || undefined;
+  const from = input.from?.trim() || undefined;
+  const to = input.to?.trim() || undefined;
+  if (from && !isValidDate(from)) return { data: { projectId, from: '', to: '' }, error: 'from must be a valid date' };
+  if (to && !isValidDate(to)) return { data: { projectId, from: '', to: '' }, error: 'to must be a valid date' };
+  if (from && to && from > to) return { data: { projectId, from: '', to: '' }, error: 'from must be before or equal to to' };
+  return { data: { projectId, from: from ?? '', to: to ?? '' }, error: null };
+}
+
+function toExclusiveDate(value: string) {
+  const date = new Date(`${value}T00:00:00.000Z`);
+  date.setUTCDate(date.getUTCDate() + 1);
+  return date.toISOString();
+}
+
+function offsetDate(value: string, days: number) {
+  const date = new Date(`${value}T00:00:00.000Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+export async function getDeliveryReport(filters: DeliveryReportFilters = {}): Promise<DeliveryReportData | null> {
   const session = await getSessionProfile();
   if (
     !session ||
@@ -144,7 +202,17 @@ export async function getDeliveryReport(): Promise<DeliveryReportData | null> {
     return null;
   }
 
-  const projects = await listDeliveryProjects();
+  const parsedFilters = parseDeliveryReportFilters(filters);
+  if (parsedFilters.error) return null;
+  const normalizedFilters = {
+    projectId: parsedFilters.data.projectId,
+    from: parsedFilters.data.from || undefined,
+    to: parsedFilters.data.to || undefined,
+  };
+  const allProjects = await listDeliveryProjects();
+  const projects = normalizedFilters.projectId
+    ? allProjects.filter((project) => project.id === normalizedFilters.projectId)
+    : allProjects;
   const client = await createSupabaseServerClient();
   const projectMap = new Map(projects.map((project) => [project.id, project]));
   const ticketProjectMap = new Map(
@@ -156,6 +224,9 @@ export async function getDeliveryReport(): Promise<DeliveryReportData | null> {
   );
   const ticketIds = Array.from(ticketProjectMap.keys());
   const projectIds = projects.map((project) => project.id);
+  const reportToday = new Date().toISOString().slice(0, 10);
+  const historyTo = normalizedFilters.to ?? reportToday;
+  const historyFrom = normalizedFilters.from ?? offsetDate(historyTo, -90);
 
   const tasksResult = ticketIds.length
     ? await client
@@ -164,19 +235,29 @@ export async function getDeliveryReport(): Promise<DeliveryReportData | null> {
         .in('ticket_id', ticketIds)
         .eq('tenant_id', session.profile.tenantId)
     : { data: [], error: null };
-  const tasks = (tasksResult.data ?? []) as ReportTaskRow[];
-  const taskIds = tasks.map((task) => task.id);
+  const allTasks = (tasksResult.data ?? []) as ReportTaskRow[];
+  const tasks = allTasks.filter((task) => {
+    if (normalizedFilters.from && task.updated_at < `${normalizedFilters.from}T00:00:00.000Z`) return false;
+    if (normalizedFilters.to && task.updated_at >= toExclusiveDate(normalizedFilters.to)) return false;
+    return true;
+  });
+  const taskIds = allTasks.map((task) => task.id);
 
-  const [activitiesResult, handoversResult, handoverItemsResult] = await Promise.all([
-    taskIds.length
-      ? client
+  const activitiesPromise = taskIds.length
+    ? (() => {
+        let query = client
           .from('task_activities')
           .select('id, task_id, actor_id, kind, body, created_at')
           .in('task_id', taskIds)
-          .eq('tenant_id', session.profile.tenantId)
-          .order('created_at', { ascending: false })
-          .limit(20)
-      : Promise.resolve({ data: [], error: null }),
+          .eq('tenant_id', session.profile.tenantId);
+        if (normalizedFilters.from) query = query.gte('created_at', `${normalizedFilters.from}T00:00:00.000Z`);
+        if (normalizedFilters.to) query = query.lt('created_at', toExclusiveDate(normalizedFilters.to));
+        return query.order('created_at', { ascending: false }).limit(20);
+      })()
+    : Promise.resolve({ data: [], error: null });
+
+  const [activitiesResult, handoversResult, handoverItemsResult, snapshotsResult] = await Promise.all([
+    activitiesPromise,
     projectIds.length
       ? client
           .from('delivery_handovers')
@@ -190,6 +271,16 @@ export async function getDeliveryReport(): Promise<DeliveryReportData | null> {
           .select('project_id, required, completed')
           .in('project_id', projectIds)
           .eq('tenant_id', session.profile.tenantId)
+      : Promise.resolve({ data: [], error: null }),
+    projectIds.length
+      ? client
+          .from('delivery_project_snapshots')
+          .select('project_id, snapshot_date, progress, status')
+          .in('project_id', projectIds)
+          .eq('tenant_id', session.profile.tenantId)
+          .gte('snapshot_date', historyFrom)
+          .lte('snapshot_date', historyTo)
+          .order('snapshot_date', { ascending: true })
       : Promise.resolve({ data: [], error: null }),
   ]);
 
@@ -215,18 +306,20 @@ export async function getDeliveryReport(): Promise<DeliveryReportData | null> {
 
   const taskProjectMap = new Map<string, string>();
   const tasksByProject = new Map<string, ReportTaskRow[]>();
-  for (const task of tasks) {
+  const includedTaskIds = new Set(tasks.map((task) => task.id));
+  for (const task of allTasks) {
     const projectId =
       (task.delivery_project_id && projectMap.has(task.delivery_project_id) ? task.delivery_project_id : undefined) ??
       ticketProjectMap.get(task.ticket_id)?.projectId;
     if (!projectId) continue;
     taskProjectMap.set(task.id, projectId);
+    if (!includedTaskIds.has(task.id)) continue;
     const list = tasksByProject.get(projectId) ?? [];
     list.push(task);
     tasksByProject.set(projectId, list);
   }
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = normalizedFilters.to ?? reportToday;
   const overdueTasks: DeliveryReportOverdueTask[] = [];
   const reportProjects = projects.map((project) => {
     const projectTasks = tasksByProject.get(project.id) ?? [];
@@ -301,11 +394,20 @@ export async function getDeliveryReport(): Promise<DeliveryReportData | null> {
   });
 
   const projectNameById = new Map(reportProjects.map((project) => [project.id, project.name]));
+  const progressHistory = ((snapshotsResult.data ?? []) as ReportSnapshotRow[])
+    .filter((snapshot) => projectNameById.has(snapshot.project_id))
+    .map((snapshot) => ({
+      projectId: snapshot.project_id,
+      projectName: projectNameById.get(snapshot.project_id) as string,
+      snapshotDate: snapshot.snapshot_date,
+      progress: Number(snapshot.progress),
+      status: snapshot.status,
+    }));
   const recentActivities = activities
     .filter((activity) => taskProjectMap.has(activity.task_id))
     .map((activity) => {
       const projectId = taskProjectMap.get(activity.task_id) as string;
-      const task = tasks.find((row) => row.id === activity.task_id);
+      const task = allTasks.find((row) => row.id === activity.task_id);
       const ticketContext = task ? ticketProjectMap.get(task.ticket_id) : undefined;
       return {
         id: activity.id,
@@ -323,6 +425,7 @@ export async function getDeliveryReport(): Promise<DeliveryReportData | null> {
 
   return {
     generatedAt: new Date().toISOString(),
+    filters: normalizedFilters,
     metrics: {
       totalProjects: reportProjects.length,
       averageProgress: reportProjects.length
@@ -346,5 +449,6 @@ export async function getDeliveryReport(): Promise<DeliveryReportData | null> {
     projects: reportProjects,
     overdueTasks: overdueTasks.sort((a, b) => a.plannedEnd.localeCompare(b.plannedEnd)).slice(0, 20),
     recentActivities: recentActivities.slice(0, 20),
+    progressHistory,
   };
 }

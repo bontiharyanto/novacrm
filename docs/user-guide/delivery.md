@@ -82,6 +82,15 @@ account scope user. Laporan mencakup:
 - feed activity terbaru;
 - kesiapan handover dan project yang sedang hypercare.
 
+Gunakan filter **Project** untuk melihat satu project atau seluruh project
+yang berada dalam scope account user. Filter **Dari** dan **Sampai** membatasi
+task yang diperbarui serta activity yang dibuat pada periode tersebut.
+Progress project, status phase, handover, dan hypercare tetap menampilkan
+snapshot kondisi terkini. Bagian **Histori progress** menampilkan snapshot
+harian yang sudah direkam worker.
+Worker akan membuat snapshot progress harian mulai setelah migration dan worker
+aktif. Histori sebelum fitur ini aktif tidak dapat direkonstruksi otomatis.
+
 Laporan ini berbeda dari Operations Report di `/reports`. PM Delivery dan DCO
 menggunakan Delivery Report untuk scope project delivery mereka.
 
