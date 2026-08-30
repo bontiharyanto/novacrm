@@ -3,10 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>NovaCRM — ITSM multi-klien, tanpa proyek ServiceNow</title>
+    <title>NovaCRM — Service operations tanpa banyak aplikasi tambahan</title>
     <meta
       name="description"
-      content="Antrian ITSM, portal nasabah, WhatsApp, SLA, CMDB, dan roster shift. Bahasa Indonesia. Multi-tenant. Demo 35 menit."
+      content="Service desk, workforce coverage, dan delivery execution dalam satu workspace multi-tenant berbahasa Indonesia. Demo 35 menit."
     />
     <link rel="canonical" href="https://www.novacrm.click/" />
     <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
@@ -24,8 +24,9 @@
         <a class="brand" href="#atas"><span class="mark">N</span> NovaCRM</a>
         <nav class="nav-links">
           <a href="#untuk">Untuk siapa</a>
-          <a href="#produk">Produk</a>
-          <a href="#beda">Bukan helpdesk biasa</a>
+          <a href="#platform">Platform</a>
+          <a href="#cara-kerja">Cara kerja</a>
+          <a href="#beda">Pembeda</a>
         </nav>
         <div class="nav-cta">
           <a class="btn btn-ghost" href="https://novacrm.click/login">Masuk desk</a>
@@ -37,130 +38,194 @@
     <main id="atas">
       <section class="hero wrap grid-2">
         <div>
-          <p class="kicker">ITSM · Indonesia · Multi-tenant</p>
-          <h1>Satu desk untuk beberapa klien. Bukan grup WhatsApp.</h1>
+          <p class="kicker">ITSM · Workforce · Delivery · Indonesia</p>
+          <h1>Satu workspace untuk service operations.</h1>
           <p class="lede">
-            Antrian tiket, portal nasabah, SLA, CMDB, dan roster shift — Bahasa Indonesia, tanpa proyek
-            ServiceNow. Major incident: satu outage, banyak tiket cabang.
+            Kelola tiket, kapasitas team, dan delivery project sampai handover operasi — multi-klien,
+            berbahasa Indonesia, dengan tenant isolation yang jelas.
           </p>
           <div class="hero-actions">
             <a class="btn btn-primary btn-lg" href="mailto:support@novacrm.app?subject=Demo%20NovaCRM">Jadwal demo 35 menit</a>
             <a class="btn btn-ghost btn-lg" href="https://novacrm.click/login">Sudah pelanggan — masuk</a>
           </div>
-          <p class="fine">Harga setelah discovery volume. Trial di tenant baru, bukan lab bersama.</p>
+          <div class="hero-proof">
+            <span><strong>Service desk</strong> + SLA</span>
+            <span><strong>Workforce</strong> + coverage</span>
+            <span><strong>Delivery</strong> + handover</span>
+          </div>
+          <p class="fine">Harga setelah discovery volume. Trial berjalan di tenant baru, bukan lab bersama.</p>
         </div>
-        <aside class="shot" aria-label="Pratinjau major incident">
+        <aside class="shot control-tower" aria-label="Pratinjau operational control tower">
           <div class="shot-top">
             <span class="dot"></span><span class="dot"></span><span class="dot"></span>
-            <span class="badge badge-neutral">Bank Nusantara</span>
+            <span class="badge badge-neutral">Operational control tower</span>
           </div>
-          <div class="ticket-id">INC0000018</div>
-          <div class="ticket-title">WAN Bank Nusantara putus</div>
-          <span class="badge badge-danger">Major</span>
-          <p class="fine" style="margin: 12px 0 4px">Child tickets — bukan Problem RCA</p>
-          <div class="child"><span>INC0000019</span> ATM cabang Senayan offline</div>
-          <div class="child"><span>INC0000020</span> Teller Kelapa Gading down</div>
-          <div class="child"><span>RITM0000005</span> Reset VPN cabang BSD</div>
+          <div class="tower-head">
+            <div>
+              <div class="ticket-id">SERVICE OPERATIONS</div>
+              <div class="ticket-title">Bank Nusantara</div>
+            </div>
+            <span class="badge badge-ok">On track</span>
+          </div>
+          <div class="tower-metrics">
+            <div><strong>42</strong><span>Open tickets</span></div>
+            <div><strong>92%</strong><span>Shift coverage</span></div>
+            <div><strong>68%</strong><span>Delivery progress</span></div>
+          </div>
+          <div class="tower-row"><span><i class="signal signal-danger"></i>Major incident</span><b>3 child tickets</b></div>
+          <div class="tower-row"><span><i class="signal signal-warn"></i>Delivery project</span><b>2 blockers</b></div>
+          <div class="tower-row"><span><i class="signal signal-ok"></i>Handover</span><b>Ready for review</b></div>
         </aside>
       </section>
 
       <section class="section" id="untuk">
         <div class="wrap">
-          <h2>Untuk siapa</h2>
-          <p class="sub">Pembeli pertama: MSP, IT internal menengah, BPO L1. Bukan pengganti ITOM Discovery.</p>
+          <p class="kicker">Dibuat untuk team yang mengelola pekerjaan nyata</p>
+          <h2>Untuk siapa NovaCRM paling bernilai?</h2>
+          <p class="sub">Mulai dari service desk. Perluas ke workforce coverage dan delivery control saat operasi tumbuh.</p>
           <div class="cards">
             <article class="card">
-              <h3>MSP 1–3 klien</h3>
-              <p>Account per nasabah. Switcher, isolasi tenant, tiket cabang di bawah satu INC payung.</p>
+              <span class="card-index">01 / MSP</span>
+              <h3>MSP dengan beberapa klien</h3>
+              <p>Account per klien, antrian terpisah, SLA yang jelas, dan satu control tower untuk seluruh operasi.</p>
             </article>
             <article class="card">
-              <h3>IT 8–40 orang</h3>
-              <p>Hold vendor pause SLA. CSAT di portal. Jejak audit, bukan chat yang hilang.</p>
+              <span class="card-index">02 / IT INTERNAL</span>
+              <h3>Team IT 8–40 orang</h3>
+              <p>Hubungkan ticket queue, shift, vendor hold, CSAT, dan delivery tanpa kehilangan jejak audit.</p>
             </article>
             <article class="card">
-              <h3>BPO L1</h3>
-              <p>Roster, tukar shift, clock-in. Login bukan absensi. Export coverage untuk SPV.</p>
+              <span class="card-index">03 / BPO L1</span>
+              <h3>Service desk dan BPO L1</h3>
+              <p>Roster, shift swap, coverage, workload, dan laporan supervisor dalam satu workspace.</p>
             </article>
           </div>
         </div>
       </section>
 
-      <section class="section" id="produk">
+      <section class="section" id="platform">
         <div class="wrap">
-          <h2>Yang ada di workspace</h2>
-          <p class="sub">Satu aplikasi. Setiap tabel terisolasi <span class="ticket-id">tenant_id</span> + RLS.</p>
+          <p class="kicker">Satu platform · tiga lapisan operasional</p>
+          <h2>Dari antrian sampai pekerjaan selesai</h2>
+          <p class="sub">Satu aplikasi. Setiap tenant terisolasi dengan <span class="ticket-id">tenant_id</span> + RLS.</p>
           <div class="features">
             <div>
               <p class="feat-label">Service desk</p>
-              <p>Incident, problem, change, request. Hold, escalate L2/L3, SLA, major parent/child.</p>
+              <p>Incident, problem, change, request, SLA, escalation, dan major parent/child.</p>
+            </div>
+            <div>
+              <p class="feat-label">Workforce &amp; coverage</p>
+              <p>Roster, shift, shift swap, workload, occupancy, dan coverage untuk supervisor.</p>
+            </div>
+            <div>
+              <p class="feat-label">Delivery execution</p>
+              <p>Project, Work Order, phase, task activity, blocker, dan progress dari Closed Won.</p>
             </div>
             <div>
               <p class="feat-label">Portal + CSAT</p>
-              <p>Nasabah kirim katalog, nilai perbaikan. Catalog terkunci sampai skor masuk.</p>
+              <p>Customer mengirim request, melihat progress yang dipublikasikan, dan memberi nilai perbaikan.</p>
             </div>
             <div>
               <p class="feat-label">Aset &amp; CMDB</p>
-              <p>Master aset, graf hubungan, dampak mengikuti CI yang tertaut di tiket.</p>
+              <p>Master aset, graf hubungan, dan impact analysis mengikuti CI yang tertaut di tiket.</p>
             </div>
             <div>
-              <p class="feat-label">Channel</p>
-              <p>WhatsApp, Telegram, email. Inbound bisa jadi tiket. Bukan janji blast massal.</p>
+              <p class="feat-label">Channels &amp; governance</p>
+              <p>WhatsApp, Telegram, email, audit trail, dan kontrol UU PDP per tenant.</p>
             </div>
-            <div>
-              <p class="feat-label">Workforce</p>
-              <p>Roster, jam shift, tukar, occupancy. Reports Workforce untuk SPV.</p>
-            </div>
-            <div>
-              <p class="feat-label">Governance</p>
-              <p>UU PDP / DSAR di modul keamanan. Accent dan plan per tenant di platform.</p>
-            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="cara-kerja">
+        <div class="wrap">
+          <p class="kicker">Satu alur yang mudah dipahami</p>
+          <h2>Service operations dalam satu garis kerja</h2>
+          <p class="sub">Tidak perlu memindahkan konteks antar aplikasi saat ticket berubah menjadi pekerjaan delivery.</p>
+          <div class="steps">
+            <article class="step">
+              <span class="step-no">01</span>
+              <h3>Capture</h3>
+              <p>Customer masuk melalui portal atau channel. Ticket otomatis berada di account dan tenant yang benar.</p>
+            </article>
+            <article class="step">
+              <span class="step-no">02</span>
+              <h3>Staff</h3>
+              <p>Supervisor melihat queue, roster, coverage, SLA, dan agent yang tersedia untuk pekerjaan tersebut.</p>
+            </article>
+            <article class="step">
+              <span class="step-no">03</span>
+              <h3>Execute</h3>
+              <p>DCO mengubah request menjadi Work Order dan mengontrol phase, task, activity, serta blocker.</p>
+            </article>
+            <article class="step">
+              <span class="step-no">04</span>
+              <h3>Accept</h3>
+              <p>PM Delivery menyiapkan handover. Operations menerima dengan checklist dan acceptance gate.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section delivery-section" id="delivery">
+        <div class="wrap grid-2 delivery-grid">
+          <div>
+            <p class="kicker">Delivery Project</p>
+            <h2>Dari Closed Won ke Operational Acceptance.</h2>
+            <p class="sub">
+              PM Delivery menjaga milestone. DCO mengendalikan eksekusi. Customer melihat progress yang memang aman untuk dipublikasikan.
+            </p>
+            <a class="text-link" href="#cara-kerja">Lihat alurnya <span aria-hidden="true">→</span></a>
+          </div>
+          <div class="delivery-list">
+            <div><span class="list-mark">01</span><span><strong>Delivery phases</strong><small>Progress, health, milestone, dan exit criteria.</small></span></div>
+            <div><span class="list-mark">02</span><span><strong>Task activity</strong><small>Update eksekusi, blocker, dependency, dan owner.</small></span></div>
+            <div><span class="list-mark">03</span><span><strong>Handover gate</strong><small>Readiness score, checklist, evidence, dan Operations acceptance.</small></span></div>
           </div>
         </div>
       </section>
 
       <section class="section" id="beda">
         <div class="wrap">
-          <h2>Bukan helpdesk form saja</h2>
-          <table class="compare">
-            <thead>
-              <tr>
-                <th></th>
-                <th>Excel + grup WA</th>
-                <th>Helpdesk generik</th>
-                <th>NovaCRM</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Multi-klien</td>
-                <td>Campur</td>
-                <td>Sering satu antrian</td>
-                <td>Account + tenant RLS</td>
-              </tr>
-              <tr>
-                <td>Outage banyak tiket</td>
-                <td>Thread panjang</td>
-                <td>Tiket lepas</td>
-                <td>Major: satu induk, banyak anak</td>
-              </tr>
-              <tr>
-                <td>SLA tunggu ISP</td>
-                <td>Tidak ada</td>
-                <td>Jarang pause bertalasan</td>
-                <td>Hold vendor, jam berhenti</td>
-              </tr>
-              <tr>
-                <td>CMDB / WFM</td>
-                <td>Tidak</td>
-                <td>Add-on terpisah</td>
-                <td>Graf CI + roster dalam tenant</td>
-              </tr>
-            </tbody>
-          </table>
+          <p class="kicker">Mengapa NovaCRM</p>
+          <h2>Bukan sekadar form helpdesk.</h2>
+          <p class="sub">Konteks pekerjaan tetap utuh dari ticket queue, team coverage, sampai delivery acceptance.</p>
+          <div class="compare-wrap">
+            <table class="compare">
+              <thead>
+                <tr>
+                  <th>Masalah operasional</th>
+                  <th>Helpdesk generik</th>
+                  <th>NovaCRM</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Beberapa klien dalam satu operasi</td>
+                  <td>Scope mudah tercampur</td>
+                  <td>Tenant + account isolation</td>
+                </tr>
+                <tr>
+                  <td>Outage menghasilkan banyak tiket</td>
+                  <td>Tiket berdiri sendiri</td>
+                  <td>Major incident dengan child tickets</td>
+                </tr>
+                <tr>
+                  <td>Menunggu ISP atau vendor</td>
+                  <td>SLA tetap berjalan</td>
+                  <td>Hold dengan alasan dan pause SLA</td>
+                </tr>
+                <tr>
+                  <td>Team shift dan delivery tidak sinkron</td>
+                  <td>WFM sering terpisah</td>
+                  <td>Coverage + task execution dalam workspace yang sama</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
           <p class="note">
-            Jujur soal kapasitas: instance saat ini layak operasional terbatas (satu tenant, volume kecil).
-            Bukan klaim HA banyak replica atau 3 tenant ramai di paket database Free. Discovery volume dulu,
-            baru paket sewa.
+            Trial berjalan di tenant terisolasi. Kapasitas dan paket produksi ditentukan setelah discovery volume:
+            jumlah klien, agent, tiket, channel, dan kebutuhan workforce.
           </p>
         </div>
       </section>
@@ -168,15 +233,16 @@
 
     <div class="cta-band">
       <div>
-        <h2>Minta slot demo</h2>
+        <p class="kicker">Lihat alurnya dengan data nyata</p>
+        <h2>Dalam 35 menit, lihat operasi Anda lebih jelas.</h2>
         <p class="sub">Zoom atau kantor. Dua browser: desk + portal. Bukan sales call panjang.</p>
       </div>
-      <a class="btn btn-primary btn-lg" href="mailto:support@novacrm.app?subject=Demo%20NovaCRM">Email support@novacrm.app</a>
+      <a class="btn btn-primary btn-lg" href="mailto:support@novacrm.app?subject=Jadwal%20Demo%20NovaCRM">Jadwalkan demo</a>
     </div>
 
     <footer>
       <div class="wrap foot">
-        <span>NovaCRM · flyer www · desk novacrm.click</span>
+        <span>NovaCRM · service operations untuk team yang bergerak cepat</span>
         <span>
           <a href="https://novacrm.click/login">Masuk</a>
           ·
