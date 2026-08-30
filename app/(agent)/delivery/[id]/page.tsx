@@ -16,6 +16,8 @@ export default async function DeliveryProjectPage({ params }: { params: { id: st
       canManageHandover={Boolean(role && canRole(role, 'update', 'DeliveryHandover'))}
       canAcceptHandover={Boolean(role && canRole(role, 'update', 'OperationalAcceptance'))}
       canCreateTaskActivity={Boolean(role && canRole(role, 'create', 'TaskActivity'))}
+      canManageTasks={Boolean(role && canRole(role, 'update', 'DeliveryTask'))}
+      canPublishActivity={Boolean(role && canRole(role, 'update', 'DeliveryPublish'))}
       canManageAssignments={canManageAssignments}
       assignmentOptions={assignmentOptions}
     />

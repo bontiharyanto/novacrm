@@ -34,6 +34,12 @@ function statusTone(status: string): 'neutral' | 'info' | 'success' | 'warning' 
   return 'warning';
 }
 
+function healthTone(health: 'healthy' | 'at_risk' | 'blocked'): 'success' | 'warning' | 'danger' {
+  if (health === 'blocked') return 'danger';
+  if (health === 'at_risk') return 'warning';
+  return 'success';
+}
+
 function riskTone(project: DeliveryReportProject) {
   if (project.status === 'blocked' || project.blockedPhases > 0) return 'danger';
   if (project.overdueTasks > 0 || project.overduePhases > 0 || project.unassignedTasks > 0) return 'warning';
@@ -295,18 +301,20 @@ export function DeliveryReport({ initialData }: { initialData: DeliveryReportDat
                   <div className="h-full rounded-full bg-blue-500 transition-all" style={{ width: `${project.progress}%` }} />
                 </div>
                 <div className="mt-4 overflow-x-auto">
-                  <div className="min-w-[680px] rounded-lg border border-zinc-800">
-                    <div className="grid grid-cols-[minmax(220px,1.6fr)_120px_100px_100px_100px] gap-2 border-b border-zinc-800 px-3 py-2 text-[10px] uppercase tracking-[0.12em] text-zinc-600">
+                  <div className="min-w-[800px] rounded-lg border border-zinc-800">
+                    <div className="grid grid-cols-[minmax(220px,1.6fr)_120px_110px_100px_100px_100px] gap-2 border-b border-zinc-800 px-3 py-2 text-[10px] uppercase tracking-[0.12em] text-zinc-600">
                       <span>{t.common.deliveryReportPhaseBreakdown}</span>
                       <span>{t.common.deliveryPhase}</span>
+                      <span>{t.common.deliveryHealth}</span>
                       <span>{t.common.deliveryTasks}</span>
                       <span>{t.common.deliveryOverdueTasks}</span>
                       <span>{t.common.deliveryProgress}</span>
                     </div>
                     {project.phases.map((phase) => (
-                      <div key={phase.id} className="grid grid-cols-[minmax(220px,1.6fr)_120px_100px_100px_100px] gap-2 border-b border-zinc-800/80 px-3 py-2 text-xs last:border-b-0">
+                      <div key={phase.id} className="grid grid-cols-[minmax(220px,1.6fr)_120px_110px_100px_100px_100px] gap-2 border-b border-zinc-800/80 px-3 py-2 text-xs last:border-b-0">
                         <span className="truncate text-zinc-300">{phase.title}</span>
                         <span><Badge tone={statusTone(phase.status)}>{t.common.deliveryStatus[phase.status as keyof typeof t.common.deliveryStatus] ?? phase.status}</Badge></span>
+                        <span><Badge tone={healthTone(phase.health)} title={t.common.deliveryPhaseHealthReason[phase.healthReason]}>{t.common.deliveryPhaseHealth[phase.health]}</Badge></span>
                         <span className="text-zinc-500">{phase.completedTasks}/{phase.taskCount}</span>
                         <span className={phase.overdueTasks ? 'text-amber-300' : 'text-zinc-500'}>{phase.overdueTasks}</span>
                         <span className="text-zinc-500">{percentageLabel(phase.completedTasks, phase.taskCount)}</span>

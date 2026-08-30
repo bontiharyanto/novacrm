@@ -3,6 +3,7 @@ import { getSessionProfile } from '@/lib/auth/session';
 import { listDeliveryProjects } from '@/lib/delivery/actions';
 import { isCustomerRole } from '@/lib/rbac/roles';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import type { DeliveryPhaseHealth, DeliveryPhaseHealthReason } from '@/lib/delivery/health';
 
 type ReportTaskRow = {
   id: string;
@@ -48,6 +49,8 @@ export type DeliveryReportPhase = {
   id: string;
   title: string;
   status: string;
+  health: DeliveryPhaseHealth;
+  healthReason: DeliveryPhaseHealthReason;
   plannedEnd?: string;
   taskCount: number;
   completedTasks: number;
@@ -340,6 +343,8 @@ export async function getDeliveryReport(filters: DeliveryReportFilters = {}): Pr
         id: phase.id,
         title: phase.title,
         status: phase.status,
+        health: phase.health,
+        healthReason: phase.healthReason,
         plannedEnd: phase.plannedEnd,
         taskCount: phaseTasks.length,
         completedTasks: phaseTasks.filter((task) => isTerminal(task.status)).length,

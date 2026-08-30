@@ -33,7 +33,7 @@ function statusTone(status: string): 'neutral' | 'info' | 'success' | 'warning' 
 
 function projectRisk(project: DeliveryDashboardProject) {
   if (project.status === 'blocked' || project.blockedPhases > 0) return 'critical';
-  if (project.overdueTasks > 0 || project.unassignedTasks > 0) return 'at_risk';
+  if (project.overdueTasks > 0 || project.unassignedTasks > 0 || project.blockerCount > 0) return 'at_risk';
   return 'on_track';
 }
 
@@ -108,6 +108,7 @@ export function DeliveryCommandCenter({
         { label: t.common.deliveryOverdueTasks, value: data.metrics.overdueTasks, icon: CalendarClock, tone: 'text-amber-300' },
         { label: t.common.deliveryUnassignedTasks, value: data.metrics.unassignedTasks, icon: UserRound, tone: 'text-amber-300' },
         { label: t.common.deliveryBlockedDependencies, value: data.metrics.blockedDependencies, icon: GitBranch, tone: 'text-rose-300' },
+        { label: t.common.deliveryActiveBlockers, value: data.metrics.activeBlockers, icon: AlertTriangle, tone: 'text-rose-300' },
       ];
 
   return (
@@ -141,7 +142,7 @@ export function DeliveryCommandCenter({
         </div>
       </header>
 
-      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
         {metrics.map((metric) => {
           const Icon = metric.icon;
           return (
@@ -211,12 +212,14 @@ export function DeliveryCommandCenter({
                     (project.overdueTasks > 0 ||
                       project.overduePhases > 0 ||
                       project.unassignedTasks > 0 ||
-                      project.blockedPhases > 0) ? (
+                      project.blockedPhases > 0 ||
+                      project.blockerCount > 0) ? (
                       <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-zinc-500">
                         {project.overdueTasks > 0 ? <span className="text-amber-300">{project.overdueTasks} {t.common.deliveryOverdueTasks}</span> : null}
                         {project.overduePhases > 0 ? <span className="text-amber-300">{project.overduePhases} {t.common.deliveryOverduePhases}</span> : null}
                         {project.unassignedTasks > 0 ? <span>{project.unassignedTasks} {t.common.deliveryUnassignedTasks}</span> : null}
                         {project.blockedPhases > 0 ? <span className="text-rose-300">{project.blockedPhases} {t.common.deliveryBlockedPhases}</span> : null}
+                        {project.blockerCount > 0 ? <span className="text-rose-300">{project.blockerCount} {t.common.deliveryActiveBlockers}</span> : null}
                       </div>
                     ) : null}
                   </Link>

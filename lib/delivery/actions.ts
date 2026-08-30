@@ -24,6 +24,7 @@ import {
   deriveProjectStatus,
   STANDARD_DELIVERY_PHASES,
 } from '@/lib/delivery/templates';
+import { derivePhaseHealth } from '@/lib/delivery/health';
 
 type ProjectRow = {
   id: string;
@@ -70,6 +71,7 @@ type WorkOrderRow = {
 };
 
 function mapPhase(row: PhaseRow): DeliveryPhase {
+  const health = derivePhaseHealth(row);
   return {
     id: row.id,
     projectId: row.project_id,
@@ -82,6 +84,8 @@ function mapPhase(row: PhaseRow): DeliveryPhase {
     plannedStart: row.planned_start ?? undefined,
     plannedEnd: row.planned_end ?? undefined,
     completedAt: row.completed_at ?? undefined,
+    health: health.health,
+    healthReason: health.reason,
   };
 }
 

@@ -121,6 +121,9 @@ export async function createTaskActivity(ticketId: string, taskId: string, input
   if (!canRole(access.session.profile.role, 'create', 'TaskActivity')) {
     return { data: null, error: 'Unauthorized' };
   }
+  if (parsed.data.customerVisible && !canRole(access.session.profile.role, 'update', 'DeliveryPublish')) {
+    return { data: null, error: 'Only an approved delivery publisher can make activity visible to customers.' };
+  }
   const result = await access.client
     .from('task_activities')
     .insert({

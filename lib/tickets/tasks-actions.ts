@@ -38,6 +38,7 @@ type TaskRow = {
   created_by?: string | null;
   group_name?: string | null;
   assignee_name?: string | null;
+  blocker_count?: number;
 };
 
 function mapTask(row: TaskRow, locked = false): TicketTask {
@@ -61,6 +62,7 @@ function mapTask(row: TaskRow, locked = false): TicketTask {
     updatedAt: row.updated_at,
     createdBy: row.created_by ?? undefined,
     locked,
+    blockerCount: row.blocker_count ?? 0,
   };
 }
 
@@ -93,6 +95,15 @@ async function hydrateTasks(
       ? supabase.from('profiles').select('id, full_name').in('id', assigneeIds)
       : Promise.resolve({ data: [] as Array<{ id: string; full_name: string }> }),
   ]);
+  const { data: blockers } = rows.length
+    ? await supabase
+        .from('task_activities')
+        .select('task_id')
+        .in('task_id', rows.map((row) => row.id))
+        .eq('kind', 'blocker')
+    : { data: [] as Array<{ task_id: string }> };
+  const blockerCounts = new Map<string, number>();
+  for (const row of blockers ?? []) blockerCounts.set(row.task_id, (blockerCounts.get(row.task_id) ?? 0) + 1);
   const groupMap = new Map((groups ?? []).map((row) => [row.id, row.name]));
   const nameMap = new Map((profiles ?? []).map((row) => [row.id, row.full_name]));
   const mapped = rows.map((row) =>
@@ -100,6 +111,7 @@ async function hydrateTasks(
       ...row,
       group_name: row.group_id ? groupMap.get(row.group_id) ?? null : null,
       assignee_name: row.assignee_id ? nameMap.get(row.assignee_id) ?? null : null,
+      blocker_count: blockerCounts.get(row.id) ?? 0,
     }),
   );
   return withLocked(mapped, sequential);

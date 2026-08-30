@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Lock, MessageSquare, Plus } from 'lucide-react';
+import { Filter, Lock, MessageSquare, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -39,6 +39,7 @@ export function TicketTasksPanel({
   embedded = false,
   canEditTasks = true,
   canCreateActivity = true,
+  canPublishActivity = false,
   onStatsChange,
 }: {
   ticketId: string;
@@ -49,6 +50,7 @@ export function TicketTasksPanel({
   embedded?: boolean;
   canEditTasks?: boolean;
   canCreateActivity?: boolean;
+  canPublishActivity?: boolean;
   onStatsChange?: (stats: { total: number; done: number; sequential: boolean }) => void;
 }) {
   const { t } = useI18n();
@@ -61,9 +63,21 @@ export function TicketTasksPanel({
   const [agents, setAgents] = useState<AgentOption[]>([]);
   const [busy, setBusy] = useState(false);
   const [activityTaskId, setActivityTaskId] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<'all' | TicketTaskStatus>('all');
+  const [taskQuery, setTaskQuery] = useState('');
+  const [blockersOnly, setBlockersOnly] = useState(false);
 
   const typeOptions = useMemo(() => taskTypesForTicketType(ticketType), [ticketType]);
   const doneCount = tasks.filter((row) => row.status === 'done').length;
+  const filteredTasks = useMemo(() => {
+    const query = taskQuery.trim().toLowerCase();
+    return tasks.filter((task) => {
+      if (statusFilter !== 'all' && task.status !== statusFilter) return false;
+      if (blockersOnly && !task.blockerCount) return false;
+      if (query && !`${task.number} ${task.title} ${task.groupName ?? ''} ${task.assigneeName ?? ''}`.toLowerCase().includes(query)) return false;
+      return true;
+    });
+  }, [blockersOnly, statusFilter, taskQuery, tasks]);
 
   const load = useCallback(async () => {
     const response = await fetch(`/api/tickets/${ticketId}/tasks`);
@@ -164,8 +178,33 @@ export function TicketTasksPanel({
   const body = (
     <div className="space-y-4">
       {embedded ? <div className="flex justify-end">{badges}</div> : null}
+      {tasks.length > 0 ? (
+        <div className="flex flex-wrap items-center gap-2 rounded-lg border border-zinc-800/80 bg-zinc-950/40 p-2">
+          <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.12em] text-zinc-600">
+            <Filter className="h-3 w-3" /> {t.tickets.tasks.taskFilters}
+          </span>
+          <Input
+            value={taskQuery}
+            onChange={(event) => setTaskQuery(event.target.value)}
+            placeholder={t.tickets.tasks.searchTasks}
+            className="h-7 w-44 text-[11px]"
+          />
+          <Select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)} className="h-7 w-auto min-w-32 px-2 text-[11px]">
+            <option value="all">{t.tickets.tasks.allTaskStatuses}</option>
+            {(['open', 'in_progress', 'done', 'cancelled'] as const).map((value) => (
+              <option key={value} value={value}>{statusLabel(value)}</option>
+            ))}
+          </Select>
+          <label className="inline-flex cursor-pointer items-center gap-1.5 text-[11px] text-zinc-500">
+            <input type="checkbox" checked={blockersOnly} onChange={(event) => setBlockersOnly(event.target.checked)} />
+            {t.tickets.tasks.blockersOnly}
+          </label>
+        </div>
+      ) : null}
       {tasks.length === 0 ? (
         <p className="text-sm text-zinc-500">{t.tickets.tasks.empty}</p>
+      ) : filteredTasks.length === 0 ? (
+        <p className="text-sm text-zinc-500">{t.tickets.tasks.noMatchingTasks}</p>
       ) : (
         <div className="overflow-hidden rounded-lg border border-zinc-800">
           <div className="hidden grid-cols-[88px_minmax(0,1.4fr)_100px_120px_120px_100px_88px] gap-2 border-b border-zinc-800 px-3 py-2 text-[10px] uppercase tracking-[0.14em] text-zinc-500 md:grid">
@@ -177,7 +216,7 @@ export function TicketTasksPanel({
             <span>{t.tickets.tasks.colType}</span>
             <span>{t.tickets.tasks.colActions}</span>
           </div>
-          {tasks.map((task) => (
+          {filteredTasks.map((task) => (
             <div
               key={task.id}
               className="grid gap-2 border-b border-zinc-800/80 px-3 py-2.5 last:border-b-0 md:grid-cols-[88px_minmax(0,1.4fr)_100px_120px_120px_100px_88px] md:items-center"
@@ -195,6 +234,11 @@ export function TicketTasksPanel({
                     {task.completedAt ? formatRelativeId(task.completedAt) : '—'}
                   </p>
                 )}
+                {task.blockerCount ? (
+                  <Badge tone="danger" className="mt-1">
+                    {t.tickets.tasks.blockerCount.replace('{{count}}', String(task.blockerCount))}
+                  </Badge>
+                ) : null}
               </div>
               <Badge tone={statusTone(task.status)}>{statusLabel(task.status)}</Badge>
               <p className="truncate text-xs text-zinc-400">{task.groupName ?? '—'}</p>
@@ -241,7 +285,12 @@ export function TicketTasksPanel({
                 </Button>
               </div>
               {activityTaskId === task.id ? (
-                <TaskActivityThread ticketId={ticketId} taskId={task.id} readOnly={!canCreateActivity} />
+                <TaskActivityThread
+                  ticketId={ticketId}
+                  taskId={task.id}
+                  readOnly={!canCreateActivity}
+                  canPublishActivity={canPublishActivity}
+                />
               ) : null}
             </div>
           ))}

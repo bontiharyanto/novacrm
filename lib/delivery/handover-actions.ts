@@ -8,7 +8,9 @@ import {
   type DeliveryHandover,
   type DeliveryHandoverItem,
   type DeliveryHandoverReview,
+  type DeliveryProject,
 } from '@/lib/delivery/schema';
+import { isTaskTerminal } from '@/lib/tickets/tasks-schema';
 
 const DEFAULT_HANDOVER_ITEMS = [
   { itemKey: 'scope_accepted', title: 'Scope and acceptance criteria confirmed' },
@@ -125,6 +127,7 @@ async function ensureHandover(
 async function loadHandover(
   client: Awaited<ReturnType<typeof createSupabaseServerClient>>,
   handover: HandoverRow,
+  project: DeliveryProject,
 ): Promise<DeliveryHandover> {
   const [itemsResult, reviewsResult] = await Promise.all([
     client.from('delivery_handover_items').select('*').eq('project_id', handover.project_id).order('created_at'),
@@ -141,6 +144,32 @@ async function loadHandover(
   const names = new Map((profilesResult.data ?? []).map((profile) => [profile.id, profile.full_name ?? profile.id]));
   const requiredItems = items.filter((item) => item.required);
   const completedCount = requiredItems.filter((item) => item.completed).length;
+  const ticketIds = project.workOrders.map((order) => order.ticketId).filter((id): id is string => Boolean(id));
+  const tasksResult = ticketIds.length
+    ? await client
+        .from('ticket_tasks')
+        .select('id, status')
+        .in('ticket_id', ticketIds)
+        .eq('tenant_id', handover.tenant_id)
+    : { data: [] as Array<{ id: string; status: string }> };
+  const tasks = (tasksResult.data ?? []) as Array<{ id: string; status: string }>;
+  const blockerResult = tasks.length
+    ? await client
+        .from('task_activities')
+        .select('task_id')
+        .in('task_id', tasks.map((task) => task.id))
+        .eq('kind', 'blocker')
+    : { data: [] as Array<{ task_id: string }> };
+  const openTaskCount = tasks.filter((task) => !isTaskTerminal(task.status as 'open' | 'in_progress' | 'done' | 'cancelled')).length;
+  const blockers = [
+    ...requiredItems.filter((item) => !item.completed).map((item) => `Checklist incomplete: ${item.title}`),
+    ...project.phases.filter((phase) => phase.status === 'blocked').map((phase) => `Phase blocked: ${phase.title}`),
+  ];
+  if (openTaskCount > 0) blockers.push(`${openTaskCount} delivery task(s) are still open.`);
+  const blockerActivityCount = (blockerResult.data ?? []).length;
+  const executionProgress = tasks.length
+    ? Math.round((tasks.filter((task) => task.status === 'done').length / tasks.length) * 100)
+    : project.progress;
 
   return {
     id: handover.id,
@@ -167,6 +196,9 @@ async function loadHandover(
     requiredCount: requiredItems.length,
     completedCount,
     progress: requiredItems.length ? Math.round((completedCount / requiredItems.length) * 100) : 0,
+    readinessScore: Math.round((requiredItems.length ? (completedCount / requiredItems.length) * 100 : 0) * 0.6 + executionProgress * 0.4),
+    blockers,
+    blockerActivityCount,
   };
 }
 
@@ -196,7 +228,7 @@ export async function getDeliveryHandover(projectId: string) {
     }
   }
   if (!handover) return { data: null, error: 'Handover record is not available' };
-  return { data: await loadHandover(client, handover), error: null };
+  return { data: await loadHandover(client, handover, project.data), error: null };
 }
 
 export async function updateDeliveryHandoverItem(projectId: string, input: unknown) {
@@ -244,18 +276,14 @@ export async function reviewDeliveryHandover(projectId: string, input: unknown) 
   const client = await createSupabaseServerClient();
   try {
     const handover = await ensureHandover(client, session.profile.tenantId, projectId, session.userId);
-    const itemsResult = await client
-      .from('delivery_handover_items')
-      .select('required, completed')
-      .eq('project_id', projectId)
-      .eq('tenant_id', session.profile.tenantId);
-    if (itemsResult.error) return { data: null, error: itemsResult.error.message };
-    const requiredIncomplete = (itemsResult.data ?? []).some((item) => item.required && !item.completed);
-    if (parsed.data.action === 'submit' && requiredIncomplete) {
-      return { data: null, error: 'Complete all required checklist items before submitting for Operations review.' };
+    const project = await getDeliveryProject(projectId);
+    if (project.error || !project.data) return { data: null, error: project.error ?? 'Project not found' };
+    const current = await loadHandover(client, handover, project.data);
+    if (parsed.data.action === 'submit' && current.blockers.length > 0) {
+      return { data: null, error: `Resolve delivery blockers before submitting: ${current.blockers[0]}` };
     }
-    if (parsed.data.action !== 'submit' && parsed.data.action !== 'reject' && requiredIncomplete) {
-      return { data: null, error: 'Required checklist items are still incomplete.' };
+    if (parsed.data.action !== 'submit' && parsed.data.action !== 'reject' && current.blockers.length > 0) {
+      return { data: null, error: `Resolve delivery blockers before acceptance: ${current.blockers[0]}` };
     }
 
     const status =

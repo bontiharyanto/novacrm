@@ -107,7 +107,11 @@ export function DeliveryHandoverPanel({
   }
   if (!handover) return null;
 
-  const canSubmit = canManageChecklist && handover.progress === 100 && ['not_started', 'in_progress', 'rejected'].includes(handover.status);
+  const canSubmit =
+    canManageChecklist &&
+    handover.readinessScore === 100 &&
+    handover.blockers.length === 0 &&
+    ['not_started', 'in_progress', 'rejected'].includes(handover.status);
   const canReview = canAccept && handover.status === 'under_review';
   const canEditChecklist = canManageChecklist && !['accepted', 'accepted_with_conditions'].includes(handover.status);
   const canClose =
@@ -142,6 +146,39 @@ export function DeliveryHandoverPanel({
         <div className="h-2 min-w-48 flex-1 overflow-hidden rounded-full bg-zinc-800">
           <div className="h-full rounded-full bg-emerald-500 transition-all" style={{ width: `${handover.progress}%` }} />
         </div>
+      </div>
+
+      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+        <div className="rounded-lg border border-blue-500/20 bg-blue-500/5 p-3">
+          <p className="text-[10px] uppercase tracking-[0.14em] text-zinc-500">{t.common.deliveryHandoverReadiness}</p>
+          <p className="mt-1 text-xl font-semibold text-blue-200">{handover.readinessScore}%</p>
+        </div>
+        <div className={`rounded-lg border p-3 ${
+          handover.blockers.length ? 'border-rose-500/20 bg-rose-500/5' : 'border-emerald-500/20 bg-emerald-500/5'
+        }`}>
+          <p className="text-[10px] uppercase tracking-[0.14em] text-zinc-500">{t.common.deliveryHandoverBlockers}</p>
+          <p className={`mt-1 text-xl font-semibold ${handover.blockers.length ? 'text-rose-200' : 'text-emerald-200'}`}>
+            {handover.blockers.length}
+          </p>
+        </div>
+      </div>
+
+      <div className={`mt-4 rounded-lg border p-3 ${
+        handover.blockers.length ? 'border-rose-500/20 bg-rose-500/5' : 'border-emerald-500/20 bg-emerald-500/5'
+      }`}>
+        <p className="text-xs text-zinc-300">
+          {handover.blockers.length ? t.common.deliveryHandoverBlockerHint : t.common.deliveryHandoverNoBlockers}
+        </p>
+        {handover.blockers.length ? (
+          <ul className="mt-2 list-disc space-y-1 pl-4 text-xs text-rose-200">
+            {handover.blockers.slice(0, 8).map((blocker) => <li key={blocker}>{blocker}</li>)}
+          </ul>
+        ) : null}
+        {handover.blockerActivityCount > 0 ? (
+          <p className="mt-2 text-[11px] text-amber-300">
+            {t.common.deliveryHandoverActivityBlockers.replace('{{count}}', String(handover.blockerActivityCount))}
+          </p>
+        ) : null}
       </div>
 
       <div className="mt-5 grid gap-2 md:grid-cols-2">

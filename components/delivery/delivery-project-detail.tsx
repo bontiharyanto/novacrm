@@ -26,6 +26,12 @@ function statusTone(status: DeliveryPhaseStatus): 'neutral' | 'info' | 'success'
   return 'warning';
 }
 
+function healthTone(health: DeliveryProject['phases'][number]['health']): 'success' | 'warning' | 'danger' {
+  if (health === 'blocked') return 'danger';
+  if (health === 'at_risk') return 'warning';
+  return 'success';
+}
+
 function phaseIcon(status: DeliveryPhaseStatus) {
   if (status === 'completed') return Check;
   if (status === 'in_progress') return Clock3;
@@ -40,6 +46,8 @@ export function DeliveryProjectDetail({
   canManageHandover = !readOnly,
   canAcceptHandover = false,
   canCreateTaskActivity = false,
+  canManageTasks = false,
+  canPublishActivity = false,
   canManageAssignments = false,
   assignmentOptions = { pm: [], dco: [] },
 }: {
@@ -50,6 +58,8 @@ export function DeliveryProjectDetail({
   canManageHandover?: boolean;
   canAcceptHandover?: boolean;
   canCreateTaskActivity?: boolean;
+  canManageTasks?: boolean;
+  canPublishActivity?: boolean;
   canManageAssignments?: boolean;
   assignmentOptions?: {
     pm: DeliveryAssignmentUser[];
@@ -234,8 +244,9 @@ export function DeliveryProjectDetail({
                     accountId={project.accountId}
                     groups={[]}
                     embedded
-                    canEditTasks={false}
+                    canEditTasks={canManageTasks}
                     canCreateActivity={canCreateTaskActivity}
+                    canPublishActivity={canPublishActivity}
                   />
                 </div>
               ))
@@ -283,7 +294,16 @@ export function DeliveryProjectDetail({
                           : 'border-l-zinc-700'
                   }`}>
                     <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(132px,160px)] sm:items-center">
-                      <p className="min-w-0 text-sm leading-5 text-zinc-100">{phase.title}</p>
+                      <div className="min-w-0">
+                        <p className="text-sm leading-5 text-zinc-100">{phase.title}</p>
+                        <Badge
+                          tone={healthTone(phase.health)}
+                          className="mt-1"
+                          title={t.common.deliveryPhaseHealthReason[phase.healthReason]}
+                        >
+                          {t.common.deliveryPhaseHealth[phase.health]}
+                        </Badge>
+                      </div>
                       {readOnly || !canManagePhases ? (
                         <Badge tone={statusTone(phase.status)}>{t.common.deliveryStatus[phase.status]}</Badge>
                       ) : (

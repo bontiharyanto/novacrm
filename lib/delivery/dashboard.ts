@@ -46,6 +46,7 @@ export type DeliveryDashboardProject = {
   openTasks: number;
   overdueTasks: number;
   unassignedTasks: number;
+  blockerCount: number;
 };
 
 export type DeliveryDashboardActivity = {
@@ -71,6 +72,7 @@ export type DeliveryDashboardData = {
     overdueTasks: number;
     unassignedTasks: number;
     blockedDependencies: number;
+    activeBlockers: number;
   };
   projects: DeliveryDashboardProject[];
   recentActivities: DeliveryDashboardActivity[];
@@ -99,7 +101,7 @@ export async function getDeliveryDashboard(): Promise<DeliveryDashboardData | nu
   const tasks = (tasksResult.data ?? []) as DashboardTaskRow[];
   const taskIds = tasks.map((task) => task.id);
 
-  const [dependenciesResult, activitiesResult] = await Promise.all([
+  const [dependenciesResult, activitiesResult, blockersResult] = await Promise.all([
     taskIds.length
       ? client
           .from('task_dependencies')
@@ -116,10 +118,19 @@ export async function getDeliveryDashboard(): Promise<DeliveryDashboardData | nu
           .order('created_at', { ascending: false })
           .limit(8)
       : Promise.resolve({ data: [], error: null }),
+    taskIds.length
+      ? client
+          .from('task_activities')
+          .select('task_id')
+          .in('task_id', taskIds)
+          .eq('tenant_id', session.profile.tenantId)
+          .eq('kind', 'blocker')
+      : Promise.resolve({ data: [], error: null }),
   ]);
 
   const dependencies = (dependenciesResult.data ?? []) as DashboardDependencyRow[];
   const activities = (activitiesResult.data ?? []) as DashboardActivityRow[];
+  const blockerTaskIds = new Set((blockersResult.data ?? []).map((row) => row.task_id as string));
   const taskMap = new Map(tasks.map((task) => [task.id, task]));
   const phaseMap = new Map(projects.flatMap((project) => project.phases).map((phase) => [phase.id, phase]));
   const today = new Date().toISOString().slice(0, 10);
@@ -142,6 +153,7 @@ export async function getDeliveryDashboard(): Promise<DeliveryDashboardData | nu
     ).length;
     const openWorkOrders = project.workOrders.filter((order) => !isTerminal(order.status)).length;
     const openTasks = projectTasks.filter((task) => !isTerminal(task.status)).length;
+    const blockerCount = projectTasks.filter((task) => blockerTaskIds.has(task.id)).length;
 
     return {
       id: project.id,
@@ -160,6 +172,7 @@ export async function getDeliveryDashboard(): Promise<DeliveryDashboardData | nu
       openTasks,
       overdueTasks,
       unassignedTasks: projectTasks.filter((task) => !task.assignee_id && !isTerminal(task.status)).length,
+      blockerCount,
     };
   });
 
@@ -191,6 +204,7 @@ export async function getDeliveryDashboard(): Promise<DeliveryDashboardData | nu
       overdueTasks: projectRows.reduce((sum, project) => sum + project.overdueTasks, 0),
       unassignedTasks: projectRows.reduce((sum, project) => sum + project.unassignedTasks, 0),
       blockedDependencies,
+      activeBlockers: projectRows.reduce((sum, project) => sum + project.blockerCount, 0),
     },
     projects: projectRows,
     recentActivities: activities.map((activity) => ({

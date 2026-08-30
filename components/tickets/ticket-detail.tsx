@@ -137,12 +137,14 @@ export function TicketDetail({
   currentUserName,
   canEditTicket,
   canCreateTaskActivity,
+  canPublishActivity,
 }: {
   ticketId: string;
   currentUserId: string;
   currentUserName: string;
   canEditTicket: boolean;
   canCreateTaskActivity: boolean;
+  canPublishActivity?: boolean;
 }) {
   const { t } = useI18n();
   const [ticket, setTicket] = useState<TicketItem | null>(null);
@@ -461,6 +463,7 @@ export function TicketDetail({
                 embedded
                 canEditTasks={canEditTicket}
                 canCreateActivity={canCreateTaskActivity}
+                canPublishActivity={canPublishActivity}
                 onStatsChange={setTaskStats}
               />
             </div>

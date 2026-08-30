@@ -76,6 +76,7 @@ export type TicketTask = {
   updatedAt: string;
   createdBy?: string;
   locked?: boolean;
+  blockerCount?: number;
 };
 
 export const REQUEST_TASK_TYPES: TicketTaskType[] = [

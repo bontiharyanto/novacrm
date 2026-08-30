@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { optionalUuidSchema } from '@/lib/validation/id';
+import type { DeliveryPhaseHealth, DeliveryPhaseHealthReason } from '@/lib/delivery/health';
 
 export const deliveryProjectStatusSchema = z.enum([
   'planned',
@@ -127,6 +128,9 @@ export type DeliveryHandover = {
   requiredCount: number;
   completedCount: number;
   progress: number;
+  readinessScore: number;
+  blockers: string[];
+  blockerActivityCount: number;
 };
 
 export type DeliveryPhase = {
@@ -141,6 +145,8 @@ export type DeliveryPhase = {
   plannedStart?: string;
   plannedEnd?: string;
   completedAt?: string;
+  health: DeliveryPhaseHealth;
+  healthReason: DeliveryPhaseHealthReason;
 };
 
 export type DeliveryWorkOrder = {

@@ -11,6 +11,7 @@ export default async function TicketDetailPage({ params }: { params: { id: strin
       currentUserName={session?.profile.fullName ?? ''}
       canEditTicket={Boolean(session && canRole(session.profile.role, 'update', 'Ticket'))}
       canCreateTaskActivity={Boolean(session && canRole(session.profile.role, 'create', 'TaskActivity'))}
+      canPublishActivity={Boolean(session && canRole(session.profile.role, 'update', 'DeliveryPublish'))}
     />
   );
 }
