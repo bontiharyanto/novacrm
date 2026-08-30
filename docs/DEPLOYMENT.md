@@ -138,6 +138,52 @@ New migrations are applied once and recorded in
 production tenant unless the database is a disposable demo. Use the manual
 Delivery sample button at `/delivery` for a safe demo project.
 
+## 4b. Menjalankan SQL dari VPS tanpa instalasi `psql`
+
+Jika `psql` belum terpasang di VPS, gunakan image PostgreSQL Docker. Muat
+`DATABASE_URL` dari `.env.production`; jangan menulis connection string asli
+langsung ke repository atau menggantikan nilainya dengan placeholder.
+
+```bash
+cd /opt/novacrm
+set -a
+. ./.env.production
+set +a
+
+docker run --rm \
+  -e DATABASE_URL="$DATABASE_URL" \
+  postgres:17-alpine \
+  psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -c "
+select id, email, role
+from public.profiles
+order by created_at;
+"
+```
+
+Untuk query yang lebih panjang, kirim SQL melalui standard input:
+
+```bash
+docker run --rm -i \
+  -e DATABASE_URL="$DATABASE_URL" \
+  postgres:17-alpine \
+  psql "$DATABASE_URL" -v ON_ERROR_STOP=1 <<'SQL'
+select
+  p.email,
+  am.role,
+  a.name as account_name,
+  a.id as account_id
+from public.profiles p
+join public.account_members am on am.user_id = p.id
+join public.accounts a on a.id = am.account_id
+where p.email = 'customer@novacrm.app';
+SQL
+```
+
+Metode ini dapat dipakai untuk memeriksa account Delivery, project,
+membership customer, atau status migration. Untuk `insert`, `update`, atau
+`delete`, verifikasi tenant dan account terlebih dahulu. Jangan menjalankan
+seluruh `supabase/seed.sql` di production.
+
 ## 5. Runtime
 
 - Web: Next.js, `--scale web=1` for the current VPS footprint; scale to 3+ replicas after capacity and shared limits are verified, Traefik TLS
