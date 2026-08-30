@@ -83,7 +83,7 @@ export function LoginForm() {
           <NovaWordmark subtitle={t.brand.operations} size={36} />
           <div className="max-w-md space-y-8">
             <div className="space-y-3">
-              <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-zinc-500">{t.brand.name}</p>
+              <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-[color:var(--accent)]">{t.login.productLabel}</p>
               <h1 className="text-3xl font-semibold tracking-tight text-zinc-50 xl:text-4xl">{t.login.tagline}</h1>
             </div>
             <ul className="space-y-3">
@@ -132,6 +132,7 @@ export function LoginForm() {
             </div>
 
             <div className="space-y-4 rounded-xl border border-zinc-800/90 bg-zinc-900/30 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
+              <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-[color:var(--accent)] lg:hidden">{t.login.productLabel}</p>
               <p className="text-[11px] font-medium uppercase tracking-[0.16em] text-zinc-500">{t.login.continueEmail}</p>
               <form className="space-y-4" onSubmit={(event) => void onSubmit(event)}>
                 <div className="space-y-2">

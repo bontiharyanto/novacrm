@@ -247,7 +247,8 @@ export const en = {
     title: 'Sign in',
     demo: 'Local test: admin / agent / customer on the same tenant.',
     hosted: 'Use your tenant account to enter the operations desk.',
-    tagline: 'Operations desk for ITSM — tickets, assets, and portal in one workspace.',
+    tagline: 'Service operations for tickets, workforce, and delivery in one workspace.',
+    productLabel: 'ITSM · Workforce · Delivery',
     workspace: 'Workspace',
     secureHint: 'Encrypted session · MFA available · Tenant-isolated data',
     continueEmail: 'Continue with email',
@@ -268,8 +269,8 @@ export const en = {
     passwordExpired: 'Your password expired. Sign in, then change it to continue.',
     points: {
       desk: 'Service desk with SLA, escalation, and major incident',
-      portal: 'Customer portal and multi-channel notifications',
-      cmdb: 'Assets, CMDB, and workforce in one tenant',
+      portal: 'Workforce roster, shift coverage, and workload visibility',
+      cmdb: 'Delivery phases, task activity, and operational handover',
     },
   },
   passwordPolicy: {

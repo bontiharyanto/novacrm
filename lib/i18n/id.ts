@@ -249,7 +249,8 @@ export const id: Dictionary = {
     title: 'Masuk',
     demo: 'Uji lokal: admin / agent / customer pada tenant yang sama.',
     hosted: 'Masuk ke desk operasi dengan akun tenant Anda.',
-    tagline: 'Desk operasi ITSM — tiket, aset, dan portal dalam satu workspace.',
+    tagline: 'Service operations untuk tiket, workforce, dan delivery dalam satu workspace.',
+    productLabel: 'ITSM · Workforce · Delivery',
     workspace: 'Workspace',
     secureHint: 'Sesi terenkripsi · MFA tersedia · Data terisolasi per tenant',
     continueEmail: 'Lanjut dengan email',
@@ -270,8 +271,8 @@ export const id: Dictionary = {
     passwordExpired: 'Kata sandi kedaluwarsa. Masuk, lalu ganti untuk melanjutkan.',
     points: {
       desk: 'Service desk dengan SLA, eskalasi, dan major incident',
-      portal: 'Portal customer dan notifikasi multi-channel',
-      cmdb: 'Aset, CMDB, dan workforce dalam satu tenant',
+      portal: 'Roster workforce, coverage shift, dan visibilitas workload',
+      cmdb: 'Delivery phase, task activity, dan handover operasional',
     },
   },
   passwordPolicy: {

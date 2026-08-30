@@ -88,18 +88,18 @@ export function TaskActivityThread({
         <span className="inline-flex items-center gap-1 text-[10px] uppercase tracking-[0.12em] text-zinc-600">
           <Filter className="h-3 w-3" /> {t.tickets.tasks.activityFilters}
         </span>
-        <Select value={kindFilter} onChange={(event) => setKindFilter(event.target.value as typeof kindFilter)} className="h-7 w-auto min-w-32 px-2 text-[11px]">
+        <Select value={kindFilter} onChange={(event) => setKindFilter(event.target.value as typeof kindFilter)} className="h-7 w-auto min-w-32 px-2 py-0 text-[11px] leading-7">
           <option value="all">{t.tickets.tasks.allActivityKinds}</option>
           {(['progress', 'comment', 'blocker', 'decision', 'status_change', 'handover'] as const).map((value) => (
             <option key={value} value={value}>{t.tickets.tasks.activityKind[value]}</option>
           ))}
         </Select>
-        <Select value={visibilityFilter} onChange={(event) => setVisibilityFilter(event.target.value as typeof visibilityFilter)} className="h-7 w-auto min-w-28 px-2 text-[11px]">
+        <Select value={visibilityFilter} onChange={(event) => setVisibilityFilter(event.target.value as typeof visibilityFilter)} className="h-7 w-auto min-w-28 px-2 py-0 text-[11px] leading-7">
           <option value="all">{t.tickets.tasks.allVisibility}</option>
           <option value="internal">{t.tickets.tasks.internalVisibility}</option>
           <option value="customer">{t.tickets.tasks.customerVisibility}</option>
         </Select>
-        <Select value={activityWindow} onChange={(event) => setActivityWindow(event.target.value as typeof activityWindow)} className="h-7 w-auto min-w-24 px-2 text-[11px]">
+        <Select value={activityWindow} onChange={(event) => setActivityWindow(event.target.value as typeof activityWindow)} className="h-7 w-auto min-w-24 px-2 py-0 text-[11px] leading-7">
           <option value="all">{t.tickets.tasks.allTime}</option>
           <option value="7">{t.tickets.tasks.last7Days}</option>
           <option value="30">{t.tickets.tasks.last30Days}</option>

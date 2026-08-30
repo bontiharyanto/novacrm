@@ -189,7 +189,7 @@ export function TicketTasksPanel({
             placeholder={t.tickets.tasks.searchTasks}
             className="h-7 w-44 text-[11px]"
           />
-          <Select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)} className="h-7 w-auto min-w-32 px-2 text-[11px]">
+          <Select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)} className="h-7 w-auto min-w-32 px-2 py-0 text-[11px] leading-7">
             <option value="all">{t.tickets.tasks.allTaskStatuses}</option>
             {(['open', 'in_progress', 'done', 'cancelled'] as const).map((value) => (
               <option key={value} value={value}>{statusLabel(value)}</option>
