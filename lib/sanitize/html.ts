@@ -1,6 +1,25 @@
 import { looksLikeObjectKey, objectKeyFromImageSrc, ticketObjectImageSrc } from '@/lib/tickets/object-image';
 
-const ALLOWED_TAGS = new Set(['p', 'br', 'strong', 'em', 'ul', 'ol', 'li', 'b', 'i', 'img']);
+const ALLOWED_TAGS = new Set([
+  'p',
+  'br',
+  'strong',
+  'em',
+  'ul',
+  'ol',
+  'li',
+  'b',
+  'i',
+  'img',
+  'table',
+  'thead',
+  'tbody',
+  'tfoot',
+  'tr',
+  'th',
+  'td',
+]);
+const TABLE_CELL_TAGS = new Set(['th', 'td']);
 const VOID_TAGS = new Set(['br', 'img']);
 const DROP_WITH_CONTENT = new Set(['script', 'style', 'iframe', 'object', 'embed', 'link', 'meta', 'noscript']);
 
@@ -33,6 +52,19 @@ function serializeImage(element: Element) {
   return `<img src="${escapeAttr(src)}" data-novacrm-key="${escapeAttr(key)}" alt="${escapeAttr(alt)}" class="ticket-inline-image">`;
 }
 
+function serializeTableCellAttrs(element: Element) {
+  if (!TABLE_CELL_TAGS.has(element.tagName.toLowerCase())) return '';
+  const attrs = ['colspan', 'rowspan']
+    .map((name) => {
+      const value = element.getAttribute(name);
+      return value && /^\d{1,3}$/.test(value) && Number(value) > 0
+        ? ` ${name}="${value}"`
+        : '';
+    })
+    .join('');
+  return attrs;
+}
+
 function serializeAllowed(node: ParentNode): string {
   return Array.from(node.childNodes)
     .map((child) => {
@@ -57,7 +89,7 @@ function serializeAllowed(node: ParentNode): string {
       if (VOID_TAGS.has(tag)) {
         return '<br>';
       }
-      return `<${tag}>${inner}</${tag}>`;
+      return `<${tag}${serializeTableCellAttrs(element)}>${inner}</${tag}>`;
     })
     .join('');
 }
@@ -148,7 +180,21 @@ function sanitizeWithWalker(html: string) {
       continue;
     }
 
-    out += isClose ? `</${tag}>` : `<${tag}>`;
+    if (isClose) {
+      out += `</${tag}>`;
+    } else {
+      const attrs = TABLE_CELL_TAGS.has(tag)
+        ? ['colspan', 'rowspan']
+            .map((name) => {
+              const value = parseImgAttrs(raw)[name];
+              return value && /^\d{1,3}$/.test(value) && Number(value) > 0
+                ? ` ${name}="${value}"`
+                : '';
+            })
+            .join('')
+        : '';
+      out += `<${tag}${attrs}>`;
+    }
   }
 
   return out;

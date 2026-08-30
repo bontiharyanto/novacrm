@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useEditor, EditorContent, type Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Image from '@tiptap/extension-image';
+import { TableKit } from '@tiptap/extension-table';
 import { ImageIcon, Loader2 } from 'lucide-react';
 import { sanitizeCommentHtml } from '@/lib/sanitize/html';
 import { uploadTicketFile } from '@/lib/tickets/upload-client';
@@ -96,7 +97,7 @@ export function CommentEditor({
   handleImageFilesRef.current = handleImageFiles;
 
   const editor = useEditor({
-    extensions: [StarterKit, TicketImage],
+    extensions: [StarterKit, TableKit, TicketImage],
     content: value || '<p></p>',
     immediatelyRender: false,
     onCreate: ({ editor: instance }) => {

@@ -575,7 +575,7 @@ function ConfigurationNav({
   );
   if (!hasPeople && !hasInventory && flatVisible.length === 0) return null;
 
-  return (
+            return (
     <NavSection
       id="configuration"
       title={t.nav.configuration}
@@ -598,8 +598,8 @@ function ConfigurationNav({
       />
       {flatVisible.map((item) => (
         <NavLink
-          key={item.href}
-          href={item.href}
+                key={item.href}
+                href={item.href}
           label={t.nav[item.labelKey]}
           icon={item.icon}
           active={isPathActive(pathname, item.href)}
@@ -696,8 +696,8 @@ function FavoritesNav({
             pinLabel={t.nav.pin}
             unpinLabel={t.nav.unpin}
           />
-        );
-      })}
+            );
+          })}
     </NavSection>
   );
 }

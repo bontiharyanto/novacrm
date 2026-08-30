@@ -640,7 +640,7 @@ export const en = {
     attachFile: 'Attach file',
     uploading: 'Uploading…',
     insertImage: 'Image',
-    pasteImageHint: 'Paste or drop a screenshot (PNG/JPEG · max 8 MB)',
+    pasteImageHint: 'Paste a table or drop a screenshot (PNG/JPEG · max 8 MB)',
     agentName: 'Agent name',
     saveAssignee: 'Save assignee',
     me: 'Me',

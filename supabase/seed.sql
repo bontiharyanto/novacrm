@@ -38,7 +38,7 @@ begin
     raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
     confirmation_token, email_change, email_change_token_new, recovery_token
   )
-  values
+values
     ('00000000-0000-0000-0000-000000000000', admin_id, 'authenticated', 'authenticated',
      'admin@novacrm.app', extensions.crypt('NovaCRM!2026', extensions.gen_salt('bf')), now(),
      '{"provider":"email","providers":["email"]}', '{"full_name":"Nova Admin","role":"admin","tenant_id":"11111111-1111-1111-1111-111111111111"}',
@@ -68,7 +68,7 @@ begin
     (gen_random_uuid(), customer_id, format('{"sub":"%s","email":"customer@novacrm.app"}', customer_id)::jsonb, 'email', customer_id::text, now(), now(), now()),
     (gen_random_uuid(), pm_delivery_id, format('{"sub":"%s","email":"pm.delivery@novacrm.app"}', pm_delivery_id)::jsonb, 'email', pm_delivery_id::text, now(), now(), now()),
     (gen_random_uuid(), dco_id, format('{"sub":"%s","email":"dco@novacrm.app"}', dco_id)::jsonb, 'email', dco_id::text, now(), now(), now())
-  on conflict do nothing;
+on conflict do nothing;
 
   insert into public.profiles (id, tenant_id, role, full_name, email, phone, created_by)
   values

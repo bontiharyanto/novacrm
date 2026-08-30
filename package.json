@@ -34,6 +34,7 @@
     "@supabase/supabase-js": "^2.112.2",
     "@tanstack/react-table": "^9.1.2",
     "@tiptap/extension-image": "^3.30.0",
+    "@tiptap/extension-table": "^3.30.0",
     "@tiptap/pm": "^3.30.0",
     "@tiptap/react": "^3.30.0",
     "@tiptap/starter-kit": "^3.30.0",
