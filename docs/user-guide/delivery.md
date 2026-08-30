@@ -21,20 +21,41 @@ Pembagian tanggung jawab:
 | Agent/team | Mengerjakan task dan mengisi activity |
 | Customer | Melihat progres dan activity yang dipublikasikan |
 
+## Urutan akses dan login
+
+Gunakan akun sesuai pemilik langkah berikut:
+
+- **PM Delivery** login ke `/delivery/dashboard` untuk memantau portfolio,
+  membuat Delivery Project, mengelola phase, dan menyiapkan handover.
+- **Manager/Admin** login ke `/dashboard` untuk membuat project bila
+  diperlukan, lalu menetapkan PM Delivery dan DCO pada project.
+- **DCO** login ke `/delivery/dashboard` untuk membuat Work Order/Request,
+  membuat task, mengatur assignment, dan mengontrol eksekusi.
+- **Agent/Delivery Team** login ke `/dashboard` untuk mengerjakan task dan
+  mengisi Task Activity.
+- **Customer** login ke `/portal` untuk melihat project, task, dan activity
+  yang dipublikasikan.
+
+Untuk akun demo dan password lab, lihat bagian [Demo logins](README.md#demo-logins).
+
 ## Alur manual sebelum CRM
 
-1. Login dengan akun internal (`pm_delivery`, `dco`, `agent`, `team_lead`,
-   `supervisor`, `manager`, `admin`, atau `superadmin`).
-2. Buka `/delivery/dashboard` untuk command center, atau `/delivery` untuk
-   project list.
-3. Pilih **customer account** yang benar.
-4. Isi nama project dan referensi internal/eksternal.
-5. Pilih mode:
+1. Pastikan project sudah berstatus **Closed Won** dan PM Delivery sudah
+   ditunjuk.
+2. Login sebagai PM Delivery atau Manager/Admin. Buka `/delivery/dashboard`
+   untuk command center, lalu `/delivery` untuk project list.
+3. Pilih **customer account** yang benar, lalu isi nama project dan referensi
+   internal/eksternal.
+4. Pilih mode:
    - **Sequential:** task berjalan sesuai urutan dan predecessor harus selesai.
    - **Parallel:** task dapat dikerjakan bersamaan.
-6. Klik **Create project**.
-7. Buka project, lalu buat **delivery request** dari panel Work Order.
-8. Sistem membuat Request ticket, menghubungkannya ke project, membuat task
+5. Klik **Create project**.
+6. Manager/Admin menetapkan PM Delivery dan DCO bila assignment belum terisi.
+7. Login sebagai DCO, buka project tersebut, lalu buat **delivery request**
+   dari panel Work Order.
+8. **Jangan membuat ticket terlebih dahulu** untuk alur delivery normal.
+   Saat Work Order dibuat, sistem otomatis membuat Request ticket,
+   menghubungkannya ke project, membuat task
    dari 7 phase standar, dan membuat dependency untuk mode sequential.
 9. Pada detail Delivery Project, panel **Task Activity** menampilkan task dan
    activity per Work Order. Buka tombol **Activity** pada task yang relevan

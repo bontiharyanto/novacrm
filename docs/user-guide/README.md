@@ -15,8 +15,8 @@ Sembilan role produk. Pilih dokumen sesuai login.
 | --- | --- | --- | --- |
 | `customer` | [Pengguna — portal](user-operator.md#bagian-b--customer-portal) | `/portal` | `customer@novacrm.app` |
 | `agent` (L1/L2/L3) | [Pengguna — desk](user-operator.md#bagian-a--agent-service-desk) | `/dashboard` | `agent@novacrm.app` |
-| `pm_delivery` | [Delivery access model](../DELIVERY-ACCESS-MODEL.md) | `/dashboard` | `pm.delivery@novacrm.app` |
-| `dco` | [Delivery access model](../DELIVERY-ACCESS-MODEL.md) | `/dashboard` | `dco@novacrm.app` |
+| `pm_delivery` | [Delivery access model](../DELIVERY-ACCESS-MODEL.md) | `/delivery/dashboard` | `pm.delivery@novacrm.app` |
+| `dco` | [Delivery access model](../DELIVERY-ACCESS-MODEL.md) | `/delivery/dashboard` | `dco@novacrm.app` |
 | `team_lead` | [Team Lead / SPV](lead-spv.md) | `/dashboard` | `lead@novacrm.app` |
 | `supervisor` | [Team Lead / SPV](lead-spv.md) | `/dashboard` | `spv@novacrm.app` |
 | `manager` | [Manager operasi](manager-ops.md) | `/dashboard` | `manager@novacrm.app` |
@@ -71,8 +71,8 @@ Password lab: `NovaCRM!2026` (bukan produksi).
 | Supervisor | `spv@novacrm.app` | `/dashboard` |
 | Team lead | `lead@novacrm.app` | `/dashboard` |
 | Agent | `agent@novacrm.app` | `/dashboard` |
-| PM Delivery | `pm.delivery@novacrm.app` | `/dashboard` |
-| DCO | `dco@novacrm.app` | `/dashboard` |
+| PM Delivery | `pm.delivery@novacrm.app` | `/delivery/dashboard` |
+| DCO | `dco@novacrm.app` | `/delivery/dashboard` |
 | L1 / L2 / L3 / on-call | `sari.l1@` · `budi.l1@` · `raka.l2@` · `maya.l3@` · `andi.oncall@novacrm.app` | `/dashboard` |
 | Customer | `customer@novacrm.app` | `/portal` |
 

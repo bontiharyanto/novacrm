@@ -4,6 +4,19 @@ Dokumen ini adalah alur operasional resmi untuk project setelah status
 **Closed Won**. Portal customer hanya menjadi kanal pemantauan; pembuatan dan
 pengendalian delivery dilakukan oleh PM Delivery, DCO, dan Operations.
 
+## Urutan login dan pemilik proses
+
+- **PM Delivery** membuka `/delivery/dashboard` untuk memantau portfolio,
+  membuat project, mengelola phase, dan menyiapkan handover.
+- **Manager/Admin** membuka `/dashboard` untuk membuat project bila diperlukan
+  dan menetapkan PM Delivery serta DCO.
+- **DCO** membuka `/delivery/dashboard` untuk membuat Work Order/Request,
+  mengatur task, assignment, dependency, dan activity.
+- **Agent/Delivery Team** membuka `/dashboard` untuk menjalankan task dan
+  mengisi activity.
+- **Customer** membuka `/portal` untuk memantau data delivery yang
+  `customer_visible`.
+
 ## Alur end-to-end
 
 ```text
@@ -11,9 +24,11 @@ CRM / Sales: Closed Won
         ↓
 PM Delivery ditunjuk dan scope dikonfirmasi
         ↓
-DCO membuat Delivery Project
+PM Delivery / Manager membuat Delivery Project
         ↓
-DCO membuat Request / Work Order ticket
+Manager/Admin menetapkan PM Delivery dan DCO
+        ↓
+DCO membuat Request / Work Order
         ↓
 Task phase + WBS dependency dibuat
         ↓
@@ -52,8 +67,9 @@ Output:
 
 ### 2. Delivery setup oleh DCO
 
-DCO membuka project dan membuat **Request / Work Order**. NovaCRM membuat
-ticket delivery yang terhubung ke project, lalu menyiapkan tujuh phase standar:
+DCO membuka project dan membuat **Request / Work Order**. Untuk alur delivery
+normal, ticket tidak dibuat lebih dahulu. NovaCRM otomatis membuat ticket
+delivery yang terhubung ke project, lalu menyiapkan tujuh phase standar:
 
 1. Feasibility / Survey;
 2. Allocate Resource & Service;
