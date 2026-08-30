@@ -61,7 +61,7 @@ export function TenantDetail({
   const [maxAgents, setMaxAgents] = useState(String(tenant.maxAgents));
   const [maxTicketsPerMonth, setMaxTicketsPerMonth] = useState(String(tenant.maxTicketsPerMonth));
   const [logoPreview, setLogoPreview] = useState<string | null>(initialLogoUrl ?? null);
-  const [isSaving, setIsSaving] = useState(false);
+  const [savingSection, setSavingSection] = useState<string | null>(null);
   const [isLogoBusy, setIsLogoBusy] = useState(false);
   const [isStatusBusy, setIsStatusBusy] = useState(false);
   const [error, setError] = useState('');
@@ -73,35 +73,18 @@ export function TenantDetail({
     setLogoPreview(initialLogoUrl ?? null);
   }, [initialLogoUrl]);
 
-  async function handleSave(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setIsSaving(true);
+  async function saveSection(section: string, input: Record<string, unknown>) {
+    setSavingSection(section);
     setError('');
-    const result = await updateTenant(tenant.id, {
-      name,
-      slug,
-      accentColor,
-      timezone,
-      supportEmail: supportEmail || undefined,
-      subscriptionPlan,
-      expiresAt,
-      graceDays: Number(graceDays),
-      autoPauseOnExpiry,
-      isProtected,
-      passwordRotationEnabled,
-      passwordMaxAgeDays: Number(passwordMaxAgeDays),
-      maxAccounts: Number(maxAccounts),
-      maxAgents: Number(maxAgents),
-      maxTicketsPerMonth: Number(maxTicketsPerMonth),
-    });
+    const result = await updateTenant(tenant.id, input);
     if (result.error) {
       setError(result.error);
       toastError(result.error);
-      setIsSaving(false);
+      setSavingSection(null);
       return;
     }
     toastSuccess('Saved');
-    setIsSaving(false);
+    setSavingSection(null);
     router.refresh();
   }
 
@@ -160,11 +143,12 @@ export function TenantDetail({
       transition={{ duration: 0.2, ease: 'easeOut' }}
       className="grid min-h-[calc(100vh-3.5rem)] lg:grid-cols-[minmax(0,1fr)_320px]"
     >
-      <form onSubmit={handleSave} className="space-y-6 p-6">
+      <div className="space-y-6 p-6">
         <div>
           <Link href="/tenants" className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-200">
             <ArrowLeft className="h-3.5 w-3.5" /> Tenants
           </Link>
+          <p className="mt-4 text-[11px] uppercase tracking-[0.18em] text-zinc-500">Platform tenant administration</p>
           <div className="mt-1 flex flex-wrap items-center gap-2">
             <h1 className="text-xl font-semibold text-zinc-50">{tenant.name}</h1>
             <Badge tone={statusTone[tenant.status]}>{TENANT_STATUS_LABEL[tenant.status]}</Badge>
@@ -257,6 +241,21 @@ export function TenantDetail({
             </div>
           </div>
         </div>
+        <div className="flex justify-end border-t border-zinc-800/80 pt-4">
+          <Button
+            type="button"
+            disabled={savingSection !== null}
+            onClick={() => void saveSection('identity', {
+              name,
+              slug,
+              accentColor,
+              timezone,
+              supportEmail: supportEmail || undefined,
+            })}
+          >
+            {savingSection === 'identity' ? 'Saving…' : 'Save identity'}
+          </Button>
+        </div>
 
         <div className="space-y-4 rounded-lg border border-zinc-800 p-4">
           <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Administration</p>
@@ -338,6 +337,20 @@ export function TenantDetail({
                 />
               </div>
             </div>
+            <div className="flex justify-end border-t border-zinc-800/80 pt-3">
+              <Button
+                type="button"
+                variant="outline"
+                disabled={savingSection !== null}
+                onClick={() => void saveSection('quota', {
+                  maxAccounts: Number(maxAccounts),
+                  maxAgents: Number(maxAgents),
+                  maxTicketsPerMonth: Number(maxTicketsPerMonth),
+                })}
+              >
+                {savingSection === 'quota' ? 'Saving…' : 'Save quotas'}
+              </Button>
+            </div>
           </div>
           <div className="grid gap-5 sm:grid-cols-2">
             <div className="space-y-2">
@@ -371,6 +384,22 @@ export function TenantDetail({
             <input type="checkbox" checked={isProtected} onChange={(event) => setIsProtected(event.target.checked)} />
             Protected (skip expiry and pause lock)
           </label>
+          <div className="flex justify-end border-t border-zinc-800/80 pt-3">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={savingSection !== null}
+              onClick={() => void saveSection('lifecycle', {
+                subscriptionPlan,
+                expiresAt,
+                graceDays: Number(graceDays),
+                autoPauseOnExpiry,
+                isProtected,
+              })}
+            >
+              {savingSection === 'lifecycle' ? 'Saving…' : 'Save lifecycle'}
+            </Button>
+          </div>
           <label className="flex items-center gap-2 text-sm text-zinc-200">
             <input
               type="checkbox"
@@ -379,21 +408,33 @@ export function TenantDetail({
             />
             Password rotation
           </label>
+          <div className="flex justify-end border-t border-zinc-800/80 pt-3">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={savingSection !== null}
+              onClick={() => void saveSection('security', {
+                passwordRotationEnabled,
+                passwordMaxAgeDays: Number(passwordMaxAgeDays),
+              })}
+            >
+              {savingSection === 'security' ? 'Saving…' : 'Save security'}
+            </Button>
+          </div>
         </div>
 
         {error ? <p className="text-sm text-rose-400">{error}</p> : null}
-        <Button type="submit" disabled={isSaving}>
-          {isSaving ? 'Saving…' : 'Save'}
-        </Button>
-      </form>
+      </div>
 
       <aside className="space-y-4 border-t border-zinc-800 p-6 lg:border-l lg:border-t-0">
         <Card>
           <CardContent className="space-y-3 p-4">
             <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Quotas</p>
-            <p className="font-mono text-xs text-zinc-300">
-              {tenant.maxAccounts} accounts · {tenant.maxAgents} agents · {tenant.maxTicketsPerMonth} tickets/mo
-            </p>
+            <div className="space-y-1 font-mono text-xs text-zinc-300">
+              <p>{tenant.accountCount} / {tenant.maxAccounts} accounts</p>
+              <p>{tenant.agentCount} / {tenant.maxAgents} agents</p>
+              <p>{tenant.ticketCount} / {tenant.maxTicketsPerMonth} tickets/mo</p>
+            </div>
             <p className="text-xs leading-5 text-zinc-500">
               Stored caps for this tenant (not invoice amounts). Create user / account / ticket paths enforce these
               limits.

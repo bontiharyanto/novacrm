@@ -1,9 +1,11 @@
 'use server';
 
 import { getSessionProfile } from '@/lib/auth/session';
-import { canRole } from '@/lib/rbac/ability';
+import { isTenantAdminRole } from '@/lib/rbac/roles';
 import { DEFAULT_IDLE_MINUTES, parseIdleMinutes } from '@/lib/auth/idle-timeout';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { tenantFieldsSchema } from '@/lib/tenants/schema';
+import { isTenantObjectKey } from '@/lib/tickets/activity';
 
 export type TenantConfig = {
   id: string;
@@ -57,23 +59,46 @@ export async function getTenantConfig(tenantId?: string) {
   return data ? mapTenant(data) : null;
 }
 
-export async function upsertTenantConfig(input: Partial<TenantConfig> & { id?: string }) {
+export async function upsertTenantConfig(
+  input: Partial<Pick<TenantConfig, 'name' | 'slug' | 'accentColor' | 'timezone' | 'supportEmail'>> & {
+    logoObjectKey?: string | null;
+    id?: string;
+  },
+) {
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'update', 'Tenant')) {
+  if (!session || !isTenantAdminRole(session.profile.role)) {
     return { data: null, error: 'Unauthorized' };
   }
 
+  const { logoObjectKey, ...tenantFields } = input;
+  const parsed = tenantFieldsSchema.partial().safeParse(tenantFields);
+  if (!parsed.success) return { data: null, error: parsed.error.issues[0]?.message ?? 'Invalid tenant settings' };
+  if (logoObjectKey && !isTenantObjectKey(session.profile.tenantId, logoObjectKey)) {
+    return { data: null, error: 'Invalid logo object key' };
+  }
+
   const supabase = await createSupabaseServerClient();
+  if (parsed.data.slug) {
+    const { data: slugTaken } = await supabase
+      .from('tenants')
+      .select('id')
+      .eq('slug', parsed.data.slug)
+      .neq('id', session.profile.tenantId)
+      .maybeSingle();
+    if (slugTaken) return { data: null, error: 'That slug is already used' };
+  }
+
+  const patch: Record<string, unknown> = {};
+  if (parsed.data.name !== undefined) patch.name = parsed.data.name;
+  if (parsed.data.slug !== undefined) patch.slug = parsed.data.slug;
+  if (parsed.data.accentColor !== undefined) patch.accent_color = parsed.data.accentColor;
+  if (parsed.data.timezone !== undefined) patch.timezone = parsed.data.timezone;
+  if (parsed.data.supportEmail !== undefined) patch.support_email = parsed.data.supportEmail || null;
+  if (logoObjectKey !== undefined) patch.logo_object_key = logoObjectKey || null;
+
   const { data, error } = await supabase
     .from('tenants')
-    .update({
-      name: input.name,
-      slug: input.slug,
-      accent_color: input.accentColor,
-      timezone: input.timezone,
-      support_email: input.supportEmail,
-      status: input.status,
-    })
+    .update(patch)
     .eq('id', session.profile.tenantId)
     .select('*')
     .single();

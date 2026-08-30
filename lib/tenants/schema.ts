@@ -88,6 +88,9 @@ export type TenantRecord = {
   maxAccounts: number;
   maxAgents: number;
   maxTicketsPerMonth: number;
+  accountCount: number;
+  agentCount: number;
+  ticketCount: number;
   createdAt: string;
   adminCount: number;
   userCount: number;
@@ -139,17 +142,17 @@ export const TENANT_PLAN_GUIDE: Record<
 > = {
   trial: {
     price: '14 days · Rp 0',
-    includes: 'Desk, portal, CSAT. Default caps: 1 account · 8 agents · 800 tickets/mo.',
-    excludes: 'Production WhatsApp, heavy custom SLA, mass roster apply.',
+    includes: 'Desk, portal, CSAT, guided Delivery preview. Default caps: 1 account · 8 agents · 800 tickets/mo.',
+    excludes: 'Production WhatsApp, Delivery integration, heavy custom SLA, mass roster apply.',
   },
   standard: {
     price: 'About Rp 5–8 jt / month (invoice · MSP)',
-    includes: 'Tickets, portal, CSAT, assets/CMDB, reports. Default caps: 5 accounts · 15 agents · 2,000 tickets/mo.',
-    excludes: 'Full WFM + Workforce export unless sold as Standard+.',
+    includes: 'Tickets, portal, CSAT, assets/CMDB, Delivery Core, reports. Default caps: 5 accounts · 15 agents · 2,000 tickets/mo.',
+    excludes: 'External Delivery CRM sync, full WFM + Workforce export unless sold as add-on.',
   },
   enterprise: {
     price: 'About Rp 12–20 jt / month · 12-month contract',
-    includes: 'All modules, WFM, UC/vendor, SSO. Default caps: 20 accounts · 40 agents · 5,000 tickets/mo.',
+    includes: 'All modules, Delivery Advanced, WFM, UC/vendor, SSO. Default caps: 20 accounts · 40 agents · 5,000 tickets/mo.',
     excludes: 'ITOM Discovery, HR payroll, multi-region HA.',
   },
 };
@@ -166,6 +169,9 @@ export const TENANT_PLAN_FEATURES: Array<{
   { label: 'Tickets / month (default)', trial: '800', standard: '2,000', enterprise: '5,000' },
   { label: 'Assets / CMDB', trial: 'Read demo', standard: 'Yes', enterprise: 'Yes' },
   { label: 'Ticket Reports', trial: 'Yes', standard: 'Yes', enterprise: 'Yes' },
+  { label: 'Delivery Project Core', trial: 'Guided', standard: 'Yes', enterprise: 'Yes' },
+  { label: 'Delivery Advanced / CRM sync', trial: 'No', standard: 'Add-on', enterprise: 'Yes' },
+  { label: 'Delivery history + handover', trial: 'Preview', standard: 'Yes', enterprise: 'Yes' },
   { label: 'WFM + Workforce export', trial: 'No', standard: 'Add-on', enterprise: 'Yes' },
   { label: 'UC / vendor queue', trial: 'No', standard: 'Limited', enterprise: 'Yes' },
   { label: 'Production WhatsApp', trial: 'No', standard: 'Add-on', enterprise: 'Add-on' },

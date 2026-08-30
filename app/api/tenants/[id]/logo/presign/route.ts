@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { requireApiUser } from '@/lib/api/require-user';
 import { createPresignedUpload } from '@/lib/minio/presign';
 import { isTenantLogoContentType } from '@/lib/tenants/logo';
+import { isTenantAdminRole } from '@/lib/rbac/roles';
 
 const presignSchema = z.object({
   filename: z.string().min(1).max(180),
@@ -10,12 +11,18 @@ const presignSchema = z.object({
 });
 
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
-  const auth = await requireApiUser('update', 'Tenant');
+  const auth = await requireApiUser();
   if (auth.error) return auth.error;
 
   const tenantId = params.id?.trim();
   if (!tenantId) {
     return NextResponse.json({ data: null, error: 'Tenant required' }, { status: 400 });
+  }
+  if (!isTenantAdminRole(auth.session.profile.role)) {
+    return NextResponse.json({ data: null, error: 'Forbidden' }, { status: 403 });
+  }
+  if (auth.session.profile.role !== 'superadmin' && auth.session.profile.tenantId !== tenantId) {
+    return NextResponse.json({ data: null, error: 'Forbidden' }, { status: 403 });
   }
 
   try {

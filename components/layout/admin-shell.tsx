@@ -989,6 +989,7 @@ function SidebarFooter({
 }) {
   const { t } = useI18n();
   const appearanceActive = pathname === '/settings/appearance';
+  const tenantSettingsActive = pathname.startsWith('/settings/tenant');
   const securityActive = pathname.startsWith('/settings/security');
   const usageActive = pathname.startsWith('/settings/usage');
   const notificationsActive = pathname.startsWith('/settings/notifications');
@@ -996,6 +997,7 @@ function SidebarFooter({
   const integrationsActive =
     pathname.startsWith('/settings') &&
     !appearanceActive &&
+    !tenantSettingsActive &&
     !securityActive &&
     !usageActive &&
     !notificationsActive &&
@@ -1004,6 +1006,16 @@ function SidebarFooter({
 
   const settings = (
     <>
+      {isTenantAdminRole(role) ? (
+        <NavLink
+          href="/settings/tenant"
+          label={t.nav.tenantSettings}
+          icon={Building2}
+          active={tenantSettingsActive}
+          onNavigate={onNavigate}
+          rail={rail}
+        />
+      ) : null}
       <NavLink
         href="/settings/appearance"
         label={t.nav.appearance}

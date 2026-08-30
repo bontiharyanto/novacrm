@@ -1,5 +1,3 @@
-'use server';
-
 import { canAccessConfiguredCapability } from '@/lib/rbac/capability-actions';
 import { getSessionProfile } from '@/lib/auth/session';
 import { listDeliveryProjects } from '@/lib/delivery/actions';

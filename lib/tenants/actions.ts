@@ -44,7 +44,13 @@ type TenantRow = {
   created_at: string;
 };
 
-function mapTenant(row: TenantRow, counts?: { adminCount: number; userCount: number }): TenantRecord {
+function mapTenant(row: TenantRow, counts?: {
+  adminCount: number;
+  userCount: number;
+  accountCount: number;
+  agentCount: number;
+  ticketCount: number;
+}): TenantRecord {
   const plan = (['trial', 'standard', 'enterprise'] as const).includes(row.subscription_plan as TenantPlan)
     ? (row.subscription_plan as TenantPlan)
     : 'standard';
@@ -72,6 +78,9 @@ function mapTenant(row: TenantRow, counts?: { adminCount: number; userCount: num
     maxAccounts: Number(row.max_accounts ?? defaults.maxAccounts),
     maxAgents: Number(row.max_agents ?? defaults.maxAgents),
     maxTicketsPerMonth: Number(row.max_tickets_per_month ?? defaults.maxTicketsPerMonth),
+    accountCount: counts?.accountCount ?? 0,
+    agentCount: counts?.agentCount ?? 0,
+    ticketCount: counts?.ticketCount ?? 0,
     createdAt: row.created_at,
     adminCount: counts?.adminCount ?? 0,
     userCount: counts?.userCount ?? 0,
@@ -90,19 +99,38 @@ async function requirePlatformAdmin(action: 'read' | 'create' | 'update' = 'read
 }
 
 async function loadCounts(tenantIds: string[]) {
-  const counts = new Map<string, { adminCount: number; userCount: number }>();
+  const counts = new Map<string, {
+    adminCount: number;
+    userCount: number;
+    accountCount: number;
+    agentCount: number;
+    ticketCount: number;
+  }>();
   for (const id of tenantIds) {
-    counts.set(id, { adminCount: 0, userCount: 0 });
+    counts.set(id, { adminCount: 0, userCount: 0, accountCount: 0, agentCount: 0, ticketCount: 0 });
   }
   if (tenantIds.length === 0) return counts;
 
   const admin = createSupabaseAdminClient();
-  const { data } = await admin.from('profiles').select('tenant_id, role').in('tenant_id', tenantIds);
-  for (const row of data ?? []) {
+  const [profilesResult, accountsResult, ticketsResult] = await Promise.all([
+    admin.from('profiles').select('tenant_id, role').in('tenant_id', tenantIds),
+    admin.from('accounts').select('tenant_id').in('tenant_id', tenantIds),
+    admin.from('tickets').select('tenant_id').in('tenant_id', tenantIds),
+  ]);
+  for (const row of profilesResult.data ?? []) {
     const current = counts.get(row.tenant_id as string);
     if (!current) continue;
     current.userCount += 1;
     if (row.role === 'admin' || row.role === 'superadmin') current.adminCount += 1;
+    if (row.role !== 'customer') current.agentCount += 1;
+  }
+  for (const row of accountsResult.data ?? []) {
+    const current = counts.get(row.tenant_id as string);
+    if (current) current.accountCount += 1;
+  }
+  for (const row of ticketsResult.data ?? []) {
+    const current = counts.get(row.tenant_id as string);
+    if (current) current.ticketCount += 1;
   }
   return counts;
 }
