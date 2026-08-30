@@ -147,6 +147,7 @@ export const id: Dictionary = {
     deliveryNoRecentActivity: 'Belum ada activity delivery.',
     deliveryReportTitle: 'Laporan delivery',
     deliveryReportSubtitle: 'Kesehatan project, eksekusi phase, risiko delivery, dan kesiapan handover dalam satu tampilan.',
+    deliveryReportPreviewPdf: 'Preview PDF',
     deliveryReportHandoverPending: 'Handover tertunda',
     deliveryReportHypercareProjects: 'Dalam hypercare',
     deliveryReportPhaseBreakdown: 'Rincian phase',

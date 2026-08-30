@@ -7,6 +7,10 @@ import {
   ArrowLeft,
   CalendarClock,
   CheckCircle2,
+  Download,
+  Eye,
+  FileSpreadsheet,
+  FileText,
   GitBranch,
   ListTodo,
   RefreshCw,
@@ -92,13 +96,44 @@ export function DeliveryReport({ initialData }: { initialData: DeliveryReportDat
           <h1 className="mt-2 text-2xl font-semibold tracking-tight text-zinc-50">{t.common.deliveryReportTitle}</h1>
           <p className="mt-1 max-w-2xl text-sm text-zinc-500">{t.common.deliveryReportSubtitle}</p>
         </div>
-        <button
-          type="button"
-          onClick={() => void load()}
-          className="inline-flex items-center gap-1.5 rounded-md border border-zinc-800 px-3 py-2 text-xs text-zinc-400 transition-colors hover:border-zinc-700 hover:text-zinc-100"
-        >
-          <RefreshCw className="h-3.5 w-3.5" /> {t.common.refresh}
-        </button>
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <a
+            href="/api/delivery/reports/export?format=pdf&preview=1"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-md border border-zinc-800 px-3 py-2 text-xs text-zinc-400 transition-colors hover:border-zinc-700 hover:text-zinc-100"
+          >
+            <Eye className="h-3.5 w-3.5" /> {t.common.deliveryReportPreviewPdf}
+          </a>
+          <a
+            href="/api/delivery/reports/export?format=csv"
+            download
+            className="inline-flex items-center gap-1.5 rounded-md border border-zinc-800 px-3 py-2 text-xs text-zinc-400 transition-colors hover:border-zinc-700 hover:text-zinc-100"
+          >
+            <Download className="h-3.5 w-3.5" /> CSV
+          </a>
+          <a
+            href="/api/delivery/reports/export?format=xlsx"
+            download
+            className="inline-flex items-center gap-1.5 rounded-md border border-zinc-800 px-3 py-2 text-xs text-zinc-400 transition-colors hover:border-zinc-700 hover:text-zinc-100"
+          >
+            <FileSpreadsheet className="h-3.5 w-3.5" /> Excel
+          </a>
+          <a
+            href="/api/delivery/reports/export?format=pdf"
+            download
+            className="inline-flex items-center gap-1.5 rounded-md border border-zinc-800 px-3 py-2 text-xs text-zinc-400 transition-colors hover:border-zinc-700 hover:text-zinc-100"
+          >
+            <FileText className="h-3.5 w-3.5" /> PDF
+          </a>
+          <button
+            type="button"
+            onClick={() => void load()}
+            className="inline-flex items-center gap-1.5 rounded-md border border-zinc-800 px-3 py-2 text-xs text-zinc-400 transition-colors hover:border-zinc-700 hover:text-zinc-100"
+          >
+            <RefreshCw className="h-3.5 w-3.5" /> {t.common.refresh}
+          </button>
+        </div>
       </header>
 
       {error ? <p className="rounded-md border border-rose-900/60 bg-rose-950/20 px-3 py-2 text-xs text-rose-300">{error}</p> : null}

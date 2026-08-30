@@ -145,6 +145,7 @@ export const en = {
     deliveryNoRecentActivity: 'No delivery activity has been recorded yet.',
     deliveryReportTitle: 'Delivery report',
     deliveryReportSubtitle: 'Project health, phase execution, delivery risk, and handover readiness in one view.',
+    deliveryReportPreviewPdf: 'Preview PDF',
     deliveryReportHandoverPending: 'Handover pending',
     deliveryReportHypercareProjects: 'In hypercare',
     deliveryReportPhaseBreakdown: 'Phase breakdown',
