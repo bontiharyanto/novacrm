@@ -52,6 +52,9 @@ export async function resolveAccountL1GroupId(
       .limit(1)
       .maybeSingle();
     if (accountGroup?.id) return accountGroup.id;
+    // Never fall back to an internal-account group for an account-scoped ticket.
+    // The database enforces that assignment groups belong to the ticket account.
+    return null;
   }
   return resolveInboundGroupId(client, tenantId);
 }
