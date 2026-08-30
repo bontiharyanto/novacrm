@@ -10,7 +10,11 @@ import { Select } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useI18n } from '@/components/layout/preferences-provider';
 import { useRealtimeTable } from '@/lib/supabase/realtime';
-import type { DeliveryPhaseStatus, DeliveryProject } from '@/lib/delivery/schema';
+import type {
+  DeliveryAssignmentUser,
+  DeliveryPhaseStatus,
+  DeliveryProject,
+} from '@/lib/delivery/schema';
 import { DeliveryHandoverPanel } from '@/components/delivery/delivery-handover-panel';
 
 function statusTone(status: DeliveryPhaseStatus): 'neutral' | 'info' | 'success' | 'warning' | 'danger' {
@@ -34,6 +38,8 @@ export function DeliveryProjectDetail({
   canCreateWorkOrder = !readOnly,
   canManageHandover = !readOnly,
   canAcceptHandover = false,
+  canManageAssignments = false,
+  assignmentOptions = { pm: [], dco: [] },
 }: {
   projectId: string;
   readOnly?: boolean;
@@ -41,6 +47,11 @@ export function DeliveryProjectDetail({
   canCreateWorkOrder?: boolean;
   canManageHandover?: boolean;
   canAcceptHandover?: boolean;
+  canManageAssignments?: boolean;
+  assignmentOptions?: {
+    pm: DeliveryAssignmentUser[];
+    dco: DeliveryAssignmentUser[];
+  };
 }) {
   const { t } = useI18n();
   const [project, setProject] = useState<DeliveryProject | null>(null);
@@ -48,11 +59,18 @@ export function DeliveryProjectDetail({
   const [savingPhase, setSavingPhase] = useState('');
   const [workOrderTitle, setWorkOrderTitle] = useState('');
   const [savingWorkOrder, setSavingWorkOrder] = useState(false);
+  const [assignmentPmId, setAssignmentPmId] = useState('');
+  const [assignmentDcoId, setAssignmentDcoId] = useState('');
+  const [savingAssignments, setSavingAssignments] = useState(false);
+  const [assignmentMessage, setAssignmentMessage] = useState('');
 
   const load = useCallback(async () => {
     const response = await fetch(`/api/delivery/projects/${projectId}`);
     const payload = await response.json().catch(() => ({}));
-    setProject(payload.data ?? null);
+    const nextProject = (payload.data ?? null) as DeliveryProject | null;
+    setProject(nextProject);
+    setAssignmentPmId(nextProject?.pmId ?? '');
+    setAssignmentDcoId(nextProject?.dcoId ?? '');
     setLoading(false);
   }, [projectId]);
 
@@ -85,6 +103,33 @@ export function DeliveryProjectDetail({
     setWorkOrderTitle('');
     await load();
     setSavingWorkOrder(false);
+  }
+
+  async function saveAssignments() {
+    if (!project) return;
+    setSavingAssignments(true);
+    setAssignmentMessage('');
+    try {
+      const response = await fetch(`/api/delivery/projects/${projectId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pmId: assignmentPmId || null,
+          dcoId: assignmentDcoId || null,
+        }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setAssignmentMessage(payload.error ?? t.common.deliveryAssignmentFailed);
+        return;
+      }
+      setProject(payload.data ?? project);
+      setAssignmentMessage(t.common.deliveryAssignmentSaved);
+    } catch {
+      setAssignmentMessage(t.common.deliveryAssignmentFailed);
+    } finally {
+      setSavingAssignments(false);
+    }
   }
 
   if (loading) {
@@ -206,16 +251,48 @@ export function DeliveryProjectDetail({
         {!readOnly ? <aside className="space-y-4">
           <section className="nova-surface rounded-xl border p-5">
             <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{t.common.deliveryPeople}</p>
-            <dl className="mt-4 space-y-3 text-sm">
-              <div>
-                <dt className="text-[11px] text-zinc-600">{t.common.deliveryPm}</dt>
-                <dd className="mt-1 text-zinc-100">{project.pmName ?? '—'}</dd>
+            {canManageAssignments ? (
+              <div className="mt-4 space-y-3">
+                <p className="text-xs leading-5 text-zinc-500">{t.common.deliveryAssignmentHint}</p>
+                <div className="grid gap-3">
+                  <label className="space-y-1.5">
+                    <span className="text-[11px] text-zinc-600">{t.common.deliveryPm}</span>
+                    <Select value={assignmentPmId} onChange={(event) => setAssignmentPmId(event.target.value)}>
+                      <option value="">{t.common.deliveryUnassigned}</option>
+                      {assignmentOptions.pm.map((user) => (
+                        <option key={user.id} value={user.id}>{user.fullName}</option>
+                      ))}
+                    </Select>
+                  </label>
+                  <label className="space-y-1.5">
+                    <span className="text-[11px] text-zinc-600">{t.common.deliveryDco}</span>
+                    <Select value={assignmentDcoId} onChange={(event) => setAssignmentDcoId(event.target.value)}>
+                      <option value="">{t.common.deliveryUnassigned}</option>
+                      {assignmentOptions.dco.map((user) => (
+                        <option key={user.id} value={user.id}>{user.fullName}</option>
+                      ))}
+                    </Select>
+                  </label>
+                </div>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-xs text-zinc-500">{assignmentMessage}</span>
+                  <Button size="sm" disabled={savingAssignments} onClick={() => void saveAssignments()}>
+                    {t.common.deliveryAssignmentSave}
+                  </Button>
+                </div>
               </div>
-              <div>
-                <dt className="text-[11px] text-zinc-600">{t.common.deliveryDco}</dt>
-                <dd className="mt-1 text-zinc-100">{project.dcoName ?? '—'}</dd>
-              </div>
-            </dl>
+            ) : (
+              <dl className="mt-4 space-y-3 text-sm">
+                <div>
+                  <dt className="text-[11px] text-zinc-600">{t.common.deliveryPm}</dt>
+                  <dd className="mt-1 text-zinc-100">{project.pmName ?? '—'}</dd>
+                </div>
+                <div>
+                  <dt className="text-[11px] text-zinc-600">{t.common.deliveryDco}</dt>
+                  <dd className="mt-1 text-zinc-100">{project.dcoName ?? '—'}</dd>
+                </div>
+              </dl>
+            )}
           </section>
           {!readOnly && canCreateWorkOrder ? (
             <section className="nova-surface rounded-xl border p-5">

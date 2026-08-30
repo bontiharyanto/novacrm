@@ -16,6 +16,7 @@ import {
   type DeliveryPhase,
   type DeliveryPhaseStatus,
   type DeliveryProject,
+  type DeliveryAssignmentUser,
   type DeliveryWebhookPayload,
 } from '@/lib/delivery/schema';
 import {
@@ -170,6 +171,59 @@ async function getReadableProjectsQuery() {
   };
 }
 
+function canManageDeliveryAssignments(role: string) {
+  return role === 'manager' || role === 'admin' || role === 'superadmin';
+}
+
+async function validateDeliveryAssignments(
+  client: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+  tenantId: string,
+  pmId?: string | null,
+  dcoId?: string | null,
+) {
+  const ids = [pmId, dcoId].filter((id): id is string => Boolean(id));
+  if (!ids.length) return null;
+  const { data, error } = await client
+    .from('profiles')
+    .select('id, role')
+    .eq('tenant_id', tenantId)
+    .in('id', ids);
+  if (error) return error.message;
+  const profiles = new Map((data ?? []).map((profile) => [profile.id, profile.role]));
+  if (pmId && profiles.get(pmId) !== 'pm_delivery') return 'Selected PM must have the pm_delivery role.';
+  if (dcoId && profiles.get(dcoId) !== 'dco') return 'Selected DCO must have the dco role.';
+  if (ids.some((id) => !profiles.has(id))) return 'Selected delivery user was not found in this tenant.';
+  return null;
+}
+
+export async function listDeliveryAssignmentOptions(): Promise<{
+  pm: DeliveryAssignmentUser[];
+  dco: DeliveryAssignmentUser[];
+}> {
+  const session = await getSessionProfile();
+  if (!session || !canManageDeliveryAssignments(session.profile.role)) return { pm: [], dco: [] };
+  const client = await createSupabaseServerClient();
+  const result = await client
+    .from('profiles')
+    .select('id, full_name, role')
+    .eq('tenant_id', session.profile.tenantId)
+    .in('role', ['pm_delivery', 'dco'])
+    .order('full_name');
+  if (result.error) return { pm: [], dco: [] };
+  const mapUser = (row: { id: string; full_name: string | null }): DeliveryAssignmentUser => ({
+    id: row.id,
+    fullName: row.full_name ?? row.id,
+  });
+  return {
+    pm: (result.data ?? [])
+      .filter((row) => row.role === 'pm_delivery')
+      .map(mapUser),
+    dco: (result.data ?? [])
+      .filter((row) => row.role === 'dco')
+      .map(mapUser),
+  };
+}
+
 export async function listDeliveryProjects() {
   const { session, client, accountId, error } = await getReadableProjectsQuery();
   if (!session || !client || error) return [];
@@ -207,6 +261,11 @@ export async function createDeliveryProject(input: unknown) {
   }
   const client = await createSupabaseServerClient();
   const values = parsed.data;
+  if (!canManageDeliveryAssignments(session.profile.role) && (values.pmId !== undefined || values.dcoId !== undefined)) {
+    return { data: null, error: 'Only Manager or Admin can assign PM Delivery and DCO.' };
+  }
+  const assignmentError = await validateDeliveryAssignments(client, session.profile.tenantId, values.pmId, values.dcoId);
+  if (assignmentError) return { data: null, error: assignmentError };
   const { data, error } = await client
     .from('delivery_projects')
     .insert({
@@ -250,6 +309,11 @@ export async function updateDeliveryProject(projectId: string, input: unknown) {
     return { data: null, error: 'Unauthorized' };
   }
   const client = await createSupabaseServerClient();
+  if (!canManageDeliveryAssignments(session.profile.role) && (parsed.data.pmId !== undefined || parsed.data.dcoId !== undefined)) {
+    return { data: null, error: 'Only Manager or Admin can assign PM Delivery and DCO.' };
+  }
+  const assignmentError = await validateDeliveryAssignments(client, session.profile.tenantId, parsed.data.pmId, parsed.data.dcoId);
+  if (assignmentError) return { data: null, error: assignmentError };
   if (parsed.data.status === 'completed') {
     const handover = await client
       .from('delivery_handovers')

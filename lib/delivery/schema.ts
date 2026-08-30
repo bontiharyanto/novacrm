@@ -10,6 +10,11 @@ export const deliveryProjectStatusSchema = z.enum([
 ]);
 export type DeliveryProjectStatus = z.infer<typeof deliveryProjectStatusSchema>;
 
+export type DeliveryAssignmentUser = {
+  id: string;
+  fullName: string;
+};
+
 export const deliveryExecutionModeSchema = z.enum(['sequential', 'parallel']);
 export type DeliveryExecutionMode = z.infer<typeof deliveryExecutionModeSchema>;
 

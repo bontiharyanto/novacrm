@@ -899,10 +899,11 @@ function SidebarNav({
   accountKey?: string | null;
 }) {
   const { t } = useI18n();
+  const compactDeliveryNav = role === 'pm_delivery' || role === 'dco';
   return (
-    <div className="relative min-h-0 flex-1">
+    <div className={cn('relative min-h-0', compactDeliveryNav ? 'shrink-0' : 'flex-1')}>
       <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-3 bg-gradient-to-b from-zinc-950 to-transparent" />
-      <div className="nova-scroll-thin h-full overflow-y-auto pb-3 pt-1">
+      <div className={cn('nova-scroll-thin overflow-y-auto pb-3 pt-1', compactDeliveryNav ? 'h-auto' : 'h-full')}>
         <Suspense fallback={null}>
           <FavoritesNav
             pins={pins}

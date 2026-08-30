@@ -66,7 +66,13 @@ export function SecuritySettings({
   const copy = t.securityPage;
   const [required, setRequired] = useState(policy.required);
   const [message, setMessage] = useState('');
-  const [saving, setSaving] = useState(false);
+  const [savingMfa, setSavingMfa] = useState(false);
+  const [savingEnroll, setSavingEnroll] = useState(false);
+  const [savingFactor, setSavingFactor] = useState(false);
+  const [savingPasswordPolicy, setSavingPasswordPolicy] = useState(false);
+  const [savingIdlePolicy, setSavingIdlePolicy] = useState(false);
+  const [savingWhatsApp, setSavingWhatsApp] = useState(false);
+  const [savingTelegram, setSavingTelegram] = useState(false);
   const [enroll, setEnroll] = useState<{ factorId: string; qr: string; secret: string } | null>(null);
   const [code, setCode] = useState('');
   const [telegramChatId, setTelegramChatId] = useState(initialTelegramChatId);
@@ -76,17 +82,17 @@ export function SecuritySettings({
   const [idleMinutes, setIdleMinutes] = useState<IdleMinutes>(parseIdleMinutes(initialIdleMinutes));
 
   async function saveToggle() {
-    setSaving(true);
+    setSavingMfa(true);
     const result = await setMfaRequired(required);
-    setSaving(false);
+    setSavingMfa(false);
     setMessage(result.error ?? (required ? copy.mfaHint : copy.mfaLab));
     router.refresh();
   }
 
   async function beginEnroll() {
-    setSaving(true);
+    setSavingEnroll(true);
     const result = await startMfaEnroll();
-    setSaving(false);
+    setSavingEnroll(false);
     if (result.error || !result.data) {
       setMessage(result.error ?? 'Unable to start TOTP');
       return;
@@ -97,9 +103,9 @@ export function SecuritySettings({
 
   async function confirmEnroll() {
     if (!enroll) return;
-    setSaving(true);
+    setSavingEnroll(true);
     const result = await verifyMfaEnroll(enroll.factorId, code);
-    setSaving(false);
+    setSavingEnroll(false);
     setMessage(result.error ?? t.common.saved);
     if (!result.error) {
       setEnroll(null);
@@ -109,9 +115,9 @@ export function SecuritySettings({
   }
 
   async function remove(factorId: string) {
-    setSaving(true);
+    setSavingFactor(true);
     const result = await unenrollOwnMfa(factorId);
-    setSaving(false);
+    setSavingFactor(false);
     setMessage(result.error ?? t.common.saved);
     router.refresh();
   }
@@ -168,15 +174,15 @@ export function SecuritySettings({
                   <Button
                     type="button"
                     size="sm"
-                    disabled={saving}
+                    disabled={savingPasswordPolicy}
                     onClick={() => {
                       void (async () => {
-                        setSaving(true);
+                        setSavingPasswordPolicy(true);
                         const result = await savePasswordPolicy({
                           enabled: rotationEnabled,
                           maxAgeDays: Number(maxAgeDays),
                         });
-                        setSaving(false);
+                        setSavingPasswordPolicy(false);
                         setMessage(result.error ?? t.common.saved);
                         if (!result.error) router.refresh();
                       })();
@@ -215,12 +221,12 @@ export function SecuritySettings({
                   <Button
                     type="button"
                     size="sm"
-                    disabled={saving}
+                    disabled={savingIdlePolicy}
                     onClick={() => {
                       void (async () => {
-                        setSaving(true);
+                        setSavingIdlePolicy(true);
                         const result = await saveIdlePolicy({ minutes: idleMinutes });
-                        setSaving(false);
+                        setSavingIdlePolicy(false);
                         setMessage(result.error ?? t.common.saved);
                         if (!result.error) router.refresh();
                       })();
@@ -251,7 +257,7 @@ export function SecuritySettings({
                   {copy.mfaRequire}
                 </label>
                 <CardFooter>
-                  <Button type="button" size="sm" disabled={saving || policy.labLocked} onClick={() => void saveToggle()}>
+                  <Button type="button" size="sm" disabled={savingMfa || policy.labLocked} onClick={() => void saveToggle()}>
                     {copy.mfaSave}
                   </Button>
                 </CardFooter>
@@ -297,12 +303,12 @@ export function SecuritySettings({
                 <Button
                   type="button"
                   size="sm"
-                  disabled={saving}
+                  disabled={savingWhatsApp}
                   onClick={() => {
                     void (async () => {
-                      setSaving(true);
+                      setSavingWhatsApp(true);
                       const result = await saveOwnWhatsAppPhone(whatsappPhone);
-                      setSaving(false);
+                      setSavingWhatsApp(false);
                       setMessage(result.error ?? t.common.saved);
                       if (!result.error && result.data?.phone) setWhatsappPhone(result.data.phone);
                       if (!result.error) router.refresh();
@@ -335,12 +341,12 @@ export function SecuritySettings({
                 <Button
                   type="button"
                   size="sm"
-                  disabled={saving}
+                  disabled={savingTelegram}
                   onClick={() => {
                     void (async () => {
-                      setSaving(true);
+                      setSavingTelegram(true);
                       const result = await saveOwnTelegramChatId(telegramChatId);
-                      setSaving(false);
+                      setSavingTelegram(false);
                       setMessage(result.error ?? t.common.saved);
                       if (!result.error) router.refresh();
                     })();
@@ -370,7 +376,7 @@ export function SecuritySettings({
                   <p className="truncate text-sm text-zinc-100">{factor.friendly_name || 'Authenticator'}</p>
                   <Badge tone={factor.status === 'verified' ? 'success' : 'neutral'}>{factor.status ?? 'totp'}</Badge>
                 </div>
-                <Button type="button" variant="outline" size="sm" disabled={saving} onClick={() => void remove(factor.id)}>
+                <Button type="button" variant="outline" size="sm" disabled={savingFactor} onClick={() => void remove(factor.id)}>
                   {copy.totpRemove}
                 </Button>
               </div>
@@ -385,14 +391,14 @@ export function SecuritySettings({
                     <Label htmlFor="mfa-code">{copy.totpCode}</Label>
                     <Input id="mfa-code" inputMode="numeric" value={code} onChange={(event) => setCode(event.target.value)} />
                   </div>
-                  <Button type="button" size="sm" disabled={saving || code.trim().length < 6} onClick={() => void confirmEnroll()}>
+                  <Button type="button" size="sm" disabled={savingEnroll || code.trim().length < 6} onClick={() => void confirmEnroll()}>
                     {copy.totpVerify}
                   </Button>
                 </div>
               </div>
             ) : (
               <CardFooter>
-                <Button type="button" variant="outline" size="sm" disabled={saving} onClick={() => void beginEnroll()}>
+                <Button type="button" variant="outline" size="sm" disabled={savingEnroll} onClick={() => void beginEnroll()}>
                   {copy.totpEnroll}
                 </Button>
               </CardFooter>
