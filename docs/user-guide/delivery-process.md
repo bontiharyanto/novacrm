@@ -89,7 +89,8 @@ blocker, decision, atau handover. Activity dapat dikelola langsung dari panel
 **Task Activity** pada detail Delivery Project; jalur alternatifnya adalah
 ticket Work Order → tab **Tasks**. DCO mengontrol status, dependency,
 assignment, dan blocker. PM Delivery memantau target, scope, risiko, serta
-kesiapan customer communication.
+kesiapan customer communication. Ringkasan lintas project tersedia di
+`/delivery/reports`.
 
 Activity yang diberi tanda `customer_visible` dapat tampil di portal. Catatan
 internal, dependency detail, assignment internal, dan evidence sensitif tetap

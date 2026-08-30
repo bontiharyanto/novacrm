@@ -2,7 +2,7 @@
 
 **Audience:** PM Delivery, DCO, agent, supervisor, dan customer portal  
 **Status:** manual mode tersedia; CRM eksternal adalah tahap berikutnya  
-**UI internal:** `/delivery/dashboard` (command center), `/delivery` (project list), dan panel **Task Activity** pada detail project
+**UI internal:** `/delivery/dashboard` (command center), `/delivery` (project list), `/delivery/reports`, dan panel **Task Activity** pada detail project
 **UI customer:** `/portal/projects`
 **Alur resmi:** [Delivery Project Process](delivery-process.md)
 
@@ -69,6 +69,21 @@ Untuk akun demo dan password lab, lihat bagian [Demo logins](README.md#demo-logi
 
 Untuk demo cepat, klik **Load sample project**. Tombol ini membuat project
 contoh hanya untuk account yang dipilih dan tidak membutuhkan CRM eksternal.
+
+## Delivery Report
+
+Buka `/delivery/reports` untuk melihat laporan delivery sesuai tenant dan
+account scope user. Laporan mencakup:
+
+- progress rata-rata dan jumlah project;
+- Work Order serta task yang masih terbuka;
+- rincian progress setiap phase;
+- task overdue, phase blocked, dan task tanpa assignment;
+- feed activity terbaru;
+- kesiapan handover dan project yang sedang hypercare.
+
+Laporan ini berbeda dari Operations Report di `/reports`. PM Delivery dan DCO
+menggunakan Delivery Report untuk scope project delivery mereka.
 
 ## Phase standar
 
