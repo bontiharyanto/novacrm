@@ -34,7 +34,7 @@ Item katalog: [Catalog & record producer](catalog-guidance.md). Major incident (
 | [Participant manual](participant-manual.md) | Learners: procedures, labs, expected results |
 | [Major incident](major-incident.md) | Agent/SPV: parent/child tickets, not RCA |
 | [Delivery Project](delivery.md) · [Alur proses](delivery-process.md) | PM/DCO/agent/customer: project, phases, work order, handover, hypercare, portal progress |
-| [Task activity & WBS](task-activities.md) | DCO/agent: activity timeline, visibility, sequential dependencies |
+| [Task activity & WBS](task-activities.md) | PM/DCO/agent/customer: activity timeline, visibility, sequential dependencies |
 | [Capability Matrix](capability-matrix.md) | Admin/superadmin: tenant capability configuration |
 | [Delivery access model](../DELIVERY-ACCESS-MODEL.md) | Owner/admin/security: access PM Delivery, DCO, partner, portal, and CRM service |
 | [SQL server — user access](../SERVER-USER-ACCESS.md) | Admin/engineer: inspect and update user role and account membership from the VPS |

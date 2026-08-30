@@ -69,7 +69,9 @@ memungkinkan task yang tidak memiliki dependency berjalan bersamaan.
 ### 3. Eksekusi dan kontrol
 
 Agent atau delivery team mengerjakan task dan mengisi activity berupa progress,
-blocker, decision, atau handover. DCO mengontrol status, dependency,
+blocker, decision, atau handover. Activity dapat dikelola langsung dari panel
+**Task Activity** pada detail Delivery Project; jalur alternatifnya adalah
+ticket Work Order → tab **Tasks**. DCO mengontrol status, dependency,
 assignment, dan blocker. PM Delivery memantau target, scope, risiko, serta
 kesiapan customer communication.
 
@@ -132,10 +134,12 @@ kebijakan Operations.
 
 ## Batas portal customer
 
-Customer dapat melihat nama project, progress, phase yang `customer_visible`,
-dan activity yang `customer_visible` pada `/portal/projects`. Customer tidak
-dapat membuat Delivery Project, mengubah phase/task, melihat checklist
-handover, melihat Operational Acceptance Record, atau menutup project.
+Customer dapat melihat nama project, progress, Work Order/task yang tersedia,
+phase yang `customer_visible`, dan activity yang `customer_visible` pada
+`/portal/projects`. Customer tidak dapat membuat Delivery Project, mengubah
+phase/task/activity, melihat checklist handover, melihat Operational Acceptance
+Record, atau menutup project. Assignment internal, dependency detail, dan
+activity internal tetap tersembunyi.
 
 ## Mode integrasi CRM berikutnya
 

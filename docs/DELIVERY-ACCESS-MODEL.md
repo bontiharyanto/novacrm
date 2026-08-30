@@ -94,6 +94,7 @@ Tidak boleh:
 Boleh:
 
 - melihat project milik account-nya;
+- melihat Work Order/task yang tersedia pada panel Task Activity;
 - melihat phase/task yang ditandai `customer_visible`;
 - melihat activity yang ditandai `customer_visible`;
 - membuat atau membalas ticket melalui portal sesuai kebijakan tenant.
@@ -168,6 +169,10 @@ Rekomendasi pemisahan:
   memutuskan accept, accept with conditions, atau reject.
 - Admin mengelola user, policy, dan integrasi.
 - Customer hanya membaca hasil yang dipublikasikan.
+
+Panel **Task Activity** pada detail Delivery Project memakai endpoint ticket/task
+yang sama dengan internal desk. RLS tenant dan account tetap berlaku, sedangkan
+`customer_visible` menyaring task dan activity yang boleh tampil di portal.
 
 Untuk project berisiko tinggi, orang yang membuat Work Order tidak menjadi
 satu-satunya approver closure. Project juga tidak boleh ditutup sebelum

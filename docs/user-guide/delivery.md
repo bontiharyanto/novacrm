@@ -2,7 +2,7 @@
 
 **Audience:** PM Delivery, DCO, agent, supervisor, dan customer portal  
 **Status:** manual mode tersedia; CRM eksternal adalah tahap berikutnya  
-**UI internal:** `/delivery/dashboard` (command center), `/delivery` (project list)
+**UI internal:** `/delivery/dashboard` (command center), `/delivery` (project list), dan panel **Task Activity** pada detail project
 **UI customer:** `/portal/projects`
 **Alur resmi:** [Delivery Project Process](delivery-process.md)
 
@@ -36,11 +36,14 @@ Pembagian tanggung jawab:
 7. Buka project, lalu buat **delivery request** dari panel Work Order.
 8. Sistem membuat Request ticket, menghubungkannya ke project, membuat task
    dari 7 phase standar, dan membuat dependency untuk mode sequential.
-9. Setelah phase **Handover to Operation** selesai, PM/DCO melengkapi
+9. Pada detail Delivery Project, panel **Task Activity** menampilkan task dan
+   activity per Work Order. Buka tombol **Activity** pada task yang relevan
+   untuk membaca atau menambahkan update.
+10. Setelah phase **Handover to Operation** selesai, PM/DCO melengkapi
    **Handover Checklist** lalu memilih **Kirim untuk review**.
-10. Supervisor/Manager Operation mengisi **Operational Acceptance Record** dan
+11. Supervisor/Manager Operation mengisi **Operational Acceptance Record** dan
     memilih **Terima**, **Terima dengan kondisi**, atau **Tolak**.
-11. Project masuk masa **Hypercare** selama 14 hari setelah acceptance. Project
+12. Project masuk masa **Hypercare** selama 14 hari setelah acceptance. Project
     tidak dapat ditutup sebelum acceptance Operation dan hypercare selesai.
 
 Untuk demo cepat, klik **Load sample project**. Tombol ini membuat project
@@ -80,10 +83,12 @@ Segregation of duties diterapkan: PM Delivery/DCO menyiapkan dan mengirim
 checklist, sedangkan Operations (`supervisor`, `manager`, `admin`) memberikan
 acceptance. Customer tidak melihat checklist internal atau catatan acceptance.
 
-## Activity dan WBS
+## Task Activity dan WBS
 
-Pada ticket Work Order, buka tab **Tasks**. Setiap task mempunyai tombol
-**Activity** untuk:
+Pada detail Delivery Project, buka panel **Task Activity**, pilih Work Order,
+lalu buka tombol **Activity** pada task yang relevan. Jalur alternatif tetap
+tersedia melalui ticket Work Order → tab **Tasks**. Setiap task mempunyai
+tombol **Activity** untuk:
 
 - menulis progress note;
 - mencatat blocker;
@@ -102,10 +107,12 @@ Customer membuka `/portal/projects`. Portal menampilkan project yang memiliki
 - nama project dan progress;
 - phase yang `customer_visible`;
 - status phase;
+- Work Order dan task yang tersedia untuk portal;
 - activity yang `customer_visible`.
 
 Customer tidak dapat mengubah project, phase, task, activity, assignment, atau
-dependency. Detail internal PM/DCO dan Work Order tidak ditampilkan di portal.
+dependency. Assignment internal, dependency detail, dan activity internal tidak
+ditampilkan di portal.
 
 ## Jika portal kosong
 
@@ -129,11 +136,14 @@ Jangan mengatasi masalah ini dengan menghapus RLS.
 - [ ] Sample project muncul pada account yang dipilih.
 - [ ] DCO dapat membuat Request dari project.
 - [ ] Request memiliki task phase standar.
+- [ ] Panel Task Activity tampil langsung pada detail Delivery Project.
 - [ ] Sequential menolak task sebelum predecessor selesai.
 - [ ] Parallel tidak mengunci task lain.
 - [ ] Agent dapat menambah activity.
 - [ ] Activity internal tidak muncul di portal.
 - [ ] Activity `customer_visible` muncul di portal.
+- [ ] Task dan Work Order internal tidak bocor ke portal; hanya data yang
+      diizinkan RLS dan `customer_visible` yang terlihat.
 - [ ] Customer dari account berbeda tidak dapat melihat project.
 - [ ] Checklist handover otomatis tersedia pada project delivery.
 - [ ] Project tidak dapat ditutup sebelum Operations acceptance dan hypercare.

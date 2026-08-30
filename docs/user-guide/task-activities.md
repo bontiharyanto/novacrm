@@ -1,6 +1,6 @@
 # Task Activity & WBS
 
-**Audience:** DCO, PM Delivery, agent, supervisor  
+**Audience:** DCO, PM Delivery, agent, supervisor, dan customer portal (read-only)
 **Parent process:** [Delivery Project](delivery.md)
 
 ## Konsep
@@ -22,13 +22,18 @@ Jenis activity:
 
 ## Cara menambahkan activity
 
-1. Buka ticket Work Order.
-2. Buka tab **Tasks**.
-3. Klik **Activity** pada task yang relevan.
+1. Buka detail Delivery Project dari `/delivery`.
+2. Pada panel **Task Activity**, pilih Work Order dan task yang relevan.
+3. Klik **Activity** pada task tersebut. Jalur alternatifnya adalah membuka
+   ticket Work Order → tab **Tasks** → **Activity**.
 4. Pilih jenis activity.
 5. Tulis catatan yang faktual dan singkat.
 6. Centang **Visible to customer** hanya bila isi aman dipublikasikan.
 7. Klik **Add update**.
+
+Customer dapat membuka panel yang sama dari `/portal/projects`, tetapi hanya
+melihat task dan activity yang telah diizinkan untuk portal. Customer tidak
+memiliki form untuk menulis atau mengubah activity.
 
 Perubahan status `Start`, `Complete`, `Cancel`, atau update status dari phase
 akan membuat activity `status_change` otomatis. Activity mencatat actor dan
