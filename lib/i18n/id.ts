@@ -65,6 +65,8 @@ export const id: Dictionary = {
     deliveryCreateWorkOrder: 'Buat request delivery',
     deliveryCreateWorkOrderHint: 'DCO membuat request internal di sini; customer hanya memantau progresnya.',
     deliveryWorkOrderTitle: 'Judul request',
+    deliveryWorkOrderCreated: 'Request delivery berhasil dibuat.',
+    deliveryWorkOrderFailed: 'Request delivery gagal dibuat.',
     deliveryExternalId: 'ID eksternal',
     deliveryPeople: 'Tim delivery',
     deliveryPm: 'PM Delivery',

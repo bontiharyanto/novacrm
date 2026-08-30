@@ -62,6 +62,7 @@ export function DeliveryProjectDetail({
   const [savingPhase, setSavingPhase] = useState('');
   const [workOrderTitle, setWorkOrderTitle] = useState('');
   const [savingWorkOrder, setSavingWorkOrder] = useState(false);
+  const [workOrderMessage, setWorkOrderMessage] = useState('');
   const [assignmentPmId, setAssignmentPmId] = useState('');
   const [assignmentDcoId, setAssignmentDcoId] = useState('');
   const [savingAssignments, setSavingAssignments] = useState(false);
@@ -98,14 +99,26 @@ export function DeliveryProjectDetail({
   async function createWorkOrder() {
     if (!workOrderTitle.trim()) return;
     setSavingWorkOrder(true);
-    await fetch(`/api/delivery/projects/${projectId}/work-orders`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: workOrderTitle }),
-    });
-    setWorkOrderTitle('');
-    await load();
-    setSavingWorkOrder(false);
+    setWorkOrderMessage('');
+    try {
+      const response = await fetch(`/api/delivery/projects/${projectId}/work-orders`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: workOrderTitle }),
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setWorkOrderMessage(payload.error ?? t.common.deliveryWorkOrderFailed);
+        return;
+      }
+      setWorkOrderTitle('');
+      setWorkOrderMessage(t.common.deliveryWorkOrderCreated);
+      await load();
+    } catch {
+      setWorkOrderMessage(t.common.deliveryWorkOrderFailed);
+    } finally {
+      setSavingWorkOrder(false);
+    }
   }
 
   async function saveAssignments() {
@@ -357,6 +370,7 @@ export function DeliveryProjectDetail({
                   {t.common.new}
                 </Button>
               </div>
+              {workOrderMessage ? <p className="mt-2 text-xs text-zinc-400">{workOrderMessage}</p> : null}
             </section>
           ) : null}
           <section className="nova-surface rounded-xl border p-5">

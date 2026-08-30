@@ -63,6 +63,8 @@ export const en = {
     deliveryCreateWorkOrder: 'Create delivery request',
     deliveryCreateWorkOrderHint: 'DCO creates the internal request here; customers only track its progress.',
     deliveryWorkOrderTitle: 'Request title',
+    deliveryWorkOrderCreated: 'Delivery request created.',
+    deliveryWorkOrderFailed: 'Unable to create the delivery request.',
     deliveryExternalId: 'External ID',
     deliveryPeople: 'Delivery team',
     deliveryPm: 'PM Delivery',
