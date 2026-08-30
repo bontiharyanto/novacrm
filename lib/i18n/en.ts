@@ -708,6 +708,8 @@ export const en = {
     },
     tasks: {
       title: 'Tasks',
+      activityPanelTitle: 'Task activity',
+      activityPanelHint: 'Track execution updates and blockers for each delivery Work Order.',
       empty: 'No tasks yet. Add one or create from a catalog template.',
       sequential: 'Sequential',
       parallel: 'Parallel',

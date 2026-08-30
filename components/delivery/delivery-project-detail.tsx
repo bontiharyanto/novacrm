@@ -16,6 +16,7 @@ import type {
   DeliveryProject,
 } from '@/lib/delivery/schema';
 import { DeliveryHandoverPanel } from '@/components/delivery/delivery-handover-panel';
+import { TicketTasksPanel } from '@/components/tickets/ticket-tasks';
 
 function statusTone(status: DeliveryPhaseStatus): 'neutral' | 'info' | 'success' | 'warning' | 'danger' {
   if (status === 'completed') return 'success';
@@ -38,6 +39,7 @@ export function DeliveryProjectDetail({
   canCreateWorkOrder = !readOnly,
   canManageHandover = !readOnly,
   canAcceptHandover = false,
+  canCreateTaskActivity = false,
   canManageAssignments = false,
   assignmentOptions = { pm: [], dco: [] },
 }: {
@@ -47,6 +49,7 @@ export function DeliveryProjectDetail({
   canCreateWorkOrder?: boolean;
   canManageHandover?: boolean;
   canAcceptHandover?: boolean;
+  canCreateTaskActivity?: boolean;
   canManageAssignments?: boolean;
   assignmentOptions?: {
     pm: DeliveryAssignmentUser[];
@@ -181,6 +184,51 @@ export function DeliveryProjectDetail({
         </div>
         <div className="mt-4 h-2 overflow-hidden rounded-full bg-zinc-800">
           <div className="h-full rounded-full bg-blue-500 transition-all" style={{ width: `${project.progress}%` }} />
+        </div>
+      </section>
+
+      <section className="nova-surface rounded-xl border p-5">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{t.tickets.tasks.title}</p>
+            <h2 className="mt-1 text-lg font-semibold text-zinc-100">{t.tickets.tasks.activityPanelTitle}</h2>
+          </div>
+          <p className="max-w-md text-right text-xs leading-5 text-zinc-500">
+            {t.tickets.tasks.activityPanelHint}
+          </p>
+        </div>
+        <div className="mt-4 space-y-4">
+          {project.workOrders.filter((order) => order.ticketId).length ? (
+            project.workOrders
+              .filter((order) => order.ticketId)
+              .map((order) => (
+                <div key={order.id} className="rounded-lg border border-zinc-800 p-3">
+                  <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <p className="font-mono text-[11px] text-zinc-500">{order.number}</p>
+                      <p className="mt-1 text-sm font-medium text-zinc-100">{order.title}</p>
+                    </div>
+                    <Link
+                      href={readOnly ? `/portal/${order.ticketId}` : `/tickets/${order.ticketId}`}
+                      className="text-xs text-zinc-500 hover:text-zinc-200"
+                    >
+                      {t.tickets.view}
+                    </Link>
+                  </div>
+                  <TicketTasksPanel
+                    ticketId={order.ticketId as string}
+                    ticketType="request"
+                    accountId={project.accountId}
+                    groups={[]}
+                    embedded
+                    canEditTasks={false}
+                    canCreateActivity={canCreateTaskActivity}
+                  />
+                </div>
+              ))
+          ) : (
+            <p className="text-sm text-zinc-500">{t.common.deliveryNoWorkOrders}</p>
+          )}
         </div>
       </section>
 

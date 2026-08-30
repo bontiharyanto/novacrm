@@ -711,6 +711,8 @@ export const id: Dictionary = {
     },
     tasks: {
       title: 'Task',
+      activityPanelTitle: 'Aktivitas Task',
+      activityPanelHint: 'Pantau update eksekusi dan kendala untuk setiap Work Order delivery.',
       empty: 'Belum ada task. Tambah manual atau buat dari template katalog.',
       sequential: 'Berurutan',
       parallel: 'Paralel',
