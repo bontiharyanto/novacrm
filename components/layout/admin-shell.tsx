@@ -901,25 +901,28 @@ function SidebarNav({
 }) {
   const { t } = useI18n();
   const compactDeliveryNav = role === 'pm_delivery' || role === 'dco';
+  const deliveryOverviewItems = overviewItems.filter((item) => item.href.startsWith('/delivery/'));
   return (
     <div className={cn('relative min-h-0', compactDeliveryNav ? 'shrink-0' : 'flex-1')}>
       <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-3 bg-gradient-to-b from-zinc-950 to-transparent" />
       <div className={cn('nova-scroll-thin overflow-y-auto pb-3 pt-1', compactDeliveryNav ? 'h-auto' : 'h-full')}>
-        <Suspense fallback={null}>
-          <FavoritesNav
-            pins={pins}
-            role={role}
-            capabilityOverrides={capabilityOverrides}
-            onNavigate={onNavigate}
-            rail={rail}
-            collapsed={collapsed.favorites}
-            onToggle={onToggleSection}
-          />
-        </Suspense>
+        {!compactDeliveryNav ? (
+          <Suspense fallback={null}>
+            <FavoritesNav
+              pins={pins}
+              role={role}
+              capabilityOverrides={capabilityOverrides}
+              onNavigate={onNavigate}
+              rail={rail}
+              collapsed={collapsed.favorites}
+              onToggle={onToggleSection}
+            />
+          </Suspense>
+        ) : null}
         <ItemSection
           id="overview"
           title={t.nav.overview}
-          items={overviewItems}
+          items={compactDeliveryNav ? deliveryOverviewItems : overviewItems}
           pathname={pathname}
           role={role}
           capabilityOverrides={capabilityOverrides}
@@ -930,42 +933,46 @@ function SidebarNav({
           onToggle={onToggleSection}
           pins={pins}
         />
-        <Suspense fallback={null}>
-          <ProcessNav
-            role={role}
-            capabilityOverrides={capabilityOverrides}
-            onNavigate={onNavigate}
-            rail={rail}
-            collapsed={collapsed.serviceDesk}
-            onToggle={onToggleSection}
-            pins={pins}
-            accountKey={accountKey}
-          />
-        </Suspense>
-        <ConfigurationNav
-          pathname={pathname}
-          role={role}
-          onNavigate={onNavigate}
-          rail={rail}
-          collapsed={collapsed.configuration}
-          onToggle={onToggleSection}
-          folderCollapsed={folderCollapsed}
-          onToggleFolder={onToggleFolder}
-          pins={pins}
-        />
-        <ItemSection
-          id="platform"
-          title={t.nav.platform}
-          items={platformItems}
-          pathname={pathname}
-          role={role}
-          capabilityOverrides={capabilityOverrides}
-          onNavigate={onNavigate}
-          rail={rail}
-          collapsed={collapsed.platform}
-          onToggle={onToggleSection}
-          pins={pins}
-        />
+        {!compactDeliveryNav ? (
+          <>
+            <Suspense fallback={null}>
+              <ProcessNav
+                role={role}
+                capabilityOverrides={capabilityOverrides}
+                onNavigate={onNavigate}
+                rail={rail}
+                collapsed={collapsed.serviceDesk}
+                onToggle={onToggleSection}
+                pins={pins}
+                accountKey={accountKey}
+              />
+            </Suspense>
+            <ConfigurationNav
+              pathname={pathname}
+              role={role}
+              onNavigate={onNavigate}
+              rail={rail}
+              collapsed={collapsed.configuration}
+              onToggle={onToggleSection}
+              folderCollapsed={folderCollapsed}
+              onToggleFolder={onToggleFolder}
+              pins={pins}
+            />
+            <ItemSection
+              id="platform"
+              title={t.nav.platform}
+              items={platformItems}
+              pathname={pathname}
+              role={role}
+              capabilityOverrides={capabilityOverrides}
+              onNavigate={onNavigate}
+              rail={rail}
+              collapsed={collapsed.platform}
+              onToggle={onToggleSection}
+              pins={pins}
+            />
+          </>
+        ) : null}
       </div>
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-4 bg-gradient-to-t from-zinc-950 to-transparent" />
     </div>
@@ -1163,11 +1170,21 @@ function SidebarPanel({
   onToggleFolder: (id: FolderId) => void;
   pins: ReturnType<typeof useNavPins>;
 }) {
+  const { t } = useI18n();
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="shrink-0 border-b border-zinc-800/60">
         <SidebarBrand onClose={onClose} logoUrl={logoUrl} rail={rail} onToggleRail={onToggleRail} />
         {!rail ? <AccountSwitcher accounts={accounts} activeAccountId={activeAccountId} /> : null}
+        {!rail && (role === 'pm_delivery' || role === 'dco') ? (
+          <div className="mx-3 mb-3 flex items-center gap-2 rounded-md border border-blue-500/20 bg-blue-500/5 px-2.5 py-2">
+            <BriefcaseBusiness className="h-3.5 w-3.5 shrink-0 text-blue-400" />
+            <div className="min-w-0">
+              <p className="truncate text-[11px] font-medium text-blue-100">{t.nav.delivery}</p>
+              <p className="truncate text-[10px] text-zinc-500">{ROLE_LABEL[role]}</p>
+            </div>
+          </div>
+        ) : null}
         <NewTicketButton
           role={role}
           capabilityOverrides={capabilityOverrides}
@@ -1261,6 +1278,7 @@ export function AgentShell({
   const pins = useNavPins();
   const onAssistant = pathname.startsWith('/assistant');
   const activeAccount = accounts.find((account) => account.id === activeAccountId);
+  const canCreateTicket = canConfiguredCapability(role, 'create', 'OperationsServiceDesk', capabilityOverrides);
 
   useEffect(() => {
     setRail(readRailPreference());
@@ -1280,6 +1298,7 @@ export function AgentShell({
         if (tag === 'INPUT' || tag === 'TEXTAREA' || event.target.isContentEditable) return;
       }
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'n') {
+        if (!canCreateTicket) return;
         event.preventDefault();
         router.push('/tickets/new');
       }
@@ -1294,7 +1313,7 @@ export function AgentShell({
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [router]);
+  }, [canCreateTicket, router]);
 
   function toggleRail() {
     setRail((prev) => {
@@ -1444,27 +1463,31 @@ export function AgentShell({
                 </span>
               </Link>
 
+              {canCreateTicket ? (
+                <Link
+                  href="/tickets/new"
+                  className={cn(
+                    'inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-zinc-800 px-2.5 text-[13px] text-zinc-300',
+                    'transition-colors duration-200 hover:border-zinc-700 hover:bg-zinc-900 hover:text-zinc-50',
+                  )}
+                  aria-label={t.common.newTicket}
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  <span>{t.common.new}</span>
+                  <kbd className="hidden font-mono text-[10px] text-zinc-600 xl:inline">⌘N</kbd>
+                </Link>
+              ) : null}
+            </div>
+
+            {canCreateTicket ? (
               <Link
                 href="/tickets/new"
-                className={cn(
-                  'inline-flex h-8 items-center justify-center gap-1.5 rounded-md border border-zinc-800 px-2.5 text-[13px] text-zinc-300',
-                  'transition-colors duration-200 hover:border-zinc-700 hover:bg-zinc-900 hover:text-zinc-50',
-                )}
+                className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-zinc-800 text-zinc-300 transition-colors hover:bg-zinc-900 hover:text-zinc-50 lg:hidden"
                 aria-label={t.common.newTicket}
               >
                 <Plus className="h-3.5 w-3.5" />
-                <span>{t.common.new}</span>
-                <kbd className="hidden font-mono text-[10px] text-zinc-600 xl:inline">⌘N</kbd>
               </Link>
-            </div>
-
-            <Link
-              href="/tickets/new"
-              className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-zinc-800 text-zinc-300 transition-colors hover:bg-zinc-900 hover:text-zinc-50 lg:hidden"
-              aria-label={t.common.newTicket}
-            >
-              <Plus className="h-3.5 w-3.5" />
-            </Link>
+            ) : null}
 
             <form action={signOutAction} className="md:hidden">
               <button
