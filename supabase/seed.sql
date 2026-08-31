@@ -25,6 +25,29 @@ update public.tenants
 set public_url = coalesce(nullif(public_url, ''), 'http://localhost:3000')
 where id = '11111111-1111-1111-1111-111111111111';
 
+insert into public.demo_leads (
+  tenant_id, full_name, company_name, job_title, employee_count, phone, email,
+  interest, message, locale, source, privacy_consent, marketing_consent, status
+)
+select
+  '11111111-1111-1111-1111-111111111111',
+  'Demo Prospect',
+  'Example Operations',
+  'Head of IT',
+  '11-50',
+  '+6281200000000',
+  'demo.prospect@example.com',
+  'delivery',
+  'Seed lead for testing the public discovery form.',
+  'id',
+  'seed',
+  true,
+  false,
+  'new'
+where not exists (
+  select 1 from public.demo_leads where email = 'demo.prospect@example.com'
+);
+
 do $$
 declare
   admin_id uuid := '22222222-2222-2222-2222-222222222222';

@@ -30,6 +30,7 @@
           <a href="#paket" data-id="Paket" data-en="Plans">Paket</a>
           <a href="#cara-kerja" data-id="Cara kerja" data-en="How it works">Cara kerja</a>
           <a href="#beda" data-id="Pembeda" data-en="Why NovaCRM">Pembeda</a>
+          <a href="#kontak" data-id="Kontak" data-en="Contact">Kontak</a>
         </nav>
         <div class="language-switch" role="group" aria-label="Language">
           <button type="button" data-lang="id" aria-pressed="true">ID</button>
@@ -294,6 +295,99 @@
       </section>
     </main>
 
+    <section class="section contact-section" id="kontak">
+      <div class="wrap contact-grid">
+        <div>
+          <p class="kicker" data-id="Mari bicara tentang operasi Anda" data-en="Let’s talk about your operations">Mari bicara tentang operasi Anda</p>
+          <h2 data-id="Jadwalkan discovery dengan team NovaCRM" data-en="Schedule a discovery with the NovaCRM team">Jadwalkan discovery dengan team NovaCRM</h2>
+          <p class="sub" data-id="Ceritakan kondisi service desk, workforce, dan delivery Anda. Kami akan menyiapkan alur demo yang relevan—bukan sales call generik." data-en="Tell us about your service desk, workforce, and delivery operations. We will prepare a relevant demo workflow—not a generic sales call.">Ceritakan kondisi service desk, workforce, dan delivery Anda. Kami akan menyiapkan alur demo yang relevan—bukan sales call generik.</p>
+          <div class="contact-cards">
+            <a class="contact-card" href="mailto:support@novacrm.app?subject=Discovery%20NovaCRM">
+              <span class="contact-icon">01</span>
+              <span><strong data-id="Sales &amp; discovery" data-en="Sales &amp; discovery">Sales &amp; discovery</strong><small data-id="Diskusi kebutuhan dan jadwal demo." data-en="Discuss your needs and schedule a demo.">Diskusi kebutuhan dan jadwal demo.</small></span>
+            </a>
+            <a class="contact-card" href="mailto:support@novacrm.app?subject=Customer%20support">
+              <span class="contact-icon">02</span>
+              <span><strong data-id="Customer support" data-en="Customer support">Customer support</strong><small data-id="Bantuan penggunaan untuk pelanggan existing." data-en="Product help for existing customers.">Bantuan penggunaan untuk pelanggan existing.</small></span>
+            </a>
+            <a class="contact-card" href="https://novacrm.click/login">
+              <span class="contact-icon">03</span>
+              <span><strong data-id="Sudah menjadi customer?" data-en="Already a customer?">Sudah menjadi customer?</strong><small data-id="Masuk ke operations desk dan portal Anda." data-en="Open your operations desk and customer portal.">Masuk ke operations desk dan portal Anda.</small></span>
+            </a>
+          </div>
+        </div>
+        <form class="lead-form" data-lead-form action="https://novacrm.click/api/public/leads" method="post">
+          <div class="form-heading">
+            <span class="plan-label" data-id="Discovery request" data-en="Discovery request">Discovery request</span>
+            <span class="form-required" data-id="* wajib diisi" data-en="* required">* wajib diisi</span>
+          </div>
+          <div class="form-grid">
+            <label>
+              <span data-id="Nama lengkap *" data-en="Full name *">Nama lengkap *</span>
+              <input name="fullName" type="text" required autocomplete="name" placeholder="Budi Santoso" data-placeholder-id="Budi Santoso" data-placeholder-en="Budi Santoso" />
+            </label>
+            <label>
+              <span data-id="Nama perusahaan *" data-en="Company name *">Nama perusahaan *</span>
+              <input name="companyName" type="text" required autocomplete="organization" placeholder="PT Contoh Indonesia" data-placeholder-id="PT Contoh Indonesia" data-placeholder-en="Example Company Ltd." />
+            </label>
+            <label>
+              <span data-id="Jabatan / departemen" data-en="Job title / department">Jabatan / departemen</span>
+              <input name="jobTitle" type="text" autocomplete="organization-title" placeholder="Head of IT / Operations" data-placeholder-id="Head of IT / Operations" data-placeholder-en="Head of IT / Operations" />
+            </label>
+            <label>
+              <span data-id="Jumlah karyawan" data-en="Company size">Jumlah karyawan</span>
+              <select name="employeeCount">
+                <option value="" data-id="Pilih jumlah" data-en="Select size">Pilih jumlah</option>
+                <option value="1-10">1–10</option>
+                <option value="11-50">11–50</option>
+                <option value="51-200">51–200</option>
+                <option value="201-500">201–500</option>
+                <option value="500+">500+</option>
+              </select>
+            </label>
+            <label>
+              <span data-id="Nomor WhatsApp" data-en="WhatsApp number">Nomor WhatsApp</span>
+              <input name="phone" type="tel" autocomplete="tel" placeholder="+62 812..." data-placeholder-id="+62 812..." data-placeholder-en="+62 812..." />
+            </label>
+            <label>
+              <span data-id="Alamat email *" data-en="Business email *">Alamat email *</span>
+              <input name="email" type="email" required autocomplete="email" placeholder="budi@perusahaan.com" data-placeholder-id="budi@perusahaan.com" data-placeholder-en="budi@company.com" />
+            </label>
+            <label>
+              <span data-id="Kebutuhan utama *" data-en="Primary interest *">Kebutuhan utama *</span>
+              <select name="interest" required>
+                <option value="" data-id="Pilih area" data-en="Select area">Pilih area</option>
+                <option value="itsm" data-id="ITSM / Service Desk" data-en="ITSM / Service Desk">ITSM / Service Desk</option>
+                <option value="wfm" data-id="Workforce Management" data-en="Workforce Management">Workforce Management</option>
+                <option value="delivery" data-id="Delivery Project" data-en="Delivery Project">Delivery Project</option>
+                <option value="portal" data-id="Customer Portal" data-en="Customer Portal">Customer Portal</option>
+                <option value="integration" data-id="Integrasi CRM" data-en="CRM integration">Integrasi CRM</option>
+              </select>
+            </label>
+            <label class="form-full">
+              <span data-id="Ceritakan kebutuhan Anda" data-en="Tell us about your needs">Ceritakan kebutuhan Anda</span>
+              <textarea name="message" rows="4" placeholder="Contoh: kami mengelola 3 klien dan membutuhkan SLA serta delivery tracking." data-placeholder-id="Contoh: kami mengelola 3 klien dan membutuhkan SLA serta delivery tracking." data-placeholder-en="Example: we manage 3 clients and need SLA and delivery tracking."></textarea>
+            </label>
+          </div>
+          <label class="hp-field" aria-hidden="true">
+            <span>Website</span>
+            <input name="website" type="text" tabindex="-1" autocomplete="off" />
+          </label>
+          <label class="consent-row">
+            <input name="privacyConsent" type="checkbox" value="true" required />
+            <span data-id="Saya menyetujui data ini digunakan untuk menindaklanjuti permintaan saya sesuai Pemberitahuan Privasi." data-en="I agree that this data may be used to follow up my request under the Privacy Notice.">Saya menyetujui data ini digunakan untuk menindaklanjuti permintaan saya sesuai Pemberitahuan Privasi.</span>
+          </label>
+          <label class="consent-row">
+            <input name="marketingConsent" type="checkbox" value="true" />
+            <span data-id="Saya ingin menerima update produk dan penawaran NovaCRM." data-en="I would like to receive NovaCRM product updates and offers.">Saya ingin menerima update produk dan penawaran NovaCRM.</span>
+          </label>
+          <p class="form-status" data-form-status role="status" aria-live="polite"></p>
+          <button class="btn btn-primary btn-lg" type="submit" data-id="Kirim permintaan discovery" data-en="Send discovery request">Kirim permintaan discovery</button>
+          <p class="form-footnote" data-id="Kami biasanya merespons dalam 1 hari kerja." data-en="We usually respond within one business day.">Kami biasanya merespons dalam 1 hari kerja.</p>
+        </form>
+      </div>
+    </section>
+
     <div class="cta-band">
       <div>
         <p class="kicker" data-id="Lihat alurnya dengan data nyata" data-en="See the workflow with real data">Lihat alurnya dengan data nyata</p>
@@ -318,8 +412,11 @@
         const storageKey = 'novacrm_flyer_language';
         const buttons = [...document.querySelectorAll('[data-lang]')];
         const translatable = [...document.querySelectorAll('[data-id][data-en]')];
+        const placeholders = [...document.querySelectorAll('[data-placeholder-id][data-placeholder-en]')];
         const description = document.querySelector('meta[name="description"]');
         const controlTower = document.querySelector('.control-tower');
+        const leadForm = document.querySelector('[data-lead-form]');
+        const formStatus = document.querySelector('[data-form-status]');
         const browserLanguage = (navigator.language || '').toLowerCase();
 
         function storedLanguage() {
@@ -335,6 +432,9 @@
           translatable.forEach((element) => {
             element.innerHTML = element.dataset[selected] || element.dataset.id;
           });
+          placeholders.forEach((element) => {
+            element.setAttribute('placeholder', element.dataset[`placeholder${selected === 'en' ? 'En' : 'Id'}`]);
+          });
           document.documentElement.lang = selected;
           document.title = document.querySelector('title').dataset[selected];
           if (description) description.content = description.dataset[selected];
@@ -348,6 +448,68 @@
         }
 
         buttons.forEach((button) => button.addEventListener('click', () => applyLanguage(button.dataset.lang)));
+
+        leadForm?.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          if (!leadForm.checkValidity()) {
+            leadForm.reportValidity();
+            return;
+          }
+
+          const selected = document.documentElement.lang === 'en' ? 'en' : 'id';
+          const submitButton = leadForm.querySelector('button[type="submit"]');
+          const formData = new FormData(leadForm);
+          const body = Object.fromEntries(formData.entries());
+          body.locale = selected;
+          body.source = 'flyer';
+          body.privacyConsent = formData.get('privacyConsent') === 'true';
+          body.marketingConsent = formData.get('marketingConsent') === 'true';
+          body.utmSource = new URLSearchParams(window.location.search).get('utm_source') || '';
+          body.utmMedium = new URLSearchParams(window.location.search).get('utm_medium') || '';
+          body.utmCampaign = new URLSearchParams(window.location.search).get('utm_campaign') || '';
+          if (submitButton) {
+            submitButton.disabled = true;
+            submitButton.textContent = selected === 'en' ? 'Sending...' : 'Mengirim...';
+          }
+          if (formStatus) {
+            formStatus.className = 'form-status';
+            formStatus.textContent = '';
+          }
+
+          try {
+            const response = await fetch(leadForm.action, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(body),
+            });
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok || payload.error) throw new Error(payload.error || 'Unable to send request.');
+            leadForm.reset();
+            if (formStatus) {
+              formStatus.className = 'form-status is-success';
+              formStatus.textContent =
+                selected === 'en'
+                  ? 'Thank you. Our team will contact you within one business day.'
+                  : 'Terima kasih. Team kami akan menghubungi Anda dalam 1 hari kerja.';
+            }
+          } catch (error) {
+            if (formStatus) {
+              formStatus.className = 'form-status is-error';
+              formStatus.textContent =
+                error instanceof Error
+                  ? error.message
+                  : selected === 'en'
+                    ? 'Unable to send your request. Please email our team.'
+                    : 'Permintaan belum dapat dikirim. Silakan email team kami.';
+            }
+          } finally {
+            if (submitButton) {
+              submitButton.disabled = false;
+              applyLanguage(selected);
+            }
+          }
+        });
+
         applyLanguage(storedLanguage() || (browserLanguage.startsWith('en') ? 'en' : 'id'));
       })();
     </script>
