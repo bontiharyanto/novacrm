@@ -188,9 +188,6 @@ function wfmSidebarItems(role: AppRole): NavItem[] {
   }));
 }
 
-/** @deprecated use operationsBaseItems — kept for pin catalog merge */
-const overviewItems: NavItem[] = [...operationsBaseItems, ...analyticsItems];
-
 const processItems: ProcessItem[] = [
   { href: '/tickets?queue=mine', type: 'mine', labelKey: 'myTickets', icon: Inbox, subject: 'OperationsServiceDesk' },
   { href: '/tickets?type=incident', type: 'incident', labelKey: 'incidents', icon: AlertTriangle, badgeKey: 'incident', alertBadgeKey: 'incidentSlaRisk', alertBadgeHref: '/tickets?type=incident&sla=risk', subject: 'OperationsServiceDesk' },
@@ -200,14 +197,6 @@ const processItems: ProcessItem[] = [
   { href: '/tickets?type=request', type: 'request', labelKey: 'requests', icon: ClipboardList, badgeKey: 'request', subject: 'OperationsServiceDesk' },
   { href: '/tickets', type: null, labelKey: 'allTickets', icon: Ticket, badgeKey: 'all', subject: 'OperationsServiceDesk' },
 ];
-
-const peopleItems: NavItem[] = administrationItems.filter((item) =>
-  (['accounts', 'organization', 'users'] as NavKey[]).includes(item.labelKey),
-);
-
-const inventoryItems: NavItem[] = inventorySectionItems;
-
-const configurationFlatItems: NavItem[] = administrationItems.filter((item) => item.labelKey === 'sla');
 
 const configurationItems: NavItem[] = [...administrationItems, ...inventorySectionItems];
 
