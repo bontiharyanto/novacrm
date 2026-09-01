@@ -101,7 +101,9 @@ export function TicketDashboard({ currentUserId, role }: { currentUserId: string
   const searchParams = useSearchParams();
   const typeParam = searchParams.get('type');
   const queueParam = searchParams.get('queue');
+  const slaParam = searchParams.get('sla');
   const activeType = isTicketType(typeParam) ? typeParam : 'all';
+  const slaRiskOnly = slaParam === 'risk';
   const agentOnly = role === 'agent';
   const activeQueue: QueueFilter = agentOnly
     ? 'mine'
@@ -164,7 +166,7 @@ export function TicketDashboard({ currentUserId, role }: { currentUserId: string
     };
   }, [currentUserId, t.tickets.assignedToYou]);
 
-  function setFilter(next: { type?: string; queue?: string }) {
+  function setFilter(next: { type?: string; queue?: string; sla?: string | null }) {
     const params = new URLSearchParams(searchParams.toString());
     const type = next.type ?? (activeType === 'all' ? '' : activeType);
     const queue = next.queue ?? (activeQueue === 'all' ? '' : activeQueue);
@@ -172,6 +174,8 @@ export function TicketDashboard({ currentUserId, role }: { currentUserId: string
     else params.delete('type');
     if (queue) params.set('queue', queue);
     else params.delete('queue');
+    if (next.sla === null) params.delete('sla');
+    else if (next.sla) params.set('sla', next.sla);
     const query = params.toString();
     router.replace(query ? `/tickets?${query}` : '/tickets');
   }
@@ -194,9 +198,13 @@ export function TicketDashboard({ currentUserId, role }: { currentUserId: string
       if (activeQueue === 'mine' && ticket.assigneeId !== currentUserId) return false;
       if (activeQueue === 'queue' && (!ticket.groupId || !myGroupIds.includes(ticket.groupId))) return false;
       if (activeQueue === 'unassigned' && ticket.assigneeId) return false;
+      if (slaRiskOnly) {
+        const level = evaluateTicketSla(ticket).overall;
+        if (level !== 'risk' && level !== 'breached') return false;
+      }
       return true;
     });
-  }, [tickets, activeType, activeQueue, currentUserId, myGroupIds]);
+  }, [tickets, activeType, activeQueue, currentUserId, myGroupIds, slaRiskOnly]);
 
   const openCount = visibleTickets.filter((ticket) => ticket.status === 'open').length;
   const unassignedCount = tickets.filter((ticket) => !ticket.assigneeId).length;
@@ -216,6 +224,16 @@ export function TicketDashboard({ currentUserId, role }: { currentUserId: string
             {activeType === 'all' ? t.tickets.title : t.tickets.typePlural[activeType]}
           </h1>
           {agentOnly ? <p className="mt-1 text-sm text-zinc-500">{t.tickets.agentScopeHint}</p> : null}
+          {slaRiskOnly ? (
+            <button
+              type="button"
+              onClick={() => setFilter({ sla: null })}
+              className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-rose-500/30 bg-rose-500/10 px-2.5 py-0.5 text-[11px] font-medium text-rose-300"
+            >
+              {t.tickets.slaRiskFilter}
+              <span className="text-rose-400/80">×</span>
+            </button>
+          ) : null}
         </div>
         <div className="flex items-center gap-2">
           <div className="flex rounded-md border border-zinc-800 p-0.5">
@@ -321,15 +339,27 @@ export function TicketDashboard({ currentUserId, role }: { currentUserId: string
 
       <div className="grid gap-3 md:grid-cols-4">
         {[
-          { label: t.tickets.inQueue, value: visibleTickets.length, className: 'text-zinc-500' },
-          { label: t.tickets.new, value: openCount, className: 'text-sky-400' },
-          { label: t.tickets.unassigned, value: unassignedCount, className: 'text-amber-400' },
-          { label: t.tickets.slaRisk, value: atRiskCount, className: 'text-rose-400' },
+          { label: t.tickets.inQueue, value: visibleTickets.length, className: 'text-zinc-500', onClick: undefined },
+          { label: t.tickets.new, value: openCount, className: 'text-sky-400', onClick: undefined },
+          { label: t.tickets.unassigned, value: unassignedCount, className: 'text-amber-400', onClick: undefined },
+          {
+            label: t.tickets.slaRisk,
+            value: atRiskCount,
+            className: 'text-rose-400',
+            onClick: () => setFilter({ sla: slaRiskOnly ? null : 'risk' }),
+            active: slaRiskOnly,
+          },
         ].map((stat) => (
-          <Card key={stat.label}>
+          <Card
+            key={stat.label}
+            className={stat.onClick ? 'cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:border-zinc-700' : undefined}
+            onClick={stat.onClick}
+          >
             <CardContent className="p-4">
               <p className={`text-[11px] uppercase tracking-[0.16em] ${stat.className}`}>{stat.label}</p>
-              <p className="mt-1 text-xl font-semibold text-zinc-50">{loading ? '—' : stat.value}</p>
+              <p className={`mt-1 text-xl font-semibold ${stat.active ? 'text-rose-300' : 'text-zinc-50'}`}>
+                {loading ? '—' : stat.value}
+              </p>
             </CardContent>
           </Card>
         ))}

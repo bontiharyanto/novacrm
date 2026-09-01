@@ -1,6 +1,6 @@
 'use client';
 
-import { Moon, Sun } from 'lucide-react';
+import { Moon, Sun, Building2 } from 'lucide-react';
 import { useI18n } from '@/components/layout/preferences-provider';
 import { cn } from '@/lib/utils';
 
@@ -33,6 +33,19 @@ export function PreferenceControls({ compact = false }: { compact?: boolean }) {
           aria-label={t.common.light}
         >
           <Sun className="h-3.5 w-3.5" />
+        </button>
+        <button
+          type="button"
+          disabled={pending}
+          onClick={() => setTheme('enterprise')}
+          className={cn(
+            'rounded-[5px] p-1.5 transition-colors',
+            theme === 'enterprise' ? 'bg-zinc-800 text-zinc-50' : 'text-zinc-500 hover:text-zinc-200',
+          )}
+          aria-label={t.common.enterprise}
+          title={t.appearance.enterpriseName}
+        >
+          <Building2 className="h-3.5 w-3.5" />
         </button>
       </div>
       <div className="flex rounded-md border border-zinc-800 p-0.5 font-mono text-[10px]">

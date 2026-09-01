@@ -61,8 +61,11 @@ import { canConfiguredCapability, type CapabilityOverride, type CapabilitySubjec
 import { isTenantAdminRole, ROLE_LABEL } from '@/lib/rbac/roles';
 import { PresenceControl } from '@/components/layout/presence-control';
 import { ShiftBanner } from '@/components/layout/shift-banner';
+import { ShiftTopbarChip } from '@/components/layout/shift-topbar-chip';
 import { NotificationBell } from '@/components/layout/notification-bell';
 import { IdleSessionGuard } from '@/components/layout/idle-session-guard';
+import { SidebarUserCard } from '@/components/layout/sidebar-user-card';
+import { PageBreadcrumb } from '@/components/layout/page-breadcrumb';
 import { BrandWelcome } from '@/components/brand/brand-welcome';
 import { NovaWordmark, BrandMark } from '@/components/brand/nova-mark';
 import { NAV_PINS_COOKIE, defaultNavPinsForRole, parseNavPins, serializeNavPins, type NavPin } from '@/lib/nav/pins';
@@ -91,6 +94,7 @@ type ProcessItem = {
   icon: typeof Ticket;
   badgeKey?: keyof QueueCounts;
   alertBadgeKey?: keyof QueueCounts;
+  alertBadgeHref?: string;
   subject: CapabilitySubject;
 };
 type SectionId = NavSectionId;
@@ -189,7 +193,7 @@ const overviewItems: NavItem[] = [...operationsBaseItems, ...analyticsItems];
 
 const processItems: ProcessItem[] = [
   { href: '/tickets?queue=mine', type: 'mine', labelKey: 'myTickets', icon: Inbox, subject: 'OperationsServiceDesk' },
-  { href: '/tickets?type=incident', type: 'incident', labelKey: 'incidents', icon: AlertTriangle, badgeKey: 'incident', alertBadgeKey: 'incidentSlaRisk', subject: 'OperationsServiceDesk' },
+  { href: '/tickets?type=incident', type: 'incident', labelKey: 'incidents', icon: AlertTriangle, badgeKey: 'incident', alertBadgeKey: 'incidentSlaRisk', alertBadgeHref: '/tickets?type=incident&sla=risk', subject: 'OperationsServiceDesk' },
   { href: '/tickets?type=problem', type: 'problem', labelKey: 'problems', icon: Bug, badgeKey: 'problem', subject: 'OperationsServiceDesk' },
   { href: '/tickets?type=change', type: 'change', labelKey: 'changes', icon: GitBranch, badgeKey: 'change', subject: 'OperationsServiceDesk' },
   { href: '/cab', type: 'cab', labelKey: 'cab', icon: ShieldCheck, badgeKey: 'cab', subject: 'OperationsCab' },
@@ -230,17 +234,6 @@ function isPathActive(pathname: string, href: string) {
   return pathname === path || pathname.startsWith(`${path}/`);
 }
 
-function initials(fullName: string) {
-  return (
-    fullName
-      .split(' ')
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part[0]?.toUpperCase())
-      .join('') || 'U'
-  );
-}
-
 function NavLink({
   href,
   label,
@@ -250,6 +243,7 @@ function NavLink({
   rail = false,
   badge,
   alertBadge,
+  alertBadgeHref,
   pinned,
   onPinToggle,
   pinLabel,
@@ -263,6 +257,7 @@ function NavLink({
   rail?: boolean;
   badge?: number | null;
   alertBadge?: number | null;
+  alertBadgeHref?: string;
   pinned?: boolean;
   onPinToggle?: () => void;
   pinLabel?: string;
@@ -317,17 +312,33 @@ function NavLink({
         {hasBadges ? (
           <span className={cn('flex shrink-0 items-center gap-1', rail ? 'absolute right-0 top-0' : null)}>
             {alertBadgeText ? (
-              <span
-                className={cn(
-                  'font-mono tabular-nums',
-                  rail
-                    ? 'min-w-[14px] rounded bg-rose-500 px-0.5 text-center text-[9px] font-semibold leading-[14px] text-white'
-                    : 'rounded-md bg-rose-500/15 px-1.5 py-0.5 text-[10px] font-medium text-rose-400 ring-1 ring-rose-500/30',
-                )}
-                title="SLA risk"
-              >
-                {alertBadgeText}
-              </span>
+              alertBadgeHref ? (
+                <Link
+                  href={alertBadgeHref}
+                  onClick={(event) => event.stopPropagation()}
+                  className={cn(
+                    'font-mono tabular-nums transition-opacity hover:opacity-90',
+                    rail
+                      ? 'min-w-[14px] rounded bg-rose-500 px-0.5 text-center text-[9px] font-semibold leading-[14px] text-white'
+                      : 'rounded-md bg-rose-500/15 px-1.5 py-0.5 text-[10px] font-medium text-rose-400 ring-1 ring-rose-500/30',
+                  )}
+                  title="SLA risk"
+                >
+                  {alertBadgeText}
+                </Link>
+              ) : (
+                <span
+                  className={cn(
+                    'font-mono tabular-nums',
+                    rail
+                      ? 'min-w-[14px] rounded bg-rose-500 px-0.5 text-center text-[9px] font-semibold leading-[14px] text-white'
+                      : 'rounded-md bg-rose-500/15 px-1.5 py-0.5 text-[10px] font-medium text-rose-400 ring-1 ring-rose-500/30',
+                  )}
+                  title="SLA risk"
+                >
+                  {alertBadgeText}
+                </span>
+              )
             ) : null}
             {badgeText ? (
               <span
@@ -537,6 +548,7 @@ function ProcessNav({
               rail={rail}
               badge={badge}
               alertBadge={alertBadge}
+              alertBadgeHref={item.alertBadgeHref}
               pinned={pins.isPinned(item.href)}
               onPinToggle={() => pins.togglePin(item.href, item.labelKey)}
               pinLabel={t.nav.pin}
@@ -1203,18 +1215,14 @@ function SidebarNav({
 }
 
 function SidebarFooter({
-  fullName,
   role,
   pathname,
   onNavigate,
-  onSignOut,
   rail = false,
 }: {
-  fullName: string;
   role: AppRole;
   pathname: string;
   onNavigate?: () => void;
-  onSignOut: () => void | Promise<void>;
   rail?: boolean;
 }) {
   const { t } = useI18n();
@@ -1232,7 +1240,6 @@ function SidebarFooter({
     !usageActive &&
     !notificationsActive &&
     !reportScheduleActive;
-  const roleLabel = t.roles[role] ?? ROLE_LABEL[role] ?? role;
 
   const settings = (
     <>
@@ -1304,25 +1311,12 @@ function SidebarFooter({
   if (rail) {
     return (
       <div className="shrink-0 border-t border-zinc-800/60 px-1.5 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
-        <nav className="mb-1.5 flex flex-col gap-0.5">{settings}</nav>
-        <div className="flex flex-col items-center gap-1">
-          <div
-            className="flex h-7 w-7 items-center justify-center rounded-md border border-zinc-800 bg-zinc-950 font-mono text-[10px] text-zinc-300"
-            title={`${fullName} · ${roleLabel}`}
-          >
-            {initials(fullName)}
+        <nav className="flex flex-col gap-0.5">{settings}</nav>
+        {canRole(role, 'update', 'Wfm') ? (
+          <div className="mt-1.5 border-t border-zinc-800/60 pt-1.5">
+            <PresenceControl />
           </div>
-          <form action={onSignOut}>
-            <button
-              type="submit"
-              className="inline-flex h-7 w-7 items-center justify-center rounded-md text-zinc-500 transition-colors hover:bg-zinc-800 hover:text-zinc-50"
-              aria-label={t.common.signOut}
-              title={t.common.signOut}
-            >
-              <LogOut className="h-3.5 w-3.5" />
-            </button>
-          </form>
-        </div>
+        ) : null}
       </div>
     );
   }
@@ -1330,28 +1324,11 @@ function SidebarFooter({
   return (
     <div className="shrink-0 border-t border-zinc-800/60 px-2 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
       <nav className="mb-1.5 flex flex-col gap-0.5">{settings}</nav>
-      <div className="space-y-1.5 rounded-lg border border-zinc-800/70 bg-zinc-900/50 p-1.5">
-        <div className="flex items-center gap-2 px-1 py-0.5">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-zinc-800 bg-zinc-950 font-mono text-[10px] text-zinc-300">
-            {initials(fullName)}
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[13px] leading-4 text-zinc-50">{fullName}</p>
-            <p className="mt-0.5 truncate font-mono text-[10px] uppercase tracking-[0.08em] text-zinc-500">{roleLabel}</p>
-          </div>
-          <form action={onSignOut}>
-            <button
-              type="submit"
-              className="inline-flex h-7 w-7 items-center justify-center rounded-md text-zinc-500 transition-colors duration-200 ease-out hover:bg-zinc-800 hover:text-zinc-50"
-              aria-label={t.common.signOut}
-              title={t.common.signOut}
-            >
-              <LogOut className="h-3.5 w-3.5" />
-            </button>
-          </form>
+      {canRole(role, 'update', 'Wfm') ? (
+        <div className="rounded-lg border border-zinc-800/70 bg-zinc-900/50 p-1.5">
+          <PresenceControl />
         </div>
-        {canRole(role, 'update', 'Wfm') ? <PresenceControl /> : null}
-      </div>
+      ) : null}
     </div>
   );
 }
@@ -1360,6 +1337,7 @@ function SidebarPanel({
   role,
   capabilityOverrides,
   fullName,
+  tenantName,
   accounts,
   activeAccountId,
   pathname,
@@ -1378,6 +1356,7 @@ function SidebarPanel({
   role: AppRole;
   capabilityOverrides: CapabilityOverride[];
   fullName: string;
+  tenantName?: string | null;
   accounts: AccountRecord[];
   activeAccountId?: string | null;
   pathname: string;
@@ -1399,6 +1378,13 @@ function SidebarPanel({
       <div className="shrink-0 border-b border-zinc-800/60">
         <SidebarBrand onClose={onClose} logoUrl={logoUrl} rail={rail} onToggleRail={onToggleRail} />
         {!rail ? <AccountSwitcher accounts={accounts} activeAccountId={activeAccountId} /> : null}
+        <SidebarUserCard
+          fullName={fullName}
+          role={role}
+          tenantName={tenantName}
+          rail={rail}
+          onSignOut={onSignOut}
+        />
         {!rail && (role === 'pm_delivery' || role === 'dco') ? (
           <div className="mx-3 mb-3 flex items-center gap-2 rounded-md border border-blue-500/20 bg-blue-500/5 px-2.5 py-2">
             <BriefcaseBusiness className="h-3.5 w-3.5 shrink-0 text-blue-400" />
@@ -1429,11 +1415,9 @@ function SidebarPanel({
         accountKey={activeAccountId ?? 'all'}
       />
       <SidebarFooter
-        fullName={fullName}
         role={role}
         pathname={pathname}
         onNavigate={onNavigate}
-        onSignOut={onSignOut}
         rail={rail}
       />
     </div>
@@ -1473,6 +1457,7 @@ export function AgentShell({
   role,
   capabilityOverrides,
   fullName,
+  tenantName,
   userId,
   accounts,
   activeAccountId,
@@ -1483,6 +1468,7 @@ export function AgentShell({
   role: AppRole;
   capabilityOverrides: CapabilityOverride[];
   fullName: string;
+  tenantName?: string | null;
   userId?: string;
   accounts: AccountRecord[];
   activeAccountId?: string | null;
@@ -1573,6 +1559,7 @@ export function AgentShell({
     role,
     capabilityOverrides,
     fullName,
+    tenantName,
     accounts,
     activeAccountId,
     pathname,
@@ -1667,6 +1654,7 @@ export function AgentShell({
             </div>
 
             <div className="flex shrink-0 items-center gap-1">
+              {canRole(role, 'read', 'Wfm') ? <ShiftTopbarChip /> : null}
               <PreferenceControls compact />
               <NotificationBell userId={userId} />
               {onAssistant ? null : <AskAiButton onClick={() => setAgentOpen(true)} />}
@@ -1743,6 +1731,7 @@ export function AgentShell({
           <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[radial-gradient(ellipse_at_top,color-mix(in_srgb,var(--accent)_8%,transparent),transparent_70%)]" aria-hidden />
           <div className="relative mx-auto w-full max-w-[1600px]">
             {canRole(role, 'read', 'Wfm') ? <ShiftBanner /> : null}
+            <PageBreadcrumb />
             {children}
           </div>
         </motion.main>

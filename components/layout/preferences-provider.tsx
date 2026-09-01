@@ -35,7 +35,7 @@ export function PreferencesProvider({
       startTransition(async () => {
         await setPreferences(next);
         if (next.theme) {
-          document.documentElement.classList.remove('dark', 'light');
+          document.documentElement.classList.remove('dark', 'light', 'enterprise');
           document.documentElement.classList.add(next.theme);
         }
         if (next.locale) {

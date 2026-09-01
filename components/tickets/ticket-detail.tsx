@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { ArrowLeft, Paperclip, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { StatusBadge } from '@/components/tickets/status-badge';
+import { PriorityBadge } from '@/components/tickets/priority-badge';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -116,22 +118,6 @@ type GroupOption = {
   tier?: 'l1' | 'l2' | 'l3';
   partyKind?: 'internal' | 'vendor' | 'principal';
   partyName?: string;
-};
-
-const statusTone: Record<TicketStatus, 'info' | 'warning' | 'success' | 'neutral'> = {
-  open: 'info',
-  in_progress: 'warning',
-  waiting: 'info',
-  hold: 'warning',
-  resolved: 'success',
-  closed: 'neutral',
-};
-
-const priorityTone: Record<TicketPriority, 'success' | 'warning' | 'danger' | 'neutral'> = {
-  low: 'success',
-  medium: 'warning',
-  high: 'danger',
-  critical: 'danger',
 };
 
 export function TicketDetail({
@@ -383,8 +369,8 @@ export function TicketDetail({
             {ticket.accountCode || ticket.accountName ? (
               <Badge tone="neutral">{ticket.accountCode ? `${ticket.accountCode} · ${ticket.accountName}` : ticket.accountName}</Badge>
             ) : null}
-            <Badge tone={statusTone[ticket.status]}>{ticket.status.replace('_', ' ')}</Badge>
-            <Badge tone={priorityTone[ticket.priority]}>{ticket.priority}</Badge>
+            <StatusBadge status={ticket.status} type={ticket.type} />
+            <PriorityBadge priority={ticket.priority} showDot />
             {(ticket.childTickets?.length ?? 0) > 0 ? <Badge tone="danger">{t.tickets.majorBadge}</Badge> : null}
             {ticket.parentTicketId ? <Badge tone="neutral">{t.tickets.childBadge}</Badge> : null}
           </div>

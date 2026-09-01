@@ -1,6 +1,6 @@
 'use client';
 
-import { Moon, Sun } from 'lucide-react';
+import { Moon, Sun, Building2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useI18n } from '@/components/layout/preferences-provider';
 import { cn } from '@/lib/utils';
@@ -8,23 +8,34 @@ import type { Locale, Theme } from '@/lib/preferences';
 
 function ThemePreview({ theme }: { theme: Theme }) {
   const dark = theme === 'dark';
+  const enterprise = theme === 'enterprise';
   return (
     <div
       className={cn(
         'overflow-hidden rounded-md border',
-        dark ? 'border-zinc-700 bg-[#09090b]' : 'border-zinc-300 bg-[#f7f7f8]',
+        dark ? 'border-zinc-700 bg-[#09090b]' : enterprise ? 'border-blue-200 bg-[#eef2f7]' : 'border-zinc-300 bg-[#f7f7f8]',
       )}
     >
       <div className="flex h-24">
-        <div className={cn('w-10 border-r', dark ? 'border-zinc-800 bg-[#09090b]' : 'border-zinc-200 bg-white')}>
-          <div className="nova-accent-bar mx-1.5 mt-2 h-2 rounded-sm" />
-          <div className={cn('mx-1.5 mt-1.5 h-1.5 rounded-sm', dark ? 'bg-zinc-800' : 'bg-zinc-200')} />
-          <div className={cn('mx-1.5 mt-1 h-1.5 rounded-sm', dark ? 'bg-zinc-800' : 'bg-zinc-200')} />
+        <div
+          className={cn(
+            'w-10 border-r',
+            dark ? 'border-zinc-800 bg-[#09090b]' : enterprise ? 'border-blue-200 bg-[color-mix(in_srgb,var(--accent)_18%,white)]' : 'border-zinc-200 bg-white',
+          )}
+        >
+          <div className={cn('mx-1.5 mt-2 h-2 rounded-sm', enterprise ? 'bg-[color-mix(in_srgb,var(--accent)_55%,#1e40af)]' : 'nova-accent-bar')} />
+          <div className={cn('mx-1.5 mt-1.5 h-1.5 rounded-sm', dark ? 'bg-zinc-800' : enterprise ? 'bg-blue-100' : 'bg-zinc-200')} />
+          <div className={cn('mx-1.5 mt-1 h-1.5 rounded-sm', dark ? 'bg-zinc-800' : enterprise ? 'bg-blue-50' : 'bg-zinc-200')} />
           <div className="mx-1.5 mt-1 h-1.5 rounded-sm bg-[color-mix(in_srgb,var(--accent)_40%,transparent)]" />
         </div>
         <div className="flex-1 p-2">
-          <div className={cn('h-2 w-16 rounded-sm', dark ? 'bg-zinc-200' : 'bg-zinc-800')} />
-          <div className={cn('mt-2 h-8 rounded-sm border', dark ? 'border-zinc-800 bg-zinc-900' : 'border-zinc-200 bg-white')} />
+          <div className={cn('h-2 w-16 rounded-sm', dark ? 'bg-zinc-200' : enterprise ? 'bg-slate-700' : 'bg-zinc-800')} />
+          <div
+            className={cn(
+              'mt-2 h-8 rounded-sm border',
+              dark ? 'border-zinc-800 bg-zinc-900' : enterprise ? 'border-blue-100 bg-white' : 'border-zinc-200 bg-white',
+            )}
+          />
         </div>
       </div>
     </div>
@@ -37,6 +48,7 @@ export function AppearanceSettings() {
   const themes: Array<{ id: Theme; icon: typeof Moon; name: string; hint: string }> = [
     { id: 'dark', icon: Moon, name: t.appearance.darkName, hint: t.appearance.darkHint },
     { id: 'light', icon: Sun, name: t.appearance.lightName, hint: t.appearance.lightHint },
+    { id: 'enterprise', icon: Building2, name: t.appearance.enterpriseName, hint: t.appearance.enterpriseHint },
   ];
 
   const languages: Array<{ id: Locale; name: string; native: string }> = [
@@ -58,7 +70,7 @@ export function AppearanceSettings() {
             <h2 className="text-sm font-medium text-zinc-50">{t.appearance.themeTitle}</h2>
             <p className="mt-0.5 text-[13px] text-zinc-500">{t.appearance.themeHint}</p>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {themes.map((item) => {
               const active = theme === item.id;
               const Icon = item.icon;

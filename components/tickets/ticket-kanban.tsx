@@ -18,6 +18,8 @@ import { CSS } from '@dnd-kit/utilities';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TypeBadge } from '@/components/tickets/type-badge';
+import { StatusBadge } from '@/components/tickets/status-badge';
+import { PriorityBadge } from '@/components/tickets/priority-badge';
 import { SlaBadge } from '@/components/tickets/sla-badge';
 import { PendingBadge } from '@/components/tickets/pending-badge';
 import { formatRelativeId } from '@/lib/utils/dates';
@@ -59,22 +61,6 @@ const columns: Array<{ key: TicketStatus; label: string }> = [
   { key: 'closed', label: 'Closed' },
 ];
 
-const statusColors: Record<string, string> = {
-  open: 'bg-sky-500/15 text-sky-300',
-  in_progress: 'bg-amber-500/15 text-amber-300',
-  waiting: 'bg-sky-500/15 text-sky-300',
-  hold: 'bg-amber-500/15 text-amber-300',
-  resolved: 'bg-emerald-500/15 text-emerald-300',
-  closed: 'bg-zinc-500/15 text-zinc-300',
-};
-
-const priorityColors: Record<string, string> = {
-  low: 'text-emerald-300',
-  medium: 'text-amber-300',
-  high: 'text-orange-300',
-  critical: 'text-rose-300',
-};
-
 function TicketCard({ ticket, isOverlay }: { ticket: KanbanTicket; isOverlay?: boolean }) {
   const { t } = useI18n();
   return (
@@ -87,15 +73,14 @@ function TicketCard({ ticket, isOverlay }: { ticket: KanbanTicket; isOverlay?: b
         <CardHeader className="pb-2 pt-3">
           <div className="flex items-center justify-between gap-2">
             <CardTitle className="font-mono text-base">{displayTicketNumber(ticket.number, ticket.id)}</CardTitle>
-            <span className={`inline-flex rounded-full px-2 py-1 text-[10px] font-medium ${statusColors[ticket.status]}`}>
-              {localizedStage(t, ticket.type ?? 'incident', ticket.status)}
-            </span>
+            <StatusBadge status={ticket.status} type={ticket.type} />
           </div>
         </CardHeader>
         <CardContent className="space-y-3 pb-3 text-sm text-zinc-300">
           <p className="font-medium text-zinc-50">{ticket.title}</p>
           <div className="flex flex-wrap items-center gap-2">
             <TypeBadge type={ticket.type ?? 'incident'} />
+            <PriorityBadge priority={ticket.priority} showDot />
             {ticket.accountCode || ticket.accountName ? (
               <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-zinc-500">
                 {ticket.accountCode || ticket.accountName}
@@ -104,10 +89,9 @@ function TicketCard({ ticket, isOverlay }: { ticket: KanbanTicket; isOverlay?: b
           </div>
           <div className="flex items-center justify-between text-[11px] text-zinc-400">
             <span>{ticket.requesterName}</span>
-            <span className={priorityColors[ticket.priority] ?? 'text-zinc-300'}>{ticket.priority}</span>
+            <span>{formatRelativeId(ticket.createdAt)}</span>
           </div>
           <div className="flex items-center justify-between text-[11px] text-zinc-500">
-            <span>{formatRelativeId(ticket.createdAt)}</span>
             <span>{ticket.comments.length} comments</span>
           </div>
           <SlaBadge

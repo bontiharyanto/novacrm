@@ -292,3 +292,132 @@ html.light .text-rose-300 {
   background: rgb(var(--zinc-800));
   color: rgb(var(--zinc-50));
 }
+
+/* Enterprise theme — blue-forward ITSM canvas (optional, dark remains default) */
+html.enterprise {
+  color-scheme: light;
+  --background: 214 41% 96%;
+  --foreground: 215 28% 17%;
+  --muted: 214 32% 93%;
+  --muted-foreground: 215 16% 40%;
+  --card: 0 0% 100%;
+  --card-foreground: 215 28% 17%;
+  --border: 214 24% 84%;
+  --primary: 217 91% 53%;
+  --primary-foreground: 210 40% 98%;
+  --zinc-50: 215 28% 17%;
+  --zinc-100: 215 25% 20%;
+  --zinc-200: 215 20% 27%;
+  --zinc-300: 215 16% 35%;
+  --zinc-400: 215 14% 42%;
+  --zinc-500: 215 12% 48%;
+  --zinc-600: 214 18% 62%;
+  --zinc-700: 214 22% 78%;
+  --zinc-800: 214 26% 88%;
+  --zinc-900: 0 0% 100%;
+  --zinc-950: 214 41% 96%;
+  --scroll-thumb: 214 22% 72%;
+}
+
+html.enterprise body {
+  background: rgb(var(--zinc-950));
+  color: rgb(var(--zinc-100));
+}
+
+html.enterprise aside {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--accent) 14%, white) 0%,
+    color-mix(in srgb, var(--accent) 6%, #eef2f7) 120px,
+    #eef2f7 100%
+  );
+  border-color: color-mix(in srgb, var(--accent) 18%, #cbd5e1);
+}
+
+html.enterprise .sidebar-user-card {
+  border-color: color-mix(in srgb, var(--accent) 28%, #cbd5e1);
+  background: color-mix(in srgb, var(--accent) 10%, white);
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.06);
+}
+
+html.enterprise .nova-card {
+  box-shadow: 0 1px 3px rgb(15 23 42 / 0.08);
+}
+
+html.enterprise .nova-surface {
+  background: #fff;
+  border-color: color-mix(in srgb, var(--accent) 12%, #cbd5e1);
+  box-shadow: 0 1px 2px rgb(15 23 42 / 0.05);
+}
+
+html.enterprise .ticket-table-head {
+  background: color-mix(in srgb, var(--accent) 82%, #1e3a5f);
+  color: #f8fafc;
+  border-color: color-mix(in srgb, var(--accent) 70%, #1e3a5f);
+}
+
+html.enterprise .ticket-table-head th {
+  color: #f1f5f9;
+}
+
+html.enterprise .text-blue-200,
+html.enterprise .text-blue-300,
+html.enterprise .text-blue-400 {
+  color: rgb(29 78 216);
+}
+
+html.enterprise .text-sky-400 {
+  color: rgb(3 105 161);
+}
+
+html.enterprise .text-emerald-400,
+html.enterprise .text-emerald-300 {
+  color: rgb(5 150 105);
+}
+
+html.enterprise .text-amber-400,
+html.enterprise .text-amber-300 {
+  color: rgb(217 119 6);
+}
+
+html.enterprise .text-rose-400,
+html.enterprise .text-rose-300 {
+  color: rgb(225 29 72);
+}
+
+html.enterprise header.sticky {
+  background: rgb(238 242 247 / 0.92);
+  border-color: color-mix(in srgb, var(--accent) 12%, #cbd5e1);
+}
+
+html.enterprise .bg-zinc-950\/80,
+html.enterprise .bg-zinc-950\/70,
+html.enterprise .bg-zinc-950\/60 {
+  background-color: rgb(255 255 255 / 0.88);
+}
+
+html.enterprise .bg-zinc-900\/60,
+html.enterprise .bg-zinc-900\/50,
+html.enterprise .bg-zinc-900\/40 {
+  background-color: rgb(255 255 255 / 0.92);
+}
+
+html.enterprise .bg-zinc-900 {
+  background-color: rgb(255 255 255);
+}
+
+html.enterprise .bg-zinc-950 {
+  background-color: rgb(238 242 247);
+}
+
+html.enterprise .border-zinc-800,
+html.enterprise .border-zinc-800\/80,
+html.enterprise .border-zinc-800\/70,
+html.enterprise .border-zinc-800\/60 {
+  border-color: color-mix(in srgb, var(--accent) 10%, #cbd5e1);
+}
+
+html.enterprise .cmdk-item[data-selected='true'] {
+  background: color-mix(in srgb, var(--accent) 12%, white);
+  color: rgb(var(--zinc-50));
+}

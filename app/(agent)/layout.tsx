@@ -41,6 +41,7 @@ export default async function AgentLayout({ children }: { children: React.ReactN
         role={session.profile.role}
         capabilityOverrides={capabilityOverrides}
         fullName={session.profile.fullName}
+        tenantName={tenant?.name}
         userId={session.userId}
         accounts={scope.accounts}
         activeAccountId={scope.account?.id ?? (scope.accounts.length > 0 ? ACCOUNT_ALL : null)}

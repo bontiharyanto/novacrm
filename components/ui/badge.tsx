@@ -2,6 +2,8 @@ import { cn } from '@/lib/utils';
 
 type BadgeTone = 'neutral' | 'info' | 'success' | 'warning' | 'danger';
 
+export type { BadgeTone };
+
 const tones: Record<BadgeTone, string> = {
   neutral: 'border-zinc-700 bg-zinc-800 text-zinc-300',
   info: 'border-sky-500/30 bg-sky-500/15 text-sky-300',
