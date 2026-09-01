@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { formatRelativeId } from '@/lib/utils/dates';
 import { useI18n } from '@/components/layout/preferences-provider';
 import { PortalConsentBanner } from '@/components/portal/portal-consent-banner';
+import { PortalMajorAlert } from '@/components/portal/portal-major-alert';
 import { usePrivacyEnabled } from '@/components/portal/privacy-module';
 import { localizedStage } from '@/lib/i18n/labels';
 import { displayTicketNumber, isTicketType } from '@/lib/tickets/process';
@@ -131,6 +132,8 @@ export function PortalHome({ firstName }: { firstName: string }) {
       </div>
 
       {privacyEnabled ? <PortalConsentBanner variant="home" /> : null}
+
+      <PortalMajorAlert />
 
       {loading ? (
         <div className="grid gap-3 md:grid-cols-3">

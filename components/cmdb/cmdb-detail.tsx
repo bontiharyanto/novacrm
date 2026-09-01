@@ -124,6 +124,9 @@ export function CmdbDetail({ itemId }: { itemId: string }) {
             <CardTitle className="text-sm text-zinc-400">Impact if this CI is down</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <p className="text-[11px] leading-5 text-zinc-500">
+              Directed impact: follows connects/protects downstream and depends_on/uses/runs_on dependents.
+            </p>
             <p className="text-sm text-zinc-400">
               {impactCount === 0
                 ? 'No related CIs or open tickets.'

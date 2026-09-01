@@ -10,6 +10,8 @@ export type SessionProfile = {
   email?: string;
   phone?: string;
   telegramChatId?: string;
+  site?: string;
+  clientIp?: string;
 };
 
 export type AppSession = {
@@ -34,7 +36,7 @@ export async function getSessionProfile(): Promise<AppSession | null> {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('id, tenant_id, role, full_name, email, phone, telegram_chat_id')
+      .select('id, tenant_id, role, full_name, email, phone, telegram_chat_id, site, client_ip')
       .eq('id', user.id)
       .maybeSingle();
 
@@ -52,6 +54,8 @@ export async function getSessionProfile(): Promise<AppSession | null> {
         email: profile.email ?? user.email,
         phone: profile.phone ?? undefined,
         telegramChatId: profile.telegram_chat_id ?? undefined,
+        site: profile.site ?? undefined,
+        clientIp: profile.client_ip ?? undefined,
       },
     };
   } catch {

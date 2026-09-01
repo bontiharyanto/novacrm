@@ -1825,6 +1825,24 @@ where id in (
   and tenant_id = '11111111-1111-1111-1111-111111111111'
   and parent_ticket_id is distinct from '55555555-1001-4001-8001-000000000001';
 
+update public.tickets
+set cmdb_item_id = 'bbbbbbbb-0001-0001-0001-000000000013'
+where id = '55555555-1001-4001-8001-000000000001'
+  and tenant_id = '11111111-1111-1111-1111-111111111111'
+  and cmdb_item_id is distinct from 'bbbbbbbb-0001-0001-0001-000000000013';
+
+update public.profiles
+set site = 'Jakarta HQ'
+where id = '44444444-4444-4444-4444-444444444444'
+  and tenant_id = '11111111-1111-1111-1111-111111111111'
+  and site is distinct from 'Jakarta HQ';
+
+update public.profiles
+set client_ip = '10.20.3.41'
+where id = '44444444-4444-4444-4444-444444444444'
+  and tenant_id = '11111111-1111-1111-1111-111111111111'
+  and client_ip is distinct from '10.20.3.41';
+
 insert into public.ticket_comments (
   id, tenant_id, ticket_id, author_id, created_by, message, kind, meta
 )

@@ -1,5 +1,7 @@
 'use server';
 
+import { buildCiGraph, type CiGraphNode } from '@/lib/cmdb/graph';
+import { expandCiImpact } from '@/lib/cmdb/impact-rules';
 import { getSessionProfile } from '@/lib/auth/session';
 import { canRole } from '@/lib/rbac/ability';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
@@ -33,45 +35,12 @@ export async function getCmdbImpact(itemId: string): Promise<CmdbImpact> {
     .eq('tenant_id', session.profile.tenantId)
     .eq('account_id', source.account_id);
 
-  const items = (data ?? []) as Array<{
-    id: string;
-    name: string;
-    type: string;
-    asset_id?: string | null;
-    relations?: Array<{ targetId: string; type: string }> | null;
-  }>;
+  const items = (data ?? []) as CiGraphNode[];
 
-  const byId = new Map(items.map((item) => [item.id, item]));
+  const { byId, inboundEdges, outboundEdges } = buildCiGraph(items);
   if (!byId.has(itemId)) return empty;
 
-  const inbound = new Map<string, string[]>();
-  for (const item of items) {
-    for (const relation of item.relations ?? []) {
-      const list = inbound.get(relation.targetId) ?? [];
-      list.push(item.id);
-      inbound.set(relation.targetId, list);
-    }
-  }
-
-  const seen = new Set<string>([itemId]);
-  const queue = [itemId];
-  while (queue.length > 0) {
-    const current = queue.shift()!;
-    const node = byId.get(current);
-    for (const relation of node?.relations ?? []) {
-      if (!seen.has(relation.targetId) && byId.has(relation.targetId)) {
-        seen.add(relation.targetId);
-        queue.push(relation.targetId);
-      }
-    }
-    for (const sourceId of inbound.get(current) ?? []) {
-      if (!seen.has(sourceId)) {
-        seen.add(sourceId);
-        queue.push(sourceId);
-      }
-    }
-  }
-
+  const seen = expandCiImpact(itemId, byId, outboundEdges, inboundEdges);
   const related = Array.from(seen)
     .filter((id) => id !== itemId)
     .map((id) => byId.get(id)!);

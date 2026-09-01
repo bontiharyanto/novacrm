@@ -28,6 +28,7 @@ import type { AccountRecord } from '@/lib/accounts/schema';
 import { cn } from '@/lib/utils';
 import { useI18n } from '@/components/layout/preferences-provider';
 import { toastError, toastSuccess } from '@/components/ui/toast';
+import { PortalMajorAlert } from '@/components/portal/portal-major-alert';
 
 type AgentOption = { id: string; fullName: string };
 type AssetOption = { id: string; name: string; assetTag: string; type: string };
@@ -79,6 +80,8 @@ export function TicketCreate({
   const [catalogItems, setCatalogItems] = useState<CatalogItem[]>([]);
   const [catalogItemId, setCatalogItemId] = useState('');
   const [catalogAnswers, setCatalogAnswers] = useState<Record<string, string | boolean>>({});
+  const [incidentLocation, setIncidentLocation] = useState('');
+  const [linkMajorId, setLinkMajorId] = useState<string | null>(null);
 
   const resolvedTitle = title.trim() || htmlToText(description).slice(0, 200);
   const backHref = ticketType ? `/tickets?type=${ticketType}` : '/tickets';
@@ -207,7 +210,11 @@ export function TicketCreate({
                 catalogAnswers[variable.key] == null ? '' : String(catalogAnswers[variable.key]),
               ]),
             )
-          : undefined,
+          : incidentLocation.trim()
+            ? { location: incidentLocation.trim() }
+            : undefined,
+        parentTicketId:
+          (ticketType === 'incident' || ticketType === 'request') && linkMajorId ? linkMajorId : undefined,
       }),
     });
 
@@ -407,6 +414,28 @@ export function TicketCreate({
                   <p className="text-[11px] text-zinc-500">{t.tickets.backoutPlanHint}</p>
                   <CommentEditor value={backoutPlan} onChange={setBackoutPlan} minHeightClass="min-h-32" />
                 </div>
+              </div>
+            ) : null}
+            {(ticketType === 'incident' || ticketType === 'request') && accountId ? (
+              <div className="mt-5 space-y-3 border-t border-zinc-800 pt-5">
+                <div className="space-y-1.5">
+                  <Label htmlFor="incidentLocation">{t.tickets.incidentLocation}</Label>
+                  <Input
+                    id="incidentLocation"
+                    value={incidentLocation}
+                    onChange={(event) => setIncidentLocation(event.target.value)}
+                    placeholder={t.tickets.incidentLocationHint}
+                  />
+                </div>
+                {ticketType === 'incident' ? (
+                  <PortalMajorAlert
+                    accountId={accountId}
+                    location={incidentLocation.trim().length >= 3 ? incidentLocation : undefined}
+                    selectable
+                    selectedId={linkMajorId ?? undefined}
+                    onSelect={setLinkMajorId}
+                  />
+                ) : null}
               </div>
             ) : null}
             {error ? <p className="mt-3 text-sm text-rose-400">{error}</p> : null}

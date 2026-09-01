@@ -63,6 +63,8 @@ export type TicketRecord = {
   assetName?: string;
   assetTag?: string;
   assetType?: string;
+  cmdbItemId?: string;
+  cmdbItemName?: string;
   category?: string;
   catalogItemId?: string;
   catalogAnswers?: Record<string, string>;
@@ -144,6 +146,7 @@ type TicketRow = {
   ola_started_at?: string | null;
   uc_id?: string | null;
   asset_id?: string | null;
+  cmdb_item_id?: string | null;
   category?: string | null;
   catalog_item_id?: string | null;
   catalog_answers?: Record<string, string> | null;
@@ -239,6 +242,8 @@ export function mapTicketRow(row: TicketRow): TicketRecord {
     assetName: undefined,
     assetTag: undefined,
     assetType: undefined,
+    cmdbItemId: row.cmdb_item_id ?? undefined,
+    cmdbItemName: undefined,
     category: row.category ?? undefined,
     catalogItemId: row.catalog_item_id ?? undefined,
     catalogAnswers: row.catalog_answers ?? undefined,
@@ -298,6 +303,15 @@ export function withAssets(
       assetTag: asset.asset_tag,
       assetType: asset.type,
     };
+  });
+}
+
+export function withCmdbItems(tickets: TicketRecord[], cis: Array<{ id: string; name: string }>) {
+  const byId = new Map(cis.map((ci) => [ci.id, ci]));
+  return tickets.map((ticket) => {
+    const ci = ticket.cmdbItemId ? byId.get(ticket.cmdbItemId) : undefined;
+    if (!ci) return ticket;
+    return { ...ticket, cmdbItemName: ci.name };
   });
 }
 

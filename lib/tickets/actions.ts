@@ -21,6 +21,7 @@ import {
   textToDescription,
   withAccounts,
   withAssets,
+  withCmdbItems,
   withContracts,
   withGroups,
   type TicketRecord,
@@ -31,6 +32,7 @@ import { applyTicketSlaChange, snapshotSla } from '@/lib/sla/engine';
 import { assertTicketQuota } from '@/lib/tenants/meter';
 import { snapshotOla } from '@/lib/ola/engine';
 import { recordTicketAudit, recordTicketAuditDiff } from '@/lib/tickets/audit';
+import { maybeNotifyMajorImpact } from '@/lib/tickets/major-notify';
 import { defaultPendingReason, isPauseStatus } from '@/lib/tickets/pending';
 import {
   dispatchTicket,
@@ -52,23 +54,34 @@ function publicTicketWriteError(role: string, message?: string) {
 }
 
 async function hydrateTicketAssets(client: SupabaseClient, tickets: TicketRecord[]) {
-  const ids = tickets.map((ticket) => ticket.assetId).filter((id): id is string => Boolean(id));
+  const assetIds = tickets.map((ticket) => ticket.assetId).filter((id): id is string => Boolean(id));
+  const cmdbIds = tickets.map((ticket) => ticket.cmdbItemId).filter((id): id is string => Boolean(id));
   const withAssetRows =
-    ids.length === 0
+    assetIds.length === 0
       ? tickets
-      : withAssets(tickets, ((await client.from('assets').select('id, name, asset_tag, type').in('id', ids)).data ?? []) as Array<{
+      : withAssets(tickets, ((await client.from('assets').select('id, name, asset_tag, type').in('id', assetIds)).data ?? []) as Array<{
           id: string;
           name: string;
           asset_tag?: string;
           type?: string;
         }>);
+  const withCiRows =
+    cmdbIds.length === 0
+      ? withAssetRows
+      : withCmdbItems(
+          withAssetRows,
+          ((await client.from('cmdb_items').select('id, name').in('id', cmdbIds)).data ?? []) as Array<{
+            id: string;
+            name: string;
+          }>,
+        );
 
-  const groupIds = withAssetRows.map((ticket) => ticket.groupId).filter((id): id is string => Boolean(id));
+  const groupIds = withCiRows.map((ticket) => ticket.groupId).filter((id): id is string => Boolean(id));
   const grouped =
     groupIds.length === 0
-      ? withAssetRows
+      ? withCiRows
       : withGroups(
-          withAssetRows,
+          withCiRows,
           (
             await client
               .from('assignment_groups')
@@ -303,6 +316,27 @@ export async function createTicket(input: unknown) {
     priority: parsed.priority,
   });
 
+  let parentTicketId: string | null = null;
+  if (parsed.parentTicketId && (parsed.type === 'incident' || parsed.type === 'request')) {
+    if (parsed.parentTicketId) {
+      const { data: parent } = await supabase
+        .from('tickets')
+        .select('id, type, parent_ticket_id')
+        .eq('id', parsed.parentTicketId)
+        .eq('tenant_id', session.profile.tenantId)
+        .maybeSingle();
+      if (!parent || parent.type !== 'incident') {
+        return { data: null, error: 'Parent must be an incident' };
+      }
+      if (parent.parent_ticket_id) {
+        return { data: null, error: 'Parent ticket cannot itself be a child' };
+      }
+      parentTicketId = parsed.parentTicketId;
+    }
+  }
+
+  const catalogAnswers = parsed.catalogAnswers ?? {};
+
   const { data, error } = await supabase
     .from('tickets')
     .insert({
@@ -321,10 +355,12 @@ export async function createTicket(input: unknown) {
       requester_phone: normalizePhone(parsed.requesterPhone) || session.profile.phone,
       ...assigneePatch,
       asset_id: parsed.assetId ?? null,
+      cmdb_item_id: parsed.cmdbItemId ?? null,
       group_id: groupId,
       category: parsed.category,
       catalog_item_id: parsed.catalogItemId ?? null,
-      catalog_answers: parsed.catalogAnswers ?? {},
+      catalog_answers: catalogAnswers,
+      parent_ticket_id: parentTicketId,
       change_type: parsed.type === 'change' ? parsed.changeType ?? 'normal' : null,
       risk_level: parsed.type === 'change' ? parsed.riskLevel ?? parsed.priority : null,
       planned_start: parsed.plannedStart || null,
@@ -422,6 +458,7 @@ export async function createInboundTicket(tenantId: string, input: unknown) {
       assignee_chat_id: parsed.assigneeChatId,
       category: parsed.category ?? 'inbound',
       asset_id: parsed.assetId ?? null,
+      cmdb_item_id: parsed.cmdbItemId ?? null,
       group_id: groupId,
       catalog_item_id: parsed.catalogItemId ?? null,
       catalog_answers: parsed.catalogAnswers ?? {},
@@ -613,6 +650,7 @@ export async function updateTicket(ticketId: string, input: unknown) {
       type: nextType,
       priority: parsed.priority ?? existing.data.priority,
       asset_id: parsed.assetId === undefined ? existing.data.assetId ?? null : parsed.assetId,
+      cmdb_item_id: parsed.cmdbItemId === undefined ? existing.data.cmdbItemId ?? null : parsed.cmdbItemId,
       group_id: nextGroupId,
       ...olaPatch,
       pending_reason: pendingReason,
@@ -739,6 +777,15 @@ export async function updateTicket(ticketId: string, input: unknown) {
   await maybeRecordUcCredit(supabase, hydrated, session.userId);
   const assigneeChanged = parsed.assigneeId !== undefined && nextAssignee !== previousAssignee;
   const statusChanged = Boolean(parsed.status && parsed.status !== previousStatus);
+  await maybeNotifyMajorImpact({
+    existing: existing.data,
+    updated: hydrated,
+    parsed: {
+      cmdbItemId: parsed.cmdbItemId,
+      status: parsed.status,
+    },
+    actorId: session.userId,
+  });
   await afterTicketMutation(
     assigneeChanged && !statusChanged ? 'ticket.assign' : 'ticket.status_change',
     hydrated,

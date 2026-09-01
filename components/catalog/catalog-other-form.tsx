@@ -15,6 +15,7 @@ import { formatIssueFromForm, SYMPTOM_CHIPS } from '@/lib/assistant/portal-detai
 import { emitTicketsChanged } from '@/lib/tickets/events';
 import { cn } from '@/lib/utils';
 import { PdpConsentField } from '@/components/shared/pdp-consent-field';
+import { PortalMajorAlert } from '@/components/portal/portal-major-alert';
 import { usePrivacyEnabled } from '@/components/portal/privacy-module';
 
 type Proposal = { type: string; title: string; description: string };
@@ -51,6 +52,7 @@ export function CatalogOtherForm({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [consented, setConsented] = useState(false);
+  const [linkMajorId, setLinkMajorId] = useState<string | null>(null);
 
   const complete =
     title.trim().length >= 8 &&
@@ -70,6 +72,8 @@ export function CatalogOtherForm({
     title: string;
     description: string;
     contact?: string;
+    parentTicketId?: string | null;
+    catalogAnswers?: Record<string, string>;
   }) {
     const response = await fetch('/api/tickets', {
       method: 'POST',
@@ -81,6 +85,8 @@ export function CatalogOtherForm({
         status: 'open',
         priority: input.type === 'incident' ? 'high' : 'medium',
         requesterPhone: input.contact?.trim() || undefined,
+        parentTicketId: input.parentTicketId ?? undefined,
+        catalogAnswers: input.catalogAnswers,
       }),
     });
     const payload = await response.json().catch(() => ({}));
@@ -103,6 +109,12 @@ export function CatalogOtherForm({
       title: title.trim(),
       description: issue,
       contact,
+      parentTicketId: isIncident ? linkMajorId : null,
+      catalogAnswers: {
+        location: location.trim(),
+        impact: impact.trim(),
+        contact: contact.trim(),
+      },
     });
     setBusy(false);
     if (!id) return;
@@ -161,6 +173,12 @@ export function CatalogOtherForm({
       title: proposal.title,
       description: proposal.description || proposal.title,
       contact,
+      parentTicketId: kind === 'incident' ? linkMajorId : null,
+      catalogAnswers: {
+        location: location.trim(),
+        impact: impact.trim(),
+        contact: contact.trim(),
+      },
     });
     setBusy(false);
     if (!id) return;
@@ -209,6 +227,14 @@ export function CatalogOtherForm({
         </div>
       ) : (
         <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+          {isIncident ? (
+            <PortalMajorAlert
+              location={location.trim().length >= 3 ? location : undefined}
+              selectable
+              selectedId={linkMajorId ?? undefined}
+              onSelect={setLinkMajorId}
+            />
+          ) : null}
           {showTypeToggle ? (
             <div className="space-y-2">
               <Label>{t.portal.ticketKind}</Label>

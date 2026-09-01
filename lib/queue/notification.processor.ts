@@ -32,6 +32,9 @@ async function loadActiveChannels(tenantId: string): Promise<NotificationChannel
 }
 
 function emailRecipients(payload: NotificationJobPayload) {
+  if (payload.event === 'major.impact') {
+    return [payload.requesterEmail].filter((value): value is string => Boolean(value));
+  }
   const emails =
     payload.event === 'ticket.assign'
       ? [payload.assigneeEmail]
@@ -87,15 +90,18 @@ export async function processNotificationJob(payload: NotificationJobPayload) {
         const recipients = emailRecipients(payload);
         if (recipients.length === 0) continue;
 
-        const subject = buildTicketEmailSubject({
-          event,
-          number: displayNumber,
-          title: displayTitle,
-          status: displayStatus,
-          type,
-          locale,
-          copy,
-        });
+        const subject =
+          event === 'major.impact'
+            ? `[GAMAS] ${displayNumber} — ${displayTitle}`
+            : buildTicketEmailSubject({
+                event,
+                number: displayNumber,
+                title: displayTitle,
+                status: displayStatus,
+                type,
+                locale,
+                copy,
+              });
         const resolved = displayStatus === 'resolved' || displayStatus === 'closed';
 
         for (const recipient of recipients) {
@@ -178,9 +184,12 @@ export async function processNotificationJob(payload: NotificationJobPayload) {
         const apiKey = channel.config.apiKey || process.env.FONNTE_API_KEY || process.env.WHATSAPP_API_KEY;
         const targets = new Set<string>();
         if (assigneePhone) targets.add(String(assigneePhone));
-        if (event !== 'ticket.assign') {
+        if (event !== 'ticket.assign' && event !== 'major.impact') {
           if (requesterPhone) targets.add(String(requesterPhone));
           if (channel.config.target) targets.add(String(channel.config.target));
+        }
+        if (event === 'major.impact' && requesterPhone) {
+          targets.add(String(requesterPhone));
         }
         if (!apiKey || targets.size === 0) continue;
         const detailUrl = ticketId
@@ -190,12 +199,14 @@ export async function processNotificationJob(payload: NotificationJobPayload) {
           : publicUrl;
         const text =
           message ??
-          renderTemplate(copy.whatsappFallback, {
-            name: event === 'ticket.assign' ? assigneeName : requesterName,
-            number: displayNumber,
-            status: displayStatus,
-            url: detailUrl,
-          });
+          (event === 'major.impact'
+            ? `${displayTitle}\n${detailUrl}`
+            : renderTemplate(copy.whatsappFallback, {
+                name: event === 'ticket.assign' ? assigneeName : requesterName,
+                number: displayNumber,
+                status: displayStatus,
+                url: detailUrl,
+              }));
         for (const target of Array.from(targets)) {
           const result = await sendWhatsApp(target, text, { apiKey });
           results.push({ channel: 'whatsapp', ok: Boolean(result.ok), error: result.error });

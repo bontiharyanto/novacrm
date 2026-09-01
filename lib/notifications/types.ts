@@ -16,7 +16,8 @@ export type TicketNotificationEvent =
   | 'ticket.create'
   | 'ticket.status_change'
   | 'ticket.comment_add'
-  | 'ticket.assign';
+  | 'ticket.assign'
+  | 'major.impact';
 
 export type NotificationLogStatus = 'queued' | 'sent' | 'failed';
 

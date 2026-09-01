@@ -75,6 +75,8 @@ type TicketItem = {
   assetId?: string;
   assetName?: string;
   assetTag?: string;
+  cmdbItemId?: string;
+  cmdbItemName?: string;
   accountId?: string;
   accountName?: string;
   accountCode?: string;
@@ -106,6 +108,7 @@ type AgentOption = {
   openTickets?: number;
 };
 type AssetOption = { id: string; name: string; assetTag: string; type: string };
+type CmdbOption = { id: string; name: string; type: string };
 type GroupOption = {
   id: string;
   name: string;
@@ -150,6 +153,7 @@ export function TicketDetail({
   const [ticket, setTicket] = useState<TicketItem | null>(null);
   const [agents, setAgents] = useState<AgentOption[]>([]);
   const [assets, setAssets] = useState<AssetOption[]>([]);
+  const [cmdbItems, setCmdbItems] = useState<CmdbOption[]>([]);
   const [groups, setGroups] = useState<GroupOption[]>([]);
   const [status, setStatus] = useState<TicketStatus>('open');
   const [assigneeId, setAssigneeId] = useState('');
@@ -158,6 +162,7 @@ export function TicketDetail({
   const [pendingReason, setPendingReason] = useState<TicketPendingReason>('vendor');
   const [pendingNote, setPendingNote] = useState('');
   const [linkedAssetId, setLinkedAssetId] = useState('');
+  const [linkedCmdbItemId, setLinkedCmdbItemId] = useState('');
   const [ticketType, setTicketType] = useState<TicketType>('incident');
   const [comment, setComment] = useState('');
   const [editorKey, setEditorKey] = useState(0);
@@ -186,6 +191,7 @@ export function TicketDetail({
       setAssigneeId(nextTicket.assigneeId ?? '');
       setGroupId(nextTicket.groupId ?? '');
       setLinkedAssetId(nextTicket.assetId ?? '');
+      setLinkedCmdbItemId(nextTicket.cmdbItemId ?? '');
       setTicketType(isTicketType(nextTicket.type) ? nextTicket.type : 'incident');
       const nextType = isTicketType(nextTicket.type) ? nextTicket.type : 'incident';
       setPendingReason(nextTicket.pendingReason ?? defaultPendingReason(nextTicket.status, nextType) ?? 'vendor');
@@ -206,12 +212,20 @@ export function TicketDetail({
     const query = accountId ? `?accountId=${encodeURIComponent(accountId)}` : '';
     if (!accountId) {
       setAssets([]);
+      setCmdbItems([]);
       setGroups([]);
     } else {
       void fetch(`/api/assets${query}`)
         .then((response) => response.json())
         .then((payload) => setAssets(payload.data ?? []))
         .catch(() => setAssets([]));
+      void fetch('/api/cmdb')
+        .then((response) => response.json())
+        .then((payload) => {
+          const rows = (payload.data ?? []) as Array<{ id: string; name: string; type: string; accountId?: string }>;
+          setCmdbItems(rows.filter((row) => !row.accountId || row.accountId === accountId));
+        })
+        .catch(() => setCmdbItems([]));
       void fetch(`/api/org/groups${query}`)
         .then((response) => response.json())
         .then((payload) => setGroups(payload.data ?? []))
@@ -754,6 +768,39 @@ export function TicketDetail({
                 ) : null}
               </div>
             </div>
+            {(type === 'incident') ? (
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">{t.tickets.majorRootCi}</p>
+                <p className="mt-0.5 text-[11px] leading-5 text-zinc-500">{t.tickets.majorRootCiHint}</p>
+                <Select
+                  className="mt-1"
+                  value={linkedCmdbItemId}
+                  disabled={!canEditTicket}
+                  onChange={(event) => setLinkedCmdbItemId(event.target.value)}
+                >
+                  <option value="">{t.tickets.none}</option>
+                  {cmdbItems.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name} · {item.type}
+                    </option>
+                  ))}
+                </Select>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="mt-2 w-full"
+                  onClick={() => void patchTicket({ cmdbItemId: linkedCmdbItemId || null })}
+                  disabled={isSaving || !canEditTicket}
+                >
+                  {t.tickets.saveMajorRootCi}
+                </Button>
+                {ticket.cmdbItemId ? (
+                  <Link href={`/cmdb/${ticket.cmdbItemId}`} className="mt-2 inline-block text-xs text-blue-300 hover:text-blue-200">
+                    CMDB
+                  </Link>
+                ) : null}
+              </div>
+            ) : null}
             <div>
               <p className="text-[11px] uppercase tracking-[0.14em] text-zinc-500">{t.tickets.category}</p>
               <p className="mt-1 text-zinc-200">{ticket.category || '—'}</p>

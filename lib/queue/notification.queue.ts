@@ -22,6 +22,13 @@ function getNotificationQueue() {
 }
 
 export function buildNotificationJobId(payload: NotificationJobPayload) {
+  if (payload.event === 'major.impact') {
+    const digest = createHash('sha1')
+      .update(`${payload.requesterEmail ?? ''}:${payload.requesterPhone ?? ''}:${payload.status ?? ''}`)
+      .digest('hex')
+      .slice(0, 12);
+    return `notify:major:${payload.ticketId}:${digest}`;
+  }
   if (payload.event === 'ticket.create') {
     return `notify:create:${payload.ticketId}`;
   }
