@@ -27,25 +27,25 @@ NovaCRM mengelola **empat proses ITSM** dalam satu mesin tiket:
 
 ```mermaid
 flowchart TB
-  subgraph Masuk["Cara tiket masuk"]
-    P[Portal katalog / bebas]
-    D[Desk agent]
-    I[Inbound WA / Telegram / Email / Alert]
+  subgraph masuk["Cara tiket masuk"]
+    P["Portal katalog atau bebas"]
+    D["Desk agent"]
+    I["Inbound WA, Telegram, Email, Alert"]
   end
 
-  subgraph Mesin["Mesin tiket NovaCRM"]
+  subgraph mesin["Mesin tiket NovaCRM"]
     T[(Ticket)]
-    SLA[SLA / OLA]
-    WFM[WFM auto-assign]
+    SLA["SLA dan OLA"]
+    WFM["WFM auto-assign"]
     WF[Workflow]
     N[Notifikasi]
   end
 
-  subgraph Keluar["Penutupan & nilai"]
+  subgraph keluar["Penutupan dan nilai"]
     R[Resolved]
     C[Closed]
-    CSAT[CSAT portal]
-    KB[Knowledge article]
+    CSAT["CSAT portal"]
+    KB["Knowledge article"]
   end
 
   P --> T
@@ -89,15 +89,15 @@ Status teknis sama di database; label UI berbeda per jenis proses.
 sequenceDiagram
   participant U as Customer
   participant P as Portal
-  participant API as API / Supabase
+  participant API as API Supabase
   participant N as Notifikasi
 
-  U->>P: Login /portal
-  P->>API: Auth + profil tenant
-  alt Password kedaluwarsa (30 hari)
+  U->>P: Login portal
+  P->>API: Auth dan profil tenant
+  alt Password kedaluwarsa 30 hari
     P-->>U: Halaman ganti password wajib
   else Normal
-    P-->>U: My tickets + banner GAMAS (jika terdampak)
+    P-->>U: My tickets dan banner GAMAS
   end
 ```
 
@@ -113,14 +113,14 @@ sequenceDiagram
 
 ```mermaid
 flowchart LR
-  A[/portal/catalog] --> B[Pilih item]
-  B --> C[/portal/catalog/id]
+  A["Buka portal catalog"] --> B[Pilih item]
+  B --> C["Isi form catalog"]
   C --> D[Isi variabel]
   D --> E{GAMAS aktif?}
   E -->|Ya| F[Centang tautkan ke major]
   E -->|Tidak| G[Submit]
   F --> G
-  G --> H[/portal/id]
+  G --> H["Detail tiket portal"]
 ```
 
 | Langkah | Detail |
@@ -160,10 +160,10 @@ stateDiagram-v2
   InProgress --> Waiting: Butuh info customer
   Waiting --> InProgress: Customer balas
   InProgress --> Resolved: Solusi diterapkan
-  Resolved --> Closed: Verifikasi / kebijakan
+  Resolved --> Closed: Verifikasi atau kebijakan
   Resolved --> CSAT: Portal meminta rating
   Closed --> CSAT: Portal meminta rating
-  CSAT --> [*]: 1-5 bintang
+  CSAT --> [*]: Rating 1 sampai 5
 ```
 
 | Aturan CSAT | Perilaku |
@@ -184,11 +184,11 @@ Tab **Privacy** muncul jika admin mengaktifkan. Customer bisa ajukan DSAR (akses
 
 ```mermaid
 flowchart TD
-  A[Login /dashboard] --> B[Pilih Account switcher]
+  A["Login dashboard"] --> B[Pilih Account switcher]
   B --> C{Ada shift hari ini?}
-  C -->|Ya| D[Clock in → Tersedia]
+  C -->|Ya| D["Clock in, Tersedia"]
   C -->|Tidak| E[Offline default]
-  D --> F[/tickets + filter antrian]
+  D --> F["Buka tickets, filter antrian"]
 ```
 
 | Presence | Auto-assign tiket baru | SLA clock |
@@ -231,24 +231,24 @@ flowchart TD
 
 ```mermaid
 flowchart TB
-  subgraph Kiri["Panel kiri — Activity"]
+  subgraph kiri["Panel kiri Activity"]
     C1[Komentar]
     C2[Lampiran MinIO]
     C3[Visit report]
     C4[Audit log]
   end
 
-  subgraph Kanan["Panel kanan — Properties"]
-    P1[Status + pending reason]
-    P2[Assign / Escalate]
-    P3[SLA / OLA badge]
-    P4[Asset / Root CI]
-    P5[Major / RCA panel]
+  subgraph kanan["Panel kanan Properties"]
+    P1["Status dan pending reason"]
+    P2["Assign atau Escalate"]
+    P3["SLA dan OLA badge"]
+    P4["Asset dan Root CI"]
+    P5["Major atau RCA panel"]
     P6[Tasks tab]
   end
 
-  T[Ticket detail] --> Kiri
-  T --> Kanan
+  T["Ticket detail"] --> C1
+  T --> P1
 ```
 
 | Aksi | Kapan dipakai | Efek SLA |
@@ -270,8 +270,8 @@ flowchart TB
 
 ```mermaid
 stateDiagram-v2
-  [*] --> New: Create / inbound
-  New --> InProgress: Assign + kerjakan
+  [*] --> New
+  New --> InProgress: Assign dan kerjakan
   InProgress --> Waiting: Butuh customer
   InProgress --> OnHold: Tunggu vendor
   Waiting --> InProgress: Info diterima
@@ -327,12 +327,12 @@ flowchart LR
 
 ```mermaid
 flowchart TB
-  M[Buat INC induk outage] --> CI[Set Root CI di CMDB]
-  CI --> N[Notifikasi major.impact ke user terdampak]
-  N --> B[Portal banner + auto-suggest anak]
-  M --> L[Tautkan anak INC/RITM]
+  M["Buat INC induk outage"] --> CI["Set Root CI di CMDB"]
+  CI --> N["Notifikasi major impact"]
+  N --> B["Portal banner dan auto-suggest anak"]
+  M --> L["Tautkan anak INC atau RITM"]
   L --> W[Kerjakan semua anak]
-  W --> R[Resolve induk + centang selesaikan anak]
+  W --> R["Resolve induk dan selesaikan anak"]
 ```
 
 | Langkah | UI | Aturan |
@@ -393,22 +393,22 @@ Tidak mengubah SLA matrix atau workflow — itu admin.
 
 ```mermaid
 flowchart LR
-  subgraph Setup["Setup sebelum go-live"]
-    A1[SLA matrix / UC]
+  subgraph setup["Setup sebelum go-live"]
+    A1["SLA matrix dan UC"]
     A2[Catalog items]
     A3[Assignment groups]
     A4[Notification channels]
     A5[Workflow rules]
   end
 
-  subgraph Operasi["Operasi berjalan"]
+  subgraph operasi["Operasi berjalan"]
     O1[Templates notifikasi]
     O2[Import CSV tiket]
     O3[Portal privacy]
     O4[Integrasi plugin]
   end
 
-  Setup --> Operasi
+  setup --> operasi
 ```
 
 | Area | Rute | Yang dikonfigurasi |
@@ -440,15 +440,15 @@ flowchart LR
 sequenceDiagram
   participant Ch as Channel
   participant WH as Webhook
-  participant Ing as ingest.ts
+  participant Ing as Ingest
   participant T as Ticket
   participant WF as Workflow
 
-  Ch->>WH: Pesan / alert
-  WH->>Ing: Parse + dedup 24h
-  Ing->>T: createInboundTicket()
-  T->>WF: inbound.message / alert.received
-  WF-->>Ch: Balasan nomor tiket (WA)
+  Ch->>WH: Pesan atau alert
+  WH->>Ing: Parse dan dedup 24 jam
+  Ing->>T: createInboundTicket
+  T->>WF: inbound message atau alert received
+  WF-->>Ch: Balasan nomor tiket WA
 ```
 
 | Channel | Endpoint | Perilaku |
@@ -515,12 +515,12 @@ Docs: [task-activities.md](user-guide/task-activities.md) · [delivery-process.m
 
 ```mermaid
 flowchart TB
-  A[Asset ITAM] -->|asset_id| T[Ticket]
-  C[CMDB CI] -->|cmdb_item_id Root CI| T
+  A[Asset ITAM] -->|"asset_id"| T[Ticket]
+  C[CMDB CI] -->|"cmdb_item_id Root CI"| T
   C --> G[Graf relasi]
   G --> I[Impact analysis]
   I --> P[Portal banner GAMAS]
-  I --> N[Notifikasi major.impact]
+  I --> N["Notifikasi major impact"]
 ```
 
 | Link | Field | Siapa set | Untuk apa |
