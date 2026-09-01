@@ -189,7 +189,7 @@ export function WfmShifts({
 
   return (
     <div className="space-y-6 p-6">
-      <WfmNav />
+      <WfmNav canManageWfm={canEdit} />
       <p className="text-sm text-zinc-500">{t.wfm.shiftsHint}</p>
       <p className="text-xs text-amber-400/90">{t.wfm.shiftHoursLive}</p>
 

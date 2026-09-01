@@ -32,7 +32,7 @@ export function WfmSkills({
   return (
     <div className="grid min-h-[calc(100vh-3.5rem)] lg:grid-cols-[minmax(0,1fr)_320px]">
       <div className="space-y-6 p-6">
-        <WfmNav />
+        <WfmNav canManageWfm={canEdit} />
         <div className="overflow-hidden rounded-xl border border-zinc-800">
           <table className="w-full text-left text-sm">
             <thead className="border-b border-zinc-800 bg-zinc-950 text-[11px] uppercase tracking-[0.12em] text-zinc-500">

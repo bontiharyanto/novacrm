@@ -21,6 +21,7 @@ import {
   History,
   CalendarClock,
   Gauge,
+  Inbox,
   LayoutDashboard,
   LayoutGrid,
   LogOut,
@@ -64,7 +65,15 @@ import { NotificationBell } from '@/components/layout/notification-bell';
 import { IdleSessionGuard } from '@/components/layout/idle-session-guard';
 import { BrandWelcome } from '@/components/brand/brand-welcome';
 import { NovaWordmark, BrandMark } from '@/components/brand/nova-mark';
-import { NAV_PINS_COOKIE, parseNavPins, serializeNavPins, type NavPin } from '@/lib/nav/pins';
+import { NAV_PINS_COOKIE, defaultNavPinsForRole, parseNavPins, serializeNavPins, type NavPin } from '@/lib/nav/pins';
+import {
+  defaultNavCollapseForRole,
+  normalizeNavCollapseCookie,
+  type NavFolderId,
+  type NavSectionId,
+} from '@/lib/nav/defaults';
+import { WFM_SIDEBAR_LABEL_KEYS, wfmNavTabsForRole } from '@/lib/wfm/nav-config';
+import { showsDeliveryNav } from '@/lib/nav/delivery-nav';
 import type { QueueCounts } from '@/lib/tickets/queue-counts-types';
 import { useRealtimeTable } from '@/lib/supabase/realtime';
 import { cn } from '@/lib/utils';
@@ -81,10 +90,11 @@ type ProcessItem = {
   labelKey: NavKey;
   icon: typeof Ticket;
   badgeKey?: keyof QueueCounts;
+  alertBadgeKey?: keyof QueueCounts;
   subject: CapabilitySubject;
 };
-type SectionId = 'overview' | 'serviceDesk' | 'configuration' | 'platform' | 'favorites';
-type FolderId = 'people' | 'inventory';
+type SectionId = NavSectionId;
+type FolderId = NavFolderId;
 
 function readCookie(name: string) {
   if (typeof document === 'undefined') return null;
@@ -104,8 +114,8 @@ function readCollapsedSections(): Partial<Record<SectionId, boolean>> {
   try {
     const raw = readCookie(NAV_COLLAPSE_COOKIE);
     if (!raw) return {};
-    const parsed = JSON.parse(raw) as Partial<Record<SectionId, boolean>>;
-    return parsed && typeof parsed === 'object' ? parsed : {};
+    const parsed = JSON.parse(raw) as Partial<Record<string, boolean>>;
+    return parsed && typeof parsed === 'object' ? normalizeNavCollapseCookie(parsed) : {};
   } catch {
     return {};
   }
@@ -127,18 +137,59 @@ function formatBadge(count: number) {
   return count > 99 ? '99+' : String(count);
 }
 
-const overviewItems: NavItem[] = [
+function operationsItemsForRole(role: AppRole): NavItem[] {
+  return operationsBaseItems.filter((item) => {
+    if (item.href.startsWith('/delivery/')) return showsDeliveryNav(role);
+    return true;
+  });
+}
+
+const operationsBaseItems: NavItem[] = [
   { href: '/dashboard', labelKey: 'dashboard', icon: LayoutDashboard, action: 'read', subject: 'OperationsDashboard' },
   { href: '/delivery/dashboard', labelKey: 'delivery', icon: BriefcaseBusiness, action: 'read', subject: 'DeliveryProject' },
   { href: '/delivery/reports', labelKey: 'deliveryReports', icon: BarChart3, action: 'read', subject: 'DeliveryReport' },
-  { href: '/wfm', labelKey: 'wfm', icon: CalendarClock, action: 'read', subject: 'Wfm' },
+  { href: '/knowledge', labelKey: 'knowledge', icon: BookMarked, action: 'read', subject: 'Knowledge' },
+];
+
+const analyticsItems: NavItem[] = [
   { href: '/reports', labelKey: 'reports', icon: BarChart3, action: 'read', subject: 'OperationsReports' },
   { href: '/insights', labelKey: 'insights', icon: Lightbulb, action: 'read', subject: 'OperationsInsights' },
   { href: '/audit', labelKey: 'audit', icon: History, action: 'read', subject: 'OperationsAudit' },
 ];
 
+const inventorySectionItems: NavItem[] = [
+  { href: '/assets', labelKey: 'assets', icon: Package, action: 'read', subject: 'Asset' },
+  { href: '/cmdb', labelKey: 'cmdb', icon: LayoutGrid, action: 'read', subject: 'Cmdb' },
+];
+
+const administrationItems: NavItem[] = [
+  { href: '/accounts', labelKey: 'accounts', icon: Building2, action: 'update', subject: 'Account' },
+  { href: '/org', labelKey: 'organization', icon: Users, action: 'update', subject: 'Org' },
+  { href: '/users', labelKey: 'users', icon: UserCog, action: 'read', subject: 'User' },
+  { href: '/sla', labelKey: 'sla', icon: Clock, action: 'update', subject: 'Sla' },
+  { href: '/catalog', labelKey: 'catalog', icon: BookOpen, action: 'update', subject: 'Catalog' },
+  { href: '/workflows', labelKey: 'automation', icon: Workflow, action: 'read', subject: 'Workflow' },
+  { href: '/governance', labelKey: 'governance', icon: Scale, action: 'update', subject: 'Governance' },
+  { href: '/import', labelKey: 'import', icon: Upload, action: 'create', subject: 'Import' },
+];
+
+function wfmSidebarItems(role: AppRole): NavItem[] {
+  const canManageWfm = canRole(role, 'create', 'Wfm');
+  return wfmNavTabsForRole(canManageWfm).map((tab) => ({
+    href: tab.href,
+    labelKey: WFM_SIDEBAR_LABEL_KEYS[tab.key] as NavKey,
+    icon: CalendarClock,
+    action: 'read' as const,
+    subject: 'Wfm' as const,
+  }));
+}
+
+/** @deprecated use operationsBaseItems — kept for pin catalog merge */
+const overviewItems: NavItem[] = [...operationsBaseItems, ...analyticsItems];
+
 const processItems: ProcessItem[] = [
-  { href: '/tickets?type=incident', type: 'incident', labelKey: 'incidents', icon: AlertTriangle, badgeKey: 'incident', subject: 'OperationsServiceDesk' },
+  { href: '/tickets?queue=mine', type: 'mine', labelKey: 'myTickets', icon: Inbox, subject: 'OperationsServiceDesk' },
+  { href: '/tickets?type=incident', type: 'incident', labelKey: 'incidents', icon: AlertTriangle, badgeKey: 'incident', alertBadgeKey: 'incidentSlaRisk', subject: 'OperationsServiceDesk' },
   { href: '/tickets?type=problem', type: 'problem', labelKey: 'problems', icon: Bug, badgeKey: 'problem', subject: 'OperationsServiceDesk' },
   { href: '/tickets?type=change', type: 'change', labelKey: 'changes', icon: GitBranch, badgeKey: 'change', subject: 'OperationsServiceDesk' },
   { href: '/cab', type: 'cab', labelKey: 'cab', icon: ShieldCheck, badgeKey: 'cab', subject: 'OperationsCab' },
@@ -146,35 +197,25 @@ const processItems: ProcessItem[] = [
   { href: '/tickets', type: null, labelKey: 'allTickets', icon: Ticket, badgeKey: 'all', subject: 'OperationsServiceDesk' },
 ];
 
-const peopleItems: NavItem[] = [
-  { href: '/accounts', labelKey: 'accounts', icon: Building2, action: 'update', subject: 'Account' },
-  { href: '/org', labelKey: 'organization', icon: Users, action: 'update', subject: 'Org' },
-  { href: '/users', labelKey: 'users', icon: UserCog, action: 'read', subject: 'User' },
-];
+const peopleItems: NavItem[] = administrationItems.filter((item) =>
+  (['accounts', 'organization', 'users'] as NavKey[]).includes(item.labelKey),
+);
 
-const inventoryItems: NavItem[] = [
-  { href: '/assets', labelKey: 'assets', icon: Package, action: 'read', subject: 'Asset' },
-  { href: '/cmdb', labelKey: 'cmdb', icon: LayoutGrid, action: 'read', subject: 'Cmdb' },
-  { href: '/import', labelKey: 'import', icon: Upload, action: 'create', subject: 'Import' },
-];
+const inventoryItems: NavItem[] = inventorySectionItems;
 
-const configurationFlatItems: NavItem[] = [
-  { href: '/sla', labelKey: 'sla', icon: Clock, action: 'update', subject: 'Sla' },
-];
+const configurationFlatItems: NavItem[] = administrationItems.filter((item) => item.labelKey === 'sla');
 
-const configurationItems: NavItem[] = [...peopleItems, ...configurationFlatItems, ...inventoryItems];
+const configurationItems: NavItem[] = [...administrationItems, ...inventorySectionItems];
 
 const platformItems: NavItem[] = [
   { href: '/tenants', labelKey: 'tenants', icon: Building, action: 'read', subject: 'Tenant' },
-  { href: '/catalog', labelKey: 'catalog', icon: BookOpen, action: 'update', subject: 'Catalog' },
-  { href: '/knowledge', labelKey: 'knowledge', icon: BookMarked, action: 'read', subject: 'Knowledge' },
-  { href: '/workflows', labelKey: 'automation', icon: Workflow, action: 'read', subject: 'Workflow' },
-  { href: '/governance', labelKey: 'governance', icon: Scale, action: 'update', subject: 'Governance' },
   { href: '/settings/capabilities', labelKey: 'capabilities', icon: ShieldCheck, action: 'update', subject: 'Capability' },
 ];
 
 const pinCatalog: NavItem[] = [
-  ...overviewItems,
+  ...operationsBaseItems,
+  ...analyticsItems,
+  ...wfmSidebarItems('admin'),
   ...processItems.map((item) => ({ href: item.href, labelKey: item.labelKey, icon: item.icon, action: 'read' as const, subject: item.subject })),
   ...configurationItems,
   ...platformItems,
@@ -208,6 +249,7 @@ function NavLink({
   onNavigate,
   rail = false,
   badge,
+  alertBadge,
   pinned,
   onPinToggle,
   pinLabel,
@@ -220,12 +262,15 @@ function NavLink({
   onNavigate?: () => void;
   rail?: boolean;
   badge?: number | null;
+  alertBadge?: number | null;
   pinned?: boolean;
   onPinToggle?: () => void;
   pinLabel?: string;
   unpinLabel?: string;
 }) {
   const badgeText = badge != null ? formatBadge(badge) : null;
+  const alertBadgeText = alertBadge != null ? formatBadge(alertBadge) : null;
+  const hasBadges = Boolean(badgeText || alertBadgeText);
 
   return (
     <div className="group relative flex items-center">
@@ -233,12 +278,22 @@ function NavLink({
         href={href}
         onClick={onNavigate}
         aria-current={active ? 'page' : undefined}
-        title={rail ? (badgeText ? `${label} (${badgeText})` : label) : undefined}
+        title={
+          rail
+            ? [
+                label,
+                alertBadgeText ? `${alertBadgeText} SLA risk` : null,
+                badgeText ? badgeText : null,
+              ]
+                .filter(Boolean)
+                .join(' · ')
+            : undefined
+        }
         className={cn(
           'relative flex h-8 min-w-0 flex-1 items-center rounded-md text-[13px] leading-none outline-none transition-[color,background-color] duration-200 ease-out',
           'focus-visible:ring-1 focus-visible:ring-[color-mix(in_srgb,var(--accent)_55%,transparent)]',
           rail ? 'justify-center px-0' : 'gap-2 px-2',
-          !rail && onPinToggle ? (badgeText ? 'pr-14' : 'pr-7') : null,
+          !rail && onPinToggle ? (hasBadges ? 'pr-16' : 'pr-7') : null,
           active
             ? 'bg-zinc-800/70 font-medium text-zinc-50'
             : 'text-zinc-400 hover:bg-zinc-900/80 hover:text-zinc-100',
@@ -259,16 +314,33 @@ function NavLink({
           )}
         />
         {!rail ? <span className="min-w-0 flex-1 truncate">{label}</span> : <span className="sr-only">{label}</span>}
-        {badgeText ? (
-          <span
-            className={cn(
-              'shrink-0 font-mono tabular-nums',
-              rail
-                ? 'absolute right-0 top-0 min-w-[14px] rounded bg-blue-500 px-0.5 text-center text-[9px] font-semibold leading-[14px] text-white'
-                : 'rounded-md bg-zinc-800 px-1.5 py-0.5 text-[10px] font-medium text-zinc-300 ring-1 ring-zinc-700/80',
-            )}
-          >
-            {badgeText}
+        {hasBadges ? (
+          <span className={cn('flex shrink-0 items-center gap-1', rail ? 'absolute right-0 top-0' : null)}>
+            {alertBadgeText ? (
+              <span
+                className={cn(
+                  'font-mono tabular-nums',
+                  rail
+                    ? 'min-w-[14px] rounded bg-rose-500 px-0.5 text-center text-[9px] font-semibold leading-[14px] text-white'
+                    : 'rounded-md bg-rose-500/15 px-1.5 py-0.5 text-[10px] font-medium text-rose-400 ring-1 ring-rose-500/30',
+                )}
+                title="SLA risk"
+              >
+                {alertBadgeText}
+              </span>
+            ) : null}
+            {badgeText ? (
+              <span
+                className={cn(
+                  'font-mono tabular-nums',
+                  rail
+                    ? 'min-w-[14px] rounded bg-blue-500 px-0.5 text-center text-[9px] font-semibold leading-[14px] text-white'
+                    : 'rounded-md bg-zinc-800 px-1.5 py-0.5 text-[10px] font-medium text-zinc-300 ring-1 ring-zinc-700/80',
+                )}
+              >
+                {badgeText}
+              </span>
+            ) : null}
           </span>
         ) : null}
       </Link>
@@ -299,6 +371,7 @@ function NavLink({
 function NavSection({
   id,
   title,
+  subtitle,
   children,
   divided = false,
   collapsed,
@@ -307,6 +380,7 @@ function NavSection({
 }: {
   id: SectionId;
   title: string;
+  subtitle?: string;
   children: ReactNode;
   divided?: boolean;
   collapsed?: boolean;
@@ -337,7 +411,12 @@ function NavSection({
           )}
         />
       </button>
-      {!collapsed ? <nav className="flex flex-col gap-0.5">{children}</nav> : null}
+      {!collapsed ? (
+        <>
+          {subtitle ? <p className="mb-1 px-2 text-[10px] leading-snug text-zinc-600">{subtitle}</p> : null}
+          <nav className="flex flex-col gap-0.5">{children}</nav>
+        </>
+      ) : null}
     </div>
   );
 }
@@ -363,12 +442,21 @@ function useQueueCounts(accountKey?: string | null) {
   return counts;
 }
 
-function useNavPins() {
+function useNavPins(role: AppRole) {
   const [pins, setPins] = useState<NavPin[]>([]);
 
   useEffect(() => {
-    setPins(parseNavPins(readCookie(NAV_PINS_COOKIE)));
-  }, []);
+    const raw = readCookie(NAV_PINS_COOKIE);
+    if (raw === null) {
+      const defaults = defaultNavPinsForRole(role);
+      if (defaults.length > 0) {
+        writeCookie(NAV_PINS_COOKIE, serializeNavPins(defaults));
+        setPins(defaults);
+        return;
+      }
+    }
+    setPins(parseNavPins(raw));
+  }, [role]);
 
   const togglePin = useCallback((href: string, labelKey: string) => {
     setPins((prev) => {
@@ -410,6 +498,7 @@ function ProcessNav({
   const { t } = useI18n();
   const counts = useQueueCounts(accountKey);
   const activeType = searchParams.get('type');
+  const activeQueue = searchParams.get('queue');
   const onDesk = pathname === '/tickets';
   const visibleItems = processItems.filter((item) =>
     canConfiguredCapability(role, 'read', item.subject, capabilityOverrides),
@@ -421,6 +510,7 @@ function ProcessNav({
     <NavSection
       id="serviceDesk"
       title={t.nav.serviceDesk}
+      subtitle={rail ? undefined : t.nav.serviceDeskHint}
       divided
       rail={rail}
       collapsed={collapsed}
@@ -428,10 +518,14 @@ function ProcessNav({
     >
       {visibleItems.map((item) => {
         const active =
-          item.type === 'cab'
-            ? pathname.startsWith('/cab')
-            : onDesk && ((item.type === null && !activeType) || item.type === activeType);
+          item.type === 'mine'
+            ? onDesk && activeQueue === 'mine'
+            : item.type === 'cab'
+              ? pathname.startsWith('/cab')
+              : onDesk &&
+                ((item.type === null && !activeType && activeQueue !== 'mine') || item.type === activeType);
         const badge = item.badgeKey && counts ? counts[item.badgeKey] : null;
+        const alertBadge = item.alertBadgeKey && counts ? counts[item.alertBadgeKey] : null;
         return (
           <div key={item.href} className={!rail && item.type === null ? 'mt-1 border-t border-zinc-800/60 pt-1' : undefined}>
             <NavLink
@@ -442,6 +536,7 @@ function ProcessNav({
               onNavigate={onNavigate}
               rail={rail}
               badge={badge}
+              alertBadge={alertBadge}
               pinned={pins.isPinned(item.href)}
               onPinToggle={() => pins.togglePin(item.href, item.labelKey)}
               pinLabel={t.nav.pin}
@@ -545,9 +640,10 @@ function NestedFolder({
   );
 }
 
-function ConfigurationNav({
+function OperationsNav({
   pathname,
   role,
+  capabilityOverrides,
   onNavigate,
   rail,
   collapsed,
@@ -555,9 +651,11 @@ function ConfigurationNav({
   folderCollapsed,
   onToggleFolder,
   pins,
+  divided,
 }: {
   pathname: string;
   role: AppRole;
+  capabilityOverrides: CapabilityOverride[];
   onNavigate?: () => void;
   rail?: boolean;
   collapsed?: boolean;
@@ -565,42 +663,33 @@ function ConfigurationNav({
   folderCollapsed: Partial<Record<FolderId, boolean>>;
   onToggleFolder: (id: FolderId) => void;
   pins: ReturnType<typeof useNavPins>;
+  divided?: boolean;
 }) {
   const { t } = useI18n();
-  const hasPeople = peopleItems.some((item) => !item.subject || canRole(role, item.action ?? 'read', item.subject));
-  const hasInventory = inventoryItems.some(
-    (item) => !item.subject || canRole(role, item.action ?? 'read', item.subject),
+  const baseItems = operationsItemsForRole(role).filter(
+    (item) =>
+      !item.subject ||
+      canConfiguredCapability(role, item.action ?? 'read', item.subject as CapabilitySubject, capabilityOverrides),
   );
-  const flatVisible = configurationFlatItems.filter(
-    (item) => !item.subject || canRole(role, item.action ?? 'read', item.subject),
+  const wfmItems = wfmSidebarItems(role).filter((item) =>
+    canConfiguredCapability(role, item.action ?? 'read', item.subject as CapabilitySubject, capabilityOverrides),
   );
-  if (!hasPeople && !hasInventory && flatVisible.length === 0) return null;
 
-            return (
+  if (baseItems.length === 0 && wfmItems.length === 0) return null;
+
+  return (
     <NavSection
-      id="configuration"
-      title={t.nav.configuration}
-      divided
+      id="operations"
+      title={t.nav.operations}
+      divided={divided}
       rail={rail}
       collapsed={collapsed}
       onToggle={onToggle}
     >
-      <NestedFolder
-        id="people"
-        title={t.nav.people}
-        items={peopleItems}
-        pathname={pathname}
-        role={role}
-        onNavigate={onNavigate}
-        rail={rail}
-        collapsed={Boolean(folderCollapsed.people)}
-        onToggle={onToggleFolder}
-        pins={pins}
-      />
-      {flatVisible.map((item) => (
+      {baseItems.map((item) => (
         <NavLink
-                key={item.href}
-                href={item.href}
+          key={item.href}
+          href={item.href}
           label={t.nav[item.labelKey]}
           icon={item.icon}
           active={isPathActive(pathname, item.href)}
@@ -612,19 +701,109 @@ function ConfigurationNav({
           unpinLabel={t.nav.unpin}
         />
       ))}
-      <NestedFolder
-        id="inventory"
-        title={t.nav.inventory}
-        items={inventoryItems}
-        pathname={pathname}
-        role={role}
-        onNavigate={onNavigate}
-        rail={rail}
-        collapsed={Boolean(folderCollapsed.inventory)}
-        onToggle={onToggleFolder}
-        pins={pins}
-      />
+      {wfmItems.length > 0 ? (
+        rail ? (
+          wfmItems.map((item) => (
+            <NavLink
+              key={item.href}
+              href={item.href}
+              label={t.nav[item.labelKey]}
+              icon={item.icon}
+              active={isPathActive(pathname, item.href)}
+              onNavigate={onNavigate}
+              rail
+            />
+          ))
+        ) : (
+          <NestedFolder
+            id="wfm"
+            title={t.nav.wfm}
+            items={wfmItems}
+            pathname={pathname}
+            role={role}
+            onNavigate={onNavigate}
+            rail={rail}
+            collapsed={Boolean(folderCollapsed.wfm)}
+            onToggle={onToggleFolder}
+            pins={pins}
+          />
+        )
+      ) : null}
     </NavSection>
+  );
+}
+
+function InventoryNav({
+  pathname,
+  role,
+  capabilityOverrides,
+  onNavigate,
+  rail,
+  collapsed,
+  onToggle,
+  pins,
+}: {
+  pathname: string;
+  role: AppRole;
+  capabilityOverrides: CapabilityOverride[];
+  onNavigate?: () => void;
+  rail?: boolean;
+  collapsed?: boolean;
+  onToggle?: (id: SectionId) => void;
+  pins: ReturnType<typeof useNavPins>;
+}) {
+  const { t } = useI18n();
+  return (
+    <ItemSection
+      id="inventory"
+      title={t.nav.inventory}
+      items={inventorySectionItems}
+      pathname={pathname}
+      role={role}
+      capabilityOverrides={capabilityOverrides}
+      onNavigate={onNavigate}
+      rail={rail}
+      collapsed={collapsed}
+      onToggle={onToggle}
+      pins={pins}
+    />
+  );
+}
+
+function AdministrationNav({
+  pathname,
+  role,
+  capabilityOverrides,
+  onNavigate,
+  rail,
+  collapsed,
+  onToggle,
+  pins,
+}: {
+  pathname: string;
+  role: AppRole;
+  capabilityOverrides: CapabilityOverride[];
+  onNavigate?: () => void;
+  rail?: boolean;
+  collapsed?: boolean;
+  onToggle?: (id: SectionId) => void;
+  pins: ReturnType<typeof useNavPins>;
+}) {
+  const { t } = useI18n();
+  return (
+    <ItemSection
+      id="administration"
+      title={t.nav.administration}
+      items={administrationItems}
+      pathname={pathname}
+      role={role}
+      capabilityOverrides={capabilityOverrides}
+      onNavigate={onNavigate}
+      rail={rail}
+      collapsed={collapsed}
+      onToggle={onToggle}
+      pins={pins}
+    />
   );
 }
 
@@ -678,10 +857,16 @@ function FavoritesNav({
         const label = (t.nav[labelKey] as string | undefined) ?? pin.labelKey;
         const [path, query] = pin.href.split('?');
         const pinType = query ? new URLSearchParams(query).get('type') : null;
+        const pinQueue = query ? new URLSearchParams(query).get('queue') : null;
         const active =
           path === '/tickets'
             ? pathname === '/tickets' &&
-              ((pinType === null && !searchParams.get('type')) || searchParams.get('type') === pinType)
+              ((pinQueue === 'mine' && searchParams.get('queue') === 'mine') ||
+                (pinType === null &&
+                  !pinQueue &&
+                  !searchParams.get('type') &&
+                  searchParams.get('queue') !== 'mine') ||
+                (pinType !== null && searchParams.get('type') === pinType))
             : isPathActive(pathname, pin.href);
         return (
           <NavLink
@@ -901,7 +1086,7 @@ function SidebarNav({
 }) {
   const { t } = useI18n();
   const compactDeliveryNav = role === 'pm_delivery' || role === 'dco';
-  const deliveryOverviewItems = overviewItems.filter((item) => item.href.startsWith('/delivery/'));
+  const deliveryOverviewItems = operationsBaseItems.filter((item) => item.href.startsWith('/delivery/'));
   return (
     <div className={cn('relative min-h-0', compactDeliveryNav ? 'shrink-0' : 'flex-1')}>
       <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-3 bg-gradient-to-b from-zinc-950 to-transparent" />
@@ -919,20 +1104,36 @@ function SidebarNav({
             />
           </Suspense>
         ) : null}
-        <ItemSection
-          id="overview"
-          title={t.nav.overview}
-          items={compactDeliveryNav ? deliveryOverviewItems : overviewItems}
-          pathname={pathname}
-          role={role}
-          capabilityOverrides={capabilityOverrides}
-          onNavigate={onNavigate}
-          divided={pins.pins.length > 0}
-          rail={rail}
-          collapsed={collapsed.overview}
-          onToggle={onToggleSection}
-          pins={pins}
-        />
+        {compactDeliveryNav ? (
+          <ItemSection
+            id="operations"
+            title={t.nav.operations}
+            items={deliveryOverviewItems}
+            pathname={pathname}
+            role={role}
+            capabilityOverrides={capabilityOverrides}
+            onNavigate={onNavigate}
+            divided={pins.pins.length > 0}
+            rail={rail}
+            collapsed={collapsed.operations}
+            onToggle={onToggleSection}
+            pins={pins}
+          />
+        ) : (
+          <OperationsNav
+            pathname={pathname}
+            role={role}
+            capabilityOverrides={capabilityOverrides}
+            onNavigate={onNavigate}
+            rail={rail}
+            collapsed={collapsed.operations}
+            onToggle={onToggleSection}
+            folderCollapsed={folderCollapsed}
+            onToggleFolder={onToggleFolder}
+            pins={pins}
+            divided={pins.pins.length > 0}
+          />
+        )}
         {!compactDeliveryNav ? (
           <>
             <Suspense fallback={null}>
@@ -947,15 +1148,37 @@ function SidebarNav({
                 accountKey={accountKey}
               />
             </Suspense>
-            <ConfigurationNav
+            <InventoryNav
               pathname={pathname}
               role={role}
+              capabilityOverrides={capabilityOverrides}
               onNavigate={onNavigate}
               rail={rail}
-              collapsed={collapsed.configuration}
+              collapsed={collapsed.inventory}
               onToggle={onToggleSection}
-              folderCollapsed={folderCollapsed}
-              onToggleFolder={onToggleFolder}
+              pins={pins}
+            />
+            <ItemSection
+              id="analytics"
+              title={t.nav.analytics}
+              items={analyticsItems}
+              pathname={pathname}
+              role={role}
+              capabilityOverrides={capabilityOverrides}
+              onNavigate={onNavigate}
+              rail={rail}
+              collapsed={collapsed.analytics}
+              onToggle={onToggleSection}
+              pins={pins}
+            />
+            <AdministrationNav
+              pathname={pathname}
+              role={role}
+              capabilityOverrides={capabilityOverrides}
+              onNavigate={onNavigate}
+              rail={rail}
+              collapsed={collapsed.administration}
+              onToggle={onToggleSection}
               pins={pins}
             />
             <ItemSection
@@ -1275,16 +1498,23 @@ export function AgentShell({
   const [rail, setRail] = useState(false);
   const [collapsed, setCollapsed] = useState<Partial<Record<SectionId, boolean>>>({});
   const [folderCollapsed, setFolderCollapsed] = useState<Partial<Record<FolderId, boolean>>>({});
-  const pins = useNavPins();
+  const pins = useNavPins(role);
   const onAssistant = pathname.startsWith('/assistant');
   const activeAccount = accounts.find((account) => account.id === activeAccountId);
   const canCreateTicket = canConfiguredCapability(role, 'create', 'OperationsServiceDesk', capabilityOverrides);
 
   useEffect(() => {
     setRail(readRailPreference());
-    setCollapsed(readCollapsedSections());
+    const rawCollapse = readCookie(NAV_COLLAPSE_COOKIE);
+    if (rawCollapse === null) {
+      const defaults = defaultNavCollapseForRole(role);
+      writeCookie(NAV_COLLAPSE_COOKIE, JSON.stringify(defaults));
+      setCollapsed(defaults);
+    } else {
+      setCollapsed(readCollapsedSections());
+    }
     setFolderCollapsed(readCollapsedFolders());
-  }, []);
+  }, [role]);
 
   useEffect(() => {
     setMobileOpen(false);

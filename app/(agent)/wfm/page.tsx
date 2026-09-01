@@ -8,5 +8,5 @@ export default async function WfmPage() {
   const session = await getSessionProfile();
   if (!session || !canRole(session.profile.role, 'read', 'Wfm')) redirect('/dashboard');
   const rows = await listWfmOccupancy();
-  return <WfmBoard rows={rows} canSetPresence={canRole(session.profile.role, 'update', 'Wfm')} />;
+  return <WfmBoard rows={rows} canSetPresence={canRole(session.profile.role, 'update', 'Wfm')} canManageWfm={canRole(session.profile.role, 'create', 'Wfm')} />;
 }

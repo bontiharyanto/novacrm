@@ -37,7 +37,7 @@ export function WfmOncall({
   return (
     <div className="grid min-h-[calc(100vh-3.5rem)] lg:grid-cols-[minmax(0,1fr)_320px]">
       <div className="space-y-6 p-6">
-        <WfmNav />
+        <WfmNav canManageWfm={canEdit} />
         {rotations.map((rotation) => (
           <section key={rotation.id} className="overflow-hidden rounded-xl border border-zinc-800">
             <div className="flex items-center justify-between border-b border-zinc-800 bg-zinc-900/60 px-4 py-3">

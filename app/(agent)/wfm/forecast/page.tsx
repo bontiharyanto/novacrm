@@ -8,5 +8,11 @@ export default async function WfmForecastPage() {
   const session = await getSessionProfile();
   if (!session || !canRole(session.profile.role, 'read', 'Wfm')) redirect('/dashboard');
   const { buckets, adherence } = await getWfmForecast();
-  return <WfmForecast buckets={buckets} adherence={adherence} />;
+  return (
+    <WfmForecast
+      buckets={buckets}
+      adherence={adherence}
+      canManageWfm={canRole(session.profile.role, 'create', 'Wfm')}
+    />
+  );
 }

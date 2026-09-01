@@ -145,7 +145,7 @@ export function WfmSwaps({
 
   return (
     <div className="space-y-8 p-6">
-      <WfmNav />
+      <WfmNav canManageWfm={canApprove} />
       <p className="text-sm text-zinc-500">
         {t.wfm.swapsHint}
         {canApprove ? (

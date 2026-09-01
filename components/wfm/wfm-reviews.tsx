@@ -23,9 +23,11 @@ function average(review: StaffReview) {
 export function WfmReviews({
   reviews,
   canCreate,
+  canManageWfm = false,
 }: {
   reviews: StaffReview[];
   canCreate: boolean;
+  canManageWfm?: boolean;
 }) {
   const { t } = useI18n();
   const router = useRouter();
@@ -40,7 +42,7 @@ export function WfmReviews({
 
   return (
     <div className="space-y-6 p-6">
-      <WfmNav />
+      <WfmNav canManageWfm={canManageWfm} />
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-zinc-500">{t.wfm.reviewHint}</p>
         {canCreate ? (

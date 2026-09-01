@@ -18,7 +18,15 @@ const presenceTone: Record<WfmPresenceStatus, 'success' | 'warning' | 'info' | '
   offline: 'neutral',
 };
 
-export function WfmBoard({ rows, canSetPresence }: { rows: WfmOccupancyRow[]; canSetPresence: boolean }) {
+export function WfmBoard({
+  rows,
+  canSetPresence,
+  canManageWfm = false,
+}: {
+  rows: WfmOccupancyRow[];
+  canSetPresence: boolean;
+  canManageWfm?: boolean;
+}) {
   const { t } = useI18n();
   const router = useRouter();
   const [presence, setPresence] = useState<WfmPresenceStatus>('offline');
@@ -29,7 +37,7 @@ export function WfmBoard({ rows, canSetPresence }: { rows: WfmOccupancyRow[]; ca
 
   return (
     <div className="space-y-6 p-6">
-      <WfmNav />
+      <WfmNav canManageWfm={canManageWfm} />
       {canSetPresence ? (
         <div className="flex flex-wrap items-center gap-2">
           <Select value={presence} onChange={(event) => setPresence(event.target.value as WfmPresenceStatus)} className="w-40">

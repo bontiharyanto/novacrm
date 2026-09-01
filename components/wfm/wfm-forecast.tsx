@@ -8,16 +8,18 @@ import { useI18n } from '@/components/layout/preferences-provider';
 export function WfmForecast({
   buckets,
   adherence,
+  canManageWfm = false,
 }: {
   buckets: WfmForecastBucket[];
   adherence: WfmAdherenceRow[];
+  canManageWfm?: boolean;
 }) {
   const { t } = useI18n();
   const max = Math.max(1, ...buckets.map((bucket) => Math.max(bucket.tickets, bucket.headcount)));
 
   return (
     <div className="space-y-8 p-6">
-      <WfmNav />
+      <WfmNav canManageWfm={canManageWfm} />
       <section>
         <h2 className="mb-3 text-sm font-medium text-zinc-50">{t.wfm.forecastTitle}</h2>
         <p className="mb-4 text-xs text-zinc-500">{t.wfm.forecastHint}</p>

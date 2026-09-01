@@ -12,6 +12,7 @@ export default async function WfmReviewNewPage() {
     <WfmReviewForm
       reviewerId={session.userId}
       staff={staff.map((agent) => ({ id: agent.id, fullName: agent.fullName }))}
+      canManageWfm={canRole(session.profile.role, 'create', 'Wfm')}
     />
   );
 }

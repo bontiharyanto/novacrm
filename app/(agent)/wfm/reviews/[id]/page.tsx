@@ -18,6 +18,7 @@ export default async function WfmReviewDetailPage({ params }: { params: { id: st
         canRole(session.profile.role, 'update', 'StaffReview') &&
         (review.status === 'draft' || canRole(session.profile.role, 'manage', 'Wfm'))
       }
+      canManageWfm={canRole(session.profile.role, 'create', 'Wfm')}
     />
   );
 }

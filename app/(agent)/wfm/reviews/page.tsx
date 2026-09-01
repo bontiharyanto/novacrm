@@ -8,5 +8,11 @@ export default async function WfmReviewsPage() {
   const session = await getSessionProfile();
   if (!session || !canRole(session.profile.role, 'read', 'StaffReview')) redirect('/dashboard');
   const reviews = await listStaffReviews();
-  return <WfmReviews reviews={reviews} canCreate={canRole(session.profile.role, 'create', 'StaffReview')} />;
+  return (
+    <WfmReviews
+      reviews={reviews}
+      canCreate={canRole(session.profile.role, 'create', 'StaffReview')}
+      canManageWfm={canRole(session.profile.role, 'create', 'Wfm')}
+    />
+  );
 }

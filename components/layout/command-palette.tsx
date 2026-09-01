@@ -1,11 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Command } from 'cmdk';
-import { BarChart3, BookMarked, BookOpen, Building, Building2, CalendarClock, Clock, History, LayoutDashboard, LayoutGrid, Lightbulb, Mail, Package, Palette, Scale, Settings, ShieldCheck, Sparkles, Ticket, Upload, UserCog, Users, Workflow } from 'lucide-react';
-import { canAccessConfig, canRole, type AppRole } from '@/lib/rbac/ability';
-import { isTenantAdminRole } from '@/lib/rbac/roles';
+import { type AppRole } from '@/lib/rbac/ability';
+import { commandNavGroupsForRole, resolveCommandItemLabel } from '@/lib/nav/command-items';
 import { useI18n } from '@/components/layout/preferences-provider';
 
 type TicketHit = { id: string; number?: string; title: string; status: string };
@@ -14,6 +13,7 @@ export function CommandPalette({ open, onOpenChange, role }: { open: boolean; on
   const router = useRouter();
   const { t } = useI18n();
   const [tickets, setTickets] = useState<TicketHit[]>([]);
+  const groups = useMemo(() => commandNavGroupsForRole(role), [role]);
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
@@ -56,150 +56,23 @@ export function CommandPalette({ open, onOpenChange, role }: { open: boolean; on
           />
           <Command.List className="max-h-80 overflow-y-auto p-2">
             <Command.Empty className="px-3 py-6 text-sm text-zinc-500">{t.command.empty}</Command.Empty>
-            <Command.Group heading={t.command.navigate} className="px-1 py-1 text-[11px] uppercase tracking-[0.16em] text-zinc-500">
-              <Command.Item className="cmdk-item" onSelect={() => go('/dashboard')}>
-                <LayoutDashboard className="h-3.5 w-3.5" /> {t.nav.dashboard}
-              </Command.Item>
-              <Command.Item className="cmdk-item" onSelect={() => go('/reports')}>
-                <BarChart3 className="h-3.5 w-3.5" /> {t.nav.reports}
-              </Command.Item>
-              <Command.Item className="cmdk-item" onSelect={() => go('/audit')}>
-                <History className="h-3.5 w-3.5" /> {t.nav.audit}
-              </Command.Item>
-              <Command.Item className="cmdk-item" onSelect={() => go('/assistant')}>
-                <Sparkles className="h-3.5 w-3.5" /> {t.nav.assistant}
-              </Command.Item>
-              <Command.Item className="cmdk-item" onSelect={() => go('/insights')}>
-                <Lightbulb className="h-3.5 w-3.5" /> {t.nav.insights}
-              </Command.Item>
-              <Command.Item className="cmdk-item" onSelect={() => go('/wfm')}>
-                <CalendarClock className="h-3.5 w-3.5" /> {t.nav.wfm}
-              </Command.Item>
-              <Command.Item className="cmdk-item" onSelect={() => go('/wfm/shifts')}>
-                <CalendarClock className="h-3.5 w-3.5" /> {t.wfm.shifts}
-              </Command.Item>
-              <Command.Item className="cmdk-item" onSelect={() => go('/wfm/swaps')}>
-                <CalendarClock className="h-3.5 w-3.5" /> {t.wfm.swaps}
-              </Command.Item>
-              <Command.Item className="cmdk-item" onSelect={() => go('/wfm/reviews')}>
-                <CalendarClock className="h-3.5 w-3.5" /> {t.wfm.reviews}
-              </Command.Item>
-              <Command.Item className="cmdk-item" onSelect={() => go('/tickets')}>
-                <Ticket className="h-3.5 w-3.5" /> {t.tickets.title}
-              </Command.Item>
-              <Command.Item className="cmdk-item" onSelect={() => go('/tickets/new')}>
-                <Ticket className="h-3.5 w-3.5" /> {t.common.newTicket}
-              </Command.Item>
-              <Command.Item className="cmdk-item" onSelect={() => go('/cab')}>
-                <ShieldCheck className="h-3.5 w-3.5" /> {t.nav.cab}
-              </Command.Item>
-              {canRole(role, 'read', 'Tenant') ? (
-                <Command.Item className="cmdk-item" onSelect={() => go('/tenants')}>
-                  <Building className="h-3.5 w-3.5" /> {t.nav.tenants}
-                </Command.Item>
-              ) : null}
-              {canRole(role, 'create', 'Tenant') ? (
-                <Command.Item className="cmdk-item" onSelect={() => go('/tenants/new')}>
-                  <Building className="h-3.5 w-3.5" /> New tenant
-                </Command.Item>
-              ) : null}
-              {canAccessConfig(role, 'accounts') ? (
-                <Command.Item className="cmdk-item" onSelect={() => go('/accounts')}>
-                  <Building2 className="h-3.5 w-3.5" /> {t.nav.accounts}
-                </Command.Item>
-              ) : null}
-              {canAccessConfig(role, 'org') ? (
-                <Command.Item className="cmdk-item" onSelect={() => go('/org')}>
-                  <Users className="h-3.5 w-3.5" /> {t.nav.organization}
-                </Command.Item>
-              ) : null}
-              {canAccessConfig(role, 'users') ? (
-                <Command.Item className="cmdk-item" onSelect={() => go('/users')}>
-                  <UserCog className="h-3.5 w-3.5" /> {t.nav.users}
-                </Command.Item>
-              ) : null}
-              {canAccessConfig(role, 'sla') ? (
-                <Command.Item className="cmdk-item" onSelect={() => go('/sla')}>
-                  <Clock className="h-3.5 w-3.5" /> {t.nav.sla}
-                </Command.Item>
-              ) : null}
-              {canRole(role, 'create', 'Sla') ? (
-                <Command.Item className="cmdk-item" onSelect={() => go('/sla/uc/new')}>
-                  <Clock className="h-3.5 w-3.5" /> Underpinning contract
-                </Command.Item>
-              ) : null}
-              <Command.Item className="cmdk-item" onSelect={() => go('/assets')}>
-                <Package className="h-3.5 w-3.5" /> {t.nav.assets}
-              </Command.Item>
-              <Command.Item className="cmdk-item" onSelect={() => go('/assets/new')}>
-                <Package className="h-3.5 w-3.5" /> {t.command.newAsset}
-              </Command.Item>
-              <Command.Item className="cmdk-item" onSelect={() => go('/cmdb')}>
-                <LayoutGrid className="h-3.5 w-3.5" /> {t.nav.cmdb}
-              </Command.Item>
-              <Command.Item className="cmdk-item" onSelect={() => go('/cmdb/new')}>
-                <LayoutGrid className="h-3.5 w-3.5" /> {t.command.newCi}
-              </Command.Item>
-              {canRole(role, 'create', 'Import') ? (
-                <Command.Item className="cmdk-item" onSelect={() => go('/import')}>
-                  <Upload className="h-3.5 w-3.5" /> {t.nav.import}
-                </Command.Item>
-              ) : null}
-              {canRole(role, 'read', 'Knowledge') ? (
-                <Command.Item className="cmdk-item" onSelect={() => go('/knowledge')}>
-                  <BookMarked className="h-3.5 w-3.5" /> {t.nav.knowledge}
-                </Command.Item>
-              ) : null}
-              {canAccessConfig(role, 'catalog') ? (
-                <>
-                  <Command.Item className="cmdk-item" onSelect={() => go('/catalog')}>
-                    <BookOpen className="h-3.5 w-3.5" /> {t.nav.catalog}
-                  </Command.Item>
-                  <Command.Item className="cmdk-item" onSelect={() => go('/catalog/new')}>
-                    <BookOpen className="h-3.5 w-3.5" /> {t.command.newCatalog}
-                  </Command.Item>
-                </>
-              ) : null}
-              {canRole(role, 'read', 'Workflow') ? (
-                <>
-                  <Command.Item className="cmdk-item" onSelect={() => go('/workflows')}>
-                    <Workflow className="h-3.5 w-3.5" /> {t.nav.automation}
-                  </Command.Item>
-                  <Command.Item className="cmdk-item" onSelect={() => go('/workflows/new')}>
-                    <Workflow className="h-3.5 w-3.5" /> {t.command.newFlow}
-                  </Command.Item>
-                </>
-              ) : null}
-              {canAccessConfig(role, 'governance') ? (
-                <>
-                  <Command.Item className="cmdk-item" onSelect={() => go('/governance')}>
-                    <Scale className="h-3.5 w-3.5" /> {t.nav.governance}
-                  </Command.Item>
-                  <Command.Item className="cmdk-item" onSelect={() => go('/governance/requests')}>
-                    <Scale className="h-3.5 w-3.5" /> {t.command.dsar}
-                  </Command.Item>
-                </>
-              ) : null}
-              <Command.Item className="cmdk-item" onSelect={() => go('/settings/security')}>
-                <ShieldCheck className="h-3.5 w-3.5" /> {t.nav.security}
-              </Command.Item>
-              <Command.Item className="cmdk-item" onSelect={() => go('/settings/appearance')}>
-                <Palette className="h-3.5 w-3.5" /> {t.nav.appearance}
-              </Command.Item>
-              {isTenantAdminRole(role) ? (
-                <>
-                  <Command.Item className="cmdk-item" onSelect={() => go('/settings')}>
-                    <Settings className="h-3.5 w-3.5" /> {t.nav.integrations}
-                  </Command.Item>
-                  <Command.Item className="cmdk-item" onSelect={() => go('/settings/notifications')}>
-                    <Mail className="h-3.5 w-3.5" /> {t.nav.notifications}
-                  </Command.Item>
-                  <Command.Item className="cmdk-item" onSelect={() => go('/settings/reports')}>
-                    <BarChart3 className="h-3.5 w-3.5" /> {t.nav.reportSchedule}
-                  </Command.Item>
-                </>
-              ) : null}
-            </Command.Group>
+            {groups.map((group) => (
+              <Command.Group
+                key={group.id}
+                heading={t.nav[group.labelKey]}
+                className="px-1 py-1 text-[11px] uppercase tracking-[0.16em] text-zinc-500"
+              >
+                {group.items.map((item) => {
+                  const Icon = item.icon;
+                  const label = resolveCommandItemLabel(item, t);
+                  return (
+                    <Command.Item key={`${group.id}-${item.href}-${item.label ?? item.labelKey}`} className="cmdk-item" onSelect={() => go(item.href)}>
+                      <Icon className="h-3.5 w-3.5" /> {label}
+                    </Command.Item>
+                  );
+                })}
+              </Command.Group>
+            ))}
             {tickets.length > 0 ? (
               <Command.Group heading={t.command.tickets} className="px-1 py-1 text-[11px] uppercase tracking-[0.16em] text-zinc-500">
                 {tickets.map((ticket) => (

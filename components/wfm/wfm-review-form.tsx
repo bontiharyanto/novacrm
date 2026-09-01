@@ -29,10 +29,12 @@ export function WfmReviewForm({
   staff,
   reviewerId,
   review,
+  canManageWfm = false,
 }: {
   staff: Array<{ id: string; fullName: string }>;
   reviewerId: string;
   review?: StaffReview;
+  canManageWfm?: boolean;
 }) {
   const { t } = useI18n();
   const router = useRouter();
@@ -106,7 +108,7 @@ export function WfmReviewForm({
 
   return (
     <div className="space-y-6 p-6">
-      <WfmNav />
+      <WfmNav canManageWfm={canManageWfm} />
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <section className="space-y-4 rounded-xl border border-zinc-800 bg-zinc-900/40 p-5">
           <div className="grid gap-4 sm:grid-cols-2">
