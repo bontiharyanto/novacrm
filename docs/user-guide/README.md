@@ -24,7 +24,7 @@ Sembilan role produk. Pilih dokumen sesuai login.
 | `superadmin` | [Superadmin platform](superadmin.md) | `/dashboard` | `superadmin@novacrm.app` |
 
 Password lab semua: `NovaCRM!2026`.  
-Item katalog: [Catalog & record producer](catalog-guidance.md). **Journey tenant & user:** [TENANT-USER-JOURNEY.md](../TENANT-USER-JOURNEY.md). **Journey ticketing:** [TICKETING-JOURNEY.md](../TICKETING-JOURNEY.md). Major incident (induk–anak, bukan RCA): [Major incident](major-incident.md). GAMAS + CMDB impact: [GAMAS-CMDB-IMPACT.md](../GAMAS-CMDB-IMPACT.md). Matriks hak: [RBAC](../RBAC.md). Delivery: [Delivery Project](delivery.md).
+Item katalog: [Catalog & record producer](catalog-guidance.md). **Journey tenant & user:** [TENANT-USER-JOURNEY.md](../TENANT-USER-JOURNEY.md). **Journey ticketing:** [TICKETING-JOURNEY.md](../TICKETING-JOURNEY.md). **Journey WFM:** [WFM-JOURNEY.md](../WFM-JOURNEY.md). Major incident (induk–anak, bukan RCA): [Major incident](major-incident.md). GAMAS + CMDB impact: [GAMAS-CMDB-IMPACT.md](../GAMAS-CMDB-IMPACT.md). Matriks hak: [RBAC](../RBAC.md). Delivery: [Delivery Project](delivery.md).
 
 ## Classroom pack
 
@@ -32,6 +32,7 @@ Item katalog: [Catalog & record producer](catalog-guidance.md). **Journey tenant
 | --- | --- |
 | [Tenant & user journey](../TENANT-USER-JOURNEY.md) | Superadmin/admin/manager: tenant, account, org, user, portal onboarding, import |
 | [Ticketing journey](../TICKETING-JOURNEY.md) | Semua role: peta end-to-end INC/PRB/CHG/RITM, portal, desk, GAMAS, notifikasi |
+| [WFM journey](../WFM-JOURNEY.md) | Agent/lead/SPV/manager: roster, presence, dispatch, swap, on-call, forecast, export |
 | [Trainer guide](trainer-guide.md) | Facilitator: agenda, demo data, timing, pass criteria |
 | [Participant manual](participant-manual.md) | Learners: procedures, labs, expected results |
 | [Major incident](major-incident.md) | Agent/SPV: parent/child tickets, not RCA |

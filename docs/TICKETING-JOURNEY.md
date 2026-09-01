@@ -199,6 +199,8 @@ flowchart TD
 
 **Login lab:** `agent@novacrm.app` atau `sari.l1@novacrm.app` / `NovaCRM!2026`
 
+Detail lengkap WFM: [WFM-JOURNEY.md](../WFM-JOURNEY.md)
+
 ### 4.2 Triage antrian
 
 | Filter | Arti |
@@ -494,6 +496,8 @@ Worker wajib hidup: `npm run worker` (lihat [WORKERS.md](WORKERS.md)).
 | **SLA resolve** | Sampai resolved/closed | Pause saat hold/waiting |
 | **OLA / UC** | Jika account punya underpinning contract | Vendor/principal party |
 | **WFM dispatch** | Create tanpa assignee | Auto-assign agent Available di group |
+
+Detail WFM: [WFM-JOURNEY.md](WFM-JOURNEY.md)
 
 Badge di UI: On track · Risk · Breached · Paused
 

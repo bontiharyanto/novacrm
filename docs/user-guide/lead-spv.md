@@ -152,7 +152,7 @@ Shift default per tenant: **Pagi** 08:00–16:00 (Sen–Jum), **Siang** 12:00–
 
 Presence operasional (bukan login): **Tersedia** = auto-assign; **Sibuk / Istirahat / Offline** = tidak. Assign manual tetap boleh. Clock-in/out tertulis di punch (bukan payroll HR).
 
-Occupancy dan forecast mengikuti **filter account**. Roster/skills/on-call **tenant-wide**. **Penilaian** juga tenant-wide: skor 1–5, **Minta AI** advisory. Agent **Akui** penilaian yang sudah dikirim. Dispatch di **assignment group** (`/org`). Auto-assign butuh Redis + worker.
+Occupancy dan forecast mengikuti **filter account**. Roster/skills/on-call **tenant-wide**. **Penilaian** juga tenant-wide: skor 1–5, **Minta AI** advisory. Agent **Akui** penilaian yang sudah dikirim. Dispatch di **assignment group** (`/org`). Auto-assign butuh Redis + worker. Journey lengkap: [WFM-JOURNEY.md](../WFM-JOURNEY.md).
 
 ---
 
