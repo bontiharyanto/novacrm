@@ -24,7 +24,7 @@ Sembilan role produk. Pilih dokumen sesuai login.
 | `superadmin` | [Superadmin platform](superadmin.md) | `/dashboard` | `superadmin@novacrm.app` |
 
 Password lab semua: `NovaCRM!2026`.  
-Item katalog: [Catalog & record producer](catalog-guidance.md). Major incident (induk–anak, bukan RCA): [Major incident](major-incident.md). Matriks hak: [RBAC](../RBAC.md). Delivery: [Delivery Project](delivery.md).
+Item katalog: [Catalog & record producer](catalog-guidance.md). Major incident (induk–anak, bukan RCA): [Major incident](major-incident.md). GAMAS + CMDB impact: [GAMAS-CMDB-IMPACT.md](../GAMAS-CMDB-IMPACT.md). Matriks hak: [RBAC](../RBAC.md). Delivery: [Delivery Project](delivery.md).
 
 ## Classroom pack
 
@@ -33,6 +33,7 @@ Item katalog: [Catalog & record producer](catalog-guidance.md). Major incident (
 | [Trainer guide](trainer-guide.md) | Facilitator: agenda, demo data, timing, pass criteria |
 | [Participant manual](participant-manual.md) | Learners: procedures, labs, expected results |
 | [Major incident](major-incident.md) | Agent/SPV: parent/child tickets, not RCA |
+| [GAMAS CMDB impact](../GAMAS-CMDB-IMPACT.md) | Agent/customer: root CI, portal banner, subnet match, notifications |
 | [Delivery Project](delivery.md) · [Alur proses](delivery-process.md) | PM/DCO/agent/customer: project, phases, work order, handover, hypercare, portal progress |
 | [Task activity & WBS](task-activities.md) | PM/DCO/agent/customer: activity timeline, visibility, sequential dependencies |
 | [Capability Matrix](capability-matrix.md) | Admin/superadmin: tenant capability configuration |

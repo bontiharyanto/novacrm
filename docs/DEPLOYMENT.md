@@ -194,7 +194,7 @@ seluruh `supabase/seed.sql` di production.
 - Public Supabase URL/anon key come from `.env.production` (`NOVACRM_SUPABASE_*`) so one image works per environment
 - Ops (`:3100`) is **not** published by `docker-compose.prod.yml`. Use it on the laptop, or add a loopback-only service with `OPS_TOKEN` if you need it on the VPS
 
-Email in production needs `RESEND_API_KEY`. Without it, outbound mail is logged as failed (no local sink). After pull, `migrate.sh` applies only **new** SQL files (RBAC, WFM, insights, plugins, account access, delivery, task activity/WBS, capability matrix).
+Email in production needs `RESEND_API_KEY`. Without it, outbound mail is logged as failed (no local sink). After pull, `migrate.sh` applies only **new** SQL files (RBAC, WFM, insights, plugins, account access, delivery, task activity/WBS, capability matrix, GAMAS CMDB impact).
 
 ## 6. Backup
 

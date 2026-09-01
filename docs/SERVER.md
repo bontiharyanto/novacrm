@@ -127,3 +127,8 @@ Apply in filename order (migrate.sh does this):
 - `20250815300000_staff_reviews.sql` (staff reviews under WFM)
 - `20250815310000_staff_review_ai.sql` (advisory AI scores on a review)
 - `20250815320000_assistant_threads_staff.sql` (Nova Agent threads for all staff)
+- `20250901100000_ticket_cmdb_item.sql` (GAMAS root CI on tickets)
+- `20250901120000_profile_site.sql` (portal site for impact targeting)
+- `20250901130000_profile_client_ip.sql` (portal workstation IP for subnet match)
+
+See [GAMAS-CMDB-IMPACT.md](GAMAS-CMDB-IMPACT.md) for feature docs.

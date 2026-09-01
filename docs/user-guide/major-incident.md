@@ -101,4 +101,40 @@ Skrip presenter (2 menit):
 
 Kalau tiket belum ada: seed `supabase/seed.sql` (blok major incident) atau buat dua INC baru lalu tautkan.
 
-Skrip klik untuk GitHub / presenter: [DEMO-MAJOR-INCIDENT.md](../DEMO-MAJOR-INCIDENT.md).
+Skrip klik untuk GitHub / presenter: [DEMO-MAJOR-INCIDENT.md](../DEMO-MAJOR-INCIDENT.md).  
+Deteksi dampak CMDB + portal: [GAMAS-CMDB-IMPACT.md](../GAMAS-CMDB-IMPACT.md).
+
+---
+
+## 8. Root CI & dampak CMDB (P0–P2)
+
+Major incident bisa dihubungkan ke **configuration item akar** agar sistem tahu siapa terdampak tanpa menautkan setiap tiket cabang manual.
+
+### Agent — set root CI
+
+1. Buka incident **induk** (bukan child).
+2. Sidebar kanan → **Root CI (major impact)** → pilih CI (mis. `bank-wan-indosat` di lab Bank).
+3. **Simpan CI akar**.
+
+**Expected:** link ke CMDB. Panel *Impact if this CI is down* di CI tersebut menampilkan downstream/dependents (relasi berarah).
+
+### Portal — banner & lokasi
+
+1. Login `customer@` → **Beranda**: banner jika layanan terdampak GAMAS aktif.
+2. **Account** → isi **Site / cabang** dan **IP workstation** (opsional, untuk match subnet).
+3. **Laporkan insiden** → centang **Tautkan tiket ini sebagai child GAMAS** jika banner muncul.
+
+### Auto-link saat buat tiket
+
+| Tempat | Cara |
+| --- | --- |
+| Portal form insiden | Centang link di banner GAMAS |
+| Agent buat incident | Isi lokasi + centang link di banner |
+
+Server memvalidasi parent (incident, bukan child orang lain) lalu set `parent_ticket_id`.
+
+### Notifikasi ke user terdampak
+
+Saat root CI atau status parent diubah, portal user yang match (site, IP, atau overlap CI) mendapat inbox + email/WA (`major.impact`) jika channel aktif dan worker jalan.
+
+Detail teknis: [GAMAS-CMDB-IMPACT.md](../GAMAS-CMDB-IMPACT.md).
