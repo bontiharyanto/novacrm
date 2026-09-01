@@ -5,7 +5,7 @@ Cara menyiapkan **satu klien** di NovaCRM: tenant → account → organisasi (di
 **Produksi:** [https://novacrm.click](https://novacrm.click)  
 **Lab laptop:** http://localhost:3000 — password demo `NovaCRM!2026` (ganti di produksi).
 
-Deploy VPS: [VPS.md](../VPS.md). Hak per role: [RBAC.md](../RBAC.md). Playbook harian: [README.md](README.md).
+Deploy VPS: [VPS.md](../VPS.md). Hak per role: [RBAC.md](../RBAC.md). Journey visual lengkap: [TENANT-USER-JOURNEY.md](../TENANT-USER-JOURNEY.md). Playbook harian: [README.md](README.md).
 
 ---
 
