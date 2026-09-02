@@ -35,21 +35,28 @@ export function SlaBadge({
     slaResponseMinutes,
     slaResolveMinutes,
   });
-  const escalate = getEscalationLabel(evaluation.overall);
   const deadline = slaResolveBy ?? dueDate;
+  const overall = evaluation.overall;
+
+  const hints: string[] = [];
+  if (evaluation.response === 'breached' && overall !== 'breached') {
+    hints.push('Response late');
+  } else if (evaluation.response === 'risk' && overall !== 'risk') {
+    hints.push('Response risk');
+  } else if (overall === 'risk') {
+    const escalate = getEscalationLabel(overall);
+    if (escalate) hints.push(escalate);
+  }
 
   return (
-    <span className="inline-flex flex-wrap items-center gap-1">
-      <Badge tone={toneMap[evaluation.overall]}>{getSlaLabel(evaluation.overall)}</Badge>
-      {evaluation.overall !== 'none' ? (
+    <span className="inline-flex flex-wrap items-center gap-1.5">
+      <Badge tone={toneMap[overall]}>{getSlaLabel(overall)}</Badge>
+      {overall !== 'none' ? (
         <span className="font-mono text-[10px] text-zinc-500">{getSlaCountdown(deadline, slaPausedAt)}</span>
       ) : null}
-      {evaluation.response === 'breached' || evaluation.response === 'risk' ? (
-        <Badge tone={evaluation.response === 'breached' ? 'danger' : 'warning'}>
-          {evaluation.response === 'breached' ? 'Response late' : 'Response risk'}
-        </Badge>
+      {hints.length > 0 ? (
+        <span className="text-[10px] text-zinc-500">{hints.join(' · ')}</span>
       ) : null}
-      {escalate ? <Badge tone={evaluation.overall === 'breached' ? 'danger' : 'warning'}>{escalate}</Badge> : null}
     </span>
   );
 }

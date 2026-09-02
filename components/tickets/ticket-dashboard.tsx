@@ -345,9 +345,10 @@ export function TicketDashboard({ currentUserId, role }: { currentUserId: string
           {
             label: t.tickets.slaRisk,
             value: atRiskCount,
-            className: 'text-rose-400',
+            className: 'text-zinc-500',
+            valueClassName:
+              atRiskCount > 0 ? (slaRiskOnly ? 'text-amber-300' : 'text-amber-400/90') : 'text-zinc-50',
             onClick: () => setFilter({ sla: slaRiskOnly ? null : 'risk' }),
-            active: slaRiskOnly,
           },
         ].map((stat) => (
           <Card
@@ -357,7 +358,11 @@ export function TicketDashboard({ currentUserId, role }: { currentUserId: string
           >
             <CardContent className="p-4">
               <p className={`text-[11px] uppercase tracking-[0.16em] ${stat.className}`}>{stat.label}</p>
-              <p className={`mt-1 text-xl font-semibold ${stat.active ? 'text-rose-300' : 'text-zinc-50'}`}>
+              <p
+                className={`mt-1 text-xl font-semibold ${
+                  'valueClassName' in stat ? stat.valueClassName : 'text-zinc-50'
+                }`}
+              >
                 {loading ? '—' : stat.value}
               </p>
             </CardContent>

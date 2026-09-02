@@ -308,8 +308,8 @@ function NavLink({
                   className={cn(
                     'font-mono tabular-nums transition-opacity hover:opacity-90',
                     rail
-                      ? 'min-w-[14px] rounded bg-rose-500 px-0.5 text-center text-[9px] font-semibold leading-[14px] text-white'
-                      : 'rounded-md bg-rose-500/15 px-1.5 py-0.5 text-[10px] font-medium text-rose-400 ring-1 ring-rose-500/30',
+                      ? 'min-w-[14px] rounded bg-amber-500/90 px-0.5 text-center text-[9px] font-semibold leading-[14px] text-zinc-950'
+                      : 'rounded-md bg-amber-500/12 px-1.5 py-0.5 text-[10px] font-medium text-amber-400/90 ring-1 ring-amber-500/25',
                   )}
                   title="SLA risk"
                 >
@@ -320,8 +320,8 @@ function NavLink({
                   className={cn(
                     'font-mono tabular-nums',
                     rail
-                      ? 'min-w-[14px] rounded bg-rose-500 px-0.5 text-center text-[9px] font-semibold leading-[14px] text-white'
-                      : 'rounded-md bg-rose-500/15 px-1.5 py-0.5 text-[10px] font-medium text-rose-400 ring-1 ring-rose-500/30',
+                      ? 'min-w-[14px] rounded bg-amber-500/90 px-0.5 text-center text-[9px] font-semibold leading-[14px] text-zinc-950'
+                      : 'rounded-md bg-amber-500/12 px-1.5 py-0.5 text-[10px] font-medium text-amber-400/90 ring-1 ring-amber-500/25',
                   )}
                   title="SLA risk"
                 >

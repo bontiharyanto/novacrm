@@ -50,8 +50,8 @@ function rowSlaClass(ticket: TicketRow) {
     slaResponseMinutes: ticket.slaResponseMinutes,
     slaResolveMinutes: ticket.slaResolveMinutes,
   }).overall;
-  if (level === 'breached') return 'border-l-2 border-l-rose-500/80';
-  if (level === 'risk') return 'border-l-2 border-l-amber-500/60';
+  if (level === 'breached') return 'border-l-2 border-l-rose-500/35';
+  if (level === 'risk') return 'border-l-2 border-l-amber-500/40';
   return '';
 }
 
