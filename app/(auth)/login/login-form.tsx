@@ -63,7 +63,7 @@ export function LoginForm() {
   ];
 
   return (
-    <div className="grid min-h-dvh lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+    <div className="auth-page grid min-h-dvh lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
       <aside className="relative hidden overflow-hidden border-r border-zinc-800/80 bg-zinc-950 lg:flex lg:flex-col">
         <div
           className="pointer-events-none absolute inset-0 opacity-[0.35]"

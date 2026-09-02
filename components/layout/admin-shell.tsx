@@ -1565,7 +1565,7 @@ export function AgentShell({
   const desktopPad = rail ? 'md:pl-14' : 'md:pl-[15.5rem]';
 
   return (
-    <div className="min-h-dvh bg-zinc-950 text-zinc-100">
+    <div className="agent-shell min-h-dvh bg-zinc-950 text-zinc-100">
       <aside
         className={cn(
           'fixed inset-y-0 left-0 z-30 hidden flex-col border-r border-zinc-800/80 bg-zinc-950 transition-[width] duration-200 ease-out md:flex',

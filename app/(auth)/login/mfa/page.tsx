@@ -15,7 +15,7 @@ export default async function LoginMfaPage({ searchParams }: { searchParams?: { 
   if (!factor) redirect('/settings/security?enroll=1');
 
   return (
-    <div className="flex min-h-dvh flex-col bg-zinc-950">
+    <div className="auth-page flex min-h-dvh flex-col bg-zinc-950">
       <div className="flex items-center gap-2.5 px-5 py-4 pt-safe md:px-8">
         <NovaMark size={28} />
         <span className="text-[13px] font-medium tracking-tight text-zinc-100">NovaCRM</span>

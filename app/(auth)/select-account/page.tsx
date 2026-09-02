@@ -45,7 +45,7 @@ export default async function SelectAccountPage({
     .maybeSingle();
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-950 px-4">
+    <div className="auth-page flex min-h-screen items-center justify-center bg-zinc-950 px-4">
       <SelectAccountForm
         accounts={scope.accounts}
         lastAccountId={scope.account?.id ?? (scope.viewingAll ? ACCOUNT_ALL : profile?.last_account_id) ?? ACCOUNT_ALL}
