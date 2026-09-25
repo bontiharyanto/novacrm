@@ -33,11 +33,11 @@ export function AuditBrowse() {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
-      className="space-y-5 p-6"
+      className="nova-page"
     >
       <div>
-        <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Overview</p>
-        <h1 className="text-2xl font-semibold text-zinc-50">Audit</h1>
+        <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-zinc-500">Overview</p>
+        <h1 className="text-lg font-semibold tracking-tight text-zinc-50 md:text-xl">Audit</h1>
         <p className="mt-1 text-sm text-zinc-500">Who changed a ticket field, and when. Last 200 events.</p>
       </div>
       <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search number, actor, field" />

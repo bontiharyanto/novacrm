@@ -216,11 +216,11 @@ export function TicketDashboard({ currentUserId, role }: { currentUserId: string
   const queueCount = tickets.filter((ticket) => ticket.groupId && myGroupIds.includes(ticket.groupId)).length;
 
   return (
-    <div className="space-y-5 p-4 pb-24 md:p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="nova-page pb-24">
+      <div className="flex flex-wrap items-center justify-between gap-2.5">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">{t.tickets.kicker}</p>
-          <h1 className="text-2xl font-semibold text-zinc-50">
+          <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-zinc-500">{t.tickets.kicker}</p>
+          <h1 className="text-lg font-semibold tracking-tight text-zinc-50 md:text-xl">
             {activeType === 'all' ? t.tickets.title : t.tickets.typePlural[activeType]}
           </h1>
           {agentOnly ? <p className="mt-1 text-sm text-zinc-500">{t.tickets.agentScopeHint}</p> : null}

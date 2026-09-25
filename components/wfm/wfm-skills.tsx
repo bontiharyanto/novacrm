@@ -31,7 +31,7 @@ export function WfmSkills({
 
   return (
     <div className="grid min-h-[calc(100vh-3.5rem)] lg:grid-cols-[minmax(0,1fr)_320px]">
-      <div className="space-y-6 p-6">
+      <div className="nova-page">
         <WfmNav canManageWfm={canEdit} />
         <div className="overflow-hidden rounded-xl border border-zinc-800">
           <table className="w-full text-left text-sm">

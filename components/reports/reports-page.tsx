@@ -151,14 +151,14 @@ export function ReportsPage({ canWorkforce = false }: { canWorkforce?: boolean }
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
-      className="space-y-5 p-6"
+      className="nova-page"
     >
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="flex flex-wrap items-end justify-between gap-2.5">
         <div>
-          <Link href="/dashboard" className="text-[11px] uppercase tracking-[0.2em] text-zinc-500 hover:text-zinc-200">
+          <Link href="/dashboard" className="text-[10px] font-medium uppercase tracking-[0.16em] text-zinc-500 hover:text-zinc-200">
             Operations
           </Link>
-          <h1 className="mt-1 text-2xl font-semibold text-zinc-50">Reports</h1>
+          <h1 className="text-lg font-semibold tracking-tight text-zinc-50 md:text-xl">Reports</h1>
           {kind === 'workforce' ? (
             <p className="mt-1 text-sm text-zinc-500">Coverage gaps and clock-in vs roster — export only, no preview</p>
           ) : report && !stale ? (

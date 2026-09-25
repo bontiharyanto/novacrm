@@ -58,11 +58,11 @@ export function CabBoard() {
   const emergency = changes.filter((item) => item.changeType === 'emergency' && item.status !== 'closed').length;
 
   return (
-    <div className="space-y-5 p-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+    <div className="nova-page">
+      <div className="flex flex-wrap items-end justify-between gap-2.5">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">{t.cab.kicker}</p>
-          <h1 className="text-2xl font-semibold text-zinc-50">{t.nav.cab}</h1>
+          <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-zinc-500">{t.cab.kicker}</p>
+          <h1 className="text-lg font-semibold tracking-tight text-zinc-50 md:text-xl">{t.nav.cab}</h1>
         </div>
         <Link
           href="/tickets/new?type=change"

@@ -34,11 +34,11 @@ export function KnowledgeBrowse() {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
-      className="space-y-5 p-6"
+      className="nova-page"
     >
       <div>
-        <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Platform</p>
-        <h1 className="text-2xl font-semibold text-zinc-50">Knowledge</h1>
+        <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-zinc-500">Platform</p>
+        <h1 className="text-lg font-semibold tracking-tight text-zinc-50 md:text-xl">Knowledge</h1>
         <p className="mt-1 text-sm text-zinc-500">Articles published from resolved tickets. Search before opening a duplicate.</p>
       </div>
       <Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search title or body" />

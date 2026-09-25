@@ -2,14 +2,20 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Plus, Upload } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { Dialog } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { PageHeader } from '@/components/layout/page-header';
+import { deleteDirectoryUser } from '@/lib/users/actions';
 import type { DirectoryUser } from '@/lib/users/schema';
 import { supportTierLabel } from '@/lib/tickets/pending';
 import { useI18n } from '@/components/layout/preferences-provider';
 import { localizedRole } from '@/lib/i18n/labels';
 import { isCustomerRole, type AppRole } from '@/lib/rbac/roles';
+import { toastError, toastSuccess } from '@/components/ui/toast';
 
 const roleTone: Record<AppRole, 'danger' | 'info' | 'warning' | 'neutral'> = {
   superadmin: 'danger',
@@ -29,10 +35,21 @@ const levelTone: Record<string, 'success' | 'warning' | 'danger'> = {
   l3: 'danger',
 };
 
-export function UsersDashboard({ users, canCreate }: { users: DirectoryUser[]; canCreate: boolean }) {
+export function UsersDashboard({
+  users,
+  canCreate,
+  canDelete,
+}: {
+  users: DirectoryUser[];
+  canCreate: boolean;
+  canDelete: boolean;
+}) {
   const { t } = useI18n();
+  const router = useRouter();
   const [query, setQuery] = useState('');
   const [filter, setFilter] = useState<'all' | 'staff' | 'portal'>('all');
+  const [pending, setPending] = useState<DirectoryUser | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const rows = useMemo(() => {
     return users.filter((user) => {
@@ -50,42 +67,54 @@ export function UsersDashboard({ users, canCreate }: { users: DirectoryUser[]; c
   const staffCount = users.filter((user) => !isCustomerRole(user.role)).length;
   const l2Count = users.filter((user) => user.supportLevel === 'l2' || user.supportLevel === 'l3').length;
 
-  return (
-    <div className="grid min-h-[calc(100vh-3.5rem)] lg:grid-cols-[minmax(0,1fr)_320px]">
-      <div className="space-y-6 p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Configuration</p>
-            <h1 className="text-2xl font-semibold text-zinc-50">Users</h1>
-            <p className="mt-1 text-sm text-zinc-500">Access is the app role. Level is L1/L2/L3 from assignment groups.</p>
-          </div>
-          <div className="flex items-center gap-2">
-            {canCreate ? (
-              <Link
-                href="/import?kind=users"
-                className="inline-flex items-center gap-1.5 rounded-md border border-zinc-800 px-2.5 py-1.5 text-xs text-zinc-300 hover:bg-zinc-900"
-              >
-                <Upload className="h-3.5 w-3.5" /> Import
-              </Link>
-            ) : null}
-            {canCreate ? (
-              <Link
-                href="/users/new"
-                className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-2.5 py-1.5 text-xs font-medium text-white transition-all duration-200 ease-out hover:-translate-y-0.5 hover:bg-blue-500"
-              >
-                <Plus className="h-3.5 w-3.5" /> New user
-              </Link>
-            ) : null}
-          </div>
-        </div>
+  async function confirmDelete() {
+    if (!pending) return;
+    setDeleting(true);
+    const result = await deleteDirectoryUser(pending.id);
+    setDeleting(false);
+    if (result.error) {
+      toastError(result.error);
+      return;
+    }
+    toastSuccess(t.users.deleted);
+    setPending(null);
+    router.refresh();
+  }
 
-        <div className="flex flex-wrap gap-2">
+  return (
+    <div className="nova-page-split">
+      <div className="nova-page">
+        <PageHeader
+          kicker={t.users.kicker}
+          title={t.users.title}
+          description={t.users.subtitle}
+          actions={
+            canCreate ? (
+              <>
+                <Link
+                  href="/import?kind=users"
+                  className="inline-flex h-7 items-center gap-1.5 rounded-md border border-zinc-800 px-2 text-[12px] text-zinc-300 hover:bg-zinc-900"
+                >
+                  <Upload className="h-3.5 w-3.5" /> Import
+                </Link>
+                <Link
+                  href="/users/new"
+                  className="nova-accent-btn inline-flex h-7 items-center gap-1.5 rounded-md px-2 text-[12px] font-medium text-white"
+                >
+                  <Plus className="h-3.5 w-3.5" /> {t.users.newUser}
+                </Link>
+              </>
+            ) : null
+          }
+        />
+
+        <div className="flex flex-wrap gap-1.5">
           {(['all', 'staff', 'portal'] as const).map((item) => (
             <button
               key={item}
               type="button"
               onClick={() => setFilter(item)}
-              className={`rounded-full border px-2.5 py-1 text-[11px] ${
+              className={`rounded-md border px-2 py-0.5 text-[11px] ${
                 filter === item
                   ? 'border-blue-500/40 bg-blue-500/15 text-blue-200'
                   : 'border-zinc-800 text-zinc-500 hover:border-zinc-600'
@@ -96,53 +125,70 @@ export function UsersDashboard({ users, canCreate }: { users: DirectoryUser[]; c
           ))}
         </div>
 
-        <div className="overflow-hidden rounded-xl border border-zinc-800">
-          <div className="border-b border-zinc-800 bg-zinc-900 px-3 py-2">
+        <div className="nova-table-wrap">
+          <div className="border-b border-zinc-800 bg-zinc-900 px-2.5 py-1.5">
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Filter name, email, role, level..."
-              className="w-full bg-transparent text-sm text-zinc-100 outline-none placeholder:text-zinc-600"
+              className="w-full bg-transparent text-[13px] text-zinc-100 outline-none placeholder:text-zinc-600"
             />
           </div>
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-zinc-800 bg-zinc-950 text-[11px] uppercase tracking-[0.12em] text-zinc-500">
+          <table className="nova-table">
+            <thead>
               <tr>
-                <th className="px-3 py-2 font-medium">Name</th>
-                <th className="px-3 py-2 font-medium">Access</th>
-                <th className="px-3 py-2 font-medium">Level</th>
-                <th className="px-3 py-2 font-medium">Home unit</th>
-                <th className="px-3 py-2 font-medium">Groups</th>
+                <th>Name</th>
+                <th>Access</th>
+                <th>Level</th>
+                <th>Home unit</th>
+                <th>Groups</th>
+                <th />
               </tr>
             </thead>
             <tbody>
               {rows.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-3 py-8 text-center text-zinc-500">
+                  <td colSpan={6} className="py-8 text-center text-zinc-500">
                     No users match this filter.
                   </td>
                 </tr>
               ) : (
                 rows.map((user) => (
-                  <tr key={user.id} className="border-b border-zinc-800/80 hover:bg-zinc-900/80">
-                    <td className="px-3 py-2.5">
+                  <tr key={user.id} className="hover:bg-zinc-900/80">
+                    <td>
                       <Link href={`/users/${user.id}`} className="text-zinc-50 hover:text-blue-200">
                         {user.fullName}
                       </Link>
-                      <p className="text-xs text-zinc-500">{user.email ?? '—'}</p>
+                      <p className="text-[11px] text-zinc-500">{user.email ?? '—'}</p>
                     </td>
-                    <td className="px-3 py-2.5">
+                    <td>
                       <Badge tone={roleTone[user.role]}>{localizedRole(t, user.role)}</Badge>
                     </td>
-                    <td className="px-3 py-2.5">
+                    <td>
                       {user.supportLevel ? (
                         <Badge tone={levelTone[user.supportLevel]}>{supportTierLabel[user.supportLevel]}</Badge>
                       ) : (
                         <span className="text-zinc-600">—</span>
                       )}
                     </td>
-                    <td className="px-3 py-2.5 text-zinc-400">{user.orgUnitName ?? '—'}</td>
-                    <td className="px-3 py-2.5 text-zinc-500">{user.groups.map((group) => group.name).join(', ') || '—'}</td>
+                    <td className="text-zinc-400">{user.orgUnitName ?? '—'}</td>
+                    <td className="text-zinc-500">{user.groups.map((group) => group.name).join(', ') || '—'}</td>
+                    <td className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Link href={`/users/${user.id}`} className="text-[11px] text-zinc-400 hover:text-zinc-100">
+                          Edit
+                        </Link>
+                        {canDelete ? (
+                          <button
+                            type="button"
+                            className="text-[11px] text-zinc-500 hover:text-rose-300"
+                            onClick={() => setPending(user)}
+                          >
+                            Delete
+                          </button>
+                        ) : null}
+                      </div>
+                    </td>
                   </tr>
                 ))
               )}
@@ -150,26 +196,39 @@ export function UsersDashboard({ users, canCreate }: { users: DirectoryUser[]; c
           </table>
         </div>
       </div>
-      <aside className="space-y-4 border-l border-zinc-800 p-6">
+      <aside className="nova-aside">
         <Card>
-          <CardContent className="p-4">
-            <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Staff</p>
-            <p className="mt-1 text-xl font-semibold text-zinc-50">{staffCount}</p>
+          <CardContent className="nova-stat">
+            <p className="nova-stat-label">Staff</p>
+            <p className="nova-stat-value">{staffCount}</p>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
-            <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">L2 / L3</p>
-            <p className="mt-1 text-xl font-semibold text-zinc-50">{l2Count}</p>
+          <CardContent className="nova-stat">
+            <p className="nova-stat-label">L2 / L3</p>
+            <p className="nova-stat-value">{l2Count}</p>
           </CardContent>
         </Card>
-        <p className="text-sm leading-6 text-zinc-400">
+        <p className="text-[13px] leading-5 text-zinc-400">
           <span className="text-zinc-200">Access</span> = admin / agent / customer. Customer is portal only.
           <br />
-          <span className="text-zinc-200">Level</span> = highest group tier (L1, L2, L3). Add the person to L2 Network
-          or L3 Infra to raise the level.
+          <span className="text-zinc-200">Level</span> = highest group tier (L1, L2, L3).
         </p>
       </aside>
+      <Dialog open={Boolean(pending)} title={t.users.deleteTitle} onClose={() => (deleting ? undefined : setPending(null))}>
+        <p className="text-sm leading-6 text-zinc-400">
+          {pending ? `${pending.fullName} · ${pending.email ?? '—'}` : ''}
+        </p>
+        <p className="mt-2 text-[13px] leading-5 text-zinc-500">{t.users.deleteHint}</p>
+        <div className="mt-4 flex justify-end gap-2">
+          <Button type="button" size="sm" variant="ghost" disabled={deleting} onClick={() => setPending(null)}>
+            {t.common.cancel}
+          </Button>
+          <Button type="button" size="sm" variant="outline" disabled={deleting} onClick={() => void confirmDelete()}>
+            {deleting ? t.common.saving : t.users.deleteUser}
+          </Button>
+        </div>
+      </Dialog>
     </div>
   );
 }

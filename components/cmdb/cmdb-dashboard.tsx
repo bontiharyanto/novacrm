@@ -61,13 +61,13 @@ export function CmdbDashboard() {
   const segments = items.flatMap((item) => item.segments ?? []);
 
   return (
-    <div className="grid min-h-[calc(100vh-3.5rem)] lg:grid-cols-[minmax(0,1fr)_320px]">
-      <div className="space-y-5 p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="nova-page-split">
+      <div className="nova-page">
+        <div className="flex flex-wrap items-center justify-between gap-2.5">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">Configuration</p>
-            <h1 className="text-2xl font-semibold text-zinc-50">CMDB</h1>
-            <p className="mt-1 text-sm text-zinc-500">Topology is scoped to the active account.</p>
+            <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-zinc-500">Configuration</p>
+            <h1 className="text-lg font-semibold tracking-tight text-zinc-50 md:text-xl">CMDB</h1>
+            <p className="mt-0.5 text-[13px] text-zinc-500">Topology is scoped to the active account.</p>
           </div>
           <div className="flex items-center gap-2">
             <div className="flex rounded-md border border-zinc-800 p-0.5">

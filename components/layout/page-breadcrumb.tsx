@@ -24,7 +24,7 @@ function PageBreadcrumbInner({ className }: { className?: string }) {
     <nav
       aria-label="Breadcrumb"
       className={cn(
-        'flex flex-wrap items-center gap-1 px-4 pb-2 pt-3 text-[11px] uppercase tracking-[0.14em] md:px-6',
+        'flex flex-wrap items-center gap-1 px-4 pb-1 pt-2 text-[10px] uppercase tracking-[0.14em] md:px-5',
         className,
       )}
     >

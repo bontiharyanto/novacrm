@@ -76,11 +76,11 @@ export function ImportWorkbench({ initialKind }: { initialKind?: string }) {
   };
 
   return (
-    <div className="grid min-h-[calc(100vh-3.5rem)] lg:grid-cols-[minmax(0,1fr)_320px]">
-      <div className="space-y-5 p-6">
+    <div className="nova-page-split">
+      <div className="nova-page">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">{t.import.kicker}</p>
-          <h1 className="text-2xl font-semibold text-zinc-50">{t.import.title}</h1>
+          <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-zinc-500">{t.import.kicker}</p>
+          <h1 className="text-lg font-semibold tracking-tight text-zinc-50 md:text-xl">{t.import.title}</h1>
           <p className="mt-1 max-w-2xl text-sm text-zinc-500">{t.import.subtitle}</p>
         </div>
 

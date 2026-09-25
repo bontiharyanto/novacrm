@@ -7,12 +7,13 @@ import { ArrowLeft } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
 import { addGroupMember, removeGroupMember } from '@/lib/org/actions';
 import { resetUserMfa } from '@/lib/auth/mfa';
 import { resetUserPassword } from '@/lib/auth/password-actions';
-import { updateUserAccess } from '@/lib/users/actions';
+import { deleteDirectoryUser, updateUserAccess, updateUserIdentity } from '@/lib/users/actions';
 import { Input } from '@/components/ui/input';
 import { formatDateLong } from '@/lib/utils/dates';
 import type { DirectoryUser } from '@/lib/users/schema';
@@ -41,6 +42,7 @@ export function UserDetail({
   units,
   groups,
   canEdit,
+  canDelete,
   canResetMfa,
   canResetPassword,
   actorRole,
@@ -49,12 +51,16 @@ export function UserDetail({
   units: Array<{ id: string; name: string; type: string }>;
   groups: AssignmentGroup[];
   canEdit: boolean;
+  canDelete?: boolean;
   canResetMfa?: boolean;
   canResetPassword?: boolean;
   actorRole: AppRole;
 }) {
   const router = useRouter();
   const { t, locale } = useI18n();
+  const [fullName, setFullName] = useState(user.fullName);
+  const [email, setEmail] = useState(user.email ?? '');
+  const [phone, setPhone] = useState(user.phone ?? '');
   const [role, setRole] = useState<AppRole>(user.role);
   const [orgUnitId, setOrgUnitId] = useState(user.orgUnitId ?? '');
   const [groupId, setGroupId] = useState('');
@@ -63,6 +69,8 @@ export function UserDetail({
   const [resetting, setResetting] = useState(false);
   const [tempPassword, setTempPassword] = useState('');
   const [resettingPassword, setResettingPassword] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const available = groups.filter((group) => !user.groups.some((item) => item.groupId === group.id));
 
   async function save() {
@@ -77,19 +85,45 @@ export function UserDetail({
     router.refresh();
   }
 
+  async function saveIdentity() {
+    const result = await updateUserIdentity(user.id, { fullName, email, phone });
+    if (result.error) {
+      setMessage(result.error);
+      toastError(result.error);
+    } else {
+      setMessage(t.common.saved);
+      toastSuccess(t.common.saved);
+    }
+    router.refresh();
+  }
+
+  async function removeUser() {
+    setDeleting(true);
+    const result = await deleteDirectoryUser(user.id);
+    setDeleting(false);
+    if (result.error) {
+      setMessage(result.error);
+      toastError(result.error);
+      return;
+    }
+    toastSuccess(t.users.deleted);
+    router.push('/users');
+    router.refresh();
+  }
+
   return (
-    <div className="grid min-h-[calc(100vh-3.5rem)] lg:grid-cols-[minmax(0,1fr)_320px]">
-      <div className="space-y-6 p-6">
+    <div className="nova-page-split">
+      <div className="nova-page">
         <div>
           <Link href="/users" className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-200">
-            <ArrowLeft className="h-3.5 w-3.5" /> Users
+            <ArrowLeft className="h-3.5 w-3.5" /> {t.users.title}
           </Link>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <h1 className="text-xl font-semibold text-zinc-50">{user.fullName}</h1>
+          <div className="mt-1.5 flex flex-wrap items-center gap-2">
+            <h1 className="text-lg font-semibold tracking-tight text-zinc-50 md:text-xl">{user.fullName}</h1>
             <Badge tone={roleTone[user.role]}>{localizedRole(t, user.role)}</Badge>
             {user.supportLevel ? <Badge tone="warning">{supportTierLabel[user.supportLevel]}</Badge> : null}
           </div>
-          <p className="mt-1 text-sm text-zinc-500">{user.email ?? 'No email'}</p>
+          <p className="mt-1 text-[13px] text-zinc-500">{user.email ?? 'No email'}</p>
           <p className="mt-2 text-xs text-zinc-500">
             {t.passwordPolicy.status}:{' '}
             <span className={user.passwordExpired ? 'text-amber-300' : 'text-zinc-300'}>
@@ -99,7 +133,30 @@ export function UserDetail({
           </p>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        {canEdit ? (
+          <div className="space-y-3">
+            <h2 className="text-[13px] font-medium text-zinc-50">{t.users.identity}</h2>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="fullName">{t.users.fullName}</Label>
+                <Input id="fullName" value={fullName} onChange={(event) => setFullName(event.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="email">{t.users.email}</Label>
+                <Input id="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
+              </div>
+              <div className="space-y-1.5 sm:col-span-2">
+                <Label htmlFor="phone">{t.users.phone}</Label>
+                <Input id="phone" value={phone} onChange={(event) => setPhone(event.target.value)} />
+              </div>
+            </div>
+            <Button type="button" size="sm" onClick={() => void saveIdentity()}>
+              {t.users.saveIdentity}
+            </Button>
+          </div>
+        ) : null}
+
+        <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label>Access</Label>
             <RoleSelect value={role} actorRole={actorRole} disabled={!canEdit} onChange={setRole} />
@@ -174,7 +231,7 @@ export function UserDetail({
         </div>
       </div>
 
-      <aside className="space-y-4 border-l border-zinc-800 p-6 lg:sticky lg:top-20 lg:self-start">
+      <aside className="nova-aside lg:sticky lg:top-16 lg:self-start">
         <Card>
           <CardHeader>
             <CardTitle className="text-sm text-zinc-400">Accounts</CardTitle>
@@ -313,7 +370,31 @@ export function UserDetail({
             </p>
           </div>
         ) : null}
+        {canDelete ? (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-sm text-zinc-400">{t.users.deleteUser}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="text-xs leading-5 text-zinc-500">{t.users.deleteHint}</p>
+              <Button type="button" size="sm" variant="outline" onClick={() => setConfirmDelete(true)}>
+                {t.users.deleteUser}
+              </Button>
+            </CardContent>
+          </Card>
+        ) : null}
       </aside>
+      <Dialog open={confirmDelete} title={t.users.deleteTitle} onClose={() => (deleting ? undefined : setConfirmDelete(false))}>
+        <p className="text-[13px] leading-5 text-zinc-500">{t.users.deleteHint}</p>
+        <div className="mt-4 flex justify-end gap-2">
+          <Button type="button" size="sm" variant="ghost" disabled={deleting} onClick={() => setConfirmDelete(false)}>
+            {t.common.cancel}
+          </Button>
+          <Button type="button" size="sm" variant="outline" disabled={deleting} onClick={() => void removeUser()}>
+            {deleting ? t.common.saving : t.users.deleteUser}
+          </Button>
+        </div>
+      </Dialog>
     </div>
   );
 }

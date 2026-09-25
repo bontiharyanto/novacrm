@@ -151,6 +151,7 @@ export function defineAbilityFor(role: AppRole): AppAbility {
     can('read', 'User');
     can('create', 'User');
     can('update', 'User');
+    can('delete', 'User');
     can('create', 'Catalog');
     can('update', 'Catalog');
     can('read', 'Workflow');
@@ -206,6 +207,7 @@ export function defineAbilityFor(role: AppRole): AppAbility {
     can('read', 'User');
     can('create', 'User');
     can('update', 'User');
+    can('delete', 'User');
     can('create', 'Sla');
     can('update', 'Sla');
     can('create', 'Catalog');

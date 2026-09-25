@@ -41,7 +41,7 @@ export function WfmReviews({
   };
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="nova-page">
       <WfmNav canManageWfm={canManageWfm} />
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-zinc-500">{t.wfm.reviewHint}</p>

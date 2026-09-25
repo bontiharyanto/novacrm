@@ -8,6 +8,12 @@ export const userAccessSchema = z.object({
   orgUnitId: z.preprocess((value) => (value === '' ? null : value), uuidSchema.nullable().optional()),
 });
 
+export const userIdentitySchema = z.object({
+  fullName: z.string().trim().min(2).max(120),
+  email: z.string().trim().email().max(160),
+  phone: z.preprocess(emptyToUndefined, z.string().trim().max(40).optional()),
+});
+
 export const createUserSchema = z.object({
   fullName: z.string().trim().min(2).max(120),
   email: z.string().trim().email().max(160),

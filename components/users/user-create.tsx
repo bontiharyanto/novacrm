@@ -87,9 +87,9 @@ export function UserCreate({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
-      className="grid min-h-[calc(100vh-3.5rem)] lg:grid-cols-[minmax(0,1fr)_320px]"
+      className="nova-page-split"
     >
-      <div className="space-y-6 p-6">
+      <div className="nova-page">
         <div>
           <Link href="/users" className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-200">
             <ArrowLeft className="h-3.5 w-3.5" /> Users

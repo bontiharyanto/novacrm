@@ -77,11 +77,11 @@ export function AssetDashboard() {
   }, [assets, type, status, query]);
 
   return (
-    <div className="space-y-5 p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="nova-page">
+      <div className="flex flex-wrap items-center justify-between gap-2.5">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">ITAM</p>
-          <h1 className="text-2xl font-semibold text-zinc-50">Assets</h1>
+          <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-zinc-500">ITAM</p>
+          <h1 className="text-lg font-semibold tracking-tight text-zinc-50 md:text-xl">Assets</h1>
         </div>
         <div className="flex items-center gap-2">
           <Link
@@ -107,9 +107,9 @@ export function AssetDashboard() {
           { label: 'Warranty risk', value: warrantyAlerts, className: 'text-rose-400' },
         ].map((stat) => (
           <Card key={stat.label}>
-            <CardContent className="p-4">
-              <p className={`text-[11px] uppercase tracking-[0.16em] ${stat.className}`}>{stat.label}</p>
-              <p className="mt-1 text-xl font-semibold text-zinc-50">{loading ? '—' : stat.value}</p>
+            <CardContent className="nova-stat">
+              <p className={`text-[10px] uppercase tracking-[0.14em] ${stat.className}`}>{stat.label}</p>
+              <p className="nova-stat-value">{loading ? '—' : stat.value}</p>
             </CardContent>
           </Card>
         ))}

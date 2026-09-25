@@ -274,7 +274,7 @@ function NavLink({
             : undefined
         }
         className={cn(
-          'relative flex h-8 min-w-0 flex-1 items-center rounded-md text-[13px] leading-none outline-none transition-[color,background-color] duration-200 ease-out',
+          'relative flex h-7 min-w-0 flex-1 items-center rounded-md text-[12.5px] leading-none outline-none transition-[color,background-color] duration-200 ease-out',
           'focus-visible:ring-1 focus-visible:ring-[color-mix(in_srgb,var(--accent)_55%,transparent)]',
           rail ? 'justify-center px-0' : 'gap-2 px-2',
           !rail && onPinToggle ? (hasBadges ? 'pr-16' : 'pr-7') : null,
@@ -543,7 +543,7 @@ function ProcessNav({
               pinLabel={t.nav.pin}
               unpinLabel={t.nav.unpin}
             />
-          </div>
+        </div>
         );
       })}
     </NavSection>
@@ -582,12 +582,12 @@ function NestedFolder({
   const FolderIcon = effectivelyCollapsed ? Folder : FolderOpen;
 
   if (rail) {
-    return (
+            return (
       <>
         {visible.map((item) => (
           <NavLink
-            key={item.href}
-            href={item.href}
+                key={item.href}
+                href={item.href}
             label={t.nav[item.labelKey]}
             icon={item.icon}
             active={isPathActive(pathname, item.href)}
@@ -1602,7 +1602,7 @@ export function AgentShell({
                 onClose={() => setMobileOpen(false)}
               />
             </motion.aside>
-          </div>
+            </div>
         ) : null}
       </AnimatePresence>
 
@@ -1722,7 +1722,7 @@ export function AgentShell({
             {canRole(role, 'read', 'Wfm') ? <ShiftBanner /> : null}
             <PageBreadcrumb />
             {children}
-          </div>
+      </div>
         </motion.main>
       </div>
       <CommandPalette open={commandOpen} onOpenChange={setCommandOpen} role={role} />

@@ -6,7 +6,13 @@ import { canRole, canAssignRole, isCustomerRole, isTenantAdminRole } from '@/lib
 import { isStaffRole } from '@/lib/rbac/roles';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { isSupportTier, type SupportTier } from '@/lib/tickets/pending';
-import { createUserSchema, highestSupportLevel, userAccessSchema, type DirectoryUser } from '@/lib/users/schema';
+import {
+  createUserSchema,
+  highestSupportLevel,
+  userAccessSchema,
+  userIdentitySchema,
+  type DirectoryUser,
+} from '@/lib/users/schema';
 import type { AssignmentGroup, AssignmentGroupKind } from '@/lib/org/schema';
 import { createSupabaseAdminClient, hasServiceRole } from '@/lib/supabase/admin';
 import { formatZodError } from '@/lib/validation/zod-error';
@@ -142,10 +148,15 @@ export async function listDirectoryUsers(): Promise<DirectoryUser[]> {
           .eq('tenant_id', session.profile.tenantId)
           .in('group_id', groupIds)
       : { data: [] };
+  const leftover =
+    !scoped.accountId
+      ? await supabase.from('profiles').select('id').eq('tenant_id', session.profile.tenantId)
+      : { data: [] as Array<{ id: string }> };
   const userIds = Array.from(
     new Set([
       ...(members ?? []).map((row) => row.user_id as string),
       ...(groupMembers ?? []).map((row) => row.user_id as string),
+      ...(leftover.data ?? []).map((row) => row.id as string),
     ]),
   );
   if (userIds.length === 0) return [];
@@ -251,15 +262,6 @@ export async function createDirectoryUser(input: unknown) {
 
   const supabase = await createSupabaseServerClient();
   const email = parsed.email.toLowerCase();
-  const { data: existing } = await supabase
-    .from('profiles')
-    .select('id')
-    .eq('tenant_id', session.profile.tenantId)
-    .ilike('email', email)
-    .maybeSingle();
-  if (existing) {
-    return { data: null, error: 'Email is already used in this tenant' };
-  }
 
   const { data: account } = await supabase
     .from('accounts')
@@ -272,13 +274,61 @@ export async function createDirectoryUser(input: unknown) {
     return { data: null, error: 'Portal users must join a customer account' };
   }
 
-  if (isStaffRole(parsed.role)) {
+  const { data: existing } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('tenant_id', session.profile.tenantId)
+    .ilike('email', email)
+    .maybeSingle();
+
+  const { data: members } = existing
+    ? await supabase
+        .from('account_members')
+        .select('id')
+        .eq('tenant_id', session.profile.tenantId)
+        .eq('user_id', existing.id)
+        .limit(1)
+    : { data: [] as Array<{ id: string }> };
+
+  if (existing && (members?.length ?? 0) > 0) {
+    return { data: null, error: 'Email is already used in this tenant' };
+  }
+
+  if (isStaffRole(parsed.role) && !existing) {
     const quotaError = await assertAgentQuota(session.profile.tenantId);
     if (quotaError) return { data: null, error: quotaError };
   }
 
   const admin = createSupabaseAdminClient();
-  const created = await admin.auth.admin.createUser({
+  let userId = existing?.id;
+
+  if (!userId) {
+    const created = await admin.auth.admin.createUser({
+      email,
+      password: parsed.password,
+      email_confirm: true,
+      user_metadata: {
+        full_name: parsed.fullName,
+        role: parsed.role,
+        tenant_id: session.profile.tenantId,
+      },
+    });
+    if (created.error || !created.data.user) {
+      const leftover = await findAuthUserByEmail(admin, email);
+      if (!leftover) {
+        return { data: null, error: created.error?.message ?? 'Unable to create login' };
+      }
+      const { data: other } = await admin.from('profiles').select('id, tenant_id').eq('id', leftover.id).maybeSingle();
+      if (other && other.tenant_id !== session.profile.tenantId) {
+        return { data: null, error: 'Email is already used in another workspace' };
+      }
+      userId = leftover.id;
+    } else {
+      userId = created.data.user.id;
+    }
+  }
+
+  const authSync = await admin.auth.admin.updateUserById(userId, {
     email,
     password: parsed.password,
     email_confirm: true,
@@ -288,28 +338,33 @@ export async function createDirectoryUser(input: unknown) {
       tenant_id: session.profile.tenantId,
     },
   });
-  if (created.error || !created.data.user) {
-    return { data: null, error: created.error?.message ?? 'Unable to create login' };
+  if (authSync.error) {
+    return { data: null, error: authSync.error.message };
   }
-  const userId = created.data.user.id;
 
-  const { data: profile, error: profileError } = await supabase
+  const { data: existingProfile } = await admin
     .from('profiles')
-    .update({
-      full_name: parsed.fullName,
-      email,
-      phone: parsed.phone ?? null,
-      role: parsed.role,
-      org_unit_id: parsed.orgUnitId ?? null,
-      created_by: session.userId,
-    })
-    .eq('id', userId)
-    .eq('tenant_id', session.profile.tenantId)
     .select('id')
+    .eq('id', userId)
     .maybeSingle();
-  if (profileError || !profile) {
-    await admin.auth.admin.deleteUser(userId);
-    return { data: null, error: profileError?.message ?? 'Profile was not created' };
+  const profilePayload = {
+    full_name: parsed.fullName,
+    email,
+    phone: parsed.phone ?? null,
+    role: parsed.role,
+    org_unit_id: parsed.orgUnitId ?? null,
+    created_by: session.userId,
+  };
+  const profileWrite = existingProfile
+    ? await admin.from('profiles').update(profilePayload).eq('id', userId).eq('tenant_id', session.profile.tenantId).select('id').maybeSingle()
+    : await admin
+        .from('profiles')
+        .insert({ id: userId, tenant_id: session.profile.tenantId, ...profilePayload })
+        .select('id')
+        .maybeSingle();
+  if (profileWrite.error || !profileWrite.data) {
+    if (!existing && !existingProfile) await admin.auth.admin.deleteUser(userId);
+    return { data: null, error: profileWrite.error?.message ?? 'Profile was not created' };
   }
 
   const memberRole = isCustomerRole(parsed.role) ? 'portal' : 'member';
@@ -324,7 +379,7 @@ export async function createDirectoryUser(input: unknown) {
     if (internal?.id) accountIds.add(internal.id);
   }
 
-  const { error: memberError } = await supabase.from('account_members').insert(
+  const { error: memberError } = await admin.from('account_members').upsert(
     Array.from(accountIds).map((accountId) => ({
       tenant_id: session.profile.tenantId,
       account_id: accountId,
@@ -332,9 +387,10 @@ export async function createDirectoryUser(input: unknown) {
       role: memberRole,
       created_by: session.userId,
     })),
+    { onConflict: 'account_id,user_id', ignoreDuplicates: true },
   );
   if (memberError) {
-    await admin.auth.admin.deleteUser(userId);
+    if (!existing && !existingProfile) await admin.auth.admin.deleteUser(userId);
     return { data: null, error: memberError.message };
   }
 
@@ -346,18 +402,21 @@ export async function createDirectoryUser(input: unknown) {
       .eq('tenant_id', session.profile.tenantId)
       .maybeSingle();
     if (!group) {
-      await admin.auth.admin.deleteUser(userId);
+      if (!existing && !existingProfile) await admin.auth.admin.deleteUser(userId);
       return { data: null, error: 'Group not found' };
     }
-    const { error: groupError } = await supabase.from('assignment_group_members').insert({
-      tenant_id: session.profile.tenantId,
-      group_id: parsed.groupId,
-      user_id: userId,
-      role: 'member',
-      created_by: session.userId,
-    });
+    const { error: groupError } = await admin.from('assignment_group_members').upsert(
+      {
+        tenant_id: session.profile.tenantId,
+        group_id: parsed.groupId,
+        user_id: userId,
+        role: 'member',
+        created_by: session.userId,
+      },
+      { onConflict: 'group_id,user_id', ignoreDuplicates: true },
+    );
     if (groupError) {
-      await admin.auth.admin.deleteUser(userId);
+      if (!existing && !existingProfile) await admin.auth.admin.deleteUser(userId);
       return { data: null, error: groupError.message };
     }
   }
@@ -428,4 +487,134 @@ export async function updateUserAccess(userId: string, input: unknown) {
   revalidatePath('/users');
   revalidatePath(`/users/${userId}`);
   return { data: await getDirectoryUser(userId), error: null };
+}
+
+export async function updateUserIdentity(userId: string, input: unknown) {
+  const parsedResult = userIdentitySchema.safeParse(input);
+  if (!parsedResult.success) {
+    return { data: null, error: formatZodError(parsedResult.error) };
+  }
+  const parsed = parsedResult.data;
+  const session = await getSessionProfile();
+  if (!session || !canRole(session.profile.role, 'update', 'User')) {
+    return { data: null, error: 'Unauthorized' };
+  }
+  if (!hasServiceRole()) {
+    return { data: null, error: 'Service role is not configured. Cannot update login email.' };
+  }
+
+  const email = parsed.email.toLowerCase();
+  const supabase = await createSupabaseServerClient();
+  const { data: taken } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('tenant_id', session.profile.tenantId)
+    .ilike('email', email)
+    .neq('id', userId)
+    .maybeSingle();
+  if (taken) {
+    return { data: null, error: 'Email is already used in this tenant' };
+  }
+
+  const { data: current } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('id', userId)
+    .eq('tenant_id', session.profile.tenantId)
+    .maybeSingle();
+  if (!current) return { data: null, error: 'User not found' };
+
+  const admin = createSupabaseAdminClient();
+  const { error: authError } = await admin.auth.admin.updateUserById(userId, {
+    email,
+    email_confirm: true,
+    user_metadata: { full_name: parsed.fullName },
+  });
+  if (authError) return { data: null, error: authError.message };
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      full_name: parsed.fullName,
+      email,
+      phone: parsed.phone ?? null,
+    })
+    .eq('id', userId)
+    .eq('tenant_id', session.profile.tenantId);
+  if (error) return { data: null, error: error.message };
+
+  revalidatePath('/users');
+  revalidatePath(`/users/${userId}`);
+  return { data: await getDirectoryUser(userId), error: null };
+}
+
+export async function deleteDirectoryUser(userId: string) {
+  const session = await getSessionProfile();
+  if (!session || !canRole(session.profile.role, 'delete', 'User')) {
+    return { data: null, error: 'Unauthorized' };
+  }
+  if (userId === session.userId) {
+    return { data: null, error: 'You cannot delete your own login' };
+  }
+  if (!hasServiceRole()) {
+    return { data: null, error: 'Service role is not configured. Cannot delete logins.' };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data: target } = await supabase
+    .from('profiles')
+    .select('id, role')
+    .eq('id', userId)
+    .eq('tenant_id', session.profile.tenantId)
+    .maybeSingle();
+  if (!target) return { data: null, error: 'User not found' };
+
+  if (isTenantAdminRole(target.role)) {
+    const { count } = await supabase
+      .from('profiles')
+      .select('id', { count: 'exact', head: true })
+      .eq('tenant_id', session.profile.tenantId)
+      .in('role', ['admin', 'superadmin']);
+    if ((count ?? 0) <= 1) {
+      return { data: null, error: 'Cannot remove the last tenant admin' };
+    }
+  }
+
+  const admin = createSupabaseAdminClient();
+  const tenantId = session.profile.tenantId;
+  await admin.from('assignment_group_members').delete().eq('tenant_id', tenantId).eq('user_id', userId);
+  await admin.from('account_members').delete().eq('tenant_id', tenantId).eq('user_id', userId);
+  await admin.from('wfm_oncall_slots').delete().eq('tenant_id', tenantId).eq('primary_user_id', userId);
+  await admin.from('staff_reviews').delete().eq('tenant_id', tenantId).eq('subject_id', userId);
+  await admin.from('staff_reviews').delete().eq('tenant_id', tenantId).eq('reviewer_id', userId);
+
+  const { error: profileError } = await admin.from('profiles').delete().eq('id', userId).eq('tenant_id', tenantId);
+  if (profileError) return { data: null, error: profileError.message };
+
+  const { error: authError } = await admin.auth.admin.deleteUser(userId);
+  if (authError) return { data: null, error: authError.message };
+
+  revalidatePath('/users');
+  return { data: { id: userId }, error: null };
+}
+
+async function findAuthUserByEmail(
+  admin: ReturnType<typeof createSupabaseAdminClient>,
+  email: string,
+) {
+  const lookup = admin.auth.admin as typeof admin.auth.admin & {
+    getUserByEmail?: (value: string) => Promise<{ data: { user?: { id: string } | null } }>;
+  };
+  if (typeof lookup.getUserByEmail === 'function') {
+    const { data } = await lookup.getUserByEmail(email);
+    if (data.user?.id) return data.user;
+  }
+
+  for (let page = 1; page <= 8; page += 1) {
+    const { data } = await admin.auth.admin.listUsers({ page, perPage: 200 });
+    const match = data.users.find((user) => user.email?.toLowerCase() === email);
+    if (match) return match;
+    if (data.users.length < 200) break;
+  }
+  return null;
 }

@@ -38,11 +38,11 @@ export function CatalogDashboard({ canCopyCatalog = false }: { canCopyCatalog?: 
   useRealtimeTable('catalog_items', load);
 
   return (
-    <div className="space-y-5 p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="nova-page">
+      <div className="flex flex-wrap items-center justify-between gap-2.5">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">{t.catalog.kicker}</p>
-          <h1 className="text-2xl font-semibold text-zinc-50">{t.catalog.title}</h1>
+          <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-zinc-500">{t.catalog.kicker}</p>
+          <h1 className="text-lg font-semibold tracking-tight text-zinc-50 md:text-xl">{t.catalog.title}</h1>
         </div>
         <div className="flex gap-2">
           {canCopyCatalog ? (

@@ -56,12 +56,12 @@ export function GovernanceDashboard() {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
-      className="space-y-5 p-6"
+      className="nova-page"
     >
-      <div className="flex flex-wrap items-end justify-between gap-3">
+      <div className="flex flex-wrap items-end justify-between gap-2.5">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">UU PDP · Law 27/2022</p>
-          <h1 className="text-2xl font-semibold text-zinc-50">Governance</h1>
+          <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-zinc-500">UU PDP · Law 27/2022</p>
+          <h1 className="text-lg font-semibold tracking-tight text-zinc-50 md:text-xl">Governance</h1>
         </div>
         <GovernanceNav />
       </div>

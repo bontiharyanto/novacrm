@@ -36,7 +36,7 @@ export function WfmBoard({
   useRealtimeTable('wfm_roster_entries', refresh);
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="nova-page">
       <WfmNav canManageWfm={canManageWfm} />
       {canSetPresence ? (
         <div className="flex flex-wrap items-center gap-2">

@@ -36,7 +36,7 @@ export function WfmOncall({
 
   return (
     <div className="grid min-h-[calc(100vh-3.5rem)] lg:grid-cols-[minmax(0,1fr)_320px]">
-      <div className="space-y-6 p-6">
+      <div className="nova-page">
         <WfmNav canManageWfm={canEdit} />
         {rotations.map((rotation) => (
           <section key={rotation.id} className="overflow-hidden rounded-xl border border-zinc-800">

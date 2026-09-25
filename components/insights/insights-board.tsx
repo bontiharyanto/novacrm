@@ -115,12 +115,12 @@ export function InsightsBoardView({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
-      className="space-y-5 p-6"
+      className="nova-page"
     >
-      <div className="flex flex-wrap items-end justify-between gap-4">
+      <div className="flex flex-wrap items-end justify-between gap-2.5">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">{t.nav.overview}</p>
-          <h1 className="mt-1 text-2xl font-semibold text-zinc-50">{t.insights.title}</h1>
+          <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-zinc-500">{t.nav.overview}</p>
+          <h1 className="text-lg font-semibold tracking-tight text-zinc-50 md:text-xl">{t.insights.title}</h1>
           <p className="mt-1 max-w-2xl text-sm text-zinc-500">{t.insights.subtitle}</p>
         </div>
         <Button disabled={running !== null} onClick={() => void run()}>

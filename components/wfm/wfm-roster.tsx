@@ -160,7 +160,7 @@ export function WfmRoster({
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="nova-page">
       <WfmNav selfOnly={selfOnly} canManageWfm={canEdit} />
       {selfOnly ? <p className="text-sm text-zinc-400">{t.wfm.myRosterHint}</p> : null}
       <div className="flex flex-wrap gap-2">

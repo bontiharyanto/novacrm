@@ -107,7 +107,7 @@ export function WfmReviewForm({
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="nova-page">
       <WfmNav canManageWfm={canManageWfm} />
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <section className="space-y-4 rounded-xl border border-zinc-800 bg-zinc-900/40 p-5">

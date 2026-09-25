@@ -10,5 +10,11 @@ export default async function UsersPage() {
     redirect('/dashboard');
   }
   const users = await listDirectoryUsers();
-  return <UsersDashboard users={users} canCreate={canRole(session.profile.role, 'create', 'User')} />;
+  return (
+    <UsersDashboard
+      users={users}
+      canCreate={canRole(session.profile.role, 'create', 'User')}
+      canDelete={canRole(session.profile.role, 'delete', 'User')}
+    />
+  );
 }

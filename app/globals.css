@@ -258,6 +258,54 @@ html.light .text-rose-300 {
   color: var(--accent);
 }
 
+.nova-page {
+  @apply space-y-4 px-4 py-4 md:px-5 md:py-5;
+}
+
+.nova-page-split {
+  @apply grid min-h-[calc(100dvh-3.5rem)] lg:grid-cols-[minmax(0,1fr)_260px];
+}
+
+.nova-aside {
+  @apply space-y-3 border-zinc-800 px-4 py-4 lg:border-l;
+}
+
+.nova-stat {
+  @apply p-3;
+}
+
+.nova-stat-label {
+  @apply text-[10px] uppercase tracking-[0.14em] text-zinc-500;
+}
+
+.nova-stat-value {
+  @apply mt-0.5 text-lg font-semibold tabular-nums text-zinc-50;
+}
+
+.nova-table-wrap {
+  @apply overflow-hidden rounded-lg border border-zinc-800;
+}
+
+.nova-table {
+  @apply w-full text-left text-[13px];
+}
+
+.nova-table thead {
+  @apply border-b border-zinc-800 bg-zinc-950 text-[10px] uppercase tracking-[0.12em] text-zinc-500;
+}
+
+.nova-table th {
+  @apply px-2.5 py-1.5 font-medium;
+}
+
+.nova-table td {
+  @apply px-2.5 py-1.5;
+}
+
+.nova-table tbody tr {
+  @apply border-b border-zinc-800/70 last:border-0;
+}
+
 .nova-accent-soft {
   border-color: color-mix(in srgb, var(--accent) 40%, transparent);
   background-color: rgb(var(--accent-rgb) / 0.1);

@@ -123,11 +123,11 @@ export function SlaDashboard({
 
   if (!agreement) {
     return (
-      <div className="grid min-h-[calc(100vh-3.5rem)] lg:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="space-y-6 p-6">
+      <div className="nova-page-split">
+        <div className="nova-page">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">{t.sla.kicker}</p>
-            <h1 className="text-2xl font-semibold text-zinc-50">{t.nav.sla}</h1>
+            <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-zinc-500">{t.sla.kicker}</p>
+            <h1 className="text-lg font-semibold tracking-tight text-zinc-50 md:text-xl">{t.nav.sla}</h1>
             {accountName ? <p className="mt-1 text-sm text-zinc-500">{accountName}</p> : null}
           </div>
           <UcPanel contracts={contracts} canEdit={canEdit} />
@@ -148,12 +148,12 @@ export function SlaDashboard({
   }
 
   return (
-    <div className="grid min-h-[calc(100vh-3.5rem)] lg:grid-cols-[minmax(0,1fr)_320px]">
-      <div className="space-y-6 p-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="nova-page-split">
+      <div className="nova-page">
+        <div className="flex flex-wrap items-center justify-between gap-2.5">
           <div>
-            <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">{t.sla.kicker}</p>
-            <h1 className="text-2xl font-semibold text-zinc-50">{t.nav.sla}</h1>
+            <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-zinc-500">{t.sla.kicker}</p>
+            <h1 className="text-lg font-semibold tracking-tight text-zinc-50 md:text-xl">{t.nav.sla}</h1>
             <p className="mt-1 text-sm text-zinc-500">
               {accountName ?? t.sla.currentAccount} · {sample}
             </p>

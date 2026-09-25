@@ -18,13 +18,13 @@ export function WfmNav({
   const tabs = wfmNavTabsForRole(canManageWfm);
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="flex flex-wrap items-center justify-between gap-2.5">
       <div>
-        <p className="text-[11px] uppercase tracking-[0.2em] text-zinc-500">{t.wfm.kicker}</p>
-        <h1 className="text-2xl font-semibold text-zinc-50">{t.wfm.title}</h1>
-        <p className="mt-1 text-sm text-zinc-500">{t.wfm.subtitle}</p>
+        <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-zinc-500">{t.wfm.kicker}</p>
+        <h1 className="text-lg font-semibold tracking-tight text-zinc-50 md:text-xl">{t.wfm.title}</h1>
+        <p className="mt-0.5 text-[13px] text-zinc-500">{t.wfm.subtitle}</p>
       </div>
-      <div className="flex flex-wrap gap-1 rounded-lg border border-zinc-800 bg-zinc-950 p-1">
+      <div className="flex flex-wrap gap-1 rounded-md border border-zinc-800 bg-zinc-950 p-0.5">
         {tabs.map((tab) => {
           const active =
             tab.href === '/wfm' ? pathname === '/wfm' : pathname === tab.href || pathname.startsWith(`${tab.href}/`);
