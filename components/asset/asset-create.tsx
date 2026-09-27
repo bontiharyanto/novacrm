@@ -15,6 +15,7 @@ import { ASSET_STATUSES, type AssetStatus } from '@/lib/assets/schema';
 import { DEFAULT_ASSET_TYPES, type AssetTypeOption } from '@/lib/assets/types';
 import { toastError, toastSuccess } from '@/components/ui/toast';
 import { useI18n } from '@/components/layout/preferences-provider';
+import { AssetAssigneeField } from '@/components/asset/asset-assignee-field';
 
 export function AssetCreate() {
   const router = useRouter();
@@ -193,10 +194,7 @@ export function AssetCreate() {
                   ))}
                 </Select>
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="assignedTo">Assigned to</Label>
-                <Input id="assignedTo" value={assignedTo} onChange={(event) => setAssignedTo(event.target.value)} />
-              </div>
+              <AssetAssigneeField value={assignedTo} onChange={setAssignedTo} />
               <div className="space-y-1.5">
                 <Label htmlFor="location">Location</Label>
                 <Input id="location" value={location} onChange={(event) => setLocation(event.target.value)} />

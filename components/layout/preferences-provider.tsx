@@ -2,7 +2,7 @@
 
 import { createContext, useCallback, useContext, useMemo, useTransition, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { getDictionary, type Dictionary } from '@/lib/i18n';
+import type { Dictionary } from '@/lib/i18n';
 import { setPreferences } from '@/lib/preferences/actions';
 import type { Locale, Theme } from '@/lib/preferences';
 
@@ -20,15 +20,17 @@ const PreferencesContext = createContext<PreferencesContextValue | null>(null);
 export function PreferencesProvider({
   locale,
   theme,
+  dictionary,
   children,
 }: {
   locale: Locale;
   theme: Theme;
+  dictionary: Dictionary;
   children: ReactNode;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const t = useMemo(() => getDictionary(locale), [locale]);
+  const t = dictionary;
 
   const apply = useCallback(
     (next: { theme?: Theme; locale?: Locale }) => {

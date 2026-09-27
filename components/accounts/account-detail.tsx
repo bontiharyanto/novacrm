@@ -9,28 +9,51 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select } from '@/components/ui/select';
-import { addAccountMember, removeAccountMember, setActiveAccount, updateAccount } from '@/lib/accounts/actions';
+import { Dialog } from '@/components/ui/dialog';
+import { addAccountMember, deleteAccount, removeAccountMember, setActiveAccount, updateAccount } from '@/lib/accounts/actions';
 import type { AccountMember, AccountMemberRole, AccountRecord } from '@/lib/accounts/schema';
+import { toastError, toastSuccess } from '@/components/ui/toast';
+import { useI18n } from '@/components/layout/preferences-provider';
 
 export function AccountDetail({
   account,
   members,
   profiles,
   canEdit,
+  canDelete,
 }: {
   account: AccountRecord;
   members: AccountMember[];
   profiles: Array<{ id: string; fullName: string; email?: string; role: string }>;
   canEdit: boolean;
+  canDelete?: boolean;
 }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [name, setName] = useState(account.name);
   const [code, setCode] = useState(account.code ?? '');
   const [status, setStatus] = useState(account.status);
   const [userId, setUserId] = useState('');
   const [memberRole, setMemberRole] = useState<AccountMemberRole>('member');
   const [message, setMessage] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const available = profiles.filter((profile) => !members.some((member) => member.userId === profile.id));
+  const unusedCustomer = account.type === 'customer';
+
+  async function removeAccount() {
+    setDeleting(true);
+    const result = await deleteAccount(account.id);
+    setDeleting(false);
+    if (result.error) {
+      setMessage(result.error);
+      toastError(result.error);
+      return;
+    }
+    toastSuccess(t.accounts.deleted);
+    router.push('/accounts');
+    router.refresh();
+  }
 
   async function saveAccount() {
     const result = await updateAccount(account.id, { name, code, status });
@@ -62,16 +85,23 @@ export function AccountDetail({
               <span className="font-mono text-xs text-zinc-500">{account.slug}</span>
             </div>
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              void setActiveAccount(account.id).then(() => router.refresh());
-            }}
-          >
-            Work this account
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                void setActiveAccount(account.id).then(() => router.refresh());
+              }}
+            >
+              Work this account
+            </Button>
+            {canDelete && unusedCustomer ? (
+              <Button type="button" variant="ghost" size="sm" className="text-rose-300 hover:text-rose-200" onClick={() => setConfirmDelete(true)}>
+                {t.accounts.deleteAccount}
+              </Button>
+            ) : null}
+          </div>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -180,6 +210,20 @@ export function AccountDetail({
           </div>
         ) : null}
       </aside>
+      <Dialog open={confirmDelete} title={t.accounts.deleteTitle} onClose={() => (deleting ? undefined : setConfirmDelete(false))}>
+        <p className="text-sm leading-6 text-zinc-400">
+          {account.name} · {account.code ?? account.slug}
+        </p>
+        <p className="mt-2 text-[13px] leading-5 text-zinc-500">{t.accounts.deleteHint}</p>
+        <div className="mt-4 flex justify-end gap-2">
+          <Button type="button" size="sm" variant="ghost" disabled={deleting} onClick={() => setConfirmDelete(false)}>
+            {t.common.cancel}
+          </Button>
+          <Button type="button" size="sm" variant="outline" disabled={deleting} onClick={() => void removeAccount()}>
+            {deleting ? t.common.saving : t.accounts.deleteAccount}
+          </Button>
+        </div>
+      </Dialog>
     </div>
   );
 }

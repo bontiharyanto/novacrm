@@ -15,7 +15,7 @@ import { formatAnswers, mergeVariables, missingRequired, parseVariables, slugify
 import { parseFulfillmentSteps } from '@/lib/tickets/tasks-schema';
 import { getSessionProfile } from '@/lib/auth/session';
 import { formatZodError } from '@/lib/validation/zod-error';
-import { canRole } from '@/lib/rbac/ability';
+import { canAccessConfiguredCapability } from '@/lib/rbac/capability-actions';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { createTicket } from '@/lib/tickets/actions';
 
@@ -123,13 +123,13 @@ export async function listCatalogCategories() {
   const session = await getSessionProfile();
   if (!session) return [] as CatalogCategory[];
   const { categories } = await loadSetsAndCategories(session.profile.tenantId);
-  if (canRole(session.profile.role, 'read', 'Catalog')) return categories;
+  if ((await canAccessConfiguredCapability('read', 'Catalog'))) return categories;
   return categories.filter((item) => item.isActive);
 }
 
 export async function listCatalogVariableSets() {
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'read', 'Catalog')) {
+  if (!session || !(await canAccessConfiguredCapability('read', 'Catalog'))) {
     return [] as CatalogVariableSet[];
   }
   const { sets } = await loadSetsAndCategories(session.profile.tenantId);
@@ -151,7 +151,7 @@ export async function listCatalogItems() {
     .select('*')
     .eq('tenant_id', session.profile.tenantId)
     .order('name');
-  if (!canRole(session.profile.role, 'read', 'Catalog')) {
+  if (!(await canAccessConfiguredCapability('read', 'Catalog'))) {
     query = query.eq('is_active', true);
   }
   const { data, error } = await query;
@@ -168,7 +168,7 @@ export async function getCatalogItem(itemId: string) {
 export async function createCatalogCategory(input: unknown) {
   const parsed = catalogCategorySchema.parse(input);
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'create', 'Catalog')) {
+  if (!session || !(await canAccessConfiguredCapability('create', 'Catalog'))) {
     return { data: null, error: 'Unauthorized' };
   }
 
@@ -193,10 +193,34 @@ export async function createCatalogCategory(input: unknown) {
   return { data: mapCategory(data as CategoryRow), error: null };
 }
 
+export async function deleteCatalogCategory(categoryId: string) {
+  const session = await getSessionProfile();
+  if (!session || !(await canAccessConfiguredCapability('delete', 'Catalog'))) {
+    return { data: null, error: 'Unauthorized' };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from('catalog_categories')
+    .delete()
+    .eq('id', categoryId)
+    .eq('tenant_id', session.profile.tenantId)
+    .select('id')
+    .maybeSingle();
+
+  if (error) {
+    return { data: null, error: error.message };
+  }
+  if (!data) {
+    return { data: null, error: 'Category not found' };
+  }
+  return { data: true, error: null };
+}
+
 export async function createCatalogVariableSet(input: unknown) {
   const parsed = catalogVariableSetSchema.parse(input);
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'create', 'Catalog')) {
+  if (!session || !(await canAccessConfiguredCapability('create', 'Catalog'))) {
     return { data: null, error: 'Unauthorized' };
   }
 
@@ -222,7 +246,7 @@ export async function createCatalogVariableSet(input: unknown) {
 export async function updateCatalogVariableSet(setId: string, input: unknown) {
   const parsed = catalogVariableSetUpdateSchema.parse(input);
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'update', 'Catalog')) {
+  if (!session || !(await canAccessConfiguredCapability('update', 'Catalog'))) {
     return { data: null, error: 'Unauthorized' };
   }
 
@@ -246,6 +270,25 @@ export async function updateCatalogVariableSet(setId: string, input: unknown) {
   return { data: mapSet(data as SetRow), error: null };
 }
 
+export async function deleteCatalogVariableSet(setId: string) {
+  const session = await getSessionProfile();
+  if (!session || !(await canAccessConfiguredCapability('delete', 'Catalog'))) {
+    return { data: null, error: 'Unauthorized' };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from('catalog_variable_sets')
+    .delete()
+    .eq('id', setId)
+    .eq('tenant_id', session.profile.tenantId)
+    .select('id')
+    .maybeSingle();
+  if (error) return { data: null, error: error.message };
+  if (!data) return { data: null, error: 'Variable set not found' };
+  return { data: true, error: null };
+}
+
 export async function createCatalogItem(input: unknown) {
   const parsedResult = catalogItemSchema.safeParse(input);
   if (!parsedResult.success) {
@@ -253,7 +296,7 @@ export async function createCatalogItem(input: unknown) {
   }
   const parsed = parsedResult.data;
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'create', 'Catalog')) {
+  if (!session || !(await canAccessConfiguredCapability('create', 'Catalog'))) {
     return { data: null, error: 'Unauthorized' };
   }
 
@@ -290,7 +333,7 @@ export async function createCatalogItem(input: unknown) {
 export async function updateCatalogItem(itemId: string, input: unknown) {
   const parsed = catalogItemUpdateSchema.parse(input);
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'update', 'Catalog')) {
+  if (!session || !(await canAccessConfiguredCapability('update', 'Catalog'))) {
     return { data: null, error: 'Unauthorized' };
   }
 
@@ -325,10 +368,29 @@ export async function updateCatalogItem(itemId: string, input: unknown) {
   return { data: mapItem(data as ItemRow, categories, sets), error: null };
 }
 
+export async function deleteCatalogItem(itemId: string) {
+  const session = await getSessionProfile();
+  if (!session || !(await canAccessConfiguredCapability('delete', 'Catalog'))) {
+    return { data: null, error: 'Unauthorized' };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from('catalog_items')
+    .delete()
+    .eq('id', itemId)
+    .eq('tenant_id', session.profile.tenantId)
+    .select('id')
+    .maybeSingle();
+  if (error) return { data: null, error: error.message };
+  if (!data) return { data: null, error: 'Catalog item not found' };
+  return { data: true, error: null };
+}
+
 export async function submitCatalogRequest(itemId: string, input: unknown) {
   const parsed = catalogRequestSchema.parse(input);
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'create', 'Ticket')) {
+  if (!session || !(await canAccessConfiguredCapability('create', 'Ticket'))) {
     return { data: null, error: 'Unauthorized' };
   }
 

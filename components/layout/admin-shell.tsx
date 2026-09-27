@@ -24,7 +24,6 @@ import {
   Inbox,
   LayoutDashboard,
   LayoutGrid,
-  LogOut,
   Mail,
   Menu,
   Package,
@@ -64,7 +63,7 @@ import { ShiftBanner } from '@/components/layout/shift-banner';
 import { ShiftTopbarChip } from '@/components/layout/shift-topbar-chip';
 import { NotificationBell } from '@/components/layout/notification-bell';
 import { IdleSessionGuard } from '@/components/layout/idle-session-guard';
-import { SidebarUserCard } from '@/components/layout/sidebar-user-card';
+import { TopbarUserMenu } from '@/components/layout/topbar-user-menu';
 import { PageBreadcrumb } from '@/components/layout/page-breadcrumb';
 import { BrandWelcome } from '@/components/brand/brand-welcome';
 import { NovaWordmark, BrandMark } from '@/components/brand/nova-mark';
@@ -86,7 +85,14 @@ const NAV_COLLAPSE_COOKIE = 'novacrm_nav_collapse';
 const NAV_FOLDERS_COOKIE = 'novacrm_nav_folders';
 
 type NavKey = keyof Dictionary['nav'];
-type NavItem = { href: string; labelKey: NavKey; icon: typeof Ticket; action?: Actions; subject?: Subjects };
+type NavItem = {
+  href: string;
+  labelKey: NavKey;
+  icon: typeof Ticket;
+  action?: Actions;
+  subject?: Subjects;
+  visible?: (role: AppRole) => boolean;
+};
 type ProcessItem = {
   href: string;
   type: string | null;
@@ -205,6 +211,16 @@ const platformItems: NavItem[] = [
   { href: '/settings/capabilities', labelKey: 'capabilities', icon: ShieldCheck, action: 'update', subject: 'Capability' },
 ];
 
+const settingsItems: NavItem[] = [
+  { href: '/settings/tenant', labelKey: 'tenantSettings', icon: Building2, visible: (role) => isTenantAdminRole(role) },
+  { href: '/settings/appearance', labelKey: 'appearance', icon: Palette },
+  { href: '/settings/security', labelKey: 'security', icon: ShieldCheck },
+  { href: '/settings/usage', labelKey: 'usage', icon: Gauge, visible: (role) => isTenantAdminRole(role) },
+  { href: '/settings', labelKey: 'integrations', icon: Settings, visible: (role) => isTenantAdminRole(role) },
+  { href: '/settings/notifications', labelKey: 'notifications', icon: Mail, visible: (role) => isTenantAdminRole(role) },
+  { href: '/settings/reports', labelKey: 'reportSchedule', icon: BarChart3, visible: (role) => isTenantAdminRole(role) },
+];
+
 const pinCatalog: NavItem[] = [
   ...operationsBaseItems,
   ...analyticsItems,
@@ -212,6 +228,7 @@ const pinCatalog: NavItem[] = [
   ...processItems.map((item) => ({ href: item.href, labelKey: item.labelKey, icon: item.icon, action: 'read' as const, subject: item.subject })),
   ...configurationItems,
   ...platformItems,
+  ...settingsItems,
 ];
 
 function resolvePinIcon(href: string) {
@@ -220,6 +237,7 @@ function resolvePinIcon(href: string) {
 
 function isPathActive(pathname: string, href: string) {
   const path = href.split('?')[0];
+  if (path === '/settings') return pathname === '/settings';
   return pathname === path || pathname.startsWith(`${path}/`);
 }
 
@@ -917,11 +935,13 @@ function ItemSection({
   pins?: ReturnType<typeof useNavPins>;
 }) {
   const { t } = useI18n();
-  const visible = items.filter(
-    (item) =>
+  const visible = items.filter((item) => {
+    if (item.visible && !item.visible(role)) return false;
+    return (
       !item.subject ||
-      canConfiguredCapability(role, item.action ?? 'read', item.subject as CapabilitySubject, capabilityOverrides),
-  );
+      canConfiguredCapability(role, item.action ?? 'read', item.subject as CapabilitySubject, capabilityOverrides)
+    );
+  });
   if (visible.length === 0) return null;
 
   return (
@@ -1089,9 +1109,9 @@ function SidebarNav({
   const compactDeliveryNav = role === 'pm_delivery' || role === 'dco';
   const deliveryOverviewItems = operationsBaseItems.filter((item) => item.href.startsWith('/delivery/'));
   return (
-    <div className={cn('relative min-h-0', compactDeliveryNav ? 'shrink-0' : 'flex-1')}>
+    <div className="relative min-h-0 flex-1">
       <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-3 bg-gradient-to-b from-zinc-950 to-transparent" />
-      <div className={cn('nova-scroll-thin overflow-y-auto pb-3 pt-1', compactDeliveryNav ? 'h-auto' : 'h-full')}>
+      <div className="nova-scroll-thin h-full overflow-y-auto pb-3 pt-1">
         {!compactDeliveryNav ? (
           <Suspense fallback={null}>
             <FavoritesNav
@@ -1197,6 +1217,19 @@ function SidebarNav({
             />
           </>
         ) : null}
+        <ItemSection
+          id="settings"
+          title={t.nav.settings}
+          items={settingsItems}
+          pathname={pathname}
+          role={role}
+          capabilityOverrides={capabilityOverrides}
+          onNavigate={onNavigate}
+          rail={rail}
+          collapsed={collapsed.settings}
+          onToggle={onToggleSection}
+          pins={pins}
+        />
       </div>
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-4 bg-gradient-to-t from-zinc-950 to-transparent" />
     </div>
@@ -1205,119 +1238,26 @@ function SidebarNav({
 
 function SidebarFooter({
   role,
-  pathname,
-  onNavigate,
   rail = false,
 }: {
   role: AppRole;
-  pathname: string;
-  onNavigate?: () => void;
   rail?: boolean;
 }) {
-  const { t } = useI18n();
-  const appearanceActive = pathname === '/settings/appearance';
-  const tenantSettingsActive = pathname.startsWith('/settings/tenant');
-  const securityActive = pathname.startsWith('/settings/security');
-  const usageActive = pathname.startsWith('/settings/usage');
-  const notificationsActive = pathname.startsWith('/settings/notifications');
-  const reportScheduleActive = pathname.startsWith('/settings/reports');
-  const integrationsActive =
-    pathname.startsWith('/settings') &&
-    !appearanceActive &&
-    !tenantSettingsActive &&
-    !securityActive &&
-    !usageActive &&
-    !notificationsActive &&
-    !reportScheduleActive;
-
-  const settings = (
-    <>
-      {isTenantAdminRole(role) ? (
-        <NavLink
-          href="/settings/tenant"
-          label={t.nav.tenantSettings}
-          icon={Building2}
-          active={tenantSettingsActive}
-          onNavigate={onNavigate}
-          rail={rail}
-        />
-      ) : null}
-      <NavLink
-        href="/settings/appearance"
-        label={t.nav.appearance}
-        icon={Palette}
-        active={appearanceActive}
-        onNavigate={onNavigate}
-        rail={rail}
-      />
-      <NavLink
-        href="/settings/security"
-        label={t.nav.security}
-        icon={ShieldCheck}
-        active={securityActive}
-        onNavigate={onNavigate}
-        rail={rail}
-      />
-      {isTenantAdminRole(role) ? (
-        <>
-          <NavLink
-            href="/settings/usage"
-            label={t.nav.usage}
-            icon={Gauge}
-            active={usageActive}
-            onNavigate={onNavigate}
-            rail={rail}
-          />
-          <NavLink
-            href="/settings"
-            label={t.nav.integrations}
-            icon={Settings}
-            active={integrationsActive}
-            onNavigate={onNavigate}
-            rail={rail}
-          />
-          <NavLink
-            href="/settings/notifications"
-            label={t.nav.notifications}
-            icon={Mail}
-            active={notificationsActive}
-            onNavigate={onNavigate}
-            rail={rail}
-          />
-          <NavLink
-            href="/settings/reports"
-            label={t.nav.reportSchedule}
-            icon={BarChart3}
-            active={reportScheduleActive}
-            onNavigate={onNavigate}
-            rail={rail}
-          />
-        </>
-      ) : null}
-    </>
-  );
+  if (!canRole(role, 'update', 'Wfm')) return null;
 
   if (rail) {
     return (
       <div className="shrink-0 border-t border-zinc-800/60 px-1.5 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
-        <nav className="flex flex-col gap-0.5">{settings}</nav>
-        {canRole(role, 'update', 'Wfm') ? (
-          <div className="mt-1.5 border-t border-zinc-800/60 pt-1.5">
-            <PresenceControl />
-          </div>
-        ) : null}
+        <PresenceControl />
       </div>
     );
   }
 
   return (
     <div className="shrink-0 border-t border-zinc-800/60 px-2 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
-      <nav className="mb-1.5 flex flex-col gap-0.5">{settings}</nav>
-      {canRole(role, 'update', 'Wfm') ? (
-        <div className="rounded-lg border border-zinc-800/70 bg-zinc-900/50 p-1.5">
-          <PresenceControl />
-        </div>
-      ) : null}
+      <div className="rounded-lg border border-zinc-800/70 bg-zinc-900/50 p-1.5">
+        <PresenceControl />
+      </div>
     </div>
   );
 }
@@ -1325,13 +1265,10 @@ function SidebarFooter({
 function SidebarPanel({
   role,
   capabilityOverrides,
-  fullName,
-  tenantName,
   accounts,
   activeAccountId,
   pathname,
   onNavigate,
-  onSignOut,
   onClose,
   logoUrl,
   rail = false,
@@ -1344,13 +1281,10 @@ function SidebarPanel({
 }: {
   role: AppRole;
   capabilityOverrides: CapabilityOverride[];
-  fullName: string;
-  tenantName?: string | null;
   accounts: AccountRecord[];
   activeAccountId?: string | null;
   pathname: string;
   onNavigate?: () => void;
-  onSignOut: () => void | Promise<void>;
   onClose?: () => void;
   logoUrl?: string | null;
   rail?: boolean;
@@ -1367,13 +1301,6 @@ function SidebarPanel({
       <div className="shrink-0 border-b border-zinc-800/60">
         <SidebarBrand onClose={onClose} logoUrl={logoUrl} rail={rail} onToggleRail={onToggleRail} />
         {!rail ? <AccountSwitcher accounts={accounts} activeAccountId={activeAccountId} /> : null}
-        <SidebarUserCard
-          fullName={fullName}
-          role={role}
-          tenantName={tenantName}
-          rail={rail}
-          onSignOut={onSignOut}
-        />
         {!rail && (role === 'pm_delivery' || role === 'dco') ? (
           <div className="mx-3 mb-3 flex items-center gap-2 rounded-md border border-blue-500/20 bg-blue-500/5 px-2.5 py-2">
             <BriefcaseBusiness className="h-3.5 w-3.5 shrink-0 text-blue-400" />
@@ -1403,12 +1330,7 @@ function SidebarPanel({
         pins={pins}
         accountKey={activeAccountId ?? 'all'}
       />
-      <SidebarFooter
-        role={role}
-        pathname={pathname}
-        onNavigate={onNavigate}
-        rail={rail}
-      />
+      <SidebarFooter role={role} rail={rail} />
     </div>
   );
 }
@@ -1547,12 +1469,9 @@ export function AgentShell({
   const sidebarProps = {
     role,
     capabilityOverrides,
-    fullName,
-    tenantName,
     accounts,
     activeAccountId,
     pathname,
-    onSignOut: signOutAction,
     logoUrl,
     collapsed,
     onToggleSection: toggleSection,
@@ -1696,18 +1615,7 @@ export function AgentShell({
               </Link>
             ) : null}
 
-            <form action={signOutAction} className="md:hidden">
-              <button
-                type="submit"
-                aria-label={t.common.signOut}
-                className={cn(
-                  'inline-flex h-8 w-8 items-center justify-center rounded-md border border-zinc-800 text-zinc-400',
-                  'transition-colors duration-200 ease-out hover:bg-zinc-900 hover:text-zinc-100',
-                )}
-              >
-                <LogOut className="h-3.5 w-3.5" />
-              </button>
-            </form>
+            <TopbarUserMenu fullName={fullName} role={role} tenantName={tenantName} onSignOut={signOutAction} />
           </div>
         </header>
 

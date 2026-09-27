@@ -14,7 +14,13 @@ import { useI18n } from '@/components/layout/preferences-provider';
 import { localizedType } from '@/lib/i18n/labels';
 import type { CatalogCategory, CatalogItem, CatalogVariableSet } from '@/lib/catalog/schema';
 
-export function CatalogDashboard({ canCopyCatalog = false }: { canCopyCatalog?: boolean }) {
+export function CatalogDashboard({
+  canCopyCatalog = false,
+  canDelete = false,
+}: {
+  canCopyCatalog?: boolean;
+  canDelete?: boolean;
+}) {
   const { t, locale } = useI18n();
   const [items, setItems] = useState<CatalogItem[]>([]);
   const [categories, setCategories] = useState<CatalogCategory[]>([]);
@@ -36,6 +42,8 @@ export function CatalogDashboard({ canCopyCatalog = false }: { canCopyCatalog?: 
   }, [load]);
 
   useRealtimeTable('catalog_items', load);
+  useRealtimeTable('catalog_categories', load);
+  useRealtimeTable('catalog_variable_sets', load);
 
   return (
     <div className="nova-page">
@@ -99,6 +107,7 @@ export function CatalogDashboard({ canCopyCatalog = false }: { canCopyCatalog?: 
                   <th className="px-3 py-2 font-medium">{t.catalog.produces}</th>
                   <th className="px-3 py-2 font-medium">{t.catalog.state}</th>
                   <th className="px-3 py-2 font-medium">{t.catalog.opened}</th>
+                  {canDelete ? <th className="px-3 py-2 font-medium" /> : null}
                 </tr>
               </thead>
               <tbody>
@@ -118,6 +127,21 @@ export function CatalogDashboard({ canCopyCatalog = false }: { canCopyCatalog?: 
                       </Badge>
                     </td>
                     <td className="px-3 py-2.5 text-zinc-500">{formatRelativeId(item.createdAt, locale)}</td>
+                    {canDelete ? (
+                      <td className="px-3 py-2.5 text-right">
+                        <button
+                          type="button"
+                          className="text-[11px] text-zinc-500 hover:text-rose-300"
+                          onClick={() => {
+                            void fetch(`/api/catalog/${item.id}`, { method: 'DELETE' }).then((response) => {
+                              if (response.ok) void load();
+                            });
+                          }}
+                        >
+                          {t.catalog.deleteItem}
+                        </button>
+                      </td>
+                    ) : null}
                   </tr>
                 ))}
               </tbody>
@@ -131,25 +155,63 @@ export function CatalogDashboard({ canCopyCatalog = false }: { canCopyCatalog?: 
           <p className="mb-2 text-[11px] uppercase tracking-[0.16em] text-zinc-500">{t.catalog.variableSets}</p>
           <div className="grid gap-2 md:grid-cols-2">
             {sets.map((set) => (
-              <Link
+              <div
                 key={set.id}
-                href={`/catalog/sets/${set.id}`}
-                className="rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-3 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-zinc-700"
+                className="flex items-start justify-between gap-2 rounded-lg border border-zinc-800 bg-zinc-900 px-4 py-3 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-zinc-700"
               >
-                <p className="text-sm text-zinc-50">{set.name}</p>
-                <p className="text-[11px] text-zinc-500">
-                  {t.catalog.variablesCount.replace('{{n}}', String(set.variables.length))}
-                </p>
-              </Link>
+                <Link href={`/catalog/sets/${set.id}`} className="min-w-0">
+                  <p className="text-sm text-zinc-50">{set.name}</p>
+                  <p className="text-[11px] text-zinc-500">
+                    {t.catalog.variablesCount.replace('{{n}}', String(set.variables.length))}
+                  </p>
+                </Link>
+                {canDelete ? (
+                  <button
+                    type="button"
+                    className="shrink-0 text-[11px] text-zinc-500 hover:text-rose-300"
+                    onClick={() => {
+                      void fetch(`/api/catalog/sets/${set.id}`, { method: 'DELETE' }).then((response) => {
+                        if (response.ok) void load();
+                      });
+                    }}
+                  >
+                    {t.catalog.deleteSet}
+                  </button>
+                ) : null}
+              </div>
             ))}
           </div>
         </div>
       ) : null}
 
       {categories.length > 0 ? (
-        <p className="text-xs text-zinc-500">
-          {t.catalog.categories}: {categories.map((item) => item.name).join(' · ')}
-        </p>
+        <div className="space-y-2">
+          <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">{t.catalog.categories}</p>
+          <div className="flex flex-wrap gap-1.5">
+            {categories.map((item) => (
+              <span
+                key={item.id}
+                className="inline-flex items-center gap-1.5 rounded-md border border-zinc-800 bg-zinc-900 px-2.5 py-1 text-xs text-zinc-300"
+              >
+                {item.name}
+                {canDelete ? (
+                  <button
+                    type="button"
+                    className="text-zinc-500 hover:text-rose-300"
+                    aria-label={`${t.catalog.deleteCategory}: ${item.name}`}
+                    onClick={() => {
+                      void fetch(`/api/catalog/categories/${item.id}`, { method: 'DELETE' }).then((response) => {
+                        if (response.ok) void load();
+                      });
+                    }}
+                  >
+                    ×
+                  </button>
+                ) : null}
+              </span>
+            ))}
+          </div>
+        </div>
       ) : null}
 
       {canCopyCatalog ? (

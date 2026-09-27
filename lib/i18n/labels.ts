@@ -1,6 +1,4 @@
 import type { Dictionary } from '@/lib/i18n/en';
-import { getDictionary } from '@/lib/i18n';
-import type { Locale } from '@/lib/preferences';
 import { isTicketType, stageLabel, ticketTypeMeta, type TicketType } from '@/lib/tickets/process';
 import type { TicketStatus } from '@/lib/tickets/schema';
 import type { AppRole } from '@/lib/rbac/roles';
@@ -31,10 +29,6 @@ export function localizedRole(t: Dictionary, role: AppRole) {
 
 export function localizedRoleHint(t: Dictionary, role: AppRole) {
   return t.roles.hint[role];
-}
-
-export function dictionaryFor(locale: Locale) {
-  return getDictionary(locale);
 }
 
 export function localizedDsarType(t: Dictionary, type: string) {

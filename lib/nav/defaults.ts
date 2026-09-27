@@ -7,7 +7,8 @@ export type NavSectionId =
   | 'inventory'
   | 'analytics'
   | 'administration'
-  | 'platform';
+  | 'platform'
+  | 'settings';
 
 export type NavFolderId = 'wfm' | 'people';
 
@@ -19,9 +20,10 @@ export function defaultNavCollapseForRole(role: AppRole): Partial<Record<NavSect
         analytics: true,
         administration: true,
         platform: true,
+        settings: true,
       };
     case 'supervisor':
-      return { platform: true };
+      return { platform: true, settings: true };
     default:
       return {};
   }

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getAssetById, listAssetMovements, updateAsset } from '@/lib/assets/actions';
+import { deleteAsset, getAssetById, listAssetMovements, updateAsset } from '@/lib/assets/actions';
 import { requireApiUser } from '@/lib/api/require-user';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getSessionProfile } from '@/lib/auth/session';
@@ -72,4 +72,15 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       { status: 500 },
     );
   }
+}
+
+export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
+  const auth = await requireApiUser('delete', 'Asset');
+  if (auth.error) return auth.error;
+
+  const result = await deleteAsset(params.id);
+  if (result.error) {
+    return NextResponse.json({ data: null, error: result.error }, { status: 400 });
+  }
+  return NextResponse.json(result);
 }

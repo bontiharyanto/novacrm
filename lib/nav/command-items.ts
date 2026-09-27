@@ -11,6 +11,7 @@ import {
   CalendarClock,
   ClipboardList,
   Clock,
+  Gauge,
   GitBranch,
   History,
   Inbox,
@@ -158,10 +159,12 @@ export function commandNavGroupsForRole(role: AppRole): CommandNavGroup[] {
     },
     {
       id: 'settings',
-      labelKey: 'tenantSettings',
+      labelKey: 'settings',
       items: [
+        { href: '/settings/tenant', labelKey: 'tenantSettings', icon: Building2, visible: (r) => isTenantAdminRole(r) },
         { href: '/settings/security', labelKey: 'security', icon: ShieldCheck },
         { href: '/settings/appearance', labelKey: 'appearance', icon: Palette },
+        { href: '/settings/usage', labelKey: 'usage', icon: Gauge, visible: (r) => isTenantAdminRole(r) },
         { href: '/settings', labelKey: 'integrations', icon: Settings, visible: (r) => isTenantAdminRole(r) },
         { href: '/settings/notifications', labelKey: 'notifications', icon: Mail, visible: (r) => isTenantAdminRole(r) },
         { href: '/settings/reports', labelKey: 'reportSchedule', icon: BarChart3, visible: (r) => isTenantAdminRole(r) },

@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { ACCOUNT_ALL, ACCOUNT_COOKIE, accountMemberSchema, accountSchema, accountUpdateSchema, type AccountMember, type AccountRecord } from '@/lib/accounts/schema';
 import { getAccountScope, listAccessibleAccounts, mapAccount } from '@/lib/accounts/scope';
 import { getSessionProfile } from '@/lib/auth/session';
-import { canRole } from '@/lib/rbac/ability';
+import { canAccessConfiguredCapability } from '@/lib/rbac/capability-actions';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { formatZodError } from '@/lib/validation/zod-error';
 import { assertAccountQuota } from '@/lib/tenants/meter';
@@ -57,7 +57,7 @@ export async function setActiveAccount(accountId: string) {
 
 export async function listAccounts() {
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'read', 'Account')) {
+  if (!session || !(await canAccessConfiguredCapability('read', 'Account'))) {
     return [];
   }
   return listAccessibleAccounts(session);
@@ -65,7 +65,7 @@ export async function listAccounts() {
 
 export async function getAccountById(accountId: string): Promise<AccountRecord | null> {
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'read', 'Account')) {
+  if (!session || !(await canAccessConfiguredCapability('read', 'Account'))) {
     return null;
   }
 
@@ -82,7 +82,7 @@ export async function getAccountById(accountId: string): Promise<AccountRecord |
 
 export async function listAccountMembers(accountId: string): Promise<AccountMember[]> {
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'read', 'Account')) {
+  if (!session || !(await canAccessConfiguredCapability('read', 'Account'))) {
     return [];
   }
 
@@ -120,7 +120,7 @@ export async function listAccountMembers(accountId: string): Promise<AccountMemb
 export async function createAccount(input: unknown) {
   const parsed = accountSchema.parse(input);
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'create', 'Account')) {
+  if (!session || !(await canAccessConfiguredCapability('create', 'Account'))) {
     return { data: null, error: 'Unauthorized' };
   }
 
@@ -167,7 +167,7 @@ export async function createAccount(input: unknown) {
 export async function updateAccount(accountId: string, input: unknown) {
   const parsed = accountUpdateSchema.parse(input);
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'update', 'Account')) {
+  if (!session || !(await canAccessConfiguredCapability('update', 'Account'))) {
     return { data: null, error: 'Unauthorized' };
   }
 
@@ -203,6 +203,83 @@ export async function updateAccount(accountId: string, input: unknown) {
   return { data: mapAccount(data), error: null };
 }
 
+async function countAccountUsage(tenantId: string, accountId: string) {
+  const supabase = await createSupabaseServerClient();
+  const tables = [
+    'tickets',
+    'assets',
+    'cmdb_items',
+    'delivery_projects',
+    'org_units',
+    'assignment_groups',
+    'sla_agreements',
+    'sla_calendars',
+  ] as const;
+
+  const counts = await Promise.all(
+    tables.map(async (table) => {
+      const { count, error } = await supabase
+        .from(table)
+        .select('id', { count: 'exact', head: true })
+        .eq('tenant_id', tenantId)
+        .eq('account_id', accountId);
+      return error ? 0 : count ?? 0;
+    }),
+  );
+
+  return counts.reduce((total, count) => total + count, 0);
+}
+
+export async function deleteAccount(accountId: string) {
+  const session = await getSessionProfile();
+  if (!session || !(await canAccessConfiguredCapability('delete', 'Account'))) {
+    return { data: null, error: 'Unauthorized' };
+  }
+
+  const existing = await getAccountById(accountId);
+  if (!existing) {
+    return { data: null, error: 'Account not found' };
+  }
+  if (existing.type === 'internal') {
+    return { data: null, error: 'The Internal account cannot be deleted' };
+  }
+
+  const usage = await countAccountUsage(session.profile.tenantId, accountId);
+  if (usage > 0) {
+    return { data: null, error: 'This account is still in use and cannot be deleted' };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { error: memberError } = await supabase
+    .from('account_members')
+    .delete()
+    .eq('account_id', accountId)
+    .eq('tenant_id', session.profile.tenantId);
+  if (memberError) {
+    return { data: null, error: memberError.message };
+  }
+
+  const { error } = await supabase
+    .from('accounts')
+    .delete()
+    .eq('id', accountId)
+    .eq('tenant_id', session.profile.tenantId)
+    .neq('type', 'internal');
+
+  if (error) {
+    return { data: null, error: error.message };
+  }
+
+  const cookie = cookies().get(ACCOUNT_COOKIE)?.value;
+  if (cookie === accountId) {
+    writeAccountCookie(ACCOUNT_ALL);
+  }
+
+  revalidatePath('/', 'layout');
+  revalidatePath('/accounts');
+  return { data: true, error: null };
+}
+
 export async function addAccountMember(accountId: string, input: unknown) {
   const parsedResult = accountMemberSchema.safeParse(input);
   if (!parsedResult.success) {
@@ -210,7 +287,7 @@ export async function addAccountMember(accountId: string, input: unknown) {
   }
   const parsed = parsedResult.data;
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'update', 'Account')) {
+  if (!session || !(await canAccessConfiguredCapability('update', 'Account'))) {
     return { data: null, error: 'Unauthorized' };
   }
 
@@ -251,7 +328,7 @@ export async function addAccountMember(accountId: string, input: unknown) {
 
 export async function removeAccountMember(accountId: string, memberId: string) {
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'update', 'Account')) {
+  if (!session || !(await canAccessConfiguredCapability('update', 'Account'))) {
     return { data: null, error: 'Unauthorized' };
   }
 
@@ -273,7 +350,7 @@ export async function removeAccountMember(accountId: string, memberId: string) {
 
 export async function listTenantProfiles() {
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'read', 'Account')) {
+  if (!session || !(await canAccessConfiguredCapability('read', 'Account'))) {
     return [];
   }
 

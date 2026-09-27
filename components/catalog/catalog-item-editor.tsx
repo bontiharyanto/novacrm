@@ -23,8 +23,10 @@ import {
 import { TICKET_TYPES } from '@/lib/tickets/process';
 import { useI18n } from '@/components/layout/preferences-provider';
 import { localizedType } from '@/lib/i18n/labels';
+import { Dialog } from '@/components/ui/dialog';
+import { toastError, toastSuccess } from '@/components/ui/toast';
 
-export function CatalogItemEditor({ itemId }: { itemId?: string }) {
+export function CatalogItemEditor({ itemId, canDelete = false }: { itemId?: string; canDelete?: boolean }) {
   const router = useRouter();
   const { t } = useI18n();
   const [name, setName] = useState('');
@@ -44,6 +46,8 @@ export function CatalogItemEditor({ itemId }: { itemId?: string }) {
   const [newCategory, setNewCategory] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     void fetch('/api/catalog')
@@ -85,11 +89,24 @@ export function CatalogItemEditor({ itemId }: { itemId?: string }) {
       body: JSON.stringify({ name: label }),
     });
     const payload = await response.json();
-    if (payload.data?.id) {
-      setCategories((current) => [...current, payload.data]);
-      setCategoryId(payload.data.id);
-      setNewCategory('');
+    if (payload.error || !payload.data?.id) {
+      setError(payload.error ?? 'Unable to add category.');
+      return;
     }
+    setCategories((current) => [...current, payload.data]);
+    setCategoryId(payload.data.id);
+    setNewCategory('');
+  }
+
+  async function removeCategory(id: string) {
+    const response = await fetch(`/api/catalog/categories/${id}`, { method: 'DELETE' });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || payload.error) {
+      setError(payload.error ?? 'Unable to delete category.');
+      return;
+    }
+    setCategories((current) => current.filter((item) => item.id !== id));
+    if (categoryId === id) setCategoryId('');
   }
 
   async function save() {
@@ -126,6 +143,22 @@ export function CatalogItemEditor({ itemId }: { itemId?: string }) {
     setIsSaving(false);
   }
 
+  async function removeItem() {
+    if (!itemId) return;
+    setDeleting(true);
+    const response = await fetch(`/api/catalog/${itemId}`, { method: 'DELETE' });
+    const payload = await response.json().catch(() => ({}));
+    setDeleting(false);
+    if (!response.ok || payload.error) {
+      const message = payload.error ?? t.common.deleteFailed;
+      setError(message);
+      toastError(message);
+      return;
+    }
+    toastSuccess(t.catalog.itemDeleted);
+    router.push('/catalog');
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -150,6 +183,11 @@ export function CatalogItemEditor({ itemId }: { itemId?: string }) {
             <Button type="button" variant="ghost" onClick={() => setIsActive((value) => !value)}>
               {isActive ? t.catalog.published : t.catalog.draft}
             </Button>
+            {canDelete && itemId ? (
+              <Button type="button" variant="ghost" className="text-rose-300 hover:text-rose-200" onClick={() => setConfirmDelete(true)}>
+                {t.catalog.deleteItem}
+              </Button>
+            ) : null}
             <Button type="button" variant="ghost" onClick={() => router.push('/catalog')}>
               {t.common.cancel}
             </Button>
@@ -298,7 +336,7 @@ export function CatalogItemEditor({ itemId }: { itemId?: string }) {
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label>Category</Label>
+                <Label>{t.catalog.category}</Label>
                 <Select value={categoryId} onChange={(event) => setCategoryId(event.target.value)}>
                   <option value="">None</option>
                   {categories.map((item) => (
@@ -307,10 +345,47 @@ export function CatalogItemEditor({ itemId }: { itemId?: string }) {
                     </option>
                   ))}
                 </Select>
+                {canDelete && categoryId ? (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="text-rose-300 hover:text-rose-200"
+                    onClick={() => void removeCategory(categoryId)}
+                  >
+                    {t.catalog.deleteCategory}
+                  </Button>
+                ) : null}
+                {categories.length > 0 ? (
+                  <div className="flex flex-wrap gap-1.5">
+                    {categories.map((item) => (
+                      <span
+                        key={item.id}
+                        className="inline-flex items-center gap-1 rounded-md border border-zinc-800 bg-zinc-950 px-2 py-1 text-[11px] text-zinc-300"
+                      >
+                        {item.name}
+                        {canDelete ? (
+                          <button
+                            type="button"
+                            className="text-zinc-500 hover:text-rose-300"
+                            aria-label={`${t.catalog.deleteCategory}: ${item.name}`}
+                            onClick={() => void removeCategory(item.id)}
+                          >
+                            ×
+                          </button>
+                        ) : null}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
                 <div className="flex gap-2">
-                  <Input placeholder="New category" value={newCategory} onChange={(event) => setNewCategory(event.target.value)} />
+                  <Input
+                    placeholder={t.catalog.newCategory}
+                    value={newCategory}
+                    onChange={(event) => setNewCategory(event.target.value)}
+                  />
                   <Button type="button" variant="outline" onClick={() => void addCategory()}>
-                    Add
+                    {t.catalog.addCategory}
                   </Button>
                 </div>
               </div>
@@ -332,6 +407,18 @@ export function CatalogItemEditor({ itemId }: { itemId?: string }) {
           </Card>
         </aside>
       </div>
+      <Dialog open={confirmDelete} title={t.catalog.deleteItemTitle} onClose={() => (deleting ? undefined : setConfirmDelete(false))}>
+        <p className="text-sm leading-6 text-zinc-400">{name || t.catalog.itemName}</p>
+        <p className="mt-2 text-[13px] leading-5 text-zinc-500">{t.catalog.deleteItemHint}</p>
+        <div className="mt-4 flex justify-end gap-2">
+          <Button type="button" size="sm" variant="ghost" disabled={deleting} onClick={() => setConfirmDelete(false)}>
+            {t.common.cancel}
+          </Button>
+          <Button type="button" size="sm" variant="outline" disabled={deleting} onClick={() => void removeItem()}>
+            {deleting ? t.common.saving : t.catalog.deleteItem}
+          </Button>
+        </div>
+      </Dialog>
     </motion.div>
   );
 }

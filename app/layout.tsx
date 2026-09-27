@@ -5,6 +5,7 @@ import { RuntimePublicEnv } from '@/components/layout/runtime-public-env';
 import { PreferencesProvider } from '@/components/layout/preferences-provider';
 import { Toaster } from '@/components/ui/toast';
 import { getPreferences } from '@/lib/preferences/server';
+import { getDictionary } from '@/lib/i18n';
 
 const inter = localFont({
   src: './fonts/Inter-Variable.woff2',
@@ -39,12 +40,13 @@ export const dynamic = 'force-dynamic';
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const { theme, locale } = getPreferences();
+  const dictionary = getDictionary(locale);
 
   return (
     <html lang={locale} className={`${inter.variable} ${jetbrains.variable} ${theme}`} suppressHydrationWarning>
       <body className="font-sans">
         <RuntimePublicEnv />
-        <PreferencesProvider locale={locale} theme={theme}>
+        <PreferencesProvider locale={locale} theme={theme} dictionary={dictionary}>
           {children}
           <Toaster />
         </PreferencesProvider>

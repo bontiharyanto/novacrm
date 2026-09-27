@@ -3,10 +3,11 @@
 import { assetMovementSchema, assetSchema, assetTypeCatalogSchema, assetUpdateSchema, type AssetMovement, type AssetRecord } from '@/lib/assets/schema';
 import { DEFAULT_ASSET_TYPES, type AssetTypeOption } from '@/lib/assets/types';
 import { getSessionProfile } from '@/lib/auth/session';
-import { canRole } from '@/lib/rbac/ability';
+import { canAccessConfiguredCapability } from '@/lib/rbac/capability-actions';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { requireAccountId } from '@/lib/accounts/scope';
 import { formatZodError } from '@/lib/validation/zod-error';
+import { makeAssetTag } from '@/lib/assets/tag';
 
 type AssetRow = {
   id: string;
@@ -89,13 +90,12 @@ function toRow(
 }
 
 function makeTag(index = 0) {
-  const suffix = `${Date.now().toString(36)}${index}`.slice(-6).toUpperCase();
-  return `AST-${suffix}`;
+  return makeAssetTag(index);
 }
 
 export async function listAssets(accountId?: string | null) {
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'read', 'Asset')) {
+  if (!session || !(await canAccessConfiguredCapability('read', 'Asset'))) {
     return [];
   }
 
@@ -125,7 +125,7 @@ export async function createAsset(input: unknown) {
   const parsed = parsedResult.data;
   const session = await getSessionProfile();
 
-  if (!session || !canRole(session.profile.role, 'create', 'Asset')) {
+  if (!session || !(await canAccessConfiguredCapability('create', 'Asset'))) {
     return { data: null, error: 'Unauthorized' };
   }
 
@@ -154,7 +154,7 @@ export async function updateAsset(assetId: string, input: unknown) {
   const parsed = assetUpdateSchema.parse(input);
   const session = await getSessionProfile();
 
-  if (!session || !canRole(session.profile.role, 'update', 'Asset')) {
+  if (!session || !(await canAccessConfiguredCapability('update', 'Asset'))) {
     return { data: null, error: 'Unauthorized' };
   }
 
@@ -191,9 +191,48 @@ export async function updateAsset(assetId: string, input: unknown) {
   return { data: mapAsset(data as AssetRow), error: null };
 }
 
+export async function deleteAsset(assetId: string) {
+  const session = await getSessionProfile();
+  if (!session || !(await canAccessConfiguredCapability('delete', 'Asset'))) {
+    return { data: null, error: 'Unauthorized' };
+  }
+
+  const current = await getAssetById(assetId);
+  if (!current) {
+    return { data: null, error: 'Asset not found' };
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const [{ count: ticketCount }, { count: ciCount }] = await Promise.all([
+    supabase
+      .from('tickets')
+      .select('id', { count: 'exact', head: true })
+      .eq('tenant_id', session.profile.tenantId)
+      .eq('asset_id', assetId),
+    supabase
+      .from('cmdb_items')
+      .select('id', { count: 'exact', head: true })
+      .eq('tenant_id', session.profile.tenantId)
+      .eq('asset_id', assetId),
+  ]);
+  if ((ticketCount ?? 0) + (ciCount ?? 0) > 0) {
+    return { data: null, error: 'This asset is still linked to tickets or CMDB items. Retire it instead.' };
+  }
+
+  const { error } = await supabase
+    .from('assets')
+    .delete()
+    .eq('id', assetId)
+    .eq('tenant_id', session.profile.tenantId);
+  if (error) {
+    return { data: null, error: error.message };
+  }
+  return { data: true, error: null };
+}
+
 export async function getAssetById(assetId: string) {
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'read', 'Asset')) {
+  if (!session || !(await canAccessConfiguredCapability('read', 'Asset'))) {
     return null;
   }
 
@@ -210,7 +249,7 @@ export async function getAssetById(assetId: string) {
 
 export async function importAssets(rows: unknown[]) {
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'create', 'Asset')) {
+  if (!session || !(await canAccessConfiguredCapability('create', 'Asset'))) {
     return { data: null, error: 'Unauthorized' };
   }
 
@@ -280,7 +319,7 @@ function mapMovement(
 
 export async function listAssetMovements(assetId: string): Promise<AssetMovement[]> {
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'read', 'Asset')) {
+  if (!session || !(await canAccessConfiguredCapability('read', 'Asset'))) {
     return [];
   }
 
@@ -336,7 +375,7 @@ async function attachMovementNote(assetId: string, note?: string) {
 export async function recordAssetMovement(assetId: string, input: unknown) {
   const parsed = assetMovementSchema.parse(input);
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'update', 'Asset')) {
+  if (!session || !(await canAccessConfiguredCapability('update', 'Asset'))) {
     return { data: null, error: 'Unauthorized' };
   }
 
@@ -390,7 +429,7 @@ export async function replaceAsset(
   input: { replacementId: string; note?: string },
 ) {
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'update', 'Asset')) {
+  if (!session || !(await canAccessConfiguredCapability('update', 'Asset'))) {
     return { data: null, error: 'Unauthorized' };
   }
   if (input.replacementId === assetId) {
@@ -450,7 +489,7 @@ function slugifyAssetType(value: string) {
 
 export async function listAssetTypes(): Promise<AssetTypeOption[]> {
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'read', 'Asset')) {
+  if (!session || !(await canAccessConfiguredCapability('read', 'Asset'))) {
     return DEFAULT_ASSET_TYPES;
   }
   const supabase = await createSupabaseServerClient();
@@ -474,7 +513,7 @@ export async function createAssetType(input: unknown) {
     return { data: null, error: parsedResult.error.issues[0]?.message ?? 'Invalid type' };
   }
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'create', 'Asset')) {
+  if (!session || !(await canAccessConfiguredCapability('create', 'Asset'))) {
     return { data: null, error: 'Unauthorized' };
   }
   const slug = slugifyAssetType(parsedResult.data.label);

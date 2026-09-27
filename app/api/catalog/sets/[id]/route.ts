@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCatalogVariableSet, updateCatalogVariableSet } from '@/lib/catalog/actions';
+import { deleteCatalogVariableSet, getCatalogVariableSet, updateCatalogVariableSet } from '@/lib/catalog/actions';
 import { requireApiUser } from '@/lib/api/require-user';
 
 export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
@@ -30,4 +30,15 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       { status: 500 },
     );
   }
+}
+
+export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
+  const auth = await requireApiUser('delete', 'Catalog');
+  if (auth.error) return auth.error;
+
+  const result = await deleteCatalogVariableSet(params.id);
+  if (result.error) {
+    return NextResponse.json({ data: null, error: result.error }, { status: 400 });
+  }
+  return NextResponse.json(result);
 }

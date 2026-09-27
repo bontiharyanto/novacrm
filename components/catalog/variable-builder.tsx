@@ -28,7 +28,7 @@ export function VariableBuilder({
     <div className="space-y-3">
       {variables.length === 0 ? <p className="text-sm text-zinc-500">No variables yet.</p> : null}
       {variables.map((variable, index) => (
-        <div key={`${variable.key}-${index}`} className="space-y-2 rounded-lg border border-zinc-800 bg-zinc-950 p-3">
+        <div key={`variable-${index}`} className="space-y-2 rounded-lg border border-zinc-800 bg-zinc-950 p-3">
           <div className="grid gap-2 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label>Label</Label>

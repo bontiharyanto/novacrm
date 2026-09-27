@@ -21,7 +21,8 @@ Account scope: `accessible_account_ids()` — manager+ sees every tenant account
 | Users read | | | | | ● | ● | ● | ● | ● |
 | Users create / update (rank-limited) | | | | | | ● | ● | ● | ● |
 | SLA write | | | | | | ● | ● | ● | ● |
-| Catalog write | | | | | | ● | ● | ● | ● |
+| Catalog write / delete item, set, category | | | | | | ● | ● | ● | ● |
+| Assets delete unused | | | | | | | ● | ● | ● |
 | Org / accounts write | | | | | | | ● | ● | ● |
 | Import | | | | | | | ● | ● | ● |
 | Workflow write | | | | | | | ● | ● | ● |
@@ -32,3 +33,5 @@ Account scope: `accessible_account_ids()` — manager+ sees every tenant account
 `canAssignRole`: supervisor → customer/agent; manager → customer/agent/PM Delivery/DCO/team lead/supervisor; admin → all except superadmin; superadmin → all. PM Delivery and DCO cannot assign roles.
 
 Staff land on `/dashboard`. Customer lands on `/portal`.
+
+`role_capabilities` tenant overrides are live for User, Account, Catalog, and Asset (pages, server actions, and API via `requireApiUser`). Default CASL still applies when no override exists. Nav still uses static `canRole`.

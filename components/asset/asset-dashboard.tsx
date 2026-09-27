@@ -12,6 +12,8 @@ import { ASSET_STATUSES, type AssetRecord, type AssetStatus } from '@/lib/assets
 import { DEFAULT_ASSET_TYPES, formatAssetTypeLabel, type AssetTypeOption } from '@/lib/assets/types';
 import { formatIdr, getBookValue, getWarrantyLabel, getWarrantyLevel } from '@/lib/assets/depreciation';
 import { cn } from '@/lib/utils';
+import { formatAssetAssignee } from '@/lib/assets/assignee';
+import { toastError, toastSuccess } from '@/components/ui/toast';
 
 const statusTone: Record<AssetStatus, 'success' | 'warning' | 'neutral' | 'danger'> = {
   active: 'success',
@@ -20,7 +22,7 @@ const statusTone: Record<AssetStatus, 'success' | 'warning' | 'neutral' | 'dange
   lost: 'danger',
 };
 
-export function AssetDashboard() {
+export function AssetDashboard({ canDelete = false }: { canDelete?: boolean }) {
   const [assets, setAssets] = useState<AssetRecord[]>([]);
   const [types, setTypes] = useState<AssetTypeOption[]>(DEFAULT_ASSET_TYPES);
   const [loading, setLoading] = useState(true);
@@ -154,18 +156,20 @@ export function AssetDashboard() {
                 <tr>
                   <th className="px-3 py-2 font-medium">Tag</th>
                   <th className="px-3 py-2 font-medium">Name</th>
+                  <th className="px-3 py-2 font-medium">Serial</th>
                   <th className="px-3 py-2 font-medium">Type</th>
                   <th className="px-3 py-2 font-medium">Status</th>
                   <th className="px-3 py-2 font-medium">Assigned</th>
                   <th className="px-3 py-2 font-medium">Book value</th>
                   <th className="px-3 py-2 font-medium">Warranty</th>
                   <th className="px-3 py-2 font-medium">Opened</th>
+                  {canDelete ? <th className="px-3 py-2 font-medium" /> : null}
                 </tr>
               </thead>
               <tbody>
                 {rows.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-3 py-8 text-center text-zinc-500">
+                    <td colSpan={canDelete ? 10 : 9} className="px-3 py-8 text-center text-zinc-500">
                       No assets match this filter.
                     </td>
                   </tr>
@@ -185,11 +189,12 @@ export function AssetDashboard() {
                             {asset.name}
                           </Link>
                         </td>
+                        <td className="px-3 py-2.5 font-mono text-xs text-zinc-400">{asset.serial || '—'}</td>
                         <td className="px-3 py-2.5 text-zinc-300">{formatAssetTypeLabel(asset.type, types)}</td>
                         <td className="px-3 py-2.5">
                           <Badge tone={statusTone[asset.status]}>{asset.status.replace('_', ' ')}</Badge>
                         </td>
-                        <td className="px-3 py-2.5 text-zinc-300">{asset.assignedTo || 'Unassigned'}</td>
+                        <td className="px-3 py-2.5 text-zinc-300">{formatAssetAssignee(asset.assignedTo)}</td>
                         <td className="px-3 py-2.5 font-mono text-xs text-zinc-300">{formatIdr(book.bookValue)}</td>
                         <td className="px-3 py-2.5">
                           <span
@@ -205,6 +210,27 @@ export function AssetDashboard() {
                           </span>
                         </td>
                         <td className="px-3 py-2.5 text-zinc-500">{formatRelativeId(asset.createdAt)}</td>
+                        {canDelete ? (
+                          <td className="px-3 py-2.5 text-right">
+                            <button
+                              type="button"
+                              className="text-[11px] text-zinc-500 hover:text-rose-300"
+                              onClick={() => {
+                                void fetch(`/api/assets/${asset.id}`, { method: 'DELETE' }).then(async (response) => {
+                                  const payload = await response.json().catch(() => ({}));
+                                  if (!response.ok || payload.error) {
+                                    toastError(payload.error ?? 'This asset is still in use.');
+                                    return;
+                                  }
+                                  toastSuccess('Asset deleted.');
+                                  void loadAssets();
+                                });
+                              }}
+                            >
+                              Delete
+                            </button>
+                          </td>
+                        ) : null}
                       </tr>
                     );
                   })

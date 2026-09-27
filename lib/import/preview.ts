@@ -241,7 +241,7 @@ async function previewAssets(rows: Record<string, string>[], accounts: AccountRe
     }
     const tag = parsed.data.assetTag?.trim().toUpperCase();
     if (!tag) {
-      preview.push({ row: index + 2, action: 'error', values, message: 'assetTag is required' });
+      preview.push({ row: index + 2, action: 'create', values: { ...values, assetTag: '(auto)' }, message: 'Asset tag will be auto-generated (AST-XXXXXX).' });
       return;
     }
     if (seen.has(tag)) {

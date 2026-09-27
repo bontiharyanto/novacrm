@@ -2,7 +2,9 @@
 
 import { revalidatePath } from 'next/cache';
 import { getSessionProfile } from '@/lib/auth/session';
-import { canRole, canAssignRole, isCustomerRole, isTenantAdminRole } from '@/lib/rbac/ability';
+import { canAssignRole, isCustomerRole, isTenantAdminRole, parseAppRole } from '@/lib/rbac/ability';
+import { canAccessConfiguredCapability } from '@/lib/rbac/capability-actions';
+import type { AppRole } from '@/lib/rbac/roles';
 import { isStaffRole } from '@/lib/rbac/roles';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { isSupportTier, type SupportTier } from '@/lib/tickets/pending';
@@ -122,7 +124,7 @@ async function loadDirectoryMaps(tenantId: string, userIds: string[]) {
 
 export async function listDirectoryUsers(): Promise<DirectoryUser[]> {
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'read', 'User')) return [];
+  if (!session || !(await canAccessConfiguredCapability('read', 'User'))) return [];
 
   const scoped = await requireAccountId(session);
   const accountIds = scoped.accountId
@@ -179,7 +181,7 @@ export async function listDirectoryUsers(): Promise<DirectoryUser[]> {
 
 export async function getDirectoryUser(userId: string): Promise<DirectoryUser | null> {
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'read', 'User')) return null;
+  if (!session || !(await canAccessConfiguredCapability('read', 'User'))) return null;
 
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase
@@ -196,7 +198,7 @@ export async function getDirectoryUser(userId: string): Promise<DirectoryUser | 
 
 export async function listDirectoryGroups(): Promise<AssignmentGroup[]> {
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'read', 'User')) return [];
+  if (!session || !(await canAccessConfiguredCapability('read', 'User'))) return [];
   const scoped = await requireAccountId(session);
   const accountIds = scoped.accountId
     ? [scoped.accountId]
@@ -232,7 +234,7 @@ export async function listDirectoryGroups(): Promise<AssignmentGroup[]> {
 
 export async function listHomeUnits() {
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'read', 'User')) return [];
+  if (!session || !(await canAccessConfiguredCapability('read', 'User'))) return [];
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase
     .from('org_units')
@@ -250,7 +252,7 @@ export async function createDirectoryUser(input: unknown) {
   }
   const parsed = parsedResult.data;
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'create', 'User')) {
+  if (!session || !(await canAccessConfiguredCapability('create', 'User'))) {
     return { data: null, error: 'Unauthorized' };
   }
   if (!canAssignRole(session.profile.role, parsed.role)) {
@@ -426,6 +428,13 @@ export async function createDirectoryUser(input: unknown) {
   return { data: { id: userId }, error: null };
 }
 
+function assertCanManageDirectoryUser(actorRole: AppRole, targetRole: string | null | undefined) {
+  if (!canAssignRole(actorRole, parseAppRole(targetRole))) {
+    return 'You cannot manage a user with that role';
+  }
+  return null;
+}
+
 export async function updateUserAccess(userId: string, input: unknown) {
   const parsedResult = userAccessSchema.safeParse(input);
   if (!parsedResult.success) {
@@ -433,7 +442,7 @@ export async function updateUserAccess(userId: string, input: unknown) {
   }
   const parsed = parsedResult.data;
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'update', 'User')) {
+  if (!session || !(await canAccessConfiguredCapability('update', 'User'))) {
     return { data: null, error: 'Unauthorized' };
   }
 
@@ -442,14 +451,18 @@ export async function updateUserAccess(userId: string, input: unknown) {
   }
 
   const supabase = await createSupabaseServerClient();
+  const { data: current } = await supabase
+    .from('profiles')
+    .select('id, role')
+    .eq('id', userId)
+    .eq('tenant_id', session.profile.tenantId)
+    .maybeSingle();
+  if (!current) return { data: null, error: 'User not found' };
+  const rankError = assertCanManageDirectoryUser(session.profile.role, current.role);
+  if (rankError) return { data: null, error: rankError };
 
   if (parsed.role && isStaffRole(parsed.role)) {
-    const { data: existing } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', userId)
-      .eq('tenant_id', session.profile.tenantId)
-      .maybeSingle();
+    const existing = current;
     if (existing && !isStaffRole(existing.role)) {
       const quotaError = await assertAgentQuota(session.profile.tenantId);
       if (quotaError) return { data: null, error: quotaError };
@@ -496,7 +509,7 @@ export async function updateUserIdentity(userId: string, input: unknown) {
   }
   const parsed = parsedResult.data;
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'update', 'User')) {
+  if (!session || !(await canAccessConfiguredCapability('update', 'User'))) {
     return { data: null, error: 'Unauthorized' };
   }
   if (!hasServiceRole()) {
@@ -518,11 +531,13 @@ export async function updateUserIdentity(userId: string, input: unknown) {
 
   const { data: current } = await supabase
     .from('profiles')
-    .select('id')
+    .select('id, role')
     .eq('id', userId)
     .eq('tenant_id', session.profile.tenantId)
     .maybeSingle();
   if (!current) return { data: null, error: 'User not found' };
+  const rankError = assertCanManageDirectoryUser(session.profile.role, current.role);
+  if (rankError) return { data: null, error: rankError };
 
   const admin = createSupabaseAdminClient();
   const { error: authError } = await admin.auth.admin.updateUserById(userId, {
@@ -550,7 +565,7 @@ export async function updateUserIdentity(userId: string, input: unknown) {
 
 export async function deleteDirectoryUser(userId: string) {
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'delete', 'User')) {
+  if (!session || !(await canAccessConfiguredCapability('delete', 'User'))) {
     return { data: null, error: 'Unauthorized' };
   }
   if (userId === session.userId) {
@@ -568,6 +583,8 @@ export async function deleteDirectoryUser(userId: string) {
     .eq('tenant_id', session.profile.tenantId)
     .maybeSingle();
   if (!target) return { data: null, error: 'User not found' };
+  const rankError = assertCanManageDirectoryUser(session.profile.role, target.role);
+  if (rankError) return { data: null, error: rankError };
 
   if (isTenantAdminRole(target.role)) {
     const { count } = await supabase

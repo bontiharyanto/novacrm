@@ -4,13 +4,16 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { formatRelativeId } from '@/lib/utils/dates';
 import type { AccountRecord } from '@/lib/accounts/schema';
+import { AccountDeleteButton } from '@/components/accounts/account-delete-button';
 
 export function AccountsDashboard({
   accounts,
   canCreate,
+  canDelete,
 }: {
   accounts: AccountRecord[];
   canCreate: boolean;
+  canDelete?: boolean;
 }) {
   const customers = accounts.filter((account) => account.type === 'customer').length;
 
@@ -51,6 +54,7 @@ export function AccountsDashboard({
                   <th>Type</th>
                   <th>Code</th>
                   <th>Opened</th>
+                  {canDelete ? <th /> : null}
                 </tr>
               </thead>
               <tbody>
@@ -68,6 +72,11 @@ export function AccountsDashboard({
                     </td>
                     <td className="font-mono text-xs text-zinc-400">{account.code ?? '—'}</td>
                     <td className="text-zinc-500">{formatRelativeId(account.createdAt)}</td>
+                    {canDelete ? (
+                      <td className="text-right">
+                        <AccountDeleteButton account={account} />
+                      </td>
+                    ) : null}
                   </tr>
                 ))}
               </tbody>

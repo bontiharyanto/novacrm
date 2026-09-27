@@ -1,6 +1,7 @@
 import { accountSchema } from '@/lib/accounts/schema';
 import { getAccountScope } from '@/lib/accounts/scope';
 import { assetSchema } from '@/lib/assets/schema';
+import { allocateAssetTag } from '@/lib/assets/tag';
 import { getSessionProfile } from '@/lib/auth/session';
 import { cidrSchema, ipv4Schema } from '@/lib/cmdb/schema';
 import { isImportKind, type ImportKind, type ImportResult } from '@/lib/import/catalog';
@@ -350,11 +351,8 @@ async function importAssets(
       result.errors.push({ row: index + 2, message: parsed.error.issues[0]?.message ?? 'Invalid asset' });
       continue;
     }
-    const tag = parsed.data.assetTag?.trim().toUpperCase();
-    if (!tag) {
-      result.errors.push({ row: index + 2, message: 'assetTag is required' });
-      continue;
-    }
+    const providedTag = parsed.data.assetTag?.trim().toUpperCase();
+    const tag = providedTag || allocateAssetTag(new Set(byTag.keys()), index);
     const payload = {
       tenant_id: tenantId,
       account_id: account.id,

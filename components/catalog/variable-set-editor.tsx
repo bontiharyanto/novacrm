@@ -10,14 +10,20 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { VariableBuilder } from '@/components/catalog/variable-builder';
 import type { CatalogVariable, CatalogVariableSet } from '@/lib/catalog/schema';
+import { Dialog } from '@/components/ui/dialog';
+import { toastError, toastSuccess } from '@/components/ui/toast';
+import { useI18n } from '@/components/layout/preferences-provider';
 
-export function VariableSetEditor({ setId }: { setId?: string }) {
+export function VariableSetEditor({ setId, canDelete = false }: { setId?: string; canDelete?: boolean }) {
   const router = useRouter();
+  const { t } = useI18n();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [variables, setVariables] = useState<CatalogVariable[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!setId) return;
@@ -52,6 +58,22 @@ export function VariableSetEditor({ setId }: { setId?: string }) {
     setIsSaving(false);
   }
 
+  async function removeSet() {
+    if (!setId) return;
+    setDeleting(true);
+    const response = await fetch(`/api/catalog/sets/${setId}`, { method: 'DELETE' });
+    const payload = await response.json().catch(() => ({}));
+    setDeleting(false);
+    if (!response.ok || payload.error) {
+      const message = payload.error ?? t.common.deleteFailed;
+      setError(message);
+      toastError(message);
+      return;
+    }
+    toastSuccess(t.catalog.setDeleted);
+    router.push('/catalog');
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -73,6 +95,11 @@ export function VariableSetEditor({ setId }: { setId?: string }) {
             />
           </div>
           <div className="flex items-center gap-2">
+            {canDelete && setId ? (
+              <Button type="button" variant="ghost" className="text-rose-300 hover:text-rose-200" onClick={() => setConfirmDelete(true)}>
+                {t.catalog.deleteSet}
+              </Button>
+            ) : null}
             <Button type="button" variant="ghost" onClick={() => router.push('/catalog')}>
               Cancel
             </Button>
@@ -92,6 +119,18 @@ export function VariableSetEditor({ setId }: { setId?: string }) {
           <p className="text-xs text-zinc-500">Reusable fields attached to catalog items, like location or cost center.</p>
         </div>
       </div>
+      <Dialog open={confirmDelete} title={t.catalog.deleteSetTitle} onClose={() => (deleting ? undefined : setConfirmDelete(false))}>
+        <p className="text-sm leading-6 text-zinc-400">{name || 'Variable set'}</p>
+        <p className="mt-2 text-[13px] leading-5 text-zinc-500">{t.catalog.deleteSetHint}</p>
+        <div className="mt-4 flex justify-end gap-2">
+          <Button type="button" size="sm" variant="ghost" disabled={deleting} onClick={() => setConfirmDelete(false)}>
+            {t.common.cancel}
+          </Button>
+          <Button type="button" size="sm" variant="outline" disabled={deleting} onClick={() => void removeSet()}>
+            {deleting ? t.common.saving : t.catalog.deleteSet}
+          </Button>
+        </div>
+      </Dialog>
     </motion.div>
   );
 }

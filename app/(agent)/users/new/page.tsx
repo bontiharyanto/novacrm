@@ -1,13 +1,13 @@
 import { redirect } from 'next/navigation';
 import { getSessionProfile } from '@/lib/auth/session';
-import { canRole } from '@/lib/rbac/ability';
+import { canAccessConfiguredCapability } from '@/lib/rbac/capability-actions';
 import { listAccounts } from '@/lib/accounts/actions';
 import { listDirectoryGroups, listHomeUnits } from '@/lib/users/actions';
 import { UserCreate } from '@/components/users/user-create';
 
 export default async function NewUserPage() {
   const session = await getSessionProfile();
-  if (!session || !canRole(session.profile.role, 'create', 'User')) {
+  if (!session || !(await canAccessConfiguredCapability('create', 'User'))) {
     redirect('/users');
   }
   const [accounts, units, groups] = await Promise.all([listAccounts(), listHomeUnits(), listDirectoryGroups()]);

@@ -7,7 +7,8 @@ import { createSupabaseAdminClient, hasServiceRole } from '@/lib/supabase/admin'
 import { portalPermalink, ticketPermalink } from '@/lib/notifications/email-template';
 import { loadTenantPublicUrl } from '@/lib/notifications/public-url';
 import { resolveNotificationLocale } from '@/lib/notifications/locale';
-import { dictionaryFor, localizedStage, localizedType } from '@/lib/i18n/labels';
+import { getDictionary } from '@/lib/i18n';
+import { localizedStage, localizedType } from '@/lib/i18n/labels';
 import type { TicketStatus } from '@/lib/tickets/schema';
 
 export type TicketEventContext = {
@@ -56,7 +57,7 @@ async function resolveAssigneeContact(ticket: TicketEventContext['ticket']) {
 export async function dispatchTicketNotification(context: TicketEventContext) {
   const { event, ticket, message } = context;
   const locale = resolveNotificationLocale(context.locale);
-  const t = dictionaryFor(locale);
+  const t = getDictionary(locale);
   const copy = await getMergedNotificationCopy(ticket.tenantId, locale);
   const templates = getTicketTemplates(event, locale, copy, ticket.type);
   const number = ticket.number || ticket.id.slice(0, 8);

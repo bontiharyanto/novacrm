@@ -1,4 +1,5 @@
-import { dictionaryFor, localizedStage, localizedType } from '@/lib/i18n/labels';
+import { getDictionary } from '@/lib/i18n';
+import { localizedStage, localizedType } from '@/lib/i18n/labels';
 import type { NotificationCopy } from '@/lib/notifications/copy';
 import { notificationCopy, resolveNotificationLocale } from '@/lib/notifications/locale';
 import { getAppUrl } from '@/lib/notifications/public-url';
@@ -28,7 +29,7 @@ export function buildTicketEmailSubject(input: {
   copy?: NotificationCopy;
 }) {
   const locale = resolveNotificationLocale(input.locale);
-  const t = dictionaryFor(locale);
+  const t = getDictionary(locale);
   const copy = input.copy ?? notificationCopy(locale);
   const statusLabel = localizedStage(t, input.type, input.status as TicketStatus);
   const template =
@@ -55,7 +56,7 @@ export function buildTicketEmailHtml(input: {
   copy?: NotificationCopy;
 }) {
   const locale = resolveNotificationLocale(input.locale);
-  const t = dictionaryFor(locale);
+  const t = getDictionary(locale);
   const copy = input.copy ?? notificationCopy(locale);
   const typeLabel = localizedType(t, input.type);
   const statusLabel = localizedStage(t, input.type, input.status as TicketStatus);

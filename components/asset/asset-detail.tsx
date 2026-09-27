@@ -2,7 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ArrowLeft } from 'lucide-react';
+import { Dialog } from '@/components/ui/dialog';
+import { toastError, toastSuccess } from '@/components/ui/toast';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -22,6 +25,8 @@ import {
 import { formatIdr, getBookValue, getWarrantyLabel, getWarrantyLevel } from '@/lib/assets/depreciation';
 import { displayTicketNumber } from '@/lib/tickets/process';
 import { cn } from '@/lib/utils';
+import { AssetAssigneeField } from '@/components/asset/asset-assignee-field';
+import { formatAssetAssignee } from '@/lib/assets/assignee';
 
 type AssetOption = Pick<AssetRecord, 'id' | 'name' | 'assetTag' | 'status'>;
 
@@ -68,7 +73,8 @@ function movementSummary(item: AssetMovement) {
   return `${item.fromStatus || '—'} → ${item.toStatus || '—'}`;
 }
 
-export function AssetDetail({ assetId }: { assetId: string }) {
+export function AssetDetail({ assetId, canDelete = false }: { assetId: string; canDelete?: boolean }) {
+  const router = useRouter();
   const [asset, setAsset] = useState<AssetDetailData | null>(null);
   const [assets, setAssets] = useState<AssetOption[]>([]);
   const [status, setStatus] = useState<AssetStatus>('active');
@@ -80,6 +86,8 @@ export function AssetDetail({ assetId }: { assetId: string }) {
   const [replaceNote, setReplaceNote] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState('');
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const loadAsset = useCallback(async () => {
     const response = await fetch(`/api/assets/${assetId}`);
@@ -145,6 +153,21 @@ export function AssetDetail({ assetId }: { assetId: string }) {
     setIsSaving(false);
   }
 
+  async function removeAsset() {
+    setDeleting(true);
+    const response = await fetch(`/api/assets/${assetId}`, { method: 'DELETE' });
+    const payload = await response.json().catch(() => ({}));
+    setDeleting(false);
+    if (!response.ok || payload.error) {
+      const message = payload.error ?? 'Unable to delete asset';
+      setMessage(message);
+      toastError(message);
+      return;
+    }
+    toastSuccess('Asset deleted.');
+    router.push('/assets');
+  }
+
   if (!asset) {
     return (
       <div className="grid gap-6 p-6 lg:grid-cols-[minmax(0,1fr)_320px]">
@@ -167,11 +190,20 @@ export function AssetDetail({ assetId }: { assetId: string }) {
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <h1 className="font-mono text-xl font-semibold text-zinc-50">{asset.assetTag}</h1>
             <Badge tone={statusTone[asset.status]}>{asset.status.replace('_', ' ')}</Badge>
+            {canDelete ? (
+              <Button type="button" variant="ghost" size="sm" className="text-rose-300 hover:text-rose-200" onClick={() => setConfirmDelete(true)}>
+                Delete unused
+              </Button>
+            ) : null}
           </div>
           <h2 className="mt-1 text-2xl font-semibold text-zinc-50">{asset.name}</h2>
           <p className="mt-1 text-sm text-zinc-500">
-            {[asset.brand, asset.model].filter(Boolean).join(' · ') || asset.type} · opened {formatRelativeId(asset.createdAt)}
+            {[asset.brand, asset.model].filter(Boolean).join(' · ') || asset.type}
+            {asset.serial ? ` · S/N ${asset.serial}` : ''}
+            {' · '}
+            opened {formatRelativeId(asset.createdAt)}
           </p>
+          <p className="mt-1 text-sm text-zinc-400">{formatAssetAssignee(asset.assignedTo)}</p>
           {asset.replacedBy ? (
             <p className="mt-2 text-sm text-amber-300">
               Replaced by{' '}
@@ -183,7 +215,13 @@ export function AssetDetail({ assetId }: { assetId: string }) {
           ) : null}
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <Card>
+            <CardContent className="p-4">
+              <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Serial number</p>
+              <p className="mt-1 font-mono text-lg text-zinc-50">{asset.serial || '—'}</p>
+            </CardContent>
+          </Card>
           <Card>
             <CardContent className="p-4">
               <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Book value</p>
@@ -329,10 +367,7 @@ export function AssetDetail({ assetId }: { assetId: string }) {
         <Card>
           <CardContent className="space-y-4 p-5">
             <p className="text-[11px] uppercase tracking-[0.16em] text-zinc-500">Transfer user</p>
-            <div className="space-y-1.5">
-              <Label>Assigned to</Label>
-              <Input value={assignedTo} onChange={(event) => setAssignedTo(event.target.value)} placeholder="Operations" />
-            </div>
+            <AssetAssigneeField value={assignedTo} onChange={setAssignedTo} />
             <div className="space-y-1.5">
               <Label>Note</Label>
               <Input value={transferNote} onChange={(event) => setTransferNote(event.target.value)} placeholder="Mutasi setelah reorg" />
@@ -386,6 +421,23 @@ export function AssetDetail({ assetId }: { assetId: string }) {
           </CardContent>
         </Card>
       </aside>
+      <Dialog open={confirmDelete} title="Delete this unused asset?" onClose={() => (deleting ? undefined : setConfirmDelete(false))}>
+        <p className="text-sm leading-6 text-zinc-400">
+          {asset.assetTag} · {asset.name}
+        </p>
+        <p className="mt-2 text-[13px] leading-5 text-zinc-500">
+          Only unused assets can be removed. Linked tickets or CMDB items must be cleared first — otherwise retire the
+          asset.
+        </p>
+        <div className="mt-4 flex justify-end gap-2">
+          <Button type="button" size="sm" variant="ghost" disabled={deleting} onClick={() => setConfirmDelete(false)}>
+            Cancel
+          </Button>
+          <Button type="button" size="sm" variant="outline" disabled={deleting} onClick={() => void removeAsset()}>
+            {deleting ? 'Deleting…' : 'Delete unused'}
+          </Button>
+        </div>
+      </Dialog>
     </div>
   );
 }

@@ -1,15 +1,14 @@
 import { listAccounts } from '@/lib/accounts/actions';
-import { getSessionProfile } from '@/lib/auth/session';
-import { canRole } from '@/lib/rbac/ability';
 import { AccountsDashboard } from '@/components/accounts/accounts-dashboard';
+import { canAccessConfiguredCapability } from '@/lib/rbac/capability-actions';
 
 export default async function AccountsPage() {
-  const session = await getSessionProfile();
   const accounts = await listAccounts();
   return (
     <AccountsDashboard
       accounts={accounts}
-      canCreate={session ? canRole(session.profile.role, 'create', 'Account') : false}
+      canCreate={await canAccessConfiguredCapability('create', 'Account')}
+      canDelete={await canAccessConfiguredCapability('delete', 'Account')}
     />
   );
 }
